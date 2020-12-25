@@ -39,7 +39,7 @@ static int rtw_suspend(struct usb_interface *intf, pm_message_t message);
 static int rtw_resume(struct usb_interface *intf);
 
 
-static int rtw_drv_init(struct usb_interface *pusb_intf, const struct usb_device_id *pdid);
+static int rtw_dev_probe(struct usb_interface *pusb_intf, const struct usb_device_id *pdid);
 static void rtw_dev_remove(struct usb_interface *pusb_intf);
 
 static void rtw_dev_shutdown(struct device *dev)
@@ -323,7 +323,7 @@ struct rtw_usb_drv {
 
 struct rtw_usb_drv usb_drv = {
 	.usbdrv.name = (char *)DRV_NAME,
-	.usbdrv.probe = rtw_drv_init,
+	.usbdrv.probe = rtw_dev_probe,
 	.usbdrv.disconnect = rtw_dev_remove,
 	.usbdrv.id_table = rtw_usb_id_tbl,
 	.usbdrv.suspend =  rtw_suspend,
@@ -1253,7 +1253,7 @@ static void rtw_usb_primary_adapter_deinit(_adapter *padapter)
 
 }
 
-static int rtw_drv_init(struct usb_interface *pusb_intf, const struct usb_device_id *pdid)
+static int rtw_dev_probe(struct usb_interface *pusb_intf, const struct usb_device_id *pdid)
 {
 	_adapter *padapter = NULL;
 	int status = _FAIL;
@@ -1262,7 +1262,7 @@ static int rtw_drv_init(struct usb_interface *pusb_intf, const struct usb_device
 	int i;
 #endif
 
-	/* RTW_INFO("+rtw_drv_init\n"); */
+	RTW_INFO("+%s\n", __func__);
 
 	/* step 0. */
 	process_spec_devid(pdid);
@@ -1270,17 +1270,20 @@ static int rtw_drv_init(struct usb_interface *pusb_intf, const struct usb_device
 	/* Initialize dvobj_priv */
 	dvobj = usb_dvobj_init(pusb_intf, pdid);
 	if (dvobj == NULL) {
+		RTW_ERR("usb_dvobj_init Failed!\n");
 		goto exit;
 	}
 
 	padapter = rtw_usb_primary_adapter_init(dvobj, pusb_intf);
 	if (padapter == NULL) {
-		RTW_INFO("rtw_usb_primary_adapter_init Failed!\n");
+		RTW_ERR("rtw_usb_primary_adapter_init Failed!\n");
 		goto free_dvobj;
 	}
 
-	if (usb_reprobe_switch_usb_mode(padapter) == _TRUE)
+	if (usb_reprobe_switch_usb_mode(padapter) == _TRUE) {
+		RTW_ERR("usb_reprobe_switch_usb_mode Failed!\n");
 		goto free_if_prim;
+	}
 
 #ifdef CONFIG_CONCURRENT_MODE
 	if (padapter->registrypriv.virtual_iface_num > (CONFIG_IFACE_NUMBER - 1))
@@ -1302,8 +1305,10 @@ static int rtw_drv_init(struct usb_interface *pusb_intf, const struct usb_device
 #endif
 
 	/* dev_alloc_name && register_netdev */
-	if (rtw_os_ndevs_init(dvobj) != _SUCCESS)
+	if (rtw_os_ndevs_init(dvobj) != _SUCCESS) {
+		RTW_ERR("rtw_os_ndevs_init Failed!\n");
 		goto free_if_vir;
+	}
 
 #ifdef CONFIG_HOSTAPD_MLME
 	hostapd_mode_init(padapter);
