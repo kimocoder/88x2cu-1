@@ -100,7 +100,7 @@ sint rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter)
 	precvpriv->store_law_data_flag = 0;
 #endif
 
-	rtw_os_recv_resource_init(precvpriv, padapter);
+	rtw_os_recv_resource_init(precvpriv);
 
 	precvpriv->pallocated_frame_buf = rtw_zvmalloc(NR_RECVFRAME * sizeof(union recv_frame) + RXFRAME_ALIGN_SZ);
 
@@ -122,7 +122,7 @@ sint rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter)
 
 		rtw_list_insert_tail(&(precvframe->u.list), &(precvpriv->free_recv_queue.queue));
 
-		rtw_os_recv_resource_alloc(padapter, precvframe);
+		rtw_os_recv_resource_alloc(precvframe);
 
 		precvframe->u.hdr.len = 0;
 

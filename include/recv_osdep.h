@@ -37,8 +37,8 @@ struct sta_info;
 extern void rtw_handle_tkip_mic_err(_adapter *padapter, struct sta_info *sta, u8 bgroup);
 
 
-int rtw_os_recv_resource_init(struct recv_priv *precvpriv, _adapter *padapter);
-int rtw_os_recv_resource_alloc(_adapter *padapter, union recv_frame *precvframe);
+int rtw_os_recv_resource_init(struct recv_priv *precvpriv);
+int rtw_os_recv_resource_alloc(union recv_frame *precvframe);
 void rtw_os_recv_resource_free(struct recv_priv *precvpriv);
 
 
