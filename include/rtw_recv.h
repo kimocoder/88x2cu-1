@@ -947,5 +947,6 @@ extern void  mgt_dispatcher(_adapter *padapter, union recv_frame *precv_frame);
 u8 adapter_allow_bmc_data_rx(_adapter *adapter);
 s32 pre_recv_entry(union recv_frame *precvframe, u8 *pphy_status);
 void count_rx_stats(_adapter *padapter, union recv_frame *prframe, struct sta_info *sta);
-
+u8 rtw_init_lite_recv_resource(struct dvobj_priv *dvobj);
+void rtw_free_lite_recv_resource(struct dvobj_priv *dvobj);
 #endif

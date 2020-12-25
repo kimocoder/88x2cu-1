@@ -1340,7 +1340,6 @@ struct dvobj_priv {
 	/* In /Out Pipe information */
 	int	RtInPipe[2];
 	int	RtOutPipe[MAX_BULKOUT_NUM];
-	u8	Queue2Pipe[HW_QUEUE_ENTRY];/* for out pipe mapping */
 
 	u8	irq_alloc;
 	ATOMIC_T continual_io_error;
@@ -1426,9 +1425,15 @@ struct dvobj_priv {
 	u8 *usb_vendor_req_buf;
 #endif
 
-	/* -------- below is merged form G6 for USB -------- */
+	/*-------- below is merged from G6 --------*/
+	u8	Queue2Pipe[HW_QUEUE_ENTRY];/* for out pipe mapping */
 	struct trx_urb_buf_q xmit_urb_q;
 	struct trx_urb_buf_q recv_urb_q;
+	#ifdef CONFIG_USB_INTERRUPT_IN_PIPE
+	struct trx_data_buf_q  intin_buf_q;
+	struct trx_urb_buf_q intin_urb_q;
+	#endif
+	ATOMIC_T rx_pending_cnt;/* urb counts for sumit to host  */
 
 #ifdef PLATFORM_LINUX
 	struct usb_interface *pusbintf;

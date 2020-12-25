@@ -2790,6 +2790,9 @@ u8 devobj_trx_resource_init(struct dvobj_priv *dvobj)
 	ret = rtw_init_lite_xmit_resource(dvobj);
 	if (ret == _FAIL)
 		goto exit;
+	ret = rtw_init_lite_recv_resource(dvobj);
+	if (ret == _FAIL)
+		goto exit;
 #endif
 
 exit:
@@ -2800,6 +2803,7 @@ void devobj_trx_resource_deinit(struct dvobj_priv *dvobj)
 {
 #ifdef CONFIG_USB_HCI
 	rtw_free_lite_xmit_resource(dvobj);
+	rtw_free_lite_recv_resource(dvobj);
 #endif
 }
 
