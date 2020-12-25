@@ -62,6 +62,9 @@ struct intf_priv {
 struct dvobj_priv *devobj_init(void);
 void devobj_deinit(struct dvobj_priv *pdvobj);
 
+u8 devobj_trx_resource_init(struct dvobj_priv *dvobj);
+void devobj_trx_resource_deinit(struct dvobj_priv *dvobj);
+
 u8 rtw_init_drv_sw(_adapter *padapter);
 u8 rtw_free_drv_sw(_adapter *padapter);
 u8 rtw_reset_drv_sw(_adapter *padapter);

@@ -2782,6 +2782,17 @@ u8 rtw_reset_drv_sw(_adapter *padapter)
 	return ret8;
 }
 
+u8 devobj_trx_resource_init(struct dvobj_priv *dvobj)
+{
+	u8 ret = _SUCCESS;
+
+	return ret;
+}
+
+void devobj_trx_resource_deinit(struct dvobj_priv *dvobj)
+{
+}
+
 
 u8 rtw_init_drv_sw(_adapter *padapter)
 {

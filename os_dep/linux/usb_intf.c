@@ -1274,6 +1274,9 @@ static int rtw_dev_probe(struct usb_interface *pusb_intf, const struct usb_devic
 		goto exit;
 	}
 
+	if (devobj_trx_resource_init(dvobj) == _FAIL)
+		goto free_dvobj;
+
 	padapter = rtw_usb_primary_adapter_init(dvobj, pusb_intf);
 	if (padapter == NULL) {
 		RTW_ERR("rtw_usb_primary_adapter_init Failed!\n");
@@ -1319,14 +1322,9 @@ static int rtw_dev_probe(struct usb_interface *pusb_intf, const struct usb_devic
 	rtd2885_wlan_netlink_sendMsg("linkup", "8712");
 #endif
 
+	RTW_INFO("-%s success\n", __func__);
+	return 0;
 
-	status = _SUCCESS;
-
-#if 0 /* not used now */
-os_ndevs_deinit:
-	if (status != _SUCCESS)
-		rtw_os_ndevs_deinit(dvobj);
-#endif
 free_if_vir:
 	if (status != _SUCCESS) {
 		#ifdef CONFIG_CONCURRENT_MODE
@@ -1339,11 +1337,13 @@ free_if_prim:
 	if (status != _SUCCESS && padapter)
 		rtw_usb_primary_adapter_deinit(padapter);
 
+free_trx_reso:
+	devobj_trx_resource_deinit(dvobj);
+
 free_dvobj:
-	if (status != _SUCCESS)
-		usb_dvobj_deinit(pusb_intf);
+	usb_dvobj_deinit(pusb_intf);
 exit:
-	return status == _SUCCESS ? 0 : -ENODEV;
+	return -ENODEV;
 }
 
 /*
@@ -1406,9 +1406,10 @@ static void rtw_dev_remove(struct usb_interface *pusb_intf)
 	rtw_drv_free_vir_ifaces(dvobj);
 #endif /* CONFIG_CONCURRENT_MODE */
 
+	devobj_trx_resource_deinit(dvobj);
 	usb_dvobj_deinit(pusb_intf);
 
-	RTW_INFO("-r871xu_dev_remove, done\n");
+	RTW_INFO("-%s done\n", __func__);
 
 	return;
 
