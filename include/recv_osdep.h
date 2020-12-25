@@ -16,7 +16,7 @@
 #define __RECV_OSDEP_H_
 
 
-extern sint _rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter);
+extern sint rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter);
 extern void _rtw_free_recv_priv(struct recv_priv *precvpriv);
 
 

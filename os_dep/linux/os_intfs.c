@@ -2924,8 +2924,8 @@ u8 rtw_init_drv_sw(_adapter *padapter)
 		goto exit;
 	}
 
-	if (_rtw_init_recv_priv(&padapter->recvpriv, padapter) == _FAIL) {
-		RTW_INFO("Can't _rtw_init_recv_priv\n");
+	if (rtw_init_recv_priv(&padapter->recvpriv, padapter) == _FAIL) {
+		RTW_INFO("Can't rtw_init_recv_priv\n");
 		ret8 = _FAIL;
 		goto exit;
 	}
