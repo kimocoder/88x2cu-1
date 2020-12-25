@@ -471,6 +471,9 @@ u8 rtw_init_lite_xmit_resource(struct dvobj_priv *dvobj)
 	u32 urb_nr = RTW_XMITURB_NR;
 #endif
 
+	/* init lite_xmit_buf */
+	_rtw_init_queue(&litexmitbuf_q->free_data_buf_queue);
+
 
 	return ret;
 }

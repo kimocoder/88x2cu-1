@@ -155,6 +155,25 @@
 
 typedef struct	semaphore _sema;
 typedef	spinlock_t	_lock;
+
+__inline static void _rtw_spinlock_irq(_lock *plock, unsigned long *flags)
+{
+	spin_lock_irqsave(plock, *flags);
+}
+__inline static void _rtw_spinunlock_irq(_lock *plock, unsigned long *flags)
+{
+	spin_unlock_irqrestore(plock, *flags);
+}
+__inline static void _rtw_spinlock_bh(_lock *plock)
+{
+	spin_lock_bh(plock);
+}
+__inline static void _rtw_spinunlock_bh(_lock *plock)
+{
+	spin_unlock_bh(plock);
+}
+
+
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37))
 	typedef struct mutex		_mutex;
 #else

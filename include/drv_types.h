@@ -2091,5 +2091,6 @@ int rtw_suspend_free_assoc_resource(_adapter *padapter);
 	#include <pci_ops.h>
 	#include <pci_hal.h>
 #endif
+#include <rtw_trx_ops.h>
 
 #endif /* __DRV_TYPES_H__ */

@@ -2389,6 +2389,7 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_sreset.o \
 		core/rtw_btcoex_wifionly.o \
 		core/rtw_btcoex.o \
+		core/rtw_trx.o \
 		core/rtw_beamforming.o \
 		core/rtw_odm.o \
 		core/rtw_rm.o \
