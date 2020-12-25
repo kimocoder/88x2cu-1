@@ -85,6 +85,10 @@ typedef struct _ADAPTER _adapter, ADAPTER, *PADAPTER;
 #include <recv_osdep.h>
 #include <rtw_efuse.h>
 #include <rtw_sreset.h>
+
+/*CONFIG_PHL_ARCH*/
+#include "rtw_phl.h"
+
 #include <hal_intf.h>
 #include <hal_com.h>
 #include<hal_com_h2c.h>
@@ -1138,6 +1142,43 @@ struct mbid_cam_cache {
 };
 #endif /*CONFIG_MBSSID_CAM*/
 
+#ifdef CONFIG_USB_HCI
+
+struct trx_urb_buf_q {
+	_queue gree_urb_buf_queue;
+	u8 *alloc_urb_buf;
+	u8 *urb_buf;
+	uint free_urb_buf_cnt;
+};
+
+struct data_urb {
+	_list list;
+	struct urb *urb;
+	u8 bulk_id;
+	u8 minlen;
+};
+
+#endif
+
+struct trx_data_buf_q {
+	_queue free_data_buf_queue;
+	u8 *alloc_data_buf;
+	u8 *data_buf;
+	uint free_data_buf_cnt;
+};
+
+struct lite_data_buf {
+	_list list;
+	struct dvobj_priv *dvobj;
+	u16 buf_tab;
+	u8 *pbuf;
+	u8 *phl_buf_ptr; /*point to phl rtw_usb_buf from phl*/
+#ifdef CONFIG_USB_HCI
+	struct data_urb *dataurb;
+#endif
+	struct submit_ctx *sctx;
+};
+
 #ifdef RTW_HALMAC
 struct halmac_indicator {
 	struct submit_ctx *sctx;
@@ -1344,7 +1385,7 @@ struct dvobj_priv {
 	u32 nodfs;
 #endif
 
-	/*-------- below is for SDIO INTERFACE --------*/
+	/*-------- below is for PCIE/USB/SDIO INTERFACE --------*/
 
 #ifdef INTF_DATA
 	INTF_DATA intf_data;
@@ -1357,6 +1398,10 @@ struct dvobj_priv {
 	u8 tx_aval_int_thr_mode;/* if 0=>threhold set by reques(default) ;if 1=>fixed by proc; if 2: fixed by sdio_tx_max_len */
 	u8 tx_aval_int_thr_value;
 #endif/*CONFIG_SDIO_TX_ENABLE_AVAL_INT*/
+
+	struct trx_data_buf_q litexmitbuf_q;
+	struct trx_data_buf_q litexmit_extbuf_q;
+	struct trx_data_buf_q literecvbuf_q;
 
 	/*-------- below is for USB INTERFACE --------*/
 
@@ -1380,6 +1425,10 @@ struct dvobj_priv {
 	u8 *usb_alloc_vendor_req_buf;
 	u8 *usb_vendor_req_buf;
 #endif
+
+	/* -------- below is merged form G6 for USB -------- */
+	struct trx_urb_buf_q xmit_urb_q;
+	struct trx_urb_buf_q recv_urb_q;
 
 #ifdef PLATFORM_LINUX
 	struct usb_interface *pusbintf;

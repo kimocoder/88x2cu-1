@@ -455,6 +455,26 @@ out:
 	return;
 }
 
+u8 rtw_init_lite_xmit_resource(struct dvobj_priv *dvobj)
+{
+	u8 ret = _SUCCESS;
+/* YiWei todo need use correct litexmitbuf_nr urb_nr */
+	u32 litexmitbuf_nr = RTW_LITEXMITBUF_NR;
+	u32 litexmitbuf_ext_nr = RTW_LITEXMITBUF_NR;
+	struct lite_data_buf *litexmitbuf;
+	struct trx_data_buf_q *litexmitbuf_q = &dvobj->litexmitbuf_q;
+	struct trx_data_buf_q *litexmitbuf_extbuf_q = &dvobj->litexmit_extbuf_q;
+	int i;
+#ifdef CONFIG_USB_HCI
+	struct trx_urb_buf_q *xmit_urb_q = &dvobj->xmit_urb_q;
+	struct data_urb *xmiturb;
+	u32 urb_nr = RTW_XMITURB_NR;
+#endif
+
+
+	return ret;
+}
+
 u8 rtw_get_tx_bw_mode(_adapter *adapter, struct sta_info *sta)
 {
 	u8 bw;

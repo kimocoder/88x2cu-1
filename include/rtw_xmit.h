@@ -530,9 +530,7 @@ struct  submit_ctx {
 	systime submit_time; /* */
 	u32 timeout_ms; /* <0: not synchronous, 0: wait forever, >0: up to ms waiting */
 	int status; /* status for operation */
-#ifdef PLATFORM_LINUX
-	struct completion done;
-#endif
+	_completion done;
 };
 
 enum {
@@ -970,6 +968,8 @@ void rtw_init_hwxmits(struct hw_xmit *phwxmit, sint entry);
 s32 _rtw_init_xmit_priv(struct xmit_priv *pxmitpriv, _adapter *padapter);
 void _rtw_free_xmit_priv(struct xmit_priv *pxmitpriv);
 
+u8 rtw_init_lite_xmit_resource(struct dvobj_priv *dvobj);
+void rtw_free_lite_xmit_resource(struct dvobj_priv *dvojb);
 
 void rtw_alloc_hwxmits(_adapter *padapter);
 void rtw_free_hwxmits(_adapter *padapter);
