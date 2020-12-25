@@ -2786,11 +2786,21 @@ u8 devobj_trx_resource_init(struct dvobj_priv *dvobj)
 {
 	u8 ret = _SUCCESS;
 
+#ifdef CONFIG_USB_HCI
+	ret = rtw_init_lite_xmit_resource(dvobj);
+	if (ret == _FAIL)
+		goto exit;
+#endif
+
+exit:
 	return ret;
 }
 
 void devobj_trx_resource_deinit(struct dvobj_priv *dvobj)
 {
+#ifdef CONFIG_USB_HCI
+	rtw_free_lite_xmit_resource(dvobj);
+#endif
 }
 
 

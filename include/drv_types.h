@@ -1145,7 +1145,7 @@ struct mbid_cam_cache {
 #ifdef CONFIG_USB_HCI
 
 struct trx_urb_buf_q {
-	_queue gree_urb_buf_queue;
+	_queue free_urb_buf_queue;
 	u8 *alloc_urb_buf;
 	u8 *urb_buf;
 	uint free_urb_buf_cnt;

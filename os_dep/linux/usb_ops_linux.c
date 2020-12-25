@@ -311,6 +311,31 @@ unsigned int ffaddr2pipehdl(struct dvobj_priv *pdvobj, u32 addr)
 	return pipe;
 }
 
+int rtw_os_urb_resource_alloc(struct data_urb *dataurb)
+{
+	dataurb->urb= usb_alloc_urb(0, GFP_KERNEL);
+
+	if (dataurb->urb == NULL) {
+		rtw_msleep_os(10);
+		dataurb->urb = usb_alloc_urb(0, GFP_KERNEL);
+		if (dataurb->urb == NULL) {
+			RTW_ERR("(dataurb->urb == NULL");
+			rtw_warn_on(1);
+			return _FAIL;
+		}
+	}
+	return _SUCCESS;
+}
+
+void rtw_os_urb_resource_free(struct data_urb *dataurb)
+{
+	if (dataurb->urb) {
+		usb_free_urb(dataurb->urb);
+		dataurb->urb = NULL;
+	}
+}
+
+
 struct zero_bulkout_context {
 	void *pbuf;
 	void *purb;
