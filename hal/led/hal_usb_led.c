@@ -3415,7 +3415,7 @@ SwLedControlMode10(
 			if (pLed->bLedWPSBlinkInProgress == _TRUE || pLed1->bLedWPSBlinkInProgress == _TRUE)
 				;
 			else {
-				if (pHalData->current_band_type == BAND_ON_2_4G)
+				if (pHalData->current_band_type == BAND_ON_24G)
 					/* LED0 settings */
 				{
 					pLed->CurrLedState = RTW_LED_ON;
@@ -3525,7 +3525,7 @@ SwLedControlMode10(
 		break;
 
 	case LED_CTL_STOP_WPS:	/* WPS connect success */
-		if (pHalData->current_band_type == BAND_ON_2_4G)
+		if (pHalData->current_band_type == BAND_ON_24G)
 			/* LED0 settings */
 		{
 			pLed->bLedWPSBlinkInProgress = _FALSE;

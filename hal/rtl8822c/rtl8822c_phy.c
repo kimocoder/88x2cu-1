@@ -655,7 +655,7 @@ static void set_tx_power_level_by_path(PADAPTER adapter, u8 channel, u8 path)
 {
 	PHAL_DATA_TYPE hal = GET_HAL_DATA(adapter);
 	u8 under_survey_ch = phy_check_under_survey_ch(adapter);
-	u8 under_24g = (hal->current_band_type == BAND_ON_2_4G);
+	u8 under_24g = (hal->current_band_type == BAND_ON_24G);
 
 	if (under_24g)
 		phy_set_tx_power_index_by_rate_section(adapter, path, channel, CCK);
@@ -823,7 +823,7 @@ static u8 need_switch_band(PADAPTER adapter, u8 channelToSW)
 	if (channelToSW > 14)
 		BandToSW = BAND_ON_5G;
 	else
-		BandToSW = BAND_ON_2_4G;
+		BandToSW = BAND_ON_24G;
 
 	if (BandToSW != Band) {
 		/* record current band type for other hal use */

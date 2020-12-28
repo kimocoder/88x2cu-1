@@ -220,7 +220,7 @@ int rtw_halmac_sdio_set_tx_format(struct dvobj_priv *d, enum halmac_sdio_tx_form
 #ifdef CONFIG_USB_HCI
 u8 rtw_halmac_usb_get_bulkout_id(struct dvobj_priv *, u8 *buf, u32 size);
 int rtw_halmac_usb_get_txagg_desc_num(struct dvobj_priv *d, u8 *num);
-u8 rtw_halmac_switch_usb_mode(struct dvobj_priv *d, enum RTW_USB_SPEED usb_mode);
+u8 rtw_halmac_switch_usb_mode(struct dvobj_priv *d, enum rtw_usb_speed usb_mode);
 #endif /* CONFIG_USB_HCI */
 
 #ifdef CONFIG_SUPPORT_TRX_SHARED

@@ -5721,15 +5721,15 @@ int rtw_halmac_usb_get_txagg_desc_num(struct dvobj_priv *d, u8 *num)
 	return 0;
 }
 
-static inline enum halmac_usb_mode _usb_mode_drv2halmac(enum RTW_USB_SPEED usb_mode)
+static inline enum halmac_usb_mode _usb_mode_drv2halmac(enum rtw_usb_speed usb_mode)
 {
 	enum halmac_usb_mode halmac_usb_mode = HALMAC_USB_MODE_U2;
 
 	switch (usb_mode) {
-	case RTW_USB_SPEED_2:
+	case RTW_USB_SPEED_HIGH:
 		halmac_usb_mode = HALMAC_USB_MODE_U2;
 		break;
-	case RTW_USB_SPEED_3:
+	case RTW_USB_SPEED_SUPER:
 		halmac_usb_mode = HALMAC_USB_MODE_U3;
 		break;
 	default:
@@ -5740,7 +5740,7 @@ static inline enum halmac_usb_mode _usb_mode_drv2halmac(enum RTW_USB_SPEED usb_m
 	return halmac_usb_mode;
 }
 
-u8 rtw_halmac_switch_usb_mode(struct dvobj_priv *d, enum RTW_USB_SPEED usb_mode)
+u8 rtw_halmac_switch_usb_mode(struct dvobj_priv *d, enum rtw_usb_speed usb_mode)
 {
 	PADAPTER adapter;
 	struct halmac_adapter *mac;

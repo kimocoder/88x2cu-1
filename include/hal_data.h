@@ -262,7 +262,7 @@ struct hal_spec_t {
 #define HAL_SPEC_CHK_RF_PATH_2G(_spec, _path) ((_spec)->rfpath_num_2g > (_path))
 #define HAL_SPEC_CHK_RF_PATH_5G(_spec, _path) ((_spec)->rfpath_num_5g > (_path))
 #define HAL_SPEC_CHK_RF_PATH(_spec, _band, _path) ( \
-	_band == BAND_ON_2_4G ? HAL_SPEC_CHK_RF_PATH_2G(_spec, _path) : \
+	_band == BAND_ON_24G ? HAL_SPEC_CHK_RF_PATH_2G(_spec, _path) : \
 	_band == BAND_ON_5G ? HAL_SPEC_CHK_RF_PATH_5G(_spec, _path) : 0)
 
 #ifdef CONFIG_PHY_CAPABILITY_QUERY

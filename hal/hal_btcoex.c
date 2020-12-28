@@ -517,8 +517,8 @@ u8 halbtcoutsrc_IsDualBandConnected(PADAPTER padapter)
 	if (MCC_EN(padapter) && (rtw_hal_check_mcc_status(padapter, MCC_STATUS_DOING_MCC))) {
 		struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
 		struct mcc_obj_priv *mccobjpriv = &(dvobj->mcc_objpriv);
-		u8 band0 = mccobjpriv->iface[0]->mlmeextpriv.cur_channel > 14 ? BAND_ON_5G : BAND_ON_2_4G;
-		u8 band1 = mccobjpriv->iface[1]->mlmeextpriv.cur_channel > 14 ? BAND_ON_5G : BAND_ON_2_4G;
+		u8 band0 = mccobjpriv->iface[0]->mlmeextpriv.cur_channel > 14 ? BAND_ON_5G : BAND_ON_24G;
+		u8 band1 = mccobjpriv->iface[1]->mlmeextpriv.cur_channel > 14 ? BAND_ON_5G : BAND_ON_24G;
 
 		if (band0 != band1)
 			ret = BTC_MULTIPORT_MCC_DUAL_BAND;
@@ -676,11 +676,11 @@ struct btc_wifi_link_info halbtcoutsrc_getwifilinkinfo(PBTC_COEXIST pBtCoexist)
 		/* by pass */
 	} else if (n_assoc_iface == 2) {	
 		if (sta_iface && p2p_iface) {
-			u8 band_sta = sta_iface->mlmeextpriv.cur_channel > 14 ? BAND_ON_5G : BAND_ON_2_4G;
-			u8 band_p2p = p2p_iface->mlmeextpriv.cur_channel > 14 ? BAND_ON_5G : BAND_ON_2_4G;
+			u8 band_sta = sta_iface->mlmeextpriv.cur_channel > 14 ? BAND_ON_5G : BAND_ON_24G;
+			u8 band_p2p = p2p_iface->mlmeextpriv.cur_channel > 14 ? BAND_ON_5G : BAND_ON_24G;
 			if (band_sta == band_p2p) {
 				switch (band_sta) {
-				case BAND_ON_2_4G:
+				case BAND_ON_24G:
 					if (MLME_IS_GO(p2p_iface)) {
 						#ifdef CONFIG_MCC_MODE
 						wifi_link_info.link_mode =
@@ -724,12 +724,12 @@ struct btc_wifi_link_info halbtcoutsrc_getwifilinkinfo(PBTC_COEXIST pBtCoexist)
 		}
 
 		if (sta_iface && ap_iface) {
-			u8 band_sta = sta_iface->mlmeextpriv.cur_channel > 14 ? BAND_ON_5G : BAND_ON_2_4G;
-			u8 band_ap = ap_iface->mlmeextpriv.cur_channel > 14 ? BAND_ON_5G : BAND_ON_2_4G;
+			u8 band_sta = sta_iface->mlmeextpriv.cur_channel > 14 ? BAND_ON_5G : BAND_ON_24G;
+			u8 band_ap = ap_iface->mlmeextpriv.cur_channel > 14 ? BAND_ON_5G : BAND_ON_24G;
 
 			if (band_sta == band_ap) {
 				switch (band_sta) {
-				case BAND_ON_2_4G:
+				case BAND_ON_24G:
 					#ifdef CONFIG_MCC_MODE
 					wifi_link_info.link_mode =
 						mcc_en == _TRUE ?  BTC_LINK_2G_MCC_GO_STA : BTC_LINK_2G_SCC_GO_STA;
@@ -4160,7 +4160,7 @@ void EXhalbtcoutsrc_media_status_notify(PBTC_COEXIST pBtCoexist, RT_MEDIA_STATUS
 	hal = GET_HAL_DATA(adapter);
 
 	if (RT_MEDIA_CONNECT == mediaStatus) {
-		if (hal->current_band_type == BAND_ON_2_4G)
+		if (hal->current_band_type == BAND_ON_24G)
 			mStatus = BTC_MEDIA_CONNECT;
 		else if (hal->current_band_type == BAND_ON_5G)
 			mStatus = BTC_MEDIA_CONNECT_5G;
@@ -6610,7 +6610,7 @@ u8 hal_btcoex_get_rf4ce_link_state(void)
 void hal_btcoex_switchband_notify(u8 under_scan, u8 band_type)
 {
 	switch (band_type) {
-	case BAND_ON_2_4G:
+	case BAND_ON_24G:
 		if (under_scan)
 			EXhalbtcoutsrc_switchband_notify(&GLBtCoexist, BTC_SWITCH_TO_24G);
 		else

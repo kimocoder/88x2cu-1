@@ -508,7 +508,7 @@ u8 rtw_get_ch_group(u8 ch, u8 *group, u8 *cck_group)
 	s8 gp = -1, cck_gp = -1;
 
 	if (ch <= 14) {
-		band = BAND_ON_2_4G;
+		band = BAND_ON_24G;
 
 		if (1 <= ch && ch <= 2)
 			gp = 0;
@@ -563,7 +563,7 @@ u8 rtw_get_ch_group(u8 ch, u8 *group, u8 *cck_group)
 	}
 
 	if (band == BAND_MAX
-		|| (band == BAND_ON_2_4G && cck_gp == -1)
+		|| (band == BAND_ON_24G && cck_gp == -1)
 		|| gp == -1
 	) {
 		RTW_WARN("%s invalid channel:%u", __func__, ch);
@@ -573,7 +573,7 @@ u8 rtw_get_ch_group(u8 ch, u8 *group, u8 *cck_group)
 
 	if (group)
 		*group = gp;
-	if (cck_group && band == BAND_ON_2_4G)
+	if (cck_group && band == BAND_ON_24G)
 		*cck_group = cck_gp;
 
 exit:
@@ -732,12 +732,12 @@ struct op_class_t {
 /* 802.11-2016 Table E-4, partial */
 static const struct op_class_t global_op_class[] = {
 	/* 2G ch1~13, 20M */
-	OP_CLASS_ENT(81,	BAND_ON_2_4G,	OPC_BW20,		13,	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13),
+	OP_CLASS_ENT(81,	BAND_ON_24G,	OPC_BW20,		13,	1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13),
 	/* 2G ch14, 20M */
-	OP_CLASS_ENT(82,	BAND_ON_2_4G,	OPC_BW20,		1,	14),
+	OP_CLASS_ENT(82,	BAND_ON_24G,	OPC_BW20,		1,	14),
 	/* 2G, 40M */
-	OP_CLASS_ENT(83,	BAND_ON_2_4G, 	OPC_BW40PLUS,	9,	1, 2, 3, 4, 5, 6, 7, 8, 9),
-	OP_CLASS_ENT(84,	BAND_ON_2_4G,	OPC_BW40MINUS,	9,	5, 6, 7, 8, 9, 10, 11, 12, 13),
+	OP_CLASS_ENT(83,	BAND_ON_24G, 	OPC_BW40PLUS,	9,	1, 2, 3, 4, 5, 6, 7, 8, 9),
+	OP_CLASS_ENT(84,	BAND_ON_24G,	OPC_BW40MINUS,	9,	5, 6, 7, 8, 9, 10, 11, 12, 13),
 	/* 5G band 1, 20M & 40M */
 	OP_CLASS_ENT(115,	BAND_ON_5G,		OPC_BW20,		4,	36, 40, 44, 48),
 	OP_CLASS_ENT(116,	BAND_ON_5G,		OPC_BW40PLUS,	2,	36, 44),
@@ -955,7 +955,7 @@ u8 rtw_get_op_class_by_chbw(u8 ch, u8 bw, u8 offset)
 	u8 gid = 0; /* invalid */
 
 	if (rtw_is_2g_ch(ch))
-		band = BAND_ON_2_4G;
+		band = BAND_ON_24G;
 	else if (rtw_is_5g_ch(ch))
 		band = BAND_ON_5G;
 	else
@@ -1093,7 +1093,7 @@ int op_class_pref_init(_adapter *adapter)
 	if (is_supported_5g(regsty->wireless_mode) && hal_chk_band_cap(adapter, BAND_CAP_5G))
 		band_bmp |= BAND_CAP_5G;
 
-	bw_bmp[BAND_ON_2_4G] = (ch_width_to_bw_cap(REGSTY_BW_2G(regsty) + 1) - 1) & (GET_HAL_SPEC(adapter)->bw_cap);
+	bw_bmp[BAND_ON_24G] = (ch_width_to_bw_cap(REGSTY_BW_2G(regsty) + 1) - 1) & (GET_HAL_SPEC(adapter)->bw_cap);
 	bw_bmp[BAND_ON_5G] = (ch_width_to_bw_cap(REGSTY_BW_5G(regsty) + 1) - 1) & (GET_HAL_SPEC(adapter)->bw_cap);
 	if (!REGSTY_IS_11AC_ENABLE(regsty)
 		|| !is_supported_vht(regsty->wireless_mode)
@@ -1105,7 +1105,7 @@ int op_class_pref_init(_adapter *adapter)
 		RTW_INFO("REGSTY_BW_5G(regsty):%u\n", REGSTY_BW_5G(regsty));
 		RTW_INFO("GET_HAL_SPEC(adapter)->bw_cap:0x%x\n", GET_HAL_SPEC(adapter)->bw_cap);
 		RTW_INFO("band_bmp:0x%x\n", band_bmp);
-		RTW_INFO("bw_bmp[2G]:0x%x\n", bw_bmp[BAND_ON_2_4G]);
+		RTW_INFO("bw_bmp[2G]:0x%x\n", bw_bmp[BAND_ON_24G]);
 		RTW_INFO("bw_bmp[5G]:0x%x\n", bw_bmp[BAND_ON_5G]);
 	}
 
@@ -1856,20 +1856,20 @@ void dump_txpwr_lmt(void *sel, _adapter *adapter)
 	#endif
 	RTW_PRINT_SEL(sel, "\n");
 
-	for (band = BAND_ON_2_4G; band <= BAND_ON_5G; band++) {
+	for (band = BAND_ON_24G; band <= BAND_ON_5G; band++) {
 		if (!hal_is_band_support(adapter, band))
 			continue;
 
-		rfpath_num = (band == BAND_ON_2_4G ? hal_spec->rfpath_num_2g : hal_spec->rfpath_num_5g);
+		rfpath_num = (band == BAND_ON_24G ? hal_spec->rfpath_num_2g : hal_spec->rfpath_num_5g);
 
 		for (bw = 0; bw < MAX_5G_BANDWIDTH_NUM; bw++) {
 
 			if (bw >= CHANNEL_WIDTH_160)
 				break;
-			if (band == BAND_ON_2_4G && bw >= CHANNEL_WIDTH_80)
+			if (band == BAND_ON_24G && bw >= CHANNEL_WIDTH_80)
 				break;
 
-			if (band == BAND_ON_2_4G)
+			if (band == BAND_ON_24G)
 				ch_num = CENTER_CH_2G_NUM;
 			else
 				ch_num = center_chs_5g_num(bw);
@@ -1881,7 +1881,7 @@ void dump_txpwr_lmt(void *sel, _adapter *adapter)
 
 			for (tlrs = TXPWR_LMT_RS_CCK; tlrs < TXPWR_LMT_RS_NUM; tlrs++) {
 
-				if (band == BAND_ON_2_4G && tlrs == TXPWR_LMT_RS_VHT)
+				if (band == BAND_ON_24G && tlrs == TXPWR_LMT_RS_VHT)
 					continue;
 				if (band == BAND_ON_5G && tlrs == TXPWR_LMT_RS_CCK)
 					continue;
@@ -1901,14 +1901,14 @@ void dump_txpwr_lmt(void *sel, _adapter *adapter)
 
 					/* bypass CCK multi-TX is not defined */
 					if (tlrs == TXPWR_LMT_RS_CCK && ntx_idx > RF_1TX) {
-						if (band == BAND_ON_2_4G
+						if (band == BAND_ON_24G
 							&& !(rfctl->txpwr_lmt_2g_cck_ofdm_state & (TXPWR_LMT_HAS_CCK_1T << ntx_idx)))
 							continue;
 					}
 
 					/* bypass OFDM multi-TX is not defined */
 					if (tlrs == TXPWR_LMT_RS_OFDM && ntx_idx > RF_1TX) {
-						if (band == BAND_ON_2_4G
+						if (band == BAND_ON_24G
 							&& !(rfctl->txpwr_lmt_2g_cck_ofdm_state & (TXPWR_LMT_HAS_OFDM_1T << ntx_idx)))
 							continue;
 						#if CONFIG_IEEE80211_BAND_5GHZ
@@ -1996,7 +1996,7 @@ void dump_txpwr_lmt(void *sel, _adapter *adapter)
 						s8 lmt_offset;
 						u8 base;
 
-						if (band == BAND_ON_2_4G)
+						if (band == BAND_ON_24G)
 							ch = n + 1;
 						else
 							ch = center_chs_5g(bw, n);
@@ -2141,7 +2141,7 @@ void rtw_txpwr_lmt_add_with_nlen(struct rf_ctl_t *rfctl, const char *lmt_name, u
 	rfctl->txpwr_lmt_num++;
 
 chk_lmt_val:
-	if (band == BAND_ON_2_4G)
+	if (band == BAND_ON_24G)
 		pre_lmt = ent->lmt_2g[bw][tlrs][ch_idx][ntx_idx];
 	#if CONFIG_IEEE80211_BAND_5GHZ
 	else if (band == BAND_ON_5G)
@@ -2153,10 +2153,10 @@ chk_lmt_val:
 	if (pre_lmt != hal_spec->txgi_max)
 		RTW_PRINT("duplicate txpwr_lmt for [%s][%s][%s][%s][%uT][%d]\n"
 			, lmt_name, band_str(band), ch_width_str(bw), txpwr_lmt_rs_str(tlrs), ntx_idx + 1
-			, band == BAND_ON_2_4G ? ch_idx + 1 : center_ch_5g_all[ch_idx]);
+			, band == BAND_ON_24G ? ch_idx + 1 : center_ch_5g_all[ch_idx]);
 
 	lmt = rtw_min(pre_lmt, lmt);
-	if (band == BAND_ON_2_4G)
+	if (band == BAND_ON_24G)
 		ent->lmt_2g[bw][tlrs][ch_idx][ntx_idx] = lmt;
 	#if CONFIG_IEEE80211_BAND_5GHZ
 	else if (band == BAND_ON_5G)
@@ -2166,7 +2166,7 @@ chk_lmt_val:
 	if (0)
 		RTW_PRINT("%s, %4s, %6s, %7s, %uT, ch%3d = %d\n"
 			, lmt_name, band_str(band), ch_width_str(bw), txpwr_lmt_rs_str(tlrs), ntx_idx + 1
-			, band == BAND_ON_2_4G ? ch_idx + 1 : center_ch_5g_all[ch_idx]
+			, band == BAND_ON_24G ? ch_idx + 1 : center_ch_5g_all[ch_idx]
 			, lmt);
 
 release_lock:

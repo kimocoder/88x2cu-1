@@ -605,20 +605,20 @@ static struct dvobj_priv *usb_dvobj_init(struct usb_interface *usb_intf, const s
 	switch (pusbd->speed) {
 	case USB_SPEED_LOW:
 		RTW_INFO("USB_SPEED_LOW\n");
-		pdvobjpriv->usb_speed = RTW_USB_SPEED_1_1;
+		pdvobjpriv->usb_speed = RTW_USB_SPEED_LOW;
 		break;
 	case USB_SPEED_FULL:
 		RTW_INFO("USB_SPEED_FULL\n");
-		pdvobjpriv->usb_speed = RTW_USB_SPEED_1_1;
+		pdvobjpriv->usb_speed = RTW_USB_SPEED_FULL;
 		break;
 	case USB_SPEED_HIGH:
 		RTW_INFO("USB_SPEED_HIGH\n");
-		pdvobjpriv->usb_speed = RTW_USB_SPEED_2;
+		pdvobjpriv->usb_speed = RTW_USB_SPEED_HIGH;
 		break;
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31))
 	case USB_SPEED_SUPER:
 		RTW_INFO("USB_SPEED_SUPER\n");
-		pdvobjpriv->usb_speed = RTW_USB_SPEED_3;
+		pdvobjpriv->usb_speed = RTW_USB_SPEED_SUPER;
 		break;
 #endif
 	default:

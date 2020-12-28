@@ -278,10 +278,6 @@ void rtw_reset_phy_trx_ok_counters(_adapter *padapter);
 
 void dump_chip_info(HAL_VERSION	ChipVersion);
 
-#define BAND_CAP_2G			BIT0
-#define BAND_CAP_5G			BIT1
-#define BAND_CAP_BIT_NUM	2
-
 #define BW_CAP_5M		BIT0
 #define BW_CAP_10M		BIT1
 #define BW_CAP_20M		BIT2

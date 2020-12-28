@@ -1183,7 +1183,7 @@ void hal_load_txpwr_info(_adapter *adapter)
 		for (ch_idx = 0; ch_idx < CENTER_CH_2G_NUM; ch_idx++) {
 			u8 cck_group;
 
-			if (rtw_get_ch_group(ch_idx + 1, &group, &cck_group) != BAND_ON_2_4G)
+			if (rtw_get_ch_group(ch_idx + 1, &group, &cck_group) != BAND_ON_24G)
 				continue;
 
 			hal_data->Index24G_CCK_Base[rfpath][ch_idx] = pwr_info_2g->IndexCCK_Base[rfpath][cck_group];
@@ -1457,7 +1457,7 @@ s8 rtw_regsty_get_target_tx_power(
 		return -1;
 	}
 
-	if (Band != BAND_ON_2_4G
+	if (Band != BAND_ON_24G
 		#if CONFIG_IEEE80211_BAND_5GHZ
 		&& Band != BAND_ON_5G
 		#endif
@@ -1476,7 +1476,7 @@ s8 rtw_regsty_get_target_tx_power(
 		return -1;
 	}
 
-	if (Band == BAND_ON_2_4G)
+	if (Band == BAND_ON_24G)
 		value = regsty->target_tx_pwr_2g[RfPath][RateSection];
 #if CONFIG_IEEE80211_BAND_5GHZ
 	else /* BAND_ON_5G */
@@ -1492,7 +1492,7 @@ bool rtw_regsty_chk_target_tx_power_valid(_adapter *adapter)
 	int path, tx_num, band, rs;
 	s8 target;
 
-	for (band = BAND_ON_2_4G; band <= BAND_ON_5G; band++) {
+	for (band = BAND_ON_24G; band <= BAND_ON_5G; band++) {
 		if (!hal_is_band_support(adapter, band))
 			continue;
 
@@ -1543,7 +1543,7 @@ u8 phy_get_target_txpwr(
 		return 0;
 	}
 
-	if (Band != BAND_ON_2_4G && Band != BAND_ON_5G) {
+	if (Band != BAND_ON_24G && Band != BAND_ON_5G) {
 		RTW_PRINT("%s invalid Band:%d\n", __func__, Band);
 		return 0;
 	}
@@ -1556,7 +1556,7 @@ u8 phy_get_target_txpwr(
 		return 0;
 	}
 
-	if (Band == BAND_ON_2_4G)
+	if (Band == BAND_ON_24G)
 		value = pHalData->target_txpwr_2g[RfPath][RateSection];
 	else if (Band == BAND_ON_5G)
 		value = pHalData->target_txpwr_5g[RfPath][RateSection - 1];
@@ -1579,7 +1579,7 @@ static void phy_set_target_txpwr(
 		return;
 	}
 
-	if (Band != BAND_ON_2_4G && Band != BAND_ON_5G) {
+	if (Band != BAND_ON_24G && Band != BAND_ON_5G) {
 		RTW_PRINT("%s invalid Band:%d\n", __func__, Band);
 		return;
 	}
@@ -1588,11 +1588,11 @@ static void phy_set_target_txpwr(
 		|| (Band == BAND_ON_5G && RateSection == CCK)
 	) {
 		RTW_PRINT("%s invalid RateSection:%d in %sG, RfPath:%d\n", __func__
-			, RateSection, (Band == BAND_ON_2_4G) ? "2.4" : "5", RfPath);
+			, RateSection, (Band == BAND_ON_24G) ? "2.4" : "5", RfPath);
 		return;
 	}
 
-	if (Band == BAND_ON_2_4G)
+	if (Band == BAND_ON_24G)
 		pHalData->target_txpwr_2g[RfPath][RateSection] = Value;
 	else /* BAND_ON_5G */
 		pHalData->target_txpwr_5g[RfPath][RateSection - 1] = Value;
@@ -1629,11 +1629,11 @@ static void phy_txpwr_by_rate_chk_for_path_dup(_adapter *adapter)
 	u8 band, path;
 	s8 src_path;
 
-	for (band = BAND_ON_2_4G; band <= BAND_ON_5G; band++)
+	for (band = BAND_ON_24G; band <= BAND_ON_5G; band++)
 		for (path = RF_PATH_A; path < RF_PATH_MAX; path++)
 			hal_data->txpwr_by_rate_undefined_band_path[band][path] = 0;
 
-	for (band = BAND_ON_2_4G; band <= BAND_ON_5G; band++) {
+	for (band = BAND_ON_24G; band <= BAND_ON_5G; band++) {
 		if (!hal_is_band_support(adapter, band))
 			continue;
 
@@ -1646,7 +1646,7 @@ static void phy_txpwr_by_rate_chk_for_path_dup(_adapter *adapter)
 		}
 	}
 
-	for (band = BAND_ON_2_4G; band <= BAND_ON_5G; band++) {
+	for (band = BAND_ON_24G; band <= BAND_ON_5G; band++) {
 		if (!hal_is_band_support(adapter, band))
 			continue;
 
@@ -1689,7 +1689,7 @@ void phy_store_target_tx_power(PADAPTER	pAdapter)
 
 	u8 band, path, rs, tx_num, base;
 
-	for (band = BAND_ON_2_4G; band <= BAND_ON_5G; band++) {
+	for (band = BAND_ON_24G; band <= BAND_ON_5G; band++) {
 		if (!hal_is_band_support(pAdapter, band))
 			continue;
 
@@ -2130,7 +2130,7 @@ PHY_StoreTxPowerByRateNew(
 
 	PHY_GetRateValuesOfTxPowerByRate(pAdapter, RegAddr, BitMask, Data, rates, PwrByRateVal, &rateNum);
 
-	if (Band != BAND_ON_2_4G && Band != BAND_ON_5G) {
+	if (Band != BAND_ON_24G && Band != BAND_ON_5G) {
 		RTW_PRINT("Invalid Band %d\n", Band);
 		return;
 	}
@@ -2156,7 +2156,7 @@ PHY_InitTxPowerByRate(
 	struct hal_spec_t *hal_spec = GET_HAL_SPEC(pAdapter);
 	u8	band = 0, rfPath = 0, rate = 0;
 
-	for (band = BAND_ON_2_4G; band <= BAND_ON_5G; ++band)
+	for (band = BAND_ON_24G; band <= BAND_ON_5G; ++band)
 		for (rfPath = 0; rfPath < TX_PWR_BY_RATE_NUM_RF; ++rfPath)
 				for (rate = 0; rate < TX_PWR_BY_RATE_NUM_RATE; ++rate)
 					pHalData->TxPwrByRate[band][rfPath][rate] = hal_spec->txgi_max;
@@ -2220,7 +2220,7 @@ phy_set_tx_power_index_by_rate_section(
 		goto exit;
 	}
 
-	if (rs == CCK && bw != BAND_ON_2_4G)
+	if (rs == CCK && bw != BAND_ON_24G)
 		goto exit;
 
 	for (i = 0; i < rates_by_sections[rs].rate_num; ++i) {
@@ -2288,7 +2288,7 @@ bool phy_chk_ch_setting_consistency(_adapter *adapter, u8 ch)
 	}
 
 	if (ch <= 14) {
-		if (hal_data->current_band_type != BAND_ON_2_4G) {
+		if (hal_data->current_band_type != BAND_ON_24G) {
 			rtw_warn_on(1);
 			goto exit;
 		}
@@ -2338,7 +2338,7 @@ u8 phy_get_pg_txpwr_idx(_adapter *pAdapter
 	if (0)
 		RTW_INFO("[%s] Channel Index: %d\n", band_str(band), chnlIdx);
 
-	if (band == BAND_ON_2_4G) {
+	if (band == BAND_ON_24G) {
 		if (IS_CCK_RATE_SECTION(rs)) {
 			/* CCK-nTX */
 			txPower = pHalData->Index24G_CCK_Base[RFPath][chnlIdx];
@@ -2612,7 +2612,7 @@ static s8 _phy_get_txpwr_by_rate(_adapter *adapter
 	s8 value = 0;
 	u8 rate_idx = phy_get_rate_idx_of_txpwr_by_rate(rate);
 
-	if (band != BAND_ON_2_4G && band != BAND_ON_5G) {
+	if (band != BAND_ON_24G && band != BAND_ON_5G) {
 		RTW_INFO("Invalid band %d in %s\n", band, __func__);
 		goto exit;
 	}
@@ -2765,7 +2765,7 @@ phy_set_tx_power_level_by_path(
 )
 {
 	PHAL_DATA_TYPE	pHalData = GET_HAL_DATA(Adapter);
-	BOOLEAN bIsIn24G = (pHalData->current_band_type == BAND_ON_2_4G);
+	BOOLEAN bIsIn24G = (pHalData->current_band_type == BAND_ON_24G);
 	u8 under_survey_ch = phy_check_under_survey_ch(Adapter);
 
 
@@ -2815,7 +2815,7 @@ phy_GetChannelIndexOfTxPowerLimit(
 	s8	channelIndex = -1;
 	u8	i = 0;
 
-	if (Band == BAND_ON_2_4G)
+	if (Band == BAND_ON_24G)
 		channelIndex = Channel - 1;
 	else if (Band == BAND_ON_5G) {
 		for (i = 0; i < CENTER_CH_5G_ALL_NUM; ++i) {
@@ -2875,7 +2875,7 @@ s8 phy_get_txpwr_lmt(
 		Adapter->registrypriv.RegEnableTxPowerLimit == 0)
 		goto exit;
 
-	if (Band != BAND_ON_2_4G && Band != BAND_ON_5G) {
+	if (Band != BAND_ON_24G && Band != BAND_ON_5G) {
 		RTW_ERR("%s invalid band:%u\n", __func__, Band);
 		rtw_warn_on(1);
 		goto exit;
@@ -2909,7 +2909,7 @@ s8 phy_get_txpwr_lmt(
 	if (ch_idx == -1)
 		goto release_lock;
 
-	if (Band == BAND_ON_2_4G) {
+	if (Band == BAND_ON_24G) {
 		if (!is_ww_regd) {
 			lmt = ent->lmt_2g[bw][tlrs][ch_idx][ntx_idx];
 			if (lmt != ww_lmt_val)
@@ -3305,17 +3305,17 @@ void phy_txpwr_limit_bandwidth_chk(_adapter *adapter)
 	u8 band, bw, path, tlrs, ntx_idx, cch, offset, scch;
 	u8 ch_num, n, i;
 
-	for (band = BAND_ON_2_4G; band <= BAND_ON_5G; band++) {
+	for (band = BAND_ON_24G; band <= BAND_ON_5G; band++) {
 		if (!hal_is_band_support(adapter, band))
 			continue;
 
 		for (bw = CHANNEL_WIDTH_40; bw <= CHANNEL_WIDTH_80; bw++) {
 			if (bw >= CHANNEL_WIDTH_160)
 				continue;
-			if (band == BAND_ON_2_4G && bw >= CHANNEL_WIDTH_80)
+			if (band == BAND_ON_24G && bw >= CHANNEL_WIDTH_80)
 				continue;
 
-			if (band == BAND_ON_2_4G)
+			if (band == BAND_ON_24G)
 				ch_num = center_chs_2g_num(bw);
 			else
 				ch_num = center_chs_5g_num(bw);
@@ -3327,7 +3327,7 @@ void phy_txpwr_limit_bandwidth_chk(_adapter *adapter)
 
 			for (tlrs = TXPWR_LMT_RS_HT; tlrs < TXPWR_LMT_RS_NUM; tlrs++) {
 
-				if (band == BAND_ON_2_4G && tlrs == TXPWR_LMT_RS_VHT)
+				if (band == BAND_ON_24G && tlrs == TXPWR_LMT_RS_VHT)
 					continue;
 				if (band == BAND_ON_5G && tlrs == TXPWR_LMT_RS_CCK)
 					continue;
@@ -3347,14 +3347,14 @@ void phy_txpwr_limit_bandwidth_chk(_adapter *adapter)
 
 					/* bypass CCK multi-TX is not defined */
 					if (tlrs == TXPWR_LMT_RS_CCK && ntx_idx > RF_1TX) {
-						if (band == BAND_ON_2_4G
+						if (band == BAND_ON_24G
 							&& !(rfctl->txpwr_lmt_2g_cck_ofdm_state & (TXPWR_LMT_HAS_CCK_1T << ntx_idx)))
 							continue;
 					}
 
 					/* bypass OFDM multi-TX is not defined */
 					if (tlrs == TXPWR_LMT_RS_OFDM && ntx_idx > RF_1TX) {
-						if (band == BAND_ON_2_4G
+						if (band == BAND_ON_24G
 							&& !(rfctl->txpwr_lmt_2g_cck_ofdm_state & (TXPWR_LMT_HAS_OFDM_1T << ntx_idx)))
 							continue;
 						#if CONFIG_IEEE80211_BAND_5GHZ
@@ -3383,7 +3383,7 @@ void phy_txpwr_limit_bandwidth_chk(_adapter *adapter)
 						u8 bw_pos;
 						s8 lmt[3];
 
-						if (band == BAND_ON_2_4G)
+						if (band == BAND_ON_24G)
 							cch = center_chs_2g(bw, n);
 						else
 							cch = center_chs_5g(bw, n);
@@ -3615,8 +3615,8 @@ phy_set_tx_power_limit(
 	}
 
 	if (strncmp(Band, "2.4G", 4) == 0) {
-		band = BAND_ON_2_4G;
-		channelIndex = phy_GetChannelIndexOfTxPowerLimit(BAND_ON_2_4G, channel);
+		band = BAND_ON_24G;
+		channelIndex = phy_GetChannelIndexOfTxPowerLimit(BAND_ON_24G, channel);
 
 		if (channelIndex == -1) {
 			RTW_PRINT("unsupported channel: %d at 2.4G\n", channel);
@@ -3778,8 +3778,8 @@ phy_set_tx_power_limit_ex(
 	}
 
 	if (Band == PW_LMT_BAND_2_4G) {
-		band = BAND_ON_2_4G;
-		channelIndex = phy_GetChannelIndexOfTxPowerLimit(BAND_ON_2_4G, channel);
+		band = BAND_ON_24G;
+		channelIndex = phy_GetChannelIndexOfTxPowerLimit(BAND_ON_24G, channel);
 
 		if (channelIndex == -1) {
 			RTW_PRINT("unsupported channel: %d at 2.4G\n", channel);
@@ -3829,7 +3829,7 @@ u8 phy_get_tx_power_index(
 )
 {
 	RATE_SECTION rs = mgn_rate_to_rs(Rate);
-	BAND_TYPE band = Channel <= 14 ? BAND_ON_2_4G : BAND_ON_5G;
+	BAND_TYPE band = Channel <= 14 ? BAND_ON_24G : BAND_ON_5G;
 
 	return rtw_hal_get_tx_power_index(pAdapter, RFPath, rs, Rate, BandWidth, band, Channel, 0, NULL);
 }
@@ -3939,7 +3939,7 @@ void dump_tx_power_idx_by_path_rs(void *sel, _adapter *adapter, u8 rfpath
 	u8 power_idx;
 	struct txpwr_idx_comp tic;
 	u8 tx_num, i;
-	u8 band = cch > 14 ? BAND_ON_5G : BAND_ON_2_4G;
+	u8 band = cch > 14 ? BAND_ON_5G : BAND_ON_24G;
 
 	if (!HAL_SPEC_CHK_RF_PATH(hal_spec, band, rfpath))
 		return;
@@ -4059,7 +4059,7 @@ void dump_txpwr_total_dbm_by_rs(void *sel, _adapter *adapter, u8 rs, enum channe
 	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(adapter);
 	struct hal_spec_t *hal_spec = GET_HAL_SPEC(adapter);
 	u8 i;
-	u8 band = cch > 14 ? BAND_ON_5G : BAND_ON_2_4G;
+	u8 band = cch > 14 ? BAND_ON_5G : BAND_ON_24G;
 
 	if (rs >= RATE_SECTION_NUM)
 		return;
@@ -4307,7 +4307,7 @@ void dump_target_tx_power(void *sel, _adapter *adapter)
 	int path, tx_num, band, rs;
 	u8 target;
 
-	for (band = BAND_ON_2_4G; band <= BAND_ON_5G; band++) {
+	for (band = BAND_ON_24G; band <= BAND_ON_5G; band++) {
 		if (!hal_is_band_support(adapter, band))
 			continue;
 
@@ -4353,7 +4353,7 @@ void dump_tx_power_by_rate(void *sel, _adapter *adapter)
 	u8 rate_num, max_rate_num, base;
 	s8 by_rate;
 
-	for (band = BAND_ON_2_4G; band <= BAND_ON_5G; band++) {
+	for (band = BAND_ON_24G; band <= BAND_ON_5G; band++) {
 		if (!hal_is_band_support(adapter, band))
 			continue;
 
@@ -4707,7 +4707,7 @@ phy_ParseBBPgParaFile(
 					if (szLine[0] == '#') {
 						index = 0;
 						if (strncmp(szLine, "#[2.4G]", 7) == 0) {
-							band = BAND_ON_2_4G;
+							band = BAND_ON_24G;
 							index += 8;
 						} else if (strncmp(szLine, "#[5G]", 5) == 0) {
 							band = BAND_ON_5G;
@@ -5921,7 +5921,7 @@ s8 phy_get_txpwr_target(_adapter *adapter, u8 rfpath, RATE_SECTION rs, u8 rate, 
 
 	rlmt = lmt = utgt = ulmt = hal_spec->txgi_max;
 
-	if (band != BAND_ON_2_4G && IS_CCK_RATE(rate))
+	if (band != BAND_ON_24G && IS_CCK_RATE(rate))
 		goto exit;
 
 	if (!reg_max) {
@@ -6005,7 +6005,7 @@ s8 phy_get_txpwr_amends(_adapter *adapter, u8 rfpath, RATE_SECTION rs, u8 rate, 
 	struct hal_spec_t *hal_spec = GET_HAL_SPEC(adapter);
 	s8 tpt_diff = 0, dpd_diff = 0, val = 0;
 
-	if (band != BAND_ON_2_4G && IS_CCK_RATE(rate))
+	if (band != BAND_ON_24G && IS_CCK_RATE(rate))
 		goto exit;
 
 	if (IS_HARDWARE_TYPE_8188E(adapter) || IS_HARDWARE_TYPE_8188F(adapter) || IS_HARDWARE_TYPE_8188GTV(adapter)
@@ -6036,7 +6036,7 @@ s8 phy_get_tssi_txpwr_by_rate_ref(_adapter *adapter, enum rf_path path
 {
 	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(adapter);
 	u8 ntx_idx = phy_get_current_tx_num(adapter, MGN_MCS7);
-	BAND_TYPE band = cch > 14 ? BAND_ON_5G : BAND_ON_2_4G;
+	BAND_TYPE band = cch > 14 ? BAND_ON_5G : BAND_ON_24G;
 	s8 pwr_idx;
 
 	pwr_idx = phy_get_txpwr_target(adapter, path, HT_1SS, MGN_MCS7
@@ -6146,7 +6146,7 @@ static s16 phy_get_txpwr_mbm(_adapter *adapter, u8 rfpath, RATE_SECTION rs, u8 r
 {
 	struct hal_spec_t *hal_spec = GET_HAL_SPEC(adapter);
 	struct rf_ctl_t *rfctl = adapter_to_rfctl(adapter);
-	BAND_TYPE band = cch <= 14 ? BAND_ON_2_4G : BAND_ON_5G;
+	BAND_TYPE band = cch <= 14 ? BAND_ON_24G : BAND_ON_5G;
 	u8 ntx_idx_max, ntx_idx, i;
 	s16 val, max = UNSPECIFIED_MBM;
 
@@ -6202,7 +6202,7 @@ static s16 _phy_get_txpwr_max_mbm(_adapter *adapter, s8 rfpath
 {
 	struct hal_spec_t *hal_spec = GET_HAL_SPEC(adapter);
 	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(adapter);
-	BAND_TYPE band = cch <= 14 ? BAND_ON_2_4G : BAND_ON_5G;
+	BAND_TYPE band = cch <= 14 ? BAND_ON_24G : BAND_ON_5G;
 	u8 tx_num;
 	RATE_SECTION rs;
 	u8 hw_rate;
@@ -6267,7 +6267,7 @@ phy_get_tx_power_final_absolute_value(_adapter *adapter, u8 rfpath, u8 rate,
 {
 	struct hal_spec_t *hal_spec = GET_HAL_SPEC(adapter);
 	RATE_SECTION rs = mgn_rate_to_rs(rate);
-	BAND_TYPE band = cch <= 14 ? BAND_ON_2_4G : BAND_ON_5G;
+	BAND_TYPE band = cch <= 14 ? BAND_ON_24G : BAND_ON_5G;
 	s8 val;
 
 	val = phy_get_txpwr_target(adapter, rfpath

@@ -2773,7 +2773,7 @@ static int proc_get_hal_txpwr_info(struct seq_file *m, void *v)
 	struct hal_spec_t *hal_spec = GET_HAL_SPEC(adapter);
 
 	if (hal_data->txpwr_pg_mode == TXPWR_PG_WITH_PWR_IDX) {
-		if (hal_is_band_support(adapter, BAND_ON_2_4G))
+		if (hal_is_band_support(adapter, BAND_ON_24G))
 			dump_hal_txpwr_info_2g(m, adapter, hal_spec->rfpath_num_2g, hal_data->max_tx_cnt);
 
 		#if CONFIG_IEEE80211_BAND_5GHZ

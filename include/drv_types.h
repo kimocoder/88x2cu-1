@@ -57,6 +57,9 @@ enum _NIC_VERSION {
 
 typedef struct _ADAPTER _adapter, ADAPTER, *PADAPTER;
 
+/* connection interface of drv and hal */
+#include "../phl/rtw_general_def.h"
+
 #include <rtw_debug.h>
 #include <cmn_info/rtw_sta_info.h>
 #include <rtw_rf.h>

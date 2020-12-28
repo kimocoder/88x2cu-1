@@ -514,7 +514,7 @@ struct ieee80211_supported_band *rtw_spt_band_alloc(BAND_TYPE band)
 	struct ieee80211_supported_band *spt_band = NULL;
 	int n_channels, n_bitrates;
 
-	if (band == BAND_ON_2_4G) {
+	if (band == BAND_ON_24G) {
 		n_channels = MAX_CHANNEL_NUM_2G;
 		n_bitrates = RTW_G_RATES_NUM;
 	} else if (band == BAND_ON_5G) {
@@ -9740,7 +9740,7 @@ static void rtw_cfg80211_init_ht_capab_ex(_adapter *padapter
 	/* RX STBC */
 	if (TEST_FLAG(phtpriv->stbc_cap, STBC_HT_ENABLE_RX)) {
 		/*rtw_rx_stbc 0: disable, bit(0):enable 2.4g, bit(1):enable 5g*/
-		if (band == BAND_ON_2_4G)
+		if (band == BAND_ON_24G)
 			stbc_rx_enable = (pregistrypriv->rx_stbc & BIT(0)) ? _TRUE : _FALSE;
 		if (band == BAND_ON_5G)
 			stbc_rx_enable = (pregistrypriv->rx_stbc & BIT(1)) ? _TRUE : _FALSE;
@@ -9784,11 +9784,11 @@ static void rtw_cfg80211_init_ht_capab(_adapter *padapter
 	if (TEST_FLAG(regsty->short_gi, BIT0))
 		ht_cap->cap |= IEEE80211_HT_CAP_SGI_20;
 	if (hal_is_bw_support(padapter, CHANNEL_WIDTH_40)
-		&& ((band == BAND_ON_2_4G && REGSTY_IS_BW_2G_SUPPORT(regsty, CHANNEL_WIDTH_40))
+		&& ((band == BAND_ON_24G && REGSTY_IS_BW_2G_SUPPORT(regsty, CHANNEL_WIDTH_40))
 			|| (band == BAND_ON_5G && REGSTY_IS_BW_5G_SUPPORT(regsty, CHANNEL_WIDTH_40)))
 	) {
 		ht_cap->cap |= IEEE80211_HT_CAP_SUP_WIDTH_20_40;
-		if (band == BAND_ON_2_4G)
+		if (band == BAND_ON_24G)
 			ht_cap->cap |= IEEE80211_HT_CAP_DSSSCCK40;
 		if (TEST_FLAG(regsty->short_gi, BIT1))
 			ht_cap->cap |= IEEE80211_HT_CAP_SGI_40;
@@ -9878,13 +9878,13 @@ static int rtw_cfg80211_init_wiphy_band(_adapter *padapter, struct wiphy *wiphy)
 	RTW_INFO("%s:rf_type=%d\n", __func__, rf_type);
 
 	if (IsSupported24G(padapter->registrypriv.wireless_mode)) {
-		band = wiphy->bands[NL80211_BAND_2GHZ] = rtw_spt_band_alloc(BAND_ON_2_4G);
+		band = wiphy->bands[NL80211_BAND_2GHZ] = rtw_spt_band_alloc(BAND_ON_24G);
 		if (!band)
 			goto exit;
 		rtw_2g_channels_init(band->channels);
 		rtw_2g_rates_init(band->bitrates);
 		#if defined(CONFIG_80211N_HT)
-		rtw_cfg80211_init_ht_capab(padapter, &band->ht_cap, BAND_ON_2_4G, rf_type);
+		rtw_cfg80211_init_ht_capab(padapter, &band->ht_cap, BAND_ON_24G, rf_type);
 		#endif
 	}
 #if CONFIG_IEEE80211_BAND_5GHZ
@@ -9925,7 +9925,7 @@ void rtw_cfg80211_update_wiphy_max_txpower(_adapter *adapter, struct wiphy *wiph
 	if (IsSupported24G(adapter->registrypriv.wireless_mode)) {
 		band = wiphy->bands[NL80211_BAND_2GHZ];
 		if (band) {
-			max_txpwr = phy_get_txpwr_by_rate_total_max_mbm(adapter, BAND_ON_2_4G, 1, 1);
+			max_txpwr = phy_get_txpwr_by_rate_total_max_mbm(adapter, BAND_ON_24G, 1, 1);
 			if (max_txpwr != UNSPECIFIED_MBM) {
 				for (i = 0; i < band->n_channels; i++) {
 					channel = &band->channels[i];

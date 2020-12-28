@@ -13385,7 +13385,7 @@ void rtw_var_set_basic_rate(PADAPTER padapter, u8 *val) {
 
 	/* apply force and allow mask */
 	#if CONFIG_IEEE80211_BAND_5GHZ
-	if (pHalData->current_band_type != BAND_ON_2_4G) {
+	if (pHalData->current_band_type != BAND_ON_24G) {
 		BrateCfg |= rrsr_5g_force_mask;
 		BrateCfg &= rrsr_5g_allow_mask;
 	} else

@@ -65,36 +65,6 @@ If you want to change this file please make sure notify all driver teams maintai
 #define	BI_DIRECTION_STATE	2
 
 /*--------------------Define Enum-----------------------------------*/
-enum channel_width {
-	CHANNEL_WIDTH_20		= 0,
-	CHANNEL_WIDTH_40		= 1,
-	CHANNEL_WIDTH_80		= 2,
-	CHANNEL_WIDTH_160		= 3,
-	CHANNEL_WIDTH_80_80	= 4,
-	CHANNEL_WIDTH_5		= 5,
-	CHANNEL_WIDTH_10	= 6,
-	CHANNEL_WIDTH_MAX	= 7,
-};
-
-enum rf_type {
-	RF_1T1R			= 0,
-	RF_1T2R			= 1,
-	RF_2T2R			= 2,
-	RF_2T3R			= 3,
-	RF_2T4R			= 4,
-	RF_3T3R			= 5,
-	RF_3T4R			= 6,
-	RF_4T4R			= 7,
-	RF_4T3R			= 8,
-	RF_4T2R			= 9,
-	RF_4T1R			= 10,
-	RF_3T2R			= 11,
-	RF_3T1R			= 12,
-	RF_2T1R			= 13,
-	RF_1T4R			= 14,
-	RF_1T3R			= 15,
-	RF_TYPE_MAX,
-};
 
 enum bb_path {
 	BB_PATH_NON = 0,
@@ -117,24 +87,6 @@ enum bb_path {
 
 	BB_PATH_ABCD = (BB_PATH_A | BB_PATH_B | BB_PATH_C | BB_PATH_D),
 	BB_PATH_AUTO = 0xff /*for path diversity*/
-};
-
-enum rf_path {
-	RF_PATH_A = 0,
-	RF_PATH_B = 1,
-	RF_PATH_C = 2,
-	RF_PATH_D = 3,
-	RF_PATH_AB,
-	RF_PATH_AC,
-	RF_PATH_AD,
-	RF_PATH_BC,
-	RF_PATH_BD,
-	RF_PATH_CD,
-	RF_PATH_ABC,
-	RF_PATH_ABD,
-	RF_PATH_ACD,
-	RF_PATH_BCD,
-	RF_PATH_ABCD,
 };
 
 enum rf_syn {

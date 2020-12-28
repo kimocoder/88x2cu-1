@@ -95,8 +95,8 @@ u8 rtw_mi_stayin_union_band_chk(_adapter *adapter)
 
 	u_ch = rtw_mi_get_union_chan(adapter);
 	o_ch = rtw_get_oper_ch(adapter);
-	u_band = (u_ch > 14) ? BAND_ON_5G : BAND_ON_2_4G;
-	o_band = (o_ch > 14) ? BAND_ON_5G : BAND_ON_2_4G;
+	u_band = (u_ch > 14) ? BAND_ON_5G : BAND_ON_24G;
+	o_band = (o_ch > 14) ? BAND_ON_5G : BAND_ON_24G;
 
 	if (u_ch != o_ch)
 		if(u_band != o_band)
