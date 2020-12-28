@@ -1598,7 +1598,7 @@ static u8 tos_to_up(u8 tos)
 	return up;
 }
 
-static void set_qos(_pkt *pkt, struct pkt_attrib *pattrib)
+static void set_qos(struct sk_buff *pkt, struct pkt_attrib *pattrib)
 {
 	s32 UserPriority = 0;
 
@@ -1769,7 +1769,7 @@ static u8 _rtw_lps_chk_packet_type(struct pkt_attrib *pattrib)
 	return pkt_type;
 }
 #endif
-static s32 update_attrib(_adapter *padapter, _pkt *pkt, struct pkt_attrib *pattrib)
+static s32 update_attrib(_adapter *padapter, struct sk_buff *pkt, struct pkt_attrib *pattrib)
 {
 	uint i;
 	struct pkt_file pktfile;
@@ -2886,11 +2886,11 @@ s32 rtw_xmitframe_coalesce_amsdu(_adapter *padapter, struct xmit_frame *pxmitfra
 
 	struct pkt_file pktfile;
 	struct pkt_attrib *pattrib;
-	_pkt *pkt;
+	struct sk_buff *pkt;
 
 	struct pkt_file pktfile_queue;
 	struct pkt_attrib *pattrib_queue;
-	_pkt *pkt_queue;
+	struct sk_buff *pkt_queue;
 
 	s32 llc_sz, mem_sz;
 
@@ -3082,7 +3082,7 @@ This sub-routine will perform all the following:
 6. apply sw-encrypt, if necessary.
 
 */
-s32 rtw_xmitframe_coalesce(_adapter *padapter, _pkt *pkt, struct xmit_frame *pxmitframe)
+s32 rtw_xmitframe_coalesce(_adapter *padapter, struct sk_buff *pkt, struct xmit_frame *pxmitframe)
 {
 	struct pkt_file pktfile;
 
@@ -3291,7 +3291,7 @@ exit:
  * CCMP encryption for unicast robust mgmt frame and broadcast group privicy action
  * BIP for broadcast robust mgmt frame
  */
-s32 rtw_mgmt_xmitframe_coalesce(_adapter *padapter, _pkt *pkt, struct xmit_frame *pxmitframe)
+s32 rtw_mgmt_xmitframe_coalesce(_adapter *padapter, struct sk_buff *pkt, struct xmit_frame *pxmitframe)
 {
 #define DBG_MGMT_XMIT_COALESEC_DUMP 0
 #define DBG_MGMT_XMIT_BIP_DUMP 0
@@ -4150,7 +4150,7 @@ s32 rtw_free_xmitframe(struct xmit_priv *pxmitpriv, struct xmit_frame *pxmitfram
 	_irqL irqL;
 	_queue *queue = NULL;
 	_adapter *padapter = pxmitpriv->adapter;
-	_pkt *pndis_pkt = NULL;
+	struct sk_buff *pndis_pkt = NULL;
 
 
 	if (pxmitframe == NULL) {
@@ -5011,7 +5011,7 @@ s32 rtw_monitor_xmit_entry(struct sk_buff *skb, struct net_device *ndev)
 	if (unlikely(skb->len < sizeof(struct ieee80211_radiotap_header)))
 		goto fail;
 
-	_rtw_open_pktfile((_pkt *)skb, &pktfile);
+	_rtw_open_pktfile((struct sk_buff *)skb, &pktfile);
 	_rtw_pktfile_read(&pktfile, (u8 *)(&rtap_hdr), sizeof(struct ieee80211_radiotap_header));
 	rtap_len = ieee80211_get_radiotap_len((u8 *)(&rtap_hdr));
 	if (unlikely(rtap_hdr.it_version))
@@ -5197,7 +5197,7 @@ exit:
  *	0	success, hardware will handle this xmit frame(packet)
  *	<0	fail
  */
-s32 rtw_xmit_posthandle(_adapter *padapter, struct xmit_frame *pxmitframe, _pkt *pkt)
+s32 rtw_xmit_posthandle(_adapter *padapter, struct xmit_frame *pxmitframe, struct sk_buff *pkt)
 {
 #ifdef CONFIG_AP_MODE
 	_irqL irqL0;
@@ -5262,7 +5262,7 @@ s32 rtw_xmit_posthandle(_adapter *padapter, struct xmit_frame *pxmitframe, _pkt 
  *	0	success, hardware will handle this xmit frame(packet)
  *	<0	fail
  */
-s32 rtw_xmit(_adapter *padapter, _pkt **ppkt, u16 os_qid)
+s32 rtw_xmit(_adapter *padapter, struct sk_buff **ppkt, u16 os_qid)
 {
 	static systime start = 0;
 	static u32 drop_cnt = 0;

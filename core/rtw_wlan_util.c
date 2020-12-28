@@ -5725,7 +5725,7 @@ void rtw_dbg_rx_iperf_udp_data_chk(_adapter *padapter, u8 *pdata)
 		iperf_out_of_order_cnt_inc(st, cur_iperf_seq);
 }
 
-void rtw_rx_dbg_monitor_ip_statistic(_adapter *padapter, _pkt *pkt)
+void rtw_rx_dbg_monitor_ip_statistic(_adapter *padapter, struct sk_buff *pkt)
 {
 	struct recv_priv *precvpriv = &(padapter->recvpriv);
 	u8 *ip_hdr, frag_flag, src_ip[4], frag_drop = _FALSE;

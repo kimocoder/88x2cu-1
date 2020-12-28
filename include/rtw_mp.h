@@ -26,7 +26,7 @@ struct mp_xmit_frame {
 
 	struct pkt_attrib attrib;
 
-	_pkt *pkt;
+	struct sk_buff *pkt;
 
 	int frame_tag;
 

@@ -5668,7 +5668,7 @@ static int rtw_ap_nexthop_resolve(_adapter *adapter, struct xmit_frame *xframe)
 	return ret;
 }
 
-int rtw_ap_addr_resolve(_adapter *adapter, u16 os_qid, struct xmit_frame *xframe, _pkt *pkt, _list *b2u_list)
+int rtw_ap_addr_resolve(_adapter *adapter, u16 os_qid, struct xmit_frame *xframe, struct sk_buff *pkt, _list *b2u_list)
 {
 	struct pkt_file pktfile;
 	struct ethhdr etherhdr;

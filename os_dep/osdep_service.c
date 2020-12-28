@@ -875,7 +875,7 @@ void rtw_mfree2d(void *pbuf, int h, int w, int size)
 	rtw_mfree((u8 *)pbuf, h * sizeof(void *) + w * h * size);
 }
 
-inline void rtw_os_pkt_free(_pkt *pkt)
+inline void rtw_os_pkt_free(struct sk_buff *pkt)
 {
 #if defined(PLATFORM_LINUX)
 	rtw_skb_free(pkt);
@@ -886,7 +886,7 @@ inline void rtw_os_pkt_free(_pkt *pkt)
 #endif
 }
 
-inline _pkt *rtw_os_pkt_copy(_pkt *pkt)
+inline struct sk_buff *rtw_os_pkt_copy(struct sk_buff *pkt)
 {
 #if defined(PLATFORM_LINUX)
 	return rtw_skb_copy(pkt);
@@ -897,7 +897,7 @@ inline _pkt *rtw_os_pkt_copy(_pkt *pkt)
 #endif
 }
 
-inline void *rtw_os_pkt_data(_pkt *pkt)
+inline void *rtw_os_pkt_data(struct sk_buff *pkt)
 {
 #if defined(PLATFORM_LINUX)
 	return pkt->data;
@@ -908,7 +908,7 @@ inline void *rtw_os_pkt_data(_pkt *pkt)
 #endif
 }
 
-inline u32 rtw_os_pkt_len(_pkt *pkt)
+inline u32 rtw_os_pkt_len(struct sk_buff *pkt)
 {
 #if defined(PLATFORM_LINUX)
 	return pkt->len;

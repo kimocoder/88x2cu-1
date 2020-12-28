@@ -2270,7 +2270,7 @@ sint validate_recv_frame(_adapter *adapter, union recv_frame *precv_frame)
 #ifdef CONFIG_WAPI_SUPPORT
 	PRT_WAPI_T	pWapiInfo = &adapter->wapiInfo;
 	struct recv_frame_hdr *phdr = &precv_frame->u.hdr;
-	u8 wai_pkt = 0;
+	u8 waistruct sk_buff = 0;
 	u16 sc;
 	u8	external_len = 0;
 #endif
@@ -2365,11 +2365,11 @@ sint validate_recv_frame(_adapter *adapter, union recv_frame *precv_frame)
 		else
 			external_len = 0;
 
-		wai_pkt = rtw_wapi_is_wai_packet(adapter, ptr);
+		waistruct sk_buff = rtw_wapi_is_wai_packet(adapter, ptr);
 
 		phdr->bIsWaiPacket = wai_pkt;
 
-		if (wai_pkt != 0) {
+		if (waistruct sk_buff != 0) {
 			if (sc != adapter->wapiInfo.wapiSeqnumAndFragNum)
 				adapter->wapiInfo.wapiSeqnumAndFragNum = sc;
 			else {
@@ -2494,7 +2494,7 @@ static void recvframe_expand_pkt(
 	union recv_frame *prframe)
 {
 	struct recv_frame_hdr *pfhdr;
-	_pkt *ppkt;
+	struct sk_buff *ppkt;
 	u8 shift_sz;
 	u32 alloc_sz;
 	u8 *ptr;
@@ -2542,7 +2542,7 @@ static void recvframe_expand_pkt(
 	pfhdr->rx_end = skb_end_pointer(ppkt);
 }
 #else /*!= PLATFORM_LINUX*/
-#warning "recvframe_expand_pkt not implement, defrag may crash system"
+#warning "recvframe_expandstruct sk_buff not implement, defrag may crash system"
 #endif
 #endif /*#ifndef CONFIG_SDIO_RX_COPY*/
 #endif
@@ -2856,11 +2856,11 @@ static void recv_free_fwd_resource(_adapter *adapter, struct xmit_frame *fwd_fra
 #endif
 }
 
-static void recv_fwd_pkt_hdl(_adapter *adapter, _pkt *pkt
+static void recv_fwd_pkt_hdl(_adapter *adapter, struct sk_buff *pkt
 	, u8 act, struct xmit_frame *fwd_frame, _list *b2u_list)
 {
 	struct xmit_priv *xmitpriv = &adapter->xmitpriv;
-	_pkt *fwd_pkt = pkt;
+	struct sk_buff *fwd_pkt = pkt;
 
 	if (act & RTW_RX_MSDU_ACT_INDICATE) {
 		fwd_pkt = rtw_os_pkt_copy(pkt);
@@ -2883,7 +2883,7 @@ static void recv_fwd_pkt_hdl(_adapter *adapter, _pkt *pkt
 			list = get_next(list);
 			rtw_list_delete(&b2uframe->list);
 
-			if (!fwd_frame && rtw_is_list_empty(b2u_list)) /* the last fwd_pkt */
+			if (!fwd_frame && rtw_is_list_empty(b2u_list)) /* the last fwdstruct sk_buff */
 				b2uframe->pkt = fwd_pkt;
 			else
 				b2uframe->pkt = rtw_os_pkt_copy(fwd_pkt);
@@ -2919,7 +2919,7 @@ int amsdu_to_msdu(_adapter *padapter, union recv_frame *prframe)
 	u16	nSubframe_Length;
 	u8	nr_subframes, i;
 	u8	*pdata;
-	_pkt *sub_pkt, *subframes[MAX_SUBFRAME_COUNT];
+	struct sk_buff *sub_pkt, *subframes[MAX_SUBFRAME_COUNT];
 	struct recv_priv *precvpriv = &padapter->recvpriv;
 	_queue *pfree_recv_queue = &(precvpriv->free_recv_queue);
 	const u8 *da, *sa;
@@ -2999,13 +2999,13 @@ int amsdu_to_msdu(_adapter *padapter, union recv_frame *prframe)
 		if (sub_pkt == NULL) {
 			if (act & RTW_RX_MSDU_ACT_INDICATE) {
 				#ifdef DBG_RX_DROP_FRAME
-				RTW_INFO("DBG_RX_DROP_FRAME %s rtw_os_alloc_msdu_pkt fail\n", __func__);
+				RTW_INFO("DBG_RX_DROP_FRAME %s rtw_os_alloc_msdustruct sk_buff fail\n", __func__);
 				#endif
 			}
 			#if defined(CONFIG_AP_MODE) || defined(CONFIG_RTW_MESH)
 			if (act & RTW_RX_MSDU_ACT_FORWARD) {
 				#ifdef DBG_TX_DROP_FRAME
-				RTW_INFO("DBG_TX_DROP_FRAME %s rtw_os_alloc_msdu_pkt fail\n", __func__);
+				RTW_INFO("DBG_TX_DROP_FRAME %s rtw_os_alloc_msdustruct sk_buff fail\n", __func__);
 				#endif
 				recv_free_fwd_resource(padapter, fwd_frame, &b2u_list);
 			}
@@ -3743,7 +3743,7 @@ int mp_recv_frame(_adapter *padapter, union recv_frame *rframe)
 	struct sta_info *psta = NULL;
 	DBG_COUNTER(padapter->rx_logs.core_rx_pre);
 
-	if ((check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE)) { /* &&(padapter->mppriv.check_mp_pkt == 0)) */
+	if ((check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE)) { /* &&(padapter->mppriv.check_mpstruct sk_buff == 0)) */
 		if (pattrib->crc_err == 1)
 			padapter->mppriv.rx_crcerrpktcount++;
 		else {
@@ -3864,7 +3864,7 @@ int recv_frame_monitor(_adapter *padapter, union recv_frame *rframe)
 
 #ifdef CONFIG_WIFI_MONITOR
 	struct net_device *ndev = padapter->pnetdev;
-	_pkt *pskb = NULL;
+	struct sk_buff *pskb = NULL;
 
 	if (rframe == NULL)
 		goto exit;

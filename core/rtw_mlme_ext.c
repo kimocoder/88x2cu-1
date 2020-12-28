@@ -12471,7 +12471,7 @@ exit_mlmeext_joinbss_event_callback:
 		struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
 		_list *plist, *phead;
 		_irqL irqL;
-		_pkt *pkt;
+		struct sk_buff *pkt;
 
 		padapter->mlmepriv.roam_network = NULL;
 		_rtw_spinlock_bh(&pxmitpriv->rpkt_queue.lock);
@@ -13180,7 +13180,7 @@ exit:
 void link_timer_hdl(void *ctx)
 {
 	_adapter *padapter = (_adapter *)ctx;
-	/* static unsigned int		rx_pkt = 0; */
+	/* static unsigned int		rxstruct sk_buff = 0; */
 	/* static u64				tx_cnt = 0; */
 	/* struct xmit_priv		*pxmitpriv = &(padapter->xmitpriv); */
 	struct mlme_ext_priv	*pmlmeext = &padapter->mlmeextpriv;
@@ -15401,7 +15401,7 @@ enable_mc:
 		struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
 		_list *plist, *phead;
 		_irqL irqL;
-		_pkt *pkt;
+		struct sk_buff *pkt;
 
 		padapter->mlmepriv.roam_network = NULL;
 		_rtw_spinlock_bh(&pxmitpriv->rpkt_queue.lock);

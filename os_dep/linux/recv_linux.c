@@ -16,10 +16,10 @@
 
 #include <drv_types.h>
 
-int rtw_os_recvframe_duplicate_skb(_adapter *padapter, union recv_frame *pcloneframe, _pkt *pskb)
+int rtw_os_recvframe_duplicate_skb(_adapter *padapter, union recv_frame *pcloneframe, struct sk_buff *pskb)
 {
 	int res = _SUCCESS;
-	_pkt	*pkt_copy = NULL;
+	struct sk_buff	*pkt_copy = NULL;
 
 	if (pskb == NULL) {
 		RTW_INFO("%s [WARN] skb == NULL, drop frag frame\n", __func__);
@@ -52,12 +52,12 @@ int rtw_os_recvframe_duplicate_skb(_adapter *padapter, union recv_frame *pclonef
 	return res;
 }
 
-int rtw_os_alloc_recvframe(_adapter *padapter, union recv_frame *precvframe, u8 *pdata, _pkt *pskb)
+int rtw_os_alloc_recvframe(_adapter *padapter, union recv_frame *precvframe, u8 *pdata, struct sk_buff *pskb)
 {
 	int res = _SUCCESS;
 	u8	shift_sz = 0;
 	u32	skb_len, alloc_sz;
-	_pkt	*pkt_copy = NULL;
+	struct sk_buff	*pkt_copy = NULL;
 	struct rx_pkt_attrib *pattrib = &precvframe->u.hdr.attrib;
 
 
@@ -333,11 +333,11 @@ int rtw_os_recvbuf_resource_free(_adapter *padapter, struct recv_buf *precvbuf)
 
 }
 
-_pkt *rtw_os_alloc_msdu_pkt(union recv_frame *prframe, const u8 *da, const u8 *sa
+struct sk_buff *rtw_os_alloc_msdu_pkt(union recv_frame *prframe, const u8 *da, const u8 *sa
 	, u8 *msdu ,u16 msdu_len, enum rtw_rx_llc_hdl llc_hdl)
 {
 	u8	*data_ptr;
-	_pkt *sub_skb;
+	struct sk_buff *sub_skb;
 	struct rx_pkt_attrib *pattrib;
 
 	pattrib = &prframe->u.hdr.attrib;
@@ -383,7 +383,7 @@ _pkt *rtw_os_alloc_msdu_pkt(union recv_frame *prframe, const u8 *da, const u8 *s
 #ifdef CONFIG_RTW_NAPI
 static int napi_recv(_adapter *padapter, int budget)
 {
-	_pkt *pskb;
+	struct sk_buff *pskb;
 	struct recv_priv *precvpriv = &padapter->recvpriv;
 	int work_done = 0;
 	struct registry_priv *pregistrypriv = &padapter->registrypriv;
@@ -467,7 +467,7 @@ void dynamic_napi_th_chk (_adapter *adapter)
 #endif /* CONFIG_RTW_NAPI_DYNAMIC */
 #endif /* CONFIG_RTW_NAPI */
 
-void rtw_os_recv_indicate_pkt(_adapter *padapter, _pkt *pkt, union recv_frame *rframe)
+void rtw_os_recv_indicate_pkt(_adapter *padapter, struct sk_buff *pkt, union recv_frame *rframe)
 {
 	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
 	struct recv_priv *precvpriv = &(padapter->recvpriv);
@@ -608,7 +608,7 @@ void rtw_handle_tkip_mic_err(_adapter *padapter, struct sta_info *sta, u8 bgroup
 #ifdef CONFIG_HOSTAPD_MLME
 void rtw_hostapd_mlme_rx(_adapter *padapter, union recv_frame *precv_frame)
 {
-	_pkt *skb;
+	struct sk_buff *skb;
 	struct hostapd_priv *phostapdpriv  = padapter->phostapdpriv;
 	struct net_device *pmgnt_netdev = phostapdpriv->pmgnt_netdev;
 
@@ -653,7 +653,7 @@ void rtw_hostapd_mlme_rx(_adapter *padapter, union recv_frame *precv_frame)
 int rtw_recv_monitor(_adapter *padapter, union recv_frame *precv_frame)
 {
 	int ret = _FAIL;
-	_pkt *skb;
+	struct sk_buff *skb;
 
 	skb = precv_frame->u.hdr.pkt;
 	if (skb == NULL) {
@@ -683,7 +683,7 @@ _recv_drop:
 
 inline void rtw_rframe_set_os_pkt(union recv_frame *rframe)
 {
-	_pkt *skb = rframe->u.hdr.pkt;
+	struct sk_buff *skb = rframe->u.hdr.pkt;
 
 	skb->data = rframe->u.hdr.rx_data;
 	skb_set_tail_pointer(skb, rframe->u.hdr.len);

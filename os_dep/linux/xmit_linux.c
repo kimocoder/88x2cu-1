@@ -23,7 +23,7 @@ uint rtw_remainder_len(struct pkt_file *pfile)
 	return pfile->buf_len - ((SIZE_PTR)(pfile->cur_addr) - (SIZE_PTR)(pfile->buf_start));
 }
 
-void _rtw_open_pktfile(_pkt *pktptr, struct pkt_file *pfile)
+void _rtw_open_pktfile(struct sk_buff *pktptr, struct pkt_file *pfile)
 {
 
 	pfile->pkt = pktptr;
@@ -63,7 +63,7 @@ sint rtw_endofpktfile(struct pkt_file *pfile)
 	return _FALSE;
 }
 
-void rtw_set_tx_chksum_offload(_pkt *pkt, struct pkt_attrib *pattrib)
+void rtw_set_tx_chksum_offload(struct sk_buff *pkt, struct pkt_attrib *pattrib)
 {
 #ifdef CONFIG_TCP_CSUM_OFFLOAD_TX	
 	struct sk_buff *skb = (struct sk_buff *)pkt;
@@ -255,7 +255,7 @@ static inline bool rtw_os_need_stop_queue(_adapter *padapter, u16 os_qid)
 	return _FALSE;
 }
 
-void rtw_os_pkt_complete(_adapter *padapter, _pkt *pkt)
+void rtw_os_pkt_complete(_adapter *padapter, struct sk_buff *pkt)
 {
 	rtw_skb_free(pkt);
 }
@@ -371,7 +371,7 @@ void rtw_os_wake_queue_at_free_stainfo(_adapter *padapter, int *qcnt_freed)
 #endif
 }
 
-int _rtw_xmit_entry(_pkt *pkt, _nic_hdl pnetdev)
+int _rtw_xmit_entry(struct sk_buff *pkt, _nic_hdl pnetdev)
 {
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(pnetdev);
 	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
@@ -463,7 +463,7 @@ int check_alibaba_meshpkt(struct sk_buff *skb)
 	return _FALSE;
 }
 
-s32 rtw_alibaba_mesh_xmit_entry(_pkt *pkt, struct net_device *ndev)
+s32 rtw_alibaba_mesh_xmit_entry(struct sk_buff *pkt, struct net_device *ndev)
 {
 	u16 frame_ctl;
 	
@@ -514,7 +514,7 @@ fail:
 }
 #endif
 
-int rtw_xmit_entry(_pkt *pkt, _nic_hdl pnetdev)
+int rtw_xmit_entry(struct sk_buff *pkt, _nic_hdl pnetdev)
 {
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(pnetdev);
 	struct	mlme_priv	*pmlmepriv = &(padapter->mlmepriv);

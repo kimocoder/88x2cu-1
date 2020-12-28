@@ -109,7 +109,7 @@ void rtw_ap_parse_sta_multi_ap_ie(_adapter *adapter, struct sta_info *sta, u8 *i
 
 void dump_ap_b2u_flags(void *sel, _adapter *adapter);
 
-int rtw_ap_addr_resolve(_adapter *adapter, u16 os_qid, struct xmit_frame *xframe, _pkt *pkt, _list *b2u_list);
+int rtw_ap_addr_resolve(_adapter *adapter, u16 os_qid, struct xmit_frame *xframe, struct sk_buff *pkt, _list *b2u_list);
 int rtw_ap_rx_data_validate_hdr(_adapter *adapter, union recv_frame *rframe, struct sta_info **sta);
 int rtw_ap_rx_msdu_act_check(union recv_frame *rframe
 	, const u8 *da, const u8 *sa
