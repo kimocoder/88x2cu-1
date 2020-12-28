@@ -187,6 +187,13 @@ typedef struct _ADAPTER _adapter, ADAPTER, *PADAPTER;
 #define SPEC_DEV_ID_RF_CONFIG_2T2R BIT(4)
 #define SPEC_DEV_ID_ASSIGN_IFNAME BIT(5)
 
+#if defined(RTW_PHL_TX) || defined(RTW_PHL_RX)
+//#define PHLRX_LOG(fmt, args...) printk("phl-rx [%s][%d]"fmt, __FUNCTION__,__LINE__, ## args)
+#define PHLRX_LOG		printk("phl-rx [%s][%d] \n", __FUNCTION__, __LINE__);
+#define PHLRX_ENTER		printk("phl-rx [%s][%d] ++\n", __FUNCTION__, __LINE__);
+#define PHLRX_EXIT		printk("phl-rx [%s][%d] --\n", __FUNCTION__, __LINE__);
+#endif
+
 struct specific_device_id {
 
 	u32		flags;
