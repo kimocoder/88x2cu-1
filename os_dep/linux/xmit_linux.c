@@ -290,12 +290,12 @@ void rtw_os_xmit_schedule(_adapter *padapter)
 
 	pxmitpriv = &padapter->xmitpriv;
 
-	_enter_critical_bh(&pxmitpriv->lock, &irqL);
+	_rtw_spinlock_bh(&pxmitpriv->lock);
 
 	if (rtw_txframes_pending(padapter))
 		tasklet_hi_schedule(&pxmitpriv->xmit_tasklet);
 
-	_exit_critical_bh(&pxmitpriv->lock, &irqL);
+	_rtw_spinunlock_bh(&pxmitpriv->lock);
 	
 #if defined(CONFIG_PCI_HCI) && defined(CONFIG_XMIT_THREAD_MODE)
 	if (_rtw_queue_empty(&padapter->xmitpriv.pending_xmitbuf_queue) == _FALSE)

@@ -251,7 +251,6 @@ sint _rtw_enqueue_cmd(_queue *queue, struct cmd_obj *obj, bool to_head)
 	if (obj == NULL)
 		goto exit;
 
-	/* _enter_critical_bh(&queue->lock, &irqL); */
 	_enter_critical(&queue->lock, &irqL);
 
 	if (to_head)
@@ -295,7 +294,6 @@ sint _rtw_enqueue_cmd(_queue *queue, struct cmd_obj *obj, bool to_head)
 	}
 #endif /* DBG_CMD_QUEUE */
 
-	/* _exit_critical_bh(&queue->lock, &irqL);	 */
 	_exit_critical(&queue->lock, &irqL);
 
 exit:
@@ -310,7 +308,6 @@ struct	cmd_obj	*_rtw_dequeue_cmd(_queue *queue)
 	struct cmd_obj *obj;
 
 
-	/* _enter_critical_bh(&(queue->lock), &irqL); */
 	_enter_critical(&queue->lock, &irqL);
 
 #ifdef DBG_CMD_QUEUE
@@ -357,7 +354,6 @@ struct	cmd_obj	*_rtw_dequeue_cmd(_queue *queue)
 		rtw_list_delete(&obj->list);
 	}
 
-	/* _exit_critical_bh(&(queue->lock), &irqL); */
 	_exit_critical(&queue->lock, &irqL);
 
 
@@ -740,7 +736,6 @@ post_process:
 #ifdef CONFIG_EVENT_THREAD_MODE
 u32 rtw_enqueue_evt(struct evt_priv *pevtpriv, struct evt_obj *obj)
 {
-	_irqL irqL;
 	int	res;
 	_queue *queue = &pevtpriv->evt_queue;
 
@@ -752,27 +747,22 @@ u32 rtw_enqueue_evt(struct evt_priv *pevtpriv, struct evt_obj *obj)
 		goto exit;
 	}
 
-	_enter_critical_bh(&queue->lock, &irqL);
+	_rtw_spinlock_bh(&queue->lock);
 
 	rtw_list_insert_tail(&obj->list, &queue->queue);
 
-	_exit_critical_bh(&queue->lock, &irqL);
-
-	/* rtw_evt_notify_isr(pevtpriv); */
+	_rtw_spinunlock_bh(&queue->lock);
 
 exit:
-
-
 	return res;
 }
 
 struct evt_obj *rtw_dequeue_evt(_queue *queue)
 {
-	_irqL irqL;
 	struct	evt_obj	*pevtobj;
 
 
-	_enter_critical_bh(&queue->lock, &irqL);
+	_rtw_spinlock_bh(&queue->lock);
 
 	if (rtw_is_list_empty(&(queue->queue)))
 		pevtobj = NULL;
@@ -781,8 +771,7 @@ struct evt_obj *rtw_dequeue_evt(_queue *queue)
 		rtw_list_delete(&pevtobj->list);
 	}
 
-	_exit_critical_bh(&queue->lock, &irqL);
-
+	_rtw_spinunlock_bh(&queue->lock);
 
 	return pevtobj;
 }
@@ -5010,7 +4999,7 @@ void session_tracker_chk_for_sta(_adapter *adapter, struct sta_info *sta)
 
 	_rtw_init_listhead(&dlist);
 
-	_enter_critical_bh(&st_ctl->tracker_q.lock, &irqL);
+	_rtw_spinlock_bh(&st_ctl->tracker_q.lock);
 
 	phead = &st_ctl->tracker_q.queue;
 	plist = get_next(phead);
@@ -5048,7 +5037,7 @@ void session_tracker_chk_for_sta(_adapter *adapter, struct sta_info *sta)
 		#endif
 	}
 
-	_exit_critical_bh(&st_ctl->tracker_q.lock, &irqL);
+	_rtw_spinunlock_bh(&st_ctl->tracker_q.lock);
 
 	plist = get_next(&dlist);
 	while (rtw_end_of_queue_search(&dlist, plist) == _FALSE) {
@@ -5076,7 +5065,7 @@ void session_tracker_chk_for_adapter(_adapter *adapter)
 	_list *plist, *phead;
 	u8 op_wfd_mode = MIRACAST_DISABLED;
 
-	_enter_critical_bh(&stapriv->sta_hash_lock, &irqL);
+	_rtw_spinlock_bh(&stapriv->sta_hash_lock);
 
 	for (i = 0; i < NUM_STA; i++) {
 		phead = &(stapriv->sta_hash[i]);
@@ -5092,7 +5081,7 @@ void session_tracker_chk_for_adapter(_adapter *adapter)
 		}
 	}
 
-	_exit_critical_bh(&stapriv->sta_hash_lock, &irqL);
+	_rtw_spinunlock_bh(&stapriv->sta_hash_lock);
 
 #ifdef CONFIG_WFD
 	adapter->wfd_info.op_wfd_mode = MIRACAST_MODE_REVERSE(op_wfd_mode);
@@ -5136,7 +5125,7 @@ void session_tracker_cmd_hdl(_adapter *adapter, struct st_cmd_parm *parm)
 
 		st_ctl = &sta->st_ctl;
 
-		_enter_critical_bh(&st_ctl->tracker_q.lock, &irqL);
+		_rtw_spinlock_bh(&st_ctl->tracker_q.lock);
 
 		phead = &st_ctl->tracker_q.queue;
 		plist = get_next(phead);
@@ -5168,7 +5157,7 @@ void session_tracker_cmd_hdl(_adapter *adapter, struct st_cmd_parm *parm)
 		}
 
 unlock:
-		_exit_critical_bh(&st_ctl->tracker_q.lock, &irqL);
+		_rtw_spinunlock_bh(&st_ctl->tracker_q.lock);
 
 		if (free_st) {
 			rtw_mfree((u8 *)st, sizeof(struct session_tracker));
@@ -5187,9 +5176,9 @@ unlock:
 			st->set_time = rtw_get_current_time();
 			st->status = ST_STATUS_CHECK;
 
-			_enter_critical_bh(&st_ctl->tracker_q.lock, &irqL);
+			_rtw_spinlock_bh(&st_ctl->tracker_q.lock);
 			rtw_list_insert_tail(&st->list, phead);
-			_exit_critical_bh(&st_ctl->tracker_q.lock, &irqL);
+			_rtw_spinunlock_bh(&st_ctl->tracker_q.lock);
 		}
 	}
 
@@ -5513,9 +5502,9 @@ void rtw_disassoc_cmd_callback(_adapter	*padapter,  struct cmd_obj *pcmd)
 
 
 	if (pcmd->res != H2C_SUCCESS) {
-		_enter_critical_bh(&pmlmepriv->lock, &irqL);
+		_rtw_spinlock_bh(&pmlmepriv->lock);
 		set_fwstate(pmlmepriv, WIFI_ASOC_STATE);
-		_exit_critical_bh(&pmlmepriv->lock, &irqL);
+		_rtw_spinunlock_bh(&pmlmepriv->lock);
 		goto exit;
 	}
 #ifdef CONFIG_BR_EXT
@@ -5559,17 +5548,17 @@ void rtw_create_ibss_post_hdl(_adapter *padapter, int status)
 
 	_cancel_timer_ex(&pmlmepriv->assoc_timer);
 
-	_enter_critical_bh(&pmlmepriv->lock, &irqL);
+	_rtw_spinlock_bh(&pmlmepriv->lock);
 
 	{
 		_irqL irqL;
 
 		pwlan = _rtw_alloc_network(pmlmepriv);
-		_enter_critical_bh(&(pmlmepriv->scanned_queue.lock), &irqL);
+		_rtw_spinlock_bh(&(pmlmepriv->scanned_queue.lock));
 		if (pwlan == NULL) {
 			pwlan = rtw_get_oldest_wlan_network(&pmlmepriv->scanned_queue);
 			if (pwlan == NULL) {
-				_exit_critical_bh(&(pmlmepriv->scanned_queue.lock), &irqL);
+				_rtw_spinunlock_bh(&(pmlmepriv->scanned_queue.lock));
 				goto createbss_cmd_fail;
 			}
 			pwlan->last_scanned = rtw_get_current_time();
@@ -5583,18 +5572,13 @@ void rtw_create_ibss_post_hdl(_adapter *padapter, int status)
 		/* copy pdev_network information to pmlmepriv->cur_network */
 		_rtw_memcpy(&mlme_cur_network->network, pdev_network, (get_WLAN_BSSID_EX_sz(pdev_network)));
 
-#if 0
-		/* reset DSConfig */
-		mlme_cur_network->network.Configuration.DSConfig = (u32)rtw_ch2freq(pdev_network->Configuration.DSConfig);
-#endif
-
 		_clr_fwstate_(pmlmepriv, WIFI_UNDER_LINKING);
-		_exit_critical_bh(&(pmlmepriv->scanned_queue.lock), &irqL);
+		_rtw_spinunlock_bh(&(pmlmepriv->scanned_queue.lock));
 		/* we will set WIFI_ASOC_STATE when there is one more sat to join us (rtw_stassoc_event_callback) */
 	}
 
 createbss_cmd_fail:
-	_exit_critical_bh(&pmlmepriv->lock, &irqL);
+	_rtw_spinunlock_bh(&pmlmepriv->lock);
 	return;
 }
 

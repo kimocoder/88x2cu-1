@@ -1877,7 +1877,6 @@ _continue:
 #ifdef CONFIG_AUTO_AP_MODE
 	if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE &&
 	    pmlmepriv->cur_network.join_res == _TRUE) {
-		_irqL	irqL;
 		struct sta_info	*psta;
 		u8 *mac_addr, *peer_addr;
 		struct sta_priv *pstapriv = &padapter->stapriv;
@@ -1914,7 +1913,7 @@ _continue:
 				return _SUCCESS;
 			}
 
-			_enter_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+			_rtw_spinlock_bh(&pstapriv->asoc_list_lock);
 			if (rtw_is_list_empty(&psta->asoc_list)) {
 				psta->expire_to = pstapriv->expire_to;
 				rtw_list_insert_tail(&psta->asoc_list, &pstapriv->asoc_list);
@@ -1924,7 +1923,7 @@ _continue:
 					pstapriv->tbtx_asoc_list_cnt++;
 				#endif
 			}
-			_exit_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+			_rtw_spinunlock_bh(&pstapriv->asoc_list_lock);
 
 			/* generate pairing ID */
 			mac_addr = adapter_mac_addr(padapter);
@@ -1965,9 +1964,9 @@ _continue:
 
 			_rtw_memset((void *)&psta->sta_stats, 0, sizeof(struct stainfo_stats));
 
-			_enter_critical_bh(&psta->lock, &irqL);
+			_rtw_spinlock_bh(&psta->lock);
 			psta->state |= WIFI_ASOC_STATE;
-			_exit_critical_bh(&psta->lock, &irqL);
+			_rtw_spinunlock_bh(&psta->lock);
 
 			report_add_sta_event(padapter, psta->cmn.mac_addr);
 
@@ -2178,9 +2177,6 @@ unsigned int OnBeacon(_adapter *padapter, union recv_frame *precv_frame)
 	struct tdls_ch_switch *pchsw_info = &padapter->tdlsinfo.chsw_info;
 #endif
 #endif /* CONFIG_TDLS */
-#ifdef	CONFIG_LAYER2_ROAMING
-	_irqL irqL;
-#endif
 
 	if (validate_beacon_len(pframe, len) == _FALSE)
 		return _SUCCESS;
@@ -2231,7 +2227,7 @@ unsigned int OnBeacon(_adapter *padapter, union recv_frame *precv_frame)
 				return _SUCCESS;
 			}
 #ifdef	CONFIG_LAYER2_ROAMING
-			_enter_critical_bh(&pmlmepriv->clnt_auth_lock, &irqL);
+			_rtw_spinlock_bh(&pmlmepriv->clnt_auth_lock);
 #endif
 			/* we should update current network before auth, or some IE is wrong */
 			pbss = (WLAN_BSSID_EX *)rtw_malloc(sizeof(WLAN_BSSID_EX));
@@ -2288,7 +2284,7 @@ unsigned int OnBeacon(_adapter *padapter, union recv_frame *precv_frame)
 			/* start auth */
 			start_clnt_auth(padapter);
 #ifdef	CONFIG_LAYER2_ROAMING
-			_exit_critical_bh(&pmlmepriv->clnt_auth_lock, &irqL);
+			_rtw_spinunlock_bh(&pmlmepriv->clnt_auth_lock);
 #endif
 			return _SUCCESS;
 		}
@@ -2413,14 +2409,13 @@ _END_ONBEACON_:
 #ifdef CONFIG_AP_MODE
 static u32 rtw_get_sta_num_by_state(_adapter *padapter, u32 state)
 {
-	_irqL irqL;
 	_list	*plist, *phead;
 	u32	index, sta_num = 0;
 	struct sta_info *psta = NULL;
 	struct sta_priv *pstapriv = &(padapter->stapriv);
 
-	_enter_critical_bh(&pstapriv->sta_hash_lock, &irqL);	
-	for (index = 0; index < NUM_STA; index++) {		
+	_rtw_spinlock_bh(&pstapriv->sta_hash_lock);
+	for (index = 0; index < NUM_STA; index++) {
 		phead = &(pstapriv->sta_hash[index]);
 		plist = get_next(phead);
 		while ((rtw_end_of_queue_search(phead, plist)) == _FALSE) {
@@ -2430,7 +2425,7 @@ static u32 rtw_get_sta_num_by_state(_adapter *padapter, u32 state)
 			plist = get_next(plist);
 		}
 	}
-	_exit_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+	_rtw_spinunlock_bh(&pstapriv->sta_hash_lock);
 
 	/* RTW_INFO("%s : waiting for %u sta under linking \n", __func__, sta_num); */
 	return sta_num;
@@ -2460,7 +2455,6 @@ static u8  rtw_defs_attack_chk(_adapter *padapter)
 unsigned int OnAuth(_adapter *padapter, union recv_frame *precv_frame)
 {
 #ifdef CONFIG_AP_MODE
-	_irqL irqL;
 	unsigned int	auth_mode, seq, ie_len;
 	unsigned char	*sa, *p;
 	u16	algorithm;
@@ -2593,7 +2587,7 @@ unsigned int OnAuth(_adapter *padapter, union recv_frame *precv_frame)
 #endif /* CONFIG_IEEE80211W */
 		{
 
-			_enter_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+			_rtw_spinlock_bh(&pstapriv->asoc_list_lock);
 			if (rtw_is_list_empty(&pstat->asoc_list) == _FALSE) {
 				rtw_list_delete(&pstat->asoc_list);
 				pstapriv->asoc_list_cnt--;
@@ -2604,7 +2598,7 @@ unsigned int OnAuth(_adapter *padapter, union recv_frame *precv_frame)
 				if (pstat->expire_to > 0)
 					;/* TODO: STA re_auth within expire_to */
 			}
-			_exit_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+			_rtw_spinunlock_bh(&pstapriv->asoc_list_lock);
 
 			if (seq == 1)
 				; /* TODO: STA re_auth and auth timeout */
@@ -2617,13 +2611,13 @@ unsigned int OnAuth(_adapter *padapter, union recv_frame *precv_frame)
 		|| !(pstat->flags & WLAN_STA_MFP))
 #endif /* CONFIG_IEEE80211W */
 	{
-		_enter_critical_bh(&pstapriv->auth_list_lock, &irqL);
+		_rtw_spinlock_bh(&pstapriv->auth_list_lock);
 		if (rtw_is_list_empty(&pstat->auth_list)) {
 
 			rtw_list_insert_tail(&pstat->auth_list, &pstapriv->auth_list);
 			pstapriv->auth_list_cnt++;
 		}
-		_exit_critical_bh(&pstapriv->auth_list_lock, &irqL);
+		_rtw_spinunlock_bh(&pstapriv->auth_list_lock);
 	}
 
 	if (pstat->auth_seq == 0)
@@ -2860,7 +2854,6 @@ authclnt_fail:
 unsigned int OnAssocReq(_adapter *padapter, union recv_frame *precv_frame)
 {
 #ifdef CONFIG_AP_MODE
-	_irqL irqL;
 	u16 listen_interval;
 	struct rtw_ieee802_11_elems elems;
 	struct sta_info	*pstat;
@@ -3106,14 +3099,14 @@ unsigned int OnAssocReq(_adapter *padapter, union recv_frame *precv_frame)
 		|| !(pstat->flags & WLAN_STA_MFP))
 #endif /* CONFIG_IEEE80211W */
 	{
-		_enter_critical_bh(&pstapriv->auth_list_lock, &irqL);
+		_rtw_spinlock_bh(&pstapriv->auth_list_lock);
 		if (!rtw_is_list_empty(&pstat->auth_list)) {
 			rtw_list_delete(&pstat->auth_list);
 			pstapriv->auth_list_cnt--;
 		}
-		_exit_critical_bh(&pstapriv->auth_list_lock, &irqL);
+		_rtw_spinunlock_bh(&pstapriv->auth_list_lock);
 
-		_enter_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+		_rtw_spinlock_bh(&pstapriv->asoc_list_lock);
 		if (rtw_is_list_empty(&pstat->asoc_list)) {
 			pstat->expire_to = pstapriv->expire_to;
 			rtw_list_insert_tail(&pstat->asoc_list, &pstapriv->asoc_list);
@@ -3125,7 +3118,7 @@ unsigned int OnAssocReq(_adapter *padapter, union recv_frame *precv_frame)
 			}
 #endif
 		}
-		_exit_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+		_rtw_spinunlock_bh(&pstapriv->asoc_list_lock);
 	}
 
 	/* now the station is qualified to join our BSS...	 */
@@ -3151,7 +3144,7 @@ unsigned int OnAssocReq(_adapter *padapter, union recv_frame *precv_frame)
 			issue_asocrsp(padapter, status, pstat, WIFI_REASSOCRSP);
 
 #ifdef CONFIG_IOCTL_CFG80211
-		_enter_critical_bh(&pstat->lock, &irqL);
+		_rtw_spinlock_bh(&pstat->lock);
 		if (pstat->passoc_req) {
 			rtw_mfree(pstat->passoc_req, pstat->assoc_req_len);
 			pstat->passoc_req = NULL;
@@ -3163,7 +3156,7 @@ unsigned int OnAssocReq(_adapter *padapter, union recv_frame *precv_frame)
 			_rtw_memcpy(pstat->passoc_req, pframe, pkt_len);
 			pstat->assoc_req_len = pkt_len;
 		}
-		_exit_critical_bh(&pstat->lock, &irqL);
+		_rtw_spinunlock_bh(&pstat->lock);
 #endif /* CONFIG_IOCTL_CFG80211 */
 #ifdef CONFIG_IEEE80211W
 		if ((pstat->bpairwise_key_installed != _TRUE && (pstat->flags & WLAN_STA_MFP)) 
@@ -3427,13 +3420,8 @@ unsigned int OnDeAuth(_adapter *padapter, union recv_frame *precv_frame)
 
 #ifdef CONFIG_AP_MODE
 	if (MLME_IS_AP(padapter)) {
-		_irqL irqL;
 		struct sta_info *psta;
 		struct sta_priv *pstapriv = &padapter->stapriv;
-
-		/* _enter_critical_bh(&(pstapriv->sta_hash_lock), &irqL);		 */
-		/* rtw_free_stainfo(padapter, psta); */
-		/* _exit_critical_bh(&(pstapriv->sta_hash_lock), &irqL);		 */
 
 		RTW_PRINT(FUNC_ADPT_FMT" reason=%u, ta=%pM\n"
 			, FUNC_ADPT_ARG(padapter), reason, get_addr2_ptr(pframe));
@@ -3442,7 +3430,7 @@ unsigned int OnDeAuth(_adapter *padapter, union recv_frame *precv_frame)
 		if (psta) {
 			u8 updated = _FALSE;
 
-			_enter_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+			_rtw_spinlock_bh(&pstapriv->asoc_list_lock);
 			if (rtw_is_list_empty(&psta->asoc_list) == _FALSE) {
 				rtw_list_delete(&psta->asoc_list);
 				pstapriv->asoc_list_cnt--;
@@ -3453,7 +3441,7 @@ unsigned int OnDeAuth(_adapter *padapter, union recv_frame *precv_frame)
 				updated = ap_free_sta(padapter, psta, _FALSE, reason, _TRUE);
 
 			}
-			_exit_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+			_rtw_spinunlock_bh(&pstapriv->asoc_list_lock);
 
 			associated_clients_update(padapter, updated, STA_INFO_UPDATE_ALL);
 		}
@@ -3519,13 +3507,8 @@ unsigned int OnDisassoc(_adapter *padapter, union recv_frame *precv_frame)
 
 #ifdef CONFIG_AP_MODE
 	if (MLME_IS_AP(padapter)) {
-		_irqL irqL;
 		struct sta_info *psta;
 		struct sta_priv *pstapriv = &padapter->stapriv;
-
-		/* _enter_critical_bh(&(pstapriv->sta_hash_lock), &irqL);	 */
-		/* rtw_free_stainfo(padapter, psta); */
-		/* _exit_critical_bh(&(pstapriv->sta_hash_lock), &irqL);		 */
 
 		RTW_PRINT(FUNC_ADPT_FMT" reason=%u, ta=%pM\n"
 			, FUNC_ADPT_ARG(padapter), reason, get_addr2_ptr(pframe));
@@ -3534,7 +3517,7 @@ unsigned int OnDisassoc(_adapter *padapter, union recv_frame *precv_frame)
 		if (psta) {
 			u8 updated = _FALSE;
 
-			_enter_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+			_rtw_spinlock_bh(&pstapriv->asoc_list_lock);
 			if (rtw_is_list_empty(&psta->asoc_list) == _FALSE) {
 				rtw_list_delete(&psta->asoc_list);
 				pstapriv->asoc_list_cnt--;
@@ -3545,7 +3528,7 @@ unsigned int OnDisassoc(_adapter *padapter, union recv_frame *precv_frame)
 				updated = ap_free_sta(padapter, psta, _FALSE, reason, _TRUE);
 
 			}
-			_exit_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+			_rtw_spinunlock_bh(&pstapriv->asoc_list_lock);
 
 			associated_clients_update(padapter, updated, STA_INFO_UPDATE_ALL);
 		}
@@ -4060,14 +4043,13 @@ u16 rtw_rx_ampdu_apply(_adapter *adapter)
 		/* TODO: TDLS peer */
 #ifdef CONFIG_AP_MODE
 	} else if (MLME_IS_AP(adapter) || MLME_IS_MESH(adapter)) {
-		_irqL irqL;
 		_list *phead, *plist;
 		u8 peer_num = 0;
 		char peers[NUM_STA];
 		struct sta_priv *pstapriv = &adapter->stapriv;
 		int i;
 
-		_enter_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+		_rtw_spinlock_bh(&pstapriv->asoc_list_lock);
 
 		phead = &pstapriv->asoc_list;
 		plist = get_next(phead);
@@ -4083,7 +4065,7 @@ u16 rtw_rx_ampdu_apply(_adapter *adapter)
 				peers[peer_num++] = stainfo_offset;
 		}
 
-		_exit_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+		_rtw_spinunlock_bh(&pstapriv->asoc_list_lock);
 
 		for (i = 0; i < peer_num; i++) {
 			sta = rtw_get_stainfo_by_offset(pstapriv, peers[i]);
@@ -7134,7 +7116,6 @@ unsigned int OnAction_ft(_adapter *padapter, union recv_frame *precv_frame)
 	struct mlme_priv *pmlmepriv = NULL;
 	struct wlan_network *proam_target = NULL;
 	struct ft_roam_info *pft_roam = NULL;
-	_irqL  irqL;
 
 	pmlmeext = &(padapter->mlmeextpriv);
 	pmlmeinfo = &(pmlmeext->mlmext_info);
@@ -7995,7 +7976,7 @@ void issue_beacon(_adapter *padapter, int timeout_ms)
 		return;
 	}
 #if defined(CONFIG_AP_MODE) && defined (CONFIG_NATIVEAP_MLME)
-	_enter_critical_bh(&pmlmepriv->bcn_update_lock, &irqL);
+	_rtw_spinlock_bh(&pmlmepriv->bcn_update_lock);
 #endif /* #if defined (CONFIG_AP_MODE) && defined (CONFIG_NATIVEAP_MLME) */
 
 	/* update attribute */
@@ -8260,7 +8241,7 @@ _issue_bcn:
 #if defined(CONFIG_AP_MODE) && defined (CONFIG_NATIVEAP_MLME)
 	pmlmepriv->update_bcn = _FALSE;
 
-	_exit_critical_bh(&pmlmepriv->bcn_update_lock, &irqL);
+	_rtw_spinunlock_bh(&pmlmepriv->bcn_update_lock);
 #endif /* #if defined (CONFIG_AP_MODE) && defined (CONFIG_NATIVEAP_MLME) */
 
 	if ((pattrib->pktlen + TXDESC_SIZE) > MAX_BEACON_LEN) {
@@ -10690,7 +10671,7 @@ void issue_action_BSSCoexistPacket(_adapter *padapter)
 	if (pmlmepriv->num_sta_no_ht > 0) {
 		int i;
 
-		_enter_critical_bh(&(pmlmepriv->scanned_queue.lock), &irqL);
+		_rtw_spinlock_bh(&(pmlmepriv->scanned_queue.lock));
 
 		phead = get_list_head(queue);
 		plist = get_next(phead);
@@ -10722,8 +10703,7 @@ void issue_action_BSSCoexistPacket(_adapter *padapter)
 
 		}
 
-		_exit_critical_bh(&(pmlmepriv->scanned_queue.lock), &irqL);
-
+		_rtw_spinunlock_bh(&(pmlmepriv->scanned_queue.lock));
 
 		for (i = 0; i < 8; i++) {
 			if (ICS[i][0] == 1) {
@@ -11546,10 +11526,9 @@ void start_clnt_join(_adapter *padapter)
 			_list *pos = get_next(head);
 			struct wlan_network *scanned = NULL;
 			u8 ie_offset = 0;
-			_irqL irqL;
 			bool has_p2p_ie = _FALSE;
 
-			_enter_critical_bh(&(padapter->mlmepriv.scanned_queue.lock), &irqL);
+			_rtw_spinlock_bh(&(padapter->mlmepriv.scanned_queue.lock));
 
 			for (pos = get_next(head); !rtw_end_of_queue_search(head, pos); pos = get_next(pos)) {
 
@@ -11565,7 +11544,7 @@ void start_clnt_join(_adapter *padapter)
 				}
 			}
 
-			_exit_critical_bh(&(padapter->mlmepriv.scanned_queue.lock), &irqL);
+			_rtw_spinunlock_bh(&(padapter->mlmepriv.scanned_queue.lock));
 
 			if (scanned == NULL || rtw_end_of_queue_search(head, pos) || has_p2p_ie == _FALSE)
 #endif /* CONFIG_P2P */
@@ -12234,9 +12213,9 @@ void update_sta_info(_adapter *padapter, struct sta_info *psta)
 	psta->cmn.ra_info.is_support_sgi = query_ra_short_GI(psta, rtw_get_tx_bw_mode(padapter, psta));
 	update_ldpc_stbc_cap(psta);
 
-	_enter_critical_bh(&psta->lock, &irqL);
+	_rtw_spinlock_bh(&psta->lock);
 	psta->state = WIFI_ASOC_STATE;
-	_exit_critical_bh(&psta->lock, &irqL);
+	_rtw_spinunlock_bh(&psta->lock);
 
 }
 
@@ -12495,7 +12474,7 @@ exit_mlmeext_joinbss_event_callback:
 		_pkt *pkt;
 
 		padapter->mlmepriv.roam_network = NULL;
-		_enter_critical_bh(&pxmitpriv->rpkt_queue.lock, &irqL);
+		_rtw_spinlock_bh(&pxmitpriv->rpkt_queue.lock);
 		phead = get_list_head(&pxmitpriv->rpkt_queue);
 		plist = get_next(phead);
 		while ((rtw_end_of_queue_search(phead, plist)) == _FALSE) {
@@ -12506,7 +12485,7 @@ exit_mlmeext_joinbss_event_callback:
 			rframe->pkt = NULL;
 			rtw_xmit_posthandle(padapter, rframe, pkt);
 		}
-		_exit_critical_bh(&pxmitpriv->rpkt_queue.lock, &irqL);
+		_rtw_spinunlock_bh(&pxmitpriv->rpkt_queue.lock);
 	}
 #endif
 	RTW_INFO("=>%s - End to Connection without 4-way\n", __FUNCTION__);
@@ -12710,7 +12689,6 @@ void linked_status_chk_tdls(_adapter *padapter)
 		u8 addr[ETH_ALEN];
 	};
 	struct sta_priv *pstapriv = &padapter->stapriv;
-	_irqL irqL;
 	u8 ack_chk;
 	struct sta_info *psta;
 	int i, num_teardown = 0, num_checkalive = 0;
@@ -12728,7 +12706,7 @@ void linked_status_chk_tdls(_adapter *padapter)
 	_rtw_memset(teardown, 0x00, sizeof(teardown));
 
 	if ((padapter->tdlsinfo.link_established == _TRUE)) {
-		_enter_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+		_rtw_spinlock_bh(&pstapriv->sta_hash_lock);
 		for (i = 0; i < NUM_STA; i++) {
 			phead = &(pstapriv->sta_hash[i]);
 			plist = get_next(phead);
@@ -12766,7 +12744,7 @@ void linked_status_chk_tdls(_adapter *padapter)
 			if (tdls_sta_max == _TRUE)
 				break;
 		}
-		_exit_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+		_rtw_spinunlock_bh(&pstapriv->sta_hash_lock);
 
 		if (num_checkalive > 0) {
 			for (i = 0; i < num_checkalive; i++) {
@@ -13019,7 +12997,7 @@ bypass_active_keep_alive:
 
 		_rtw_init_listhead(&dlist);
 
-		_enter_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+		_rtw_spinlock_bh(&pstapriv->sta_hash_lock);
 
 		for (i = 0; i < NUM_STA; i++) {
 
@@ -13044,7 +13022,7 @@ bypass_active_keep_alive:
 			}
 		}
 
-		_exit_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+		_rtw_spinunlock_bh(&pstapriv->sta_hash_lock);
 
 		plist = get_next(&dlist);
 		while (rtw_end_of_queue_search(&dlist, plist) == _FALSE) {
@@ -13123,14 +13101,13 @@ void rtw_tbtx_token_dispatch_timer_hdl(void *ctx)
 {
 	_adapter *padapter = (_adapter *)ctx;
 	struct mlme_ext_priv	*pmlmeext = &padapter->mlmeextpriv;
-	_irqL irqL;
 	struct sta_info *psta = NULL;
 	struct sta_priv *pstapriv = &padapter->stapriv;
 	_list *phead, *plist;
 	int i, found = _FALSE;
 	u8 nr_send, th_idx = 0;
 
-	_enter_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+	_rtw_spinlock_bh(&pstapriv->asoc_list_lock);
 	RTW_DBG("%s:asoc_cnt: %d\n",__func__, pstapriv->tbtx_asoc_list_cnt);
 
 	// check number of TBTX sta
@@ -13194,7 +13171,7 @@ outof_loop:
 
 exit:
 	// set_timer
-	_exit_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+	_rtw_spinunlock_bh(&pstapriv->asoc_list_lock);
 	_set_timer(&pmlmeext->tbtx_token_dispatch_timer, TBTX_TX_DURATION); 
 }
 #endif /* CONFIG_AP_MODE */
@@ -13872,7 +13849,7 @@ u8 join_cmd_hdl(_adapter *padapter, u8 *pbuf)
 	start_clnt_join(padapter);
 
 #ifdef	CONFIG_LAYER2_ROAMING
-	_enter_critical_bh(&pmlmepriv->clnt_auth_lock, &irqL);
+	_rtw_spinlock_bh(&pmlmepriv->clnt_auth_lock);
 	if (rnetwork && (pmlmeinfo->state & (WIFI_FW_AUTH_NULL | WIFI_FW_AUTH_STATE))) {
 		struct beacon_keys bcn_keys;
 		u32 roam_ielen;
@@ -13905,7 +13882,7 @@ u8 join_cmd_hdl(_adapter *padapter, u8 *pbuf)
 		/* start auth */
 		start_clnt_auth(padapter);
 	}
-	_exit_critical_bh(&pmlmepriv->clnt_auth_lock, &irqL);
+	_rtw_spinunlock_bh(&pmlmepriv->clnt_auth_lock);
 #endif
 	return H2C_SUCCESS;
 
@@ -14808,15 +14785,15 @@ void generate_quickss(_adapter *padapter)
 	target_ssid_len = pmlmepriv->cur_network.network.Ssid.SsidLength;
 	_rtw_memset(mark, 0, sizeof(u8)*166);
 
-	_enter_critical_bh(&(pmlmepriv->scanned_queue.lock), &irqL);
+	_rtw_spinlock_bh(&(pmlmepriv->scanned_queue.lock));
 	phead = get_list_head(&(pmlmepriv->scanned_queue));
 	if (!phead) {
-		_exit_critical_bh(&(pmlmepriv->scanned_queue.lock), &irqL);
+		_rtw_spinunlock_bh(&(pmlmepriv->scanned_queue.lock));
 		return;
 	}
 	plist = get_next(phead);
 	if (!plist) {
-		_exit_critical_bh(&(pmlmepriv->scanned_queue.lock), &irqL);
+		_rtw_spinunlock_bh(&(pmlmepriv->scanned_queue.lock));
 		return;
 	}
 	while (1) {
@@ -14835,7 +14812,7 @@ void generate_quickss(_adapter *padapter)
 		plist = get_next(plist);
 	}
        /* ex: assume roaming channel=1/6/40/165, then mark[1]/[6]/[40]/[165] are 1.  */
-	_exit_critical_bh(&(pmlmepriv->scanned_queue.lock), &irqL);
+	_rtw_spinunlock_bh(&(pmlmepriv->scanned_queue.lock));
 
 	ch_num = 0;
 	for (j = 0; j < rfctl->max_chan_nums; j++) {
@@ -15427,7 +15404,7 @@ enable_mc:
 		_pkt *pkt;
 
 		padapter->mlmepriv.roam_network = NULL;
-		_enter_critical_bh(&pxmitpriv->rpkt_queue.lock, &irqL);
+		_rtw_spinlock_bh(&pxmitpriv->rpkt_queue.lock);
 		phead = get_list_head(&pxmitpriv->rpkt_queue);
 		plist = get_next(phead);
 		while ((rtw_end_of_queue_search(phead, plist)) == _FALSE) {
@@ -15438,7 +15415,7 @@ enable_mc:
 			rframe->pkt = NULL;
 			rtw_xmit_posthandle(padapter, rframe, pkt);
 		}
-		_exit_critical_bh(&pxmitpriv->rpkt_queue.lock, &irqL);
+		_rtw_spinunlock_bh(&pxmitpriv->rpkt_queue.lock);
 	}
 #endif
 	return H2C_SUCCESS;
@@ -15769,7 +15746,6 @@ _abort_event_:
 u8 chk_bmc_sleepq_hdl(_adapter *padapter, unsigned char *pbuf)
 {
 #ifdef CONFIG_AP_MODE
-	_irqL irqL;
 	struct sta_info *psta_bmc;
 	_list	*xmitframe_plist, *xmitframe_phead;
 	struct xmit_frame *pxmitframe = NULL;
@@ -15785,8 +15761,7 @@ u8 chk_bmc_sleepq_hdl(_adapter *padapter, unsigned char *pbuf)
 #ifndef CONFIG_PCI_HCI
 		rtw_msleep_os(10);/* 10ms, ATIM(HIQ) Windows */
 #endif
-		/* _enter_critical_bh(&psta_bmc->sleep_q.lock, &irqL); */
-		_enter_critical_bh(&pxmitpriv->lock, &irqL);
+		_rtw_spinlock_bh(&pxmitpriv->lock);
 
 		xmitframe_phead = get_list_head(&psta_bmc->sleep_q);
 		xmitframe_plist = get_next(xmitframe_phead);
@@ -15809,17 +15784,10 @@ u8 chk_bmc_sleepq_hdl(_adapter *padapter, unsigned char *pbuf)
 			if (xmitframe_hiq_filter(pxmitframe) == _TRUE)
 				pxmitframe->attrib.qsel = QSLT_HIGH;/* HIQ */
 
-#if 0
-			_exit_critical_bh(&psta_bmc->sleep_q.lock, &irqL);
-			if (rtw_hal_xmit(padapter, pxmitframe) == _TRUE)
-				rtw_os_xmit_complete(padapter, pxmitframe);
-			_enter_critical_bh(&psta_bmc->sleep_q.lock, &irqL);
-#endif
 			rtw_hal_xmitframe_enqueue(padapter, pxmitframe);
 		}
 
-		/* _exit_critical_bh(&psta_bmc->sleep_q.lock, &irqL); */
-		_exit_critical_bh(&pxmitpriv->lock, &irqL);
+		_rtw_spinunlock_bh(&pxmitpriv->lock);
 
 		if (rtw_get_intf_type(padapter) != RTW_PCIE) {
 			/* check hi queue and bmc_sleepq */
@@ -16512,9 +16480,6 @@ u8 tdls_hdl(_adapter *padapter, unsigned char *pbuf)
 			return H2C_REJECTED;
 	}
 
-	/* _enter_critical_bh(&(ptdlsinfo->hdl_lock), &irqL); */
-	/* RTW_INFO("[%s] option:%d\n", __FUNCTION__, option); */
-
 	switch (option) {
 	case TDLS_ESTABLISHED: {
 		/* As long as TDLS handshake success, we should set RCR_CBSSID_DATA bit to 0 */
@@ -16721,8 +16686,6 @@ u8 tdls_hdl(_adapter *padapter, unsigned char *pbuf)
 		break;
 	}
 
-	/* _exit_critical_bh(&(ptdlsinfo->hdl_lock), &irqL); */
-
 	return H2C_SUCCESS;
 #else
 	return H2C_REJECTED;
@@ -16778,11 +16741,10 @@ int rtw_sae_preprocess(_adapter *adapter, const u8 *buf, u32 len, u8 tx)
 		/* quere commit frame until external auth statue update */
 		struct sta_priv *pstapriv = &adapter->stapriv;
 		struct sta_info	*psta = NULL;
-		_irqL irqL;
 
 		psta = rtw_get_stainfo(pstapriv, GetAddr1Ptr(buf));
 		if (psta) {
-			_enter_critical_bh(&psta->lock, &irqL);
+			_rtw_spinlock_bh(&psta->lock);
 			if (psta->pauth_frame) {
 				rtw_mfree(psta->pauth_frame, psta->auth_len);
 				psta->pauth_frame = NULL;
@@ -16794,7 +16756,7 @@ int rtw_sae_preprocess(_adapter *adapter, const u8 *buf, u32 len, u8 tx)
 				_rtw_memcpy(psta->pauth_frame, buf, len);
 				psta->auth_len = len;
 			}
-			_exit_critical_bh(&psta->lock, &irqL);
+			_rtw_spinunlock_bh(&psta->lock);
 
 			ret = 2;
 		}

@@ -1394,38 +1394,6 @@ void	_rtw_mutex_free(_mutex *pmutex)
 #endif
 }
 
-void	_rtw_spinlock_init(_lock *plock)
-{
-
-#ifdef PLATFORM_LINUX
-
-	spin_lock_init(plock);
-
-#endif
-#ifdef PLATFORM_FREEBSD
-	mtx_init(plock, "", NULL, MTX_DEF | MTX_RECURSE);
-#endif
-#ifdef PLATFORM_WINDOWS
-
-	NdisAllocateSpinLock(plock);
-
-#endif
-
-}
-
-void	_rtw_spinlock_free(_lock *plock)
-{
-#ifdef PLATFORM_FREEBSD
-	mtx_destroy(plock);
-#endif
-
-#ifdef PLATFORM_WINDOWS
-
-	NdisFreeSpinLock(plock);
-
-#endif
-
-}
 #ifdef PLATFORM_FREEBSD
 extern PADAPTER prtw_lock;
 
@@ -1446,43 +1414,6 @@ void rtw_mtx_unlock(_lock *plock)
 }
 #endif /* PLATFORM_FREEBSD */
 
-
-void	_rtw_spinlock(_lock	*plock)
-{
-
-#ifdef PLATFORM_LINUX
-
-	spin_lock(plock);
-
-#endif
-#ifdef PLATFORM_FREEBSD
-	mtx_lock(plock);
-#endif
-#ifdef PLATFORM_WINDOWS
-
-	NdisAcquireSpinLock(plock);
-
-#endif
-
-}
-
-void	_rtw_spinunlock(_lock *plock)
-{
-
-#ifdef PLATFORM_LINUX
-
-	spin_unlock(plock);
-
-#endif
-#ifdef PLATFORM_FREEBSD
-	mtx_unlock(plock);
-#endif
-#ifdef PLATFORM_WINDOWS
-
-	NdisReleaseSpinLock(plock);
-
-#endif
-}
 
 
 void	_rtw_spinlock_ex(_lock	*plock)

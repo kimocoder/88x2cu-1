@@ -862,7 +862,7 @@ u32 mp_join(PADAPTER padapter, u8 mode)
 	else
 		bssid.Length = length;
 
-	_enter_critical_bh(&pmlmepriv->lock, &irqL);
+	_rtw_spinlock_bh(&pmlmepriv->lock);
 
 	if (check_fwstate(pmlmepriv, WIFI_MP_STATE) == _TRUE)
 		goto end_of_mp_start_test;
@@ -911,7 +911,7 @@ u32 mp_join(PADAPTER padapter, u8 mode)
 
 end_of_mp_start_test:
 
-	_exit_critical_bh(&pmlmepriv->lock, &irqL);
+	_rtw_spinunlock_bh(&pmlmepriv->lock);
 
 	if (1) { /* (res == _SUCCESS) */
 		/* set MSR to WIFI_FW_ADHOC_STATE */
@@ -1026,7 +1026,7 @@ void mp_stop_test(PADAPTER padapter)
 
 	if (pmppriv->mode == MP_ON) {
 		pmppriv->bSetTxPower = 0;
-		_enter_critical_bh(&pmlmepriv->lock, &irqL);
+		_rtw_spinlock_bh(&pmlmepriv->lock);
 		if (check_fwstate(pmlmepriv, WIFI_MP_STATE) == _FALSE)
 			goto end_of_mp_stop_test;
 
@@ -1050,7 +1050,7 @@ void mp_stop_test(PADAPTER padapter)
 
 end_of_mp_stop_test:
 
-		_exit_critical_bh(&pmlmepriv->lock, &irqL);
+		_rtw_spinunlock_bh(&pmlmepriv->lock);
 
 #ifdef CONFIG_PCI_HCI
 		hal = GET_HAL_DATA(padapter);

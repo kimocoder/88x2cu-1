@@ -156,6 +156,22 @@
 typedef struct	semaphore _sema;
 typedef	spinlock_t	_lock;
 
+static inline void _rtw_spinlock_init(_lock *plock)
+{
+	spin_lock_init(plock);
+}
+static inline void _rtw_spinlock_free(_lock *plock)
+{
+}
+static inline void _rtw_spinlock(_lock *plock)
+{
+	spin_lock(plock);
+}
+static inline void _rtw_spinunlock(_lock *plock)
+{
+	spin_unlock(plock);
+}
+
 __inline static void _rtw_spinlock_irq(_lock *plock, unsigned long *flags)
 {
 	spin_lock_irqsave(plock, *flags);
@@ -310,16 +326,6 @@ __inline static void _enter_critical_ex(_lock *plock, _irqL *pirqL)
 __inline static void _exit_critical_ex(_lock *plock, _irqL *pirqL)
 {
 	spin_unlock_irqrestore(plock, *pirqL);
-}
-
-__inline static void _enter_critical_bh(_lock *plock, _irqL *pirqL)
-{
-	spin_lock_bh(plock);
-}
-
-__inline static void _exit_critical_bh(_lock *plock, _irqL *pirqL)
-{
-	spin_unlock_bh(plock);
 }
 
 __inline static void enter_critical_bh(_lock *plock)

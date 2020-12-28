@@ -876,7 +876,6 @@ s32	rtw_hal_xmit(_adapter *padapter, struct xmit_frame *pxmitframe)
 s32	rtw_hal_mgnt_xmit(_adapter *padapter, struct xmit_frame *pmgntframe)
 {
 #ifdef CONFIG_RTW_MGMT_QUEUE
-	_irqL irqL;
 	struct xmit_priv *pxmitpriv = &(padapter->xmitpriv);
 #endif
 	s32 ret = _FAIL;
@@ -897,9 +896,9 @@ s32	rtw_hal_mgnt_xmit(_adapter *padapter, struct xmit_frame *pmgntframe)
 
 #ifdef CONFIG_RTW_MGMT_QUEUE
 	if (MLME_IS_AP(padapter) || MLME_IS_MESH(padapter)) {
-		_enter_critical_bh(&pxmitpriv->lock, &irqL);
+		_rtw_spinlock_bh(&pxmitpriv->lock);
 		ret = mgmt_xmitframe_enqueue_for_sleeping_sta(padapter, pmgntframe);
-		_exit_critical_bh(&pxmitpriv->lock, &irqL);
+		_rtw_spinunlock_bh(&pxmitpriv->lock);
 
 		#ifdef DBG_MGMT_QUEUE
 		if (ret == _TRUE)

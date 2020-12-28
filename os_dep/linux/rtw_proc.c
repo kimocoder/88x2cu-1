@@ -1261,7 +1261,7 @@ static int proc_get_tx_info_msg(struct seq_file *m, void *v)
 
 	char *BW, *status;
 
-	_enter_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+	_rtw_spinlock_bh(&pstapriv->sta_hash_lock);
 
 	if (MLME_IS_STA(padapter))
 		status = "station mode";
@@ -1320,7 +1320,7 @@ static int proc_get_tx_info_msg(struct seq_file *m, void *v)
 		}
 	}
 
-	_exit_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+	_rtw_spinunlock_bh(&pstapriv->sta_hash_lock);
 
 	return 0;
 
@@ -4426,7 +4426,7 @@ int proc_get_sta_assoc_req_frame_body(struct seq_file *m, void *v)
 		}
 		RTW_PRINT(FUNC_ADPT_FMT" sta("MAC_FMT") found\n",
 			  FUNC_ADPT_ARG(adapter), MAC_ARG(assoc_req_mac_addr));
-		_enter_critical_bh(&psta->lock, &irqL);
+		_rtw_spinlock_bh(&psta->lock);
 		if (psta->passoc_req && psta->assoc_req_len > 0) {
 			passoc_req = rtw_zmalloc(psta->assoc_req_len);
 			if (passoc_req) {
@@ -4434,7 +4434,7 @@ int proc_get_sta_assoc_req_frame_body(struct seq_file *m, void *v)
 				_rtw_memcpy(passoc_req, psta->passoc_req, assoc_req_len);
 			}
 		}
-		_exit_critical_bh(&psta->lock, &irqL);
+		_rtw_spinunlock_bh(&psta->lock);
 		if (passoc_req && assoc_req_len > IEEE80211_3ADDR_LEN) {
 			u8 *body = passoc_req + IEEE80211_3ADDR_LEN;
 			u32 body_len = assoc_req_len - IEEE80211_3ADDR_LEN;

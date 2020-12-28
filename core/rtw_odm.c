@@ -155,11 +155,10 @@ void rtw_odm_get_perpkt_rssi(void *sel, _adapter *adapter)
 void rtw_odm_acquirespinlock(_adapter *adapter,	enum rt_spinlock_type type)
 {
 	PHAL_DATA_TYPE	pHalData = GET_HAL_DATA(adapter);
-	_irqL irqL;
 
 	switch (type) {
 	case RT_IQK_SPINLOCK:
-		_enter_critical_bh(&pHalData->IQKSpinLock, &irqL);
+		_rtw_spinlock_bh(&pHalData->IQKSpinLock);
 		break;
 	default:
 		break;
@@ -169,11 +168,10 @@ void rtw_odm_acquirespinlock(_adapter *adapter,	enum rt_spinlock_type type)
 void rtw_odm_releasespinlock(_adapter *adapter,	enum rt_spinlock_type type)
 {
 	PHAL_DATA_TYPE	pHalData = GET_HAL_DATA(adapter);
-	_irqL irqL;
 
 	switch (type) {
 	case RT_IQK_SPINLOCK:
-		_exit_critical_bh(&pHalData->IQKSpinLock, &irqL);
+		_rtw_spinunlock_bh(&pHalData->IQKSpinLock);
 		break;
 	default:
 		break;

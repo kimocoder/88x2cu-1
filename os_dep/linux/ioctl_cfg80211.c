@@ -1112,7 +1112,7 @@ check_bss:
 	if (!rtw_cfg80211_check_bss(padapter))
 		RTW_PRINT(FUNC_ADPT_FMT" BSS not found !!\n", FUNC_ADPT_ARG(padapter));
 
-	_enter_critical_bh(&pwdev_priv->connect_req_lock, &irqL);
+	_rtw_spinlock_bh(&pwdev_priv->connect_req_lock);
 
 	if (rtw_to_roam(padapter) > 0) {
 		#if LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 39) || defined(COMPAT_KERNEL_RELEASE)
@@ -1171,7 +1171,7 @@ check_bss:
 
 	rtw_wdev_free_connect_req(pwdev_priv);
 
-	_exit_critical_bh(&pwdev_priv->connect_req_lock, &irqL);
+	_rtw_spinunlock_bh(&pwdev_priv->connect_req_lock);
 }
 
 void rtw_cfg80211_indicate_disconnect(_adapter *padapter, u16 reason, u8 locally_generated)
@@ -1216,7 +1216,7 @@ void rtw_cfg80211_indicate_disconnect(_adapter *padapter, u16 reason, u8 locally
 	}
 #endif /* CONFIG_P2P */
 
-	_enter_critical_bh(&pwdev_priv->connect_req_lock, &irqL);
+	_rtw_spinlock_bh(&pwdev_priv->connect_req_lock);
 
 	if (padapter->ndev_unregistering || !rtw_wdev_not_indic_disco(pwdev_priv)) {
 		#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 11, 0) || defined(COMPAT_KERNEL_RELEASE)
@@ -1248,7 +1248,7 @@ void rtw_cfg80211_indicate_disconnect(_adapter *padapter, u16 reason, u8 locally
 
 	rtw_wdev_free_connect_req(pwdev_priv);
 
-	_exit_critical_bh(&pwdev_priv->connect_req_lock, &irqL);
+	_rtw_spinunlock_bh(&pwdev_priv->connect_req_lock);
 }
 
 
@@ -2752,7 +2752,7 @@ void rtw_cfg80211_indicate_scan_done(_adapter *adapter, bool aborted)
 	info.aborted = aborted;
 #endif
 
-	_enter_critical_bh(&pwdev_priv->scan_req_lock, &irqL);
+	_rtw_spinlock_bh(&pwdev_priv->scan_req_lock);
 	if (pwdev_priv->scan_request != NULL) {
 		#ifdef CONFIG_DEBUG_CFG80211
 		RTW_INFO("%s with scan req\n", __FUNCTION__);
@@ -2774,7 +2774,7 @@ void rtw_cfg80211_indicate_scan_done(_adapter *adapter, bool aborted)
 		RTW_INFO("%s without scan req\n", __FUNCTION__);
 		#endif
 	}
-	_exit_critical_bh(&pwdev_priv->scan_req_lock, &irqL);
+	_rtw_spinunlock_bh(&pwdev_priv->scan_req_lock);
 }
 
 u32 rtw_cfg80211_wait_scan_req_empty(_adapter *adapter, u32 timeout_ms)
@@ -2878,13 +2878,13 @@ static void _rtw_cfg80211_surveydone_event_callback(_adapter *padapter, struct c
 	if (scan_req)
 		target_wps_scan = rtw_cfg80211_is_target_wps_scan(scan_req, &target_ssid);
 	else {
-		_enter_critical_bh(&pwdev_priv->scan_req_lock, &irqL);
+		_rtw_spinlock_bh(&pwdev_priv->scan_req_lock);
 		if (pwdev_priv->scan_request != NULL)
 			target_wps_scan = rtw_cfg80211_is_target_wps_scan(pwdev_priv->scan_request, &target_ssid);
-		_exit_critical_bh(&pwdev_priv->scan_req_lock, &irqL);
+		_rtw_spinunlock_bh(&pwdev_priv->scan_req_lock);
 	}
 
-	_enter_critical_bh(&(pmlmepriv->scanned_queue.lock), &irqL);
+	_rtw_spinlock_bh(&(pmlmepriv->scanned_queue.lock));
 
 	phead = get_list_head(queue);
 	plist = get_next(phead);
@@ -2923,7 +2923,7 @@ static void _rtw_cfg80211_surveydone_event_callback(_adapter *padapter, struct c
 
 	}
 
-	_exit_critical_bh(&(pmlmepriv->scanned_queue.lock), &irqL);
+	_rtw_spinunlock_bh(&(pmlmepriv->scanned_queue.lock));
 }
 
 inline void rtw_cfg80211_surveydone_event_callback(_adapter *padapter)
@@ -3063,18 +3063,18 @@ u8 rtw_cfg80211_scan_via_buddy(_adapter *padapter, struct cfg80211_scan_request 
 			continue;
 
 		buddy_wdev_priv = adapter_wdev_data(iface);
-		_enter_critical_bh(&pwdev_priv->scan_req_lock, &irqL);
-		_enter_critical_bh(&buddy_wdev_priv->scan_req_lock, &irqL);
+		_rtw_spinlock_bh(&pwdev_priv->scan_req_lock);
+		_rtw_spinlock_bh(&buddy_wdev_priv->scan_req_lock);
 		if (buddy_wdev_priv->scan_request) {
 			pmlmepriv->scanning_via_buddy_intf = _TRUE;
-			_enter_critical_bh(&pmlmepriv->lock, &irqL);
+			_rtw_spinlock_bh(&pmlmepriv->lock);
 			set_fwstate(pmlmepriv, WIFI_UNDER_SURVEY);
-			_exit_critical_bh(&pmlmepriv->lock, &irqL);
+			_rtw_spinunlock_bh(&pmlmepriv->lock);
 			pwdev_priv->scan_request = request;
 			ret = _TRUE;
 		}
-		_exit_critical_bh(&buddy_wdev_priv->scan_req_lock, &irqL);
-		_exit_critical_bh(&pwdev_priv->scan_req_lock, &irqL);
+		_rtw_spinunlock_bh(&buddy_wdev_priv->scan_req_lock);
+		_rtw_spinunlock_bh(&pwdev_priv->scan_req_lock);
 
 		if (ret == _TRUE)
 			goto exit;
@@ -3105,14 +3105,14 @@ void rtw_cfg80211_indicate_scan_done_for_buddy(_adapter *padapter, bool bscan_ab
 			wdev_priv = adapter_wdev_data(iface);
 
 			indicate_buddy_scan = _FALSE;
-			_enter_critical_bh(&wdev_priv->scan_req_lock, &irqL);
+			_rtw_spinlock_bh(&wdev_priv->scan_req_lock);
 			if (mlmepriv->scanning_via_buddy_intf == _TRUE) {
 				mlmepriv->scanning_via_buddy_intf = _FALSE;
 				clr_fwstate(mlmepriv, WIFI_UNDER_SURVEY);
 				if (wdev_priv->scan_request)
 					indicate_buddy_scan = _TRUE;
 			}
-			_exit_critical_bh(&wdev_priv->scan_req_lock, &irqL);
+			_rtw_spinunlock_bh(&wdev_priv->scan_req_lock);
 
 			if (indicate_buddy_scan == _TRUE) {
 				rtw_cfg80211_surveydone_event_callback(iface);
@@ -3490,15 +3490,15 @@ bypass_p2p_chk:
 		parm.ch_num = survey_times * request->n_channels;
 	}
 
-	_enter_critical_bh(&pwdev_priv->scan_req_lock, &irqL);
-	_enter_critical_bh(&pmlmepriv->lock, &irqL);
+	_rtw_spinlock_bh(&pwdev_priv->scan_req_lock);
+	_rtw_spinlock_bh(&pmlmepriv->lock);
 	_status = rtw_sitesurvey_cmd(padapter, &parm);
 	if (_status == _SUCCESS)
 		pwdev_priv->scan_request = request;
 	else
 		ret = -1;
-	_exit_critical_bh(&pmlmepriv->lock, &irqL);
-	_exit_critical_bh(&pwdev_priv->scan_req_lock, &irqL);
+	_rtw_spinunlock_bh(&pmlmepriv->lock);
+	_rtw_spinunlock_bh(&pwdev_priv->scan_req_lock);
 
 check_need_indicate_scan_done:
 	if (_TRUE == need_indicate_scan_done) {
@@ -4139,12 +4139,11 @@ leave_ibss:
 bool rtw_cfg80211_is_connect_requested(_adapter *adapter)
 {
 	struct rtw_wdev_priv *pwdev_priv = adapter_wdev_data(adapter);
-	_irqL irqL;
 	bool requested;
 
-	_enter_critical_bh(&pwdev_priv->connect_req_lock, &irqL);
+	_rtw_spinlock_bh(&pwdev_priv->connect_req_lock);
 	requested = pwdev_priv->connect_req ? 1 : 0;
-	_exit_critical_bh(&pwdev_priv->connect_req_lock, &irqL);
+	_rtw_spinunlock_bh(&pwdev_priv->connect_req_lock);
 
 	return requested;
 }
@@ -4450,7 +4449,7 @@ static int cfg80211_rtw_connect(struct wiphy *wiphy, struct net_device *ndev,
 	}
 
 
-	_enter_critical_bh(&pwdev_priv->connect_req_lock, &irqL);
+	_rtw_spinlock_bh(&pwdev_priv->connect_req_lock);
 
 	if (pwdev_priv->connect_req) {
 		rtw_wdev_free_connect_req(pwdev_priv);
@@ -4463,7 +4462,7 @@ static int cfg80211_rtw_connect(struct wiphy *wiphy, struct net_device *ndev,
 	else
 		RTW_WARN(FUNC_NDEV_FMT" alloc connect_req fail\n", FUNC_NDEV_ARG(ndev));
 
-	_exit_critical_bh(&pwdev_priv->connect_req_lock, &irqL);
+	_rtw_spinunlock_bh(&pwdev_priv->connect_req_lock);
 
 	RTW_INFO("set ssid:dot11AuthAlgrthm=%d, dot11PrivacyAlgrthm=%d, dot118021XGrpPrivacy=%d\n", psecuritypriv->dot11AuthAlgrthm, psecuritypriv->dot11PrivacyAlgrthm,
 		psecuritypriv->dot118021XGrpPrivacy);
@@ -5690,7 +5689,7 @@ static int	cfg80211_rtw_add_station(struct wiphy *wiphy, struct net_device *ndev
 			goto exit;
 		}
 
-		_enter_critical_bh(&(plink_ctl->lock), &irqL);
+		_rtw_spinlock_bh(&(plink_ctl->lock));
 
 		plink = _rtw_mesh_plink_get(padapter, mac);
 		if (plink)
@@ -5770,7 +5769,7 @@ static int	cfg80211_rtw_add_station(struct wiphy *wiphy, struct net_device *ndev
 			ret = -EINVAL;
 		}
 release_plink_ctl:
-		_exit_critical_bh(&(plink_ctl->lock), &irqL);
+		_rtw_spinunlock_bh(&(plink_ctl->lock));
 
 		if (probe_req)
 			issue_probereq(padapter, &padapter->mlmepriv.cur_network.network.mesh_id, mac);
@@ -5861,7 +5860,7 @@ static int	cfg80211_rtw_del_station(struct wiphy *wiphy, struct net_device *ndev
 		return -EINVAL;
 
 
-	_enter_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+	_rtw_spinlock_bh(&pstapriv->asoc_list_lock);
 
 	phead = &pstapriv->asoc_list;
 	plist = get_next(phead);
@@ -5902,12 +5901,10 @@ static int	cfg80211_rtw_del_station(struct wiphy *wiphy, struct net_device *ndev
 				#endif
 				STA_SET_MESH_PLINK(psta, NULL);
 
-				/* _exit_critical_bh(&pstapriv->asoc_list_lock, &irqL); */
 				if (MLME_IS_AP(padapter))
 					updated = ap_free_sta(padapter, psta, _TRUE, WLAN_REASON_PREV_AUTH_NOT_VALID, _TRUE);
 				else
 					updated = ap_free_sta(padapter, psta, _TRUE, WLAN_REASON_DEAUTH_LEAVING, _TRUE);
-				/* _enter_critical_bh(&pstapriv->asoc_list_lock, &irqL); */
 
 				psta = NULL;
 
@@ -5918,7 +5915,7 @@ static int	cfg80211_rtw_del_station(struct wiphy *wiphy, struct net_device *ndev
 
 	}
 
-	_exit_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+	_rtw_spinunlock_bh(&pstapriv->asoc_list_lock);
 
 	associated_clients_update(padapter, updated, STA_INFO_UPDATE_ALL);
 
@@ -6017,9 +6014,9 @@ static int	cfg80211_rtw_dump_station(struct wiphy *wiphy, struct net_device *nde
 	if (DBG_DUMP_STATION)
 		RTW_INFO(FUNC_NDEV_FMT"\n", FUNC_NDEV_ARG(ndev));
 
-	_enter_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+	_rtw_spinlock_bh(&pstapriv->asoc_list_lock);
 	psta = rtw_sta_info_get_by_idx(pstapriv, idx, &asoc_list_num);
-	_exit_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+	_rtw_spinunlock_bh(&pstapriv->asoc_list_lock);
 
 #ifdef CONFIG_RTW_MESH
 	if (MLME_IS_MESH(padapter)) {
@@ -7437,10 +7434,10 @@ static s32 cfg80211_rtw_update_ft_ies(struct wiphy *wiphy,
 
 	p = (u8 *)ftie->ie;
 	if (ftie->ie_len <= sizeof(pft_roam->updated_ft_ies)) {
-		_enter_critical_bh(&pmlmepriv->lock, &irqL);
+		_rtw_spinlock_bh(&pmlmepriv->lock);
 		_rtw_memcpy(pft_roam->updated_ft_ies, ftie->ie, ftie->ie_len);
 		pft_roam->updated_ft_ies_len = ftie->ie_len;
-		_exit_critical_bh(&pmlmepriv->lock, &irqL);
+		_rtw_spinunlock_bh(&pmlmepriv->lock);
 	} else {
 		RTW_ERR("FTIEs parsing fail!\n");
 		return -EINVAL;
@@ -7734,7 +7731,7 @@ inline int rtw_cfg80211_is_p2p_scan(_adapter *adapter)
 		_irqL irqL;
 		int is_p2p_scan = 0;
 
-		_enter_critical_bh(&wdev_data->scan_req_lock, &irqL);
+		_rtw_spinlock_bh(&wdev_data->scan_req_lock);
 		if (wdev_data->scan_request
 			&& wdev_data->scan_request->n_ssids
 			&& wdev_data->scan_request->ssids
@@ -7744,7 +7741,7 @@ inline int rtw_cfg80211_is_p2p_scan(_adapter *adapter)
 				&& rtw_get_p2p_ie((u8 *)wdev_data->scan_request->ie, wdev_data->scan_request->ie_len, NULL, NULL))
 				is_p2p_scan = 1;
 		}
-		_exit_critical_bh(&wdev_data->scan_req_lock, &irqL);
+		_rtw_spinunlock_bh(&wdev_data->scan_req_lock);
 
 		return is_p2p_scan;
 	}
@@ -7861,10 +7858,10 @@ inline int rtw_cfg80211_is_scan_by_pd_wdev(_adapter *adapter)
 	struct wireless_dev *wdev = NULL;
 	_irqL irqL;
 
-	_enter_critical_bh(&wdev_data->scan_req_lock, &irqL);
+	_rtw_spinlock_bh(&wdev_data->scan_req_lock);
 	if (wdev_data->scan_request)
 		wdev = wdev_data->scan_request->wdev;
-	_exit_critical_bh(&wdev_data->scan_req_lock, &irqL);
+	_rtw_spinunlock_bh(&wdev_data->scan_req_lock);
 
 	if (wdev && wdev == wiphy_to_pd_wdev(wiphy))
 		return 1;
@@ -9699,11 +9696,10 @@ int	cfg80211_rtw_resume(struct wiphy *wiphy) {
 		}
 		parm.ssid_num = pwrpriv->pnlo_info->ssid_num;
 
-		_enter_critical_bh(&pmlmepriv->lock, &irqL);
+		_rtw_spinlock_bh(&pmlmepriv->lock);
 		//This modification fix PNO wakeup reconnect issue with hidden SSID AP.
-		//rtw_sitesurvey_cmd(padapter, NULL);
 		rtw_sitesurvey_cmd(padapter, &parm);
-		_exit_critical_bh(&pmlmepriv->lock, &irqL);
+		_rtw_spinunlock_bh(&pmlmepriv->lock);
 		
 		for (PNOWakeupScanWaitCnt = 0; PNOWakeupScanWaitCnt < 10; PNOWakeupScanWaitCnt++) {
 			if(check_fwstate(pmlmepriv, WIFI_UNDER_SURVEY) == _FALSE)
@@ -9711,9 +9707,9 @@ int	cfg80211_rtw_resume(struct wiphy *wiphy) {
 			rtw_msleep_os(1000);
 		}
 		
-		_enter_critical_bh(&pmlmepriv->lock, &irqL);
+		_rtw_spinlock_bh(&pmlmepriv->lock);
 		cfg80211_sched_scan_results(padapter->rtw_wdev->wiphy);
-		_exit_critical_bh(&pmlmepriv->lock, &irqL);
+		_rtw_spinunlock_bh(&pmlmepriv->lock);
 
 	}
 	RTW_DBG("<== %s\n",__func__);
@@ -10367,7 +10363,7 @@ void rtw_cfg80211_external_auth_status(struct wiphy *wiphy, struct net_device *d
 		/* RTW_INFO_DUMP("PMKID:", params->pmkid, PMKID_LEN); */
 		_rtw_set_pmksa(dev, params->bssid, params->pmkid);
 
-		_enter_critical_bh(&psta->lock, &irqL);
+		_rtw_spinlock_bh(&psta->lock);
 		if ((psta->auth_len != 0) && (psta->pauth_frame != NULL)) {
 			buf =  rtw_zmalloc(psta->auth_len);
 			if (buf) {
@@ -10379,7 +10375,7 @@ void rtw_cfg80211_external_auth_status(struct wiphy *wiphy, struct net_device *d
 			psta->pauth_frame = NULL;
 			psta->auth_len = 0;
 		}
-		_exit_critical_bh(&psta->lock, &irqL);
+		_rtw_spinunlock_bh(&psta->lock);
 
 		if (buf) {
 			struct mlme_ext_priv *pmlmeext = &(padapter->mlmeextpriv);
@@ -10697,13 +10693,12 @@ void rtw_wdev_free(struct wireless_dev *wdev)
 	if (wdev_to_ndev(wdev)) {
 		_adapter *adapter = (_adapter *)rtw_netdev_priv(wdev_to_ndev(wdev));
 		struct rtw_wdev_priv *wdev_priv = adapter_wdev_data(adapter);
-		_irqL irqL;
 
 		_rtw_spinlock_free(&wdev_priv->scan_req_lock);
 
-		_enter_critical_bh(&wdev_priv->connect_req_lock, &irqL);
+		_rtw_spinlock_bh(&wdev_priv->connect_req_lock);
 		rtw_wdev_free_connect_req(wdev_priv);
-		_exit_critical_bh(&wdev_priv->connect_req_lock, &irqL);
+		_rtw_spinunlock_bh(&wdev_priv->connect_req_lock);
 		_rtw_spinlock_free(&wdev_priv->connect_req_lock);
 
 		_rtw_mutex_free(&wdev_priv->roch_mutex);

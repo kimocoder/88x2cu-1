@@ -81,7 +81,7 @@ u8 rtw_do_join(_adapter *padapter)
 	u8 ret = _SUCCESS;
 
 
-	_enter_critical_bh(&(pmlmepriv->scanned_queue.lock), &irqL);
+	_rtw_spinlock_bh(&(pmlmepriv->scanned_queue.lock));
 	phead = get_list_head(queue);
 	plist = get_next(phead);
 
@@ -105,7 +105,7 @@ u8 rtw_do_join(_adapter *padapter)
 	}
 
 	if (_rtw_queue_empty(queue) == _TRUE) {
-		_exit_critical_bh(&(pmlmepriv->scanned_queue.lock), &irqL);
+		_rtw_spinunlock_bh(&(pmlmepriv->scanned_queue.lock));
 		_clr_fwstate_(pmlmepriv, WIFI_UNDER_LINKING);
 
 		/* when set_ssid/set_bssid for rtw_do_join(), but scanning queue is empty */
@@ -134,7 +134,7 @@ u8 rtw_do_join(_adapter *padapter)
 		goto exit;
 	} else {
 		int select_ret;
-		_exit_critical_bh(&(pmlmepriv->scanned_queue.lock), &irqL);
+		_rtw_spinunlock_bh(&(pmlmepriv->scanned_queue.lock));
 		select_ret = rtw_select_and_join_from_scanned_queue(pmlmepriv);
 		if (select_ret == _SUCCESS) {
 			pmlmepriv->to_join = _FALSE;
@@ -219,7 +219,7 @@ u8 rtw_set_802_11_bssid(_adapter *padapter, u8 *bssid)
 		goto exit;
 	}
 
-	_enter_critical_bh(&pmlmepriv->lock, &irqL);
+	_rtw_spinlock_bh(&pmlmepriv->lock);
 
 
 	RTW_INFO("Set BSSID under fw_state=0x%08x\n", get_fwstate(pmlmepriv));
@@ -266,7 +266,7 @@ handle_tkip_countermeasure:
 		status = rtw_do_join(padapter);
 
 release_mlme_lock:
-	_exit_critical_bh(&pmlmepriv->lock, &irqL);
+	_rtw_spinunlock_bh(&pmlmepriv->lock);
 
 exit:
 
@@ -291,7 +291,7 @@ u8 rtw_set_802_11_ssid(_adapter *padapter, NDIS_802_11_SSID *ssid)
 		goto exit;
 	}
 
-	_enter_critical_bh(&pmlmepriv->lock, &irqL);
+	_rtw_spinlock_bh(&pmlmepriv->lock);
 
 	RTW_INFO("Set SSID under fw_state=0x%08x\n", get_fwstate(pmlmepriv));
 	if (check_fwstate(pmlmepriv, WIFI_UNDER_SURVEY) == _TRUE)
@@ -363,7 +363,7 @@ handle_tkip_countermeasure:
 		status = rtw_do_join(padapter);
 
 release_mlme_lock:
-	_exit_critical_bh(&pmlmepriv->lock, &irqL);
+	_rtw_spinunlock_bh(&pmlmepriv->lock);
 
 exit:
 
@@ -400,7 +400,7 @@ u8 rtw_set_802_11_connect(_adapter *padapter,
 		goto exit;
 	}
 
-	_enter_critical_bh(&pmlmepriv->lock, &irqL);
+	_rtw_spinlock_bh(&pmlmepriv->lock);
 
 	RTW_PRINT(FUNC_ADPT_FMT"  fw_state=0x%08x\n",
 		  FUNC_ADPT_ARG(padapter), get_fwstate(pmlmepriv));
@@ -435,7 +435,7 @@ handle_tkip_countermeasure:
 		status = rtw_do_join(padapter);
 
 release_mlme_lock:
-	_exit_critical_bh(&pmlmepriv->lock, &irqL);
+	_rtw_spinunlock_bh(&pmlmepriv->lock);
 
 exit:
 	return status;
@@ -466,13 +466,13 @@ u8 rtw_set_802_11_infrastructure_mode(_adapter *padapter,
 #endif
 		}
 
-		_enter_critical_bh(&pmlmepriv->lock, &irqL);
+		_rtw_spinlock_bh(&pmlmepriv->lock);
 		is_linked = check_fwstate(pmlmepriv, WIFI_ASOC_STATE);
 		is_adhoc_master = check_fwstate(pmlmepriv, WIFI_ADHOC_MASTER_STATE);
 
 		/* flags = 0, means enqueue cmd and no wait */
 		if (flags != 0)
-			_exit_critical_bh(&pmlmepriv->lock, &irqL);
+			_rtw_spinunlock_bh(&pmlmepriv->lock);
 
 		if ((is_linked == _TRUE) || (*pold_state == Ndis802_11IBSS))
 			rtw_disassoc_cmd(padapter, 0, flags);
@@ -489,7 +489,7 @@ u8 rtw_set_802_11_infrastructure_mode(_adapter *padapter,
 
 		/* flags = 0, means enqueue cmd and no wait */
 		if (flags != 0)
-			_enter_critical_bh(&pmlmepriv->lock, &irqL);
+			_rtw_spinlock_bh(&pmlmepriv->lock);
 
 		*pold_state = networktype;
 
@@ -539,7 +539,7 @@ u8 rtw_set_802_11_infrastructure_mode(_adapter *padapter,
 		/* SecClearAllKeys(adapter); */
 
 
-		_exit_critical_bh(&pmlmepriv->lock, &irqL);
+		_rtw_spinunlock_bh(&pmlmepriv->lock);
 	}
 
 	return ret;
@@ -552,7 +552,7 @@ u8 rtw_set_802_11_disassociate(_adapter *padapter)
 	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
 
 
-	_enter_critical_bh(&pmlmepriv->lock, &irqL);
+	_rtw_spinlock_bh(&pmlmepriv->lock);
 
 	if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE) {
 
@@ -564,7 +564,7 @@ u8 rtw_set_802_11_disassociate(_adapter *padapter)
 			RTW_INFO("%s(): rtw_pwr_wakeup fail !!!\n", __FUNCTION__);
 	}
 
-	_exit_critical_bh(&pmlmepriv->lock, &irqL);
+	_rtw_spinunlock_bh(&pmlmepriv->lock);
 
 
 	return _TRUE;
@@ -573,13 +573,12 @@ u8 rtw_set_802_11_disassociate(_adapter *padapter)
 #if 1
 u8 rtw_set_802_11_bssid_list_scan(_adapter *padapter, struct sitesurvey_parm *pparm)
 {
-	_irqL	irqL;
 	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
 	u8	res = _TRUE;
 
-	_enter_critical_bh(&pmlmepriv->lock, &irqL);
+	_rtw_spinlock_bh(&pmlmepriv->lock);
 	res = rtw_sitesurvey_cmd(padapter, pparm);
-	_exit_critical_bh(&pmlmepriv->lock, &irqL);
+	_rtw_spinunlock_bh(&pmlmepriv->lock);
 
 	return res;
 }
@@ -587,7 +586,6 @@ u8 rtw_set_802_11_bssid_list_scan(_adapter *padapter, struct sitesurvey_parm *pp
 #else
 u8 rtw_set_802_11_bssid_list_scan(_adapter *padapter, struct sitesurvey_parm *pparm)
 {
-	_irqL	irqL;
 	struct	mlme_priv		*pmlmepriv = &padapter->mlmepriv;
 	u8	res = _TRUE;
 
@@ -615,11 +613,11 @@ u8 rtw_set_802_11_bssid_list_scan(_adapter *padapter, struct sitesurvey_parm *pp
 			return _SUCCESS;
 		}
 
-		_enter_critical_bh(&pmlmepriv->lock, &irqL);
+		_rtw_spinlock_bh(&pmlmepriv->lock);
 
 		res = rtw_sitesurvey_cmd(padapter, pparm);
 
-		_exit_critical_bh(&pmlmepriv->lock, &irqL);
+		_rtw_spinunlock_bh(&pmlmepriv->lock);
 	}
 exit:
 

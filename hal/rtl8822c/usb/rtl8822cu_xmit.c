@@ -610,7 +610,7 @@ static s32 rtl8822cu_xmitframe_complete(PADAPTER padapter, struct xmit_priv *pxm
 		pxmitframe->agg_num,pxmitframe->attrib.last_txcmdsz,len,pbuf,pxmitframe->pkt_offset ); */
 
 
-	_enter_critical_bh(&pxmitpriv->lock, &irqL);
+	_rtw_spinlock_bh(&pxmitpriv->lock);
 
 	sta_phead = get_list_head(phwxmit->sta_queue);
 	sta_plist = get_next(sta_phead);
@@ -706,7 +706,7 @@ static s32 rtl8822cu_xmitframe_complete(PADAPTER padapter, struct xmit_priv *pxm
 		rtw_list_insert_tail(&ptxservq->tx_pending, get_list_head(phwxmit->sta_queue));
 	}
 
-	_exit_critical_bh(&pxmitpriv->lock, &irqL);
+	_rtw_spinunlock_bh(&pxmitpriv->lock);
 agg_end:
 #ifdef CONFIG_80211N_HT
 	if ((pfirstframe->attrib.ether_type != 0x0806) &&
@@ -916,7 +916,7 @@ static s32 pre_xmitframe(PADAPTER padapter, struct xmit_frame *pxmitframe)
 	struct pkt_attrib *pattrib = &pxmitframe->attrib;
 	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
 
-	_enter_critical_bh(&pxmitpriv->lock, &irqL);
+	_rtw_spinlock_bh(&pxmitpriv->lock);
 
 	if (rtw_txframes_sta_ac_pending(padapter, pattrib) > 0)
 		goto enqueue;
@@ -931,7 +931,7 @@ static s32 pre_xmitframe(PADAPTER padapter, struct xmit_frame *pxmitframe)
 	if (pxmitbuf == NULL)
 		goto enqueue;
 
-	_exit_critical_bh(&pxmitpriv->lock, &irqL);
+	_rtw_spinunlock_bh(&pxmitpriv->lock);
 
 	pxmitframe->pxmitbuf = pxmitbuf;
 	pxmitframe->buf_addr = pxmitbuf->pbuf;
@@ -946,7 +946,7 @@ static s32 pre_xmitframe(PADAPTER padapter, struct xmit_frame *pxmitframe)
 
 enqueue:
 	res = rtw_xmitframe_enqueue(padapter, pxmitframe);
-	_exit_critical_bh(&pxmitpriv->lock, &irqL);
+	_rtw_spinunlock_bh(&pxmitpriv->lock);
 
 	if (res != _SUCCESS) {
 		rtw_free_xmitframe(pxmitpriv, pxmitframe);

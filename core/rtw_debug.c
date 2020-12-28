@@ -1108,7 +1108,7 @@ int proc_get_rx_stat(struct seq_file *m, void *v)
 	u8 bc_addr[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 	u8 null_addr[ETH_ALEN] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
-	_enter_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+	_rtw_spinlock_bh(&pstapriv->sta_hash_lock);
 	for (i = 0; i < NUM_STA; i++) {
 		phead = &(pstapriv->sta_hash[i]);
 		plist = get_next(phead);
@@ -1139,7 +1139,7 @@ int proc_get_rx_stat(struct seq_file *m, void *v)
 			}
 		}
 	}
-	_exit_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+	_rtw_spinunlock_bh(&pstapriv->sta_hash_lock);
 	return 0;
 }
 
@@ -1165,7 +1165,7 @@ int proc_get_tx_stat(struct seq_file *m, void *v)
 		return 0;
 	}
 
-	_enter_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+	_rtw_spinlock_bh(&pstapriv->sta_hash_lock);
 	for (i = 0; i < NUM_STA; i++) {
 		phead = &(pstapriv->sta_hash[i]);
 		plist = get_next(phead);
@@ -1181,7 +1181,7 @@ int proc_get_tx_stat(struct seq_file *m, void *v)
 			}
 		}
 	}
-	_exit_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+	_rtw_spinunlock_bh(&pstapriv->sta_hash_lock);
 	for (i = 0; i < macid_rec_idx; i++) {
 		_rtw_memcpy(pstapriv_primary->c2h_sta_mac, &sta_mac[i][0], ETH_ALEN);
 		pstapriv_primary->c2h_adapter_id = adapter->iface_id;
@@ -2254,7 +2254,7 @@ int proc_get_survey_info(struct seq_file *m, void *v)
 #endif
 	u8 rsni = 255;
 
-	_enter_critical_bh(&(pmlmepriv->scanned_queue.lock), &irqL);
+	_rtw_spinlock_bh(&(pmlmepriv->scanned_queue.lock));
 	phead = get_list_head(queue);
 	if (!phead)
 		goto _exit;
@@ -2324,7 +2324,7 @@ int proc_get_survey_info(struct seq_file *m, void *v)
 	}
 #endif
 _exit:
-	_exit_critical_bh(&(pmlmepriv->scanned_queue.lock), &irqL);
+	_rtw_spinunlock_bh(&(pmlmepriv->scanned_queue.lock));
 
 	return 0;
 }
@@ -2776,7 +2776,7 @@ ssize_t proc_set_rate_ctl(struct file *file, const char __user *buffer, size_t c
 		}
 
 		/*	no specific macid, apply to all macids except bc/mc macid */
-		_enter_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+		_rtw_spinlock_bh(&pstapriv->sta_hash_lock);
 		for (i = 0; i < NUM_STA; i++) {
 			phead = &(pstapriv->sta_hash[i]);
 			plist = get_next(phead);
@@ -2791,7 +2791,7 @@ ssize_t proc_set_rate_ctl(struct file *file, const char __user *buffer, size_t c
 				}
 			}
 		}
-		_exit_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+		_rtw_spinunlock_bh(&pstapriv->sta_hash_lock);
 
 		for (i = 0; i < macid_rec_idx; i++) {
 			RTW_INFO("Call phydm_fw_fix_rate()--en[%d] mac_id[%d] bw[%d] fix_rate[%d]\n", en, mac_id[i], bw, fix_rate);
@@ -4737,7 +4737,7 @@ int proc_get_all_sta_info(struct seq_file *m, void *v)
 	RTW_MAP_DUMP_SEL(m, "sta_dz_bitmap=", pstapriv->sta_dz_bitmap, pstapriv->aid_bmp_len);
 	RTW_MAP_DUMP_SEL(m, "tim_bitmap=", pstapriv->tim_bitmap, pstapriv->aid_bmp_len);
 
-	_enter_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+	_rtw_spinlock_bh(&pstapriv->sta_hash_lock);
 
 	for (i = 0; i < NUM_STA; i++) {
 		phead = &(pstapriv->sta_hash[i]);
@@ -4834,7 +4834,7 @@ int proc_get_all_sta_info(struct seq_file *m, void *v)
 
 	}
 
-	_exit_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+	_rtw_spinunlock_bh(&pstapriv->sta_hash_lock);
 
 	return 0;
 }
@@ -6526,7 +6526,7 @@ static int proc_tdls_display_tdls_sta_info(struct seq_file *m)
 	BOOLEAN FirstMatchFound = _FALSE;
 
 	/* Search for TDLS sta info to display */
-	_enter_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+	_rtw_spinlock_bh(&pstapriv->sta_hash_lock);
 	for (i = 0; i < NUM_STA; i++) {
 		phead = &(pstapriv->sta_hash[i]);
 		plist = get_next(phead);
@@ -6681,7 +6681,7 @@ static int proc_tdls_display_tdls_sta_info(struct seq_file *m)
 			}
 		}
 	}
-	_exit_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+	_rtw_spinunlock_bh(&pstapriv->sta_hash_lock);
 	if (NumOfTdlsStaToShow == 0) {
 		RTW_PRINT_SEL(m, "============[TDLS Peer STA Info]============\n");
 		RTW_PRINT_SEL(m, "No TDLS direct link exists!\n");
@@ -7020,7 +7020,7 @@ ssize_t proc_set_tx_sa_query(struct file *file, const char __user *buffer, size_
 		issue_action_SA_Query(padapter, get_my_bssid(&(pmlmeinfo->network)), 0, 0, (u8)key_type);
 	} else if (check_fwstate(pmlmepriv, WIFI_AP_STATE) == _TRUE && SEC_IS_BIP_KEY_INSTALLED(&padapter->securitypriv) == _TRUE) {
 		/* TX unicast sa_query to every client STA */
-		_enter_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+		_rtw_spinlock_bh(&pstapriv->sta_hash_lock);
 		for (index = 0; index < NUM_STA; index++) {
 			psta = NULL;
 
@@ -7033,7 +7033,7 @@ ssize_t proc_set_tx_sa_query(struct file *file, const char __user *buffer, size_
 				_rtw_memcpy(&mac_addr[psta->cmn.mac_id][0], psta->cmn.mac_addr, ETH_ALEN);
 			}
 		}
-		_exit_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+		_rtw_spinunlock_bh(&pstapriv->sta_hash_lock);
 
 		for (index = 0; index < macid_ctl->num && index < NUM_STA; index++) {
 			if (rtw_macid_is_used(macid_ctl, index) && !rtw_macid_is_bmc(macid_ctl, index)) {
@@ -7110,7 +7110,7 @@ ssize_t proc_set_tx_deauth(struct file *file, const char __user *buffer, size_t 
 			issue_deauth_11w(padapter, bc_addr, 0, IEEE80211W_RIGHT_KEY);
 
 		/* TX unicast deauth to every client STA */
-		_enter_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+		_rtw_spinlock_bh(&pstapriv->sta_hash_lock);
 		for (index = 0; index < NUM_STA; index++) {
 			psta = NULL;
 
@@ -7123,7 +7123,7 @@ ssize_t proc_set_tx_deauth(struct file *file, const char __user *buffer, size_t 
 				_rtw_memcpy(&mac_addr[psta->cmn.mac_id][0], psta->cmn.mac_addr, ETH_ALEN);
 			}
 		}
-		_exit_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+		_rtw_spinunlock_bh(&pstapriv->sta_hash_lock);
 
 		for (index = 0; index < macid_ctl->num && index < NUM_STA; index++) {
 			if (rtw_macid_is_used(macid_ctl, index) && !rtw_macid_is_bmc(macid_ctl, index)) {
@@ -7133,7 +7133,7 @@ ssize_t proc_set_tx_deauth(struct file *file, const char __user *buffer, size_t 
 
 					psta = rtw_get_stainfo(pstapriv, &mac_addr[index][0]);
 					if (psta && key_type != IEEE80211W_WRONG_KEY && key_type != IEEE80211W_NO_KEY) {
-						_enter_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+						_rtw_spinlock_bh(&pstapriv->asoc_list_lock);
 						if (rtw_is_list_empty(&psta->asoc_list) == _FALSE) {
 							rtw_list_delete(&psta->asoc_list);
 							pstapriv->asoc_list_cnt--;
@@ -7144,7 +7144,7 @@ ssize_t proc_set_tx_deauth(struct file *file, const char __user *buffer, size_t 
 							updated |= ap_free_sta(padapter, psta, _FALSE, WLAN_REASON_PREV_AUTH_NOT_VALID, _TRUE);
 
 						}
-						_exit_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+						_rtw_spinunlock_bh(&pstapriv->asoc_list_lock);
 					}
 
 					RTW_INFO("STA[%u]:"MAC_FMT"\n", index , MAC_ARG(&mac_addr[index][0]));

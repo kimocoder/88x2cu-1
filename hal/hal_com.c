@@ -206,7 +206,6 @@ void rtw_hal_read_sta_dk_key(_adapter *adapter, u8 key_id)
 	struct security_priv *psecuritypriv = &adapter->securitypriv;
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
 	struct cam_ctl_t *cam_ctl = &dvobj->cam_ctl;
-	_irqL irqL;
 	u8 get_key[16];
 
 	_rtw_memset(get_key, 0, sizeof(get_key));
@@ -219,12 +218,12 @@ void rtw_hal_read_sta_dk_key(_adapter *adapter, u8 key_id)
 	rtw_sec_read_cam_ent(adapter, key_id, NULL, NULL, get_key);
 
 	/*update key into related sw variable*/
-	_enter_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinlock_bh(&cam_ctl->lock);
 	if (_rtw_camid_is_gk(adapter, key_id)) {
 		RTW_INFO("[HW KEY] -Key-id:%d "KEY_FMT"\n", key_id, KEY_ARG(get_key));
 		RTW_INFO("[cam_cache KEY] - Key-id:%d "KEY_FMT"\n", key_id, KEY_ARG(&dvobj->cam_cache[key_id].key));
 	}
-	_exit_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinunlock_bh(&cam_ctl->lock);
 
 }
 #endif
@@ -2523,14 +2522,13 @@ void rtw_mbid_cam_deinit(struct dvobj_priv *dvobj)
 
 void rtw_mbid_cam_reset(_adapter *adapter)
 {
-	_irqL irqL;
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
 	struct mbid_cam_ctl_t *mbid_cam_ctl = &dvobj->mbid_cam_ctl;
 
-	_enter_critical_bh(&mbid_cam_ctl->lock, &irqL);
+	_rtw_spinlock_bh(&mbid_cam_ctl->lock);
 	mbid_cam_ctl->bitmap = 0;
 	_rtw_memset(&dvobj->mbid_cam_cache, 0, sizeof(dvobj->mbid_cam_cache));
-	_exit_critical_bh(&mbid_cam_ctl->lock, &irqL);
+	_rtw_spinunlock_bh(&mbid_cam_ctl->lock);
 
 	ATOMIC_SET(&mbid_cam_ctl->mbid_entry_num, 0);
 }
@@ -2553,15 +2551,13 @@ static u8 _rtw_mbid_cam_search_by_macaddr(_adapter *adapter, u8 *mac_addr)
 
 u8 rtw_mbid_cam_search_by_macaddr(_adapter *adapter, u8 *mac_addr)
 {
-	_irqL irqL;
-
 	u8 cam_id = INVALID_CAM_ID;
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
 	struct mbid_cam_ctl_t *mbid_cam_ctl = &dvobj->mbid_cam_ctl;
 
-	_enter_critical_bh(&mbid_cam_ctl->lock, &irqL);
+	_rtw_spinlock_bh(&mbid_cam_ctl->lock);
 	cam_id = _rtw_mbid_cam_search_by_macaddr(adapter, mac_addr);
-	_exit_critical_bh(&mbid_cam_ctl->lock, &irqL);
+	_rtw_spinunlock_bh(&mbid_cam_ctl->lock);
 
 	return cam_id;
 }
@@ -2586,14 +2582,13 @@ static u8 _rtw_mbid_cam_search_by_ifaceid(_adapter *adapter, u8 iface_id)
 
 u8 rtw_mbid_cam_search_by_ifaceid(_adapter *adapter, u8 iface_id)
 {
-	_irqL irqL;
 	u8 cam_id = INVALID_CAM_ID;
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
 	struct mbid_cam_ctl_t *mbid_cam_ctl = &dvobj->mbid_cam_ctl;
 
-	_enter_critical_bh(&mbid_cam_ctl->lock, &irqL);
+	_rtw_spinlock_bh(&mbid_cam_ctl->lock);
 	cam_id = _rtw_mbid_cam_search_by_ifaceid(adapter, iface_id);
-	_exit_critical_bh(&mbid_cam_ctl->lock, &irqL);
+	_rtw_spinunlock_bh(&mbid_cam_ctl->lock);
 
 	return cam_id;
 }
@@ -2605,14 +2600,14 @@ u8 rtw_get_max_mbid_cam_id(_adapter *adapter)
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
 	struct mbid_cam_ctl_t *mbid_cam_ctl = &dvobj->mbid_cam_ctl;
 
-	_enter_critical_bh(&mbid_cam_ctl->lock, &irqL);
+	_rtw_spinlock_bh(&mbid_cam_ctl->lock);
 	for (i = (TOTAL_MBID_CAM_NUM - 1); i >= 0; i--) {
 		if (mbid_cam_ctl->bitmap & BIT(i)) {
 			cam_id = i;
 			break;
 		}
 	}
-	_exit_critical_bh(&mbid_cam_ctl->lock, &irqL);
+	_rtw_spinunlock_bh(&mbid_cam_ctl->lock);
 	/*RTW_INFO("%s max cam_id:%d\n", __func__, cam_id);*/
 	return cam_id;
 }
@@ -2656,7 +2651,7 @@ u8 rtw_mbid_camid_alloc(_adapter *adapter, u8 *mac_addr)
 		rtw_warn_on(1);
 	}
 
-	_enter_critical_bh(&mbid_cam_ctl->lock, &irqL);
+	_rtw_spinlock_bh(&mbid_cam_ctl->lock);
 	for (i = 0; i < TOTAL_MBID_CAM_NUM; i++) {
 		if (!(mbid_cam_ctl->bitmap & BIT(i))) {
 			mbid_cam_ctl->bitmap |= BIT(i);
@@ -2666,7 +2661,7 @@ u8 rtw_mbid_camid_alloc(_adapter *adapter, u8 *mac_addr)
 	}
 	if ((cam_id != INVALID_CAM_ID) && (mac_addr))
 		mbid_cam_cache_init(adapter, &dvobj->mbid_cam_cache[cam_id], mac_addr);
-	_exit_critical_bh(&mbid_cam_ctl->lock, &irqL);
+	_rtw_spinunlock_bh(&mbid_cam_ctl->lock);
 
 	if (cam_id != INVALID_CAM_ID) {
 		ATOMIC_INC(&mbid_cam_ctl->mbid_entry_num);
@@ -2687,12 +2682,12 @@ u8 rtw_mbid_cam_info_change(_adapter *adapter, u8 *mac_addr)
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
 	struct mbid_cam_ctl_t *mbid_cam_ctl = &dvobj->mbid_cam_ctl;
 
-	_enter_critical_bh(&mbid_cam_ctl->lock, &irqL);
+	_rtw_spinlock_bh(&mbid_cam_ctl->lock);
 	entry_id = _rtw_mbid_cam_search_by_ifaceid(adapter, adapter->iface_id);
 	if (entry_id != INVALID_CAM_ID)
 		mbid_cam_cache_init(adapter, &dvobj->mbid_cam_cache[entry_id], mac_addr);
 
-	_exit_critical_bh(&mbid_cam_ctl->lock, &irqL);
+	_rtw_spinunlock_bh(&mbid_cam_ctl->lock);
 
 	return entry_id;
 }
@@ -2711,7 +2706,7 @@ u8 rtw_mbid_cam_assign(_adapter *adapter, u8 *mac_addr, u8 camid)
 	if (INVALID_CAM_ID != rtw_mbid_cam_search_by_macaddr(adapter, mac_addr))
 		goto exit;
 
-	_enter_critical_bh(&mbid_cam_ctl->lock, &irqL);
+	_rtw_spinlock_bh(&mbid_cam_ctl->lock);
 	if (!(mbid_cam_ctl->bitmap & BIT(camid))) {
 		if (mac_addr) {
 			mbid_cam_ctl->bitmap |= BIT(camid);
@@ -2719,7 +2714,7 @@ u8 rtw_mbid_cam_assign(_adapter *adapter, u8 *mac_addr, u8 camid)
 			ret = _TRUE;
 		}
 	}
-	_exit_critical_bh(&mbid_cam_ctl->lock, &irqL);
+	_rtw_spinunlock_bh(&mbid_cam_ctl->lock);
 
 	if (ret == _TRUE) {
 		ATOMIC_INC(&mbid_cam_ctl->mbid_entry_num);
@@ -2744,10 +2739,10 @@ void rtw_mbid_camid_clean(_adapter *adapter, u8 mbss_canid)
 		RTW_INFO(FUNC_ADPT_FMT" failed !! invlaid mbid_canid :%d\n", FUNC_ADPT_ARG(adapter), mbss_canid);
 		rtw_warn_on(1);
 	}
-	_enter_critical_bh(&mbid_cam_ctl->lock, &irqL);
+	_rtw_spinlock_bh(&mbid_cam_ctl->lock);
 	mbid_cam_cache_clr(&dvobj->mbid_cam_cache[mbss_canid]);
 	mbid_cam_ctl->bitmap &= (~BIT(mbss_canid));
-	_exit_critical_bh(&mbid_cam_ctl->lock, &irqL);
+	_rtw_spinunlock_bh(&mbid_cam_ctl->lock);
 	ATOMIC_DEC(&mbid_cam_ctl->mbid_entry_num);
 	RTW_INFO("%s - cam_id:%d\n", __func__, mbss_canid);
 }
@@ -2764,7 +2759,7 @@ int rtw_mbid_cam_cache_dump(void *sel, const char *fun_name, _adapter *adapter)
 
 	RTW_PRINT_SEL(sel, "== MBSSID CAM DUMP (%s)==\n", fun_name);
 
-	_enter_critical_bh(&mbid_cam_ctl->lock, &irqL);
+	_rtw_spinlock_bh(&mbid_cam_ctl->lock);
 	RTW_PRINT_SEL(sel, "Entry numbers:%d, max_camid:%d, bitmap:0x%08x\n", entry_num, max_cam_id, mbid_cam_ctl->bitmap);
 	for (i = 0; i < TOTAL_MBID_CAM_NUM; i++) {
 		RTW_PRINT_SEL(sel, "CAM_ID = %d\t", i);
@@ -2789,7 +2784,7 @@ int rtw_mbid_cam_cache_dump(void *sel, const char *fun_name, _adapter *adapter)
 		} else
 			_RTW_PRINT_SEL(sel, "N/A\n");
 	}
-	_exit_critical_bh(&mbid_cam_ctl->lock, &irqL);
+	_rtw_spinunlock_bh(&mbid_cam_ctl->lock);
 	return 0;
 }
 
@@ -2837,14 +2832,12 @@ int rtw_mbid_cam_dump(void *sel, const char *fun_name, _adapter *adapter)
 
 	RTW_PRINT_SEL(sel, "\n== MBSSID HW-CAM DUMP (%s)==\n", fun_name);
 
-	/*_enter_critical_bh(&mbid_cam_ctl->lock, &irqL);*/
 	for (i = 0; i < TOTAL_MBID_CAM_NUM; i++) {
 		RTW_PRINT_SEL(sel, "CAM_ID = %d\t", i);
 		_rtw_memset(mac_addr, 0, ETH_ALEN);
 		read_mbssid_cam(adapter, i, mac_addr);
 		_RTW_PRINT_SEL(sel, "MAC Addr:"MAC_FMT"\n", MAC_ARG(mac_addr));
 	}
-	/*_exit_critical_bh(&mbid_cam_ctl->lock, &irqL);*/
 	return 0;
 }
 
@@ -5429,10 +5422,10 @@ static void rtw_hal_update_gtk_offload_info(_adapter *adapter)
 		rtw_clean_hw_dk_cam(adapter);
 
 		if (_rtw_camid_is_gk(adapter, gtk_id)) {
-			_enter_critical_bh(&cam_ctl->lock, &irqL);
+			_rtw_spinlock_bh(&cam_ctl->lock);
 			_rtw_memcpy(&dvobj->cam_cache[gtk_id].key,
 				    get_key, 16);
-			_exit_critical_bh(&cam_ctl->lock, &irqL);
+			_rtw_spinunlock_bh(&cam_ctl->lock);
 		} else {
 			struct setkey_parm parm_gtk;
 
@@ -6543,9 +6536,6 @@ static void rtw_hal_construct_P2PBeacon(_adapter *padapter, u8 *pframe, u32 *pLe
 	u8 dbgbufLen = 0, index = 0;
 
 	RTW_INFO("%s\n", __FUNCTION__);
-	/* #if defined (CONFIG_AP_MODE) && defined (CONFIG_NATIVEAP_MLME) */
-	/*	_enter_critical_bh(&pmlmepriv->bcn_update_lock, &irqL);
-	 * #endif */ /* #if defined (CONFIG_AP_MODE) && defined (CONFIG_NATIVEAP_MLME) */
 
 	pwlanhdr = (struct rtw_ieee80211_hdr *)pframe;
 
@@ -6771,25 +6761,7 @@ static void rtw_hal_construct_P2PBeacon(_adapter *padapter, u8 *pframe, u32 *pLe
 
 _issue_bcn:
 
-	/* #if defined (CONFIG_AP_MODE) && defined (CONFIG_NATIVEAP_MLME) */
-	/*	pmlmepriv->update_bcn = _FALSE;
-	 *
-	 *	_exit_critical_bh(&pmlmepriv->bcn_update_lock, &irqL);
-	 * #endif */ /* #if defined (CONFIG_AP_MODE) && defined (CONFIG_NATIVEAP_MLME) */
-
 	*pLength = pktlen;
-#if 0
-	/* printf dbg msg */
-	dbgbufLen = pktlen;
-	RTW_INFO("======> DBG MSG FOR CONSTRAUCT P2P BEACON\n");
-
-	for (index = 0; index < dbgbufLen; index++)
-		printk("%x ", *(dbgbuf + index));
-
-	printk("\n");
-	RTW_INFO("<====== DBG MSG FOR CONSTRAUCT P2P BEACON\n");
-
-#endif
 }
 
 static void rtw_hal_construct_P2PProbeRsp(_adapter *padapter, u8 *pframe, u32 *pLength)
@@ -14437,7 +14409,7 @@ void rtw_dump_rx_dframe_info(_adapter *padapter, void *sel)
 
 	if (precvpriv->store_law_data_flag) {
 
-		_enter_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+		_rtw_spinlock_bh(&pstapriv->sta_hash_lock);
 
 		for (i = 0; i < NUM_STA; i++) {
 			phead = &(pstapriv->sta_hash[i]);
@@ -14487,7 +14459,7 @@ void rtw_dump_rx_dframe_info(_adapter *padapter, void *sel)
 				}
 			}
 		}
-		_exit_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+		_rtw_spinunlock_bh(&pstapriv->sta_hash_lock);
 	}
 }
 #endif
@@ -16232,7 +16204,7 @@ static void _hw_client_port_alloc(_adapter *adapter)
 			ADPT_ARG(adapter), adapter->client_id, adapter->client_port);
 		return;
 	}
-	_enter_critical_bh(&cltp->lock, &irql);
+	_rtw_spinlock_bh(&cltp->lock);
 	for (i = 0; i < MAX_CLIENT_PORT_NUM; i++) {
 		if (!(cltp->bmp & BIT(i)))
 			break;
@@ -16244,7 +16216,7 @@ static void _hw_client_port_alloc(_adapter *adapter)
 		adapter->client_port = _clt_port_id[i];
 	}
 	cltp->num++;
-	_exit_critical_bh(&cltp->lock, &irql);
+	_rtw_spinunlock_bh(&cltp->lock);
 	RTW_INFO("%s("ADPT_FMT")id:%d, port:%d clt_num:%d\n",
 		__func__, ADPT_ARG(adapter), adapter->client_id, adapter->client_port, cltp->num);
 }
@@ -16264,7 +16236,7 @@ static void _hw_client_port_free(_adapter *adapter)
 	RTW_INFO("%s ("ADPT_FMT") id:%d, port:%d clt_num:%d\n",
 		__func__, ADPT_ARG(adapter), adapter->client_id, adapter->client_port, cltp->num);
 
-	_enter_critical_bh(&cltp->lock, &irql);
+	_rtw_spinlock_bh(&cltp->lock);
 	if (adapter->client_id !=  MAX_CLIENT_PORT_NUM) {
 		cltp->bmp &= ~ BIT(adapter->client_id);
 		adapter->client_id = MAX_CLIENT_PORT_NUM;
@@ -16273,7 +16245,7 @@ static void _hw_client_port_free(_adapter *adapter)
 	cltp->num--;
 	if (cltp->num < 0)
 		cltp->num = 0;
-	_exit_critical_bh(&cltp->lock, &irql);
+	_rtw_spinunlock_bh(&cltp->lock);
 }
 void rtw_hw_client_port_allocate(_adapter *adapter)
 {

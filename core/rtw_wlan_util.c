@@ -650,7 +650,7 @@ void invalidate_cam_all(_adapter *padapter)
 
 	rtw_hal_set_hwreg(padapter, HW_VAR_CAM_INVALID_ALL, &val8);
 
-	_enter_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinlock_bh(&cam_ctl->lock);
 
 	rtw_sec_cam_map_clr_all(&cam_ctl->used);
 
@@ -664,7 +664,7 @@ void invalidate_cam_all(_adapter *padapter)
 #endif
 
 	_rtw_memset(dvobj->cam_cache, 0, sizeof(struct sec_cam_ent) * SEC_CAM_ENT_NUM_SW_LIMIT);
-	_exit_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinunlock_bh(&cam_ctl->lock);
 
 #ifdef SEC_DEFAULT_KEY_SEARCH//!BMC TX force camid
 	/* clear default key related key search setting */
@@ -711,28 +711,28 @@ inline void write_cam_from_cache(_adapter *adapter, u8 id)
 {
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
 	struct cam_ctl_t *cam_ctl = &dvobj->cam_ctl;
-	_irqL irqL;
 	struct sec_cam_ent cache;
 
-	_enter_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinlock_bh(&cam_ctl->lock);
 	_rtw_memcpy(&cache, &dvobj->cam_cache[id], sizeof(struct sec_cam_ent));
-	_exit_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinunlock_bh(&cam_ctl->lock);
 
 	rtw_sec_write_cam_ent(adapter, id, cache.ctrl, cache.mac, cache.key);
 }
+
 void write_cam_cache(_adapter *adapter, u8 id, u16 ctrl, u8 *mac, u8 *key)
 {
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
 	struct cam_ctl_t *cam_ctl = &dvobj->cam_ctl;
 	_irqL irqL;
 
-	_enter_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinlock_bh(&cam_ctl->lock);
 
 	dvobj->cam_cache[id].ctrl = ctrl;
 	_rtw_memcpy(dvobj->cam_cache[id].mac, mac, ETH_ALEN);
 	_rtw_memcpy(dvobj->cam_cache[id].key, key, 16);
 
-	_exit_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinunlock_bh(&cam_ctl->lock);
 }
 
 void clear_cam_cache(_adapter *adapter, u8 id)
@@ -741,11 +741,11 @@ void clear_cam_cache(_adapter *adapter, u8 id)
 	struct cam_ctl_t *cam_ctl = &dvobj->cam_ctl;
 	_irqL irqL;
 
-	_enter_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinlock_bh(&cam_ctl->lock);
 
 	_rtw_memset(&(dvobj->cam_cache[id]), 0, sizeof(struct sec_cam_ent));
 
-	_exit_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinunlock_bh(&cam_ctl->lock);
 }
 
 inline bool _rtw_camctl_chk_cap(_adapter *adapter, u8 cap)
@@ -772,9 +772,9 @@ inline void rtw_camctl_set_flags(_adapter *adapter, u32 flags)
 	struct cam_ctl_t *cam_ctl = &dvobj->cam_ctl;
 	_irqL irqL;
 
-	_enter_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinlock_bh(&cam_ctl->lock);
 	_rtw_camctl_set_flags(adapter, flags);
-	_exit_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinunlock_bh(&cam_ctl->lock);
 }
 
 inline void _rtw_camctl_clr_flags(_adapter *adapter, u32 flags)
@@ -791,9 +791,9 @@ inline void rtw_camctl_clr_flags(_adapter *adapter, u32 flags)
 	struct cam_ctl_t *cam_ctl = &dvobj->cam_ctl;
 	_irqL irqL;
 
-	_enter_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinlock_bh(&cam_ctl->lock);
 	_rtw_camctl_clr_flags(adapter, flags);
-	_exit_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinunlock_bh(&cam_ctl->lock);
 }
 
 inline bool _rtw_camctl_chk_flags(_adapter *adapter, u32 flags)
@@ -961,9 +961,9 @@ inline bool rtw_sec_camid_is_used(struct cam_ctl_t *cam_ctl, u8 id)
 	_irqL irqL;
 	bool ret;
 
-	_enter_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinlock_bh(&cam_ctl->lock);
 	ret = _rtw_sec_camid_is_used(cam_ctl, id);
-	_exit_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinunlock_bh(&cam_ctl->lock);
 
 	return ret;
 }
@@ -975,7 +975,7 @@ u8 rtw_get_sec_camid(_adapter *adapter, u8 max_bk_key_num, u8 *sec_key_id)
 	_irqL irqL;
 	u8 sec_cam_num = 0;
 
-	_enter_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinlock_bh(&cam_ctl->lock);
 	for (i = 0; i < cam_ctl->num; i++) {
 		if (_rtw_sec_camid_is_used(cam_ctl, i)) {
 			sec_key_id[sec_cam_num++] = i;
@@ -983,7 +983,7 @@ u8 rtw_get_sec_camid(_adapter *adapter, u8 max_bk_key_num, u8 *sec_key_id)
 				break;
 		}
 	}
-	_exit_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinunlock_bh(&cam_ctl->lock);
 
 	return sec_cam_num;
 }
@@ -1015,9 +1015,9 @@ inline bool rtw_camid_is_gk(_adapter *adapter, u8 cam_id)
 	_irqL irqL;
 	bool ret;
 
-	_enter_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinlock_bh(&cam_ctl->lock);
 	ret = _rtw_camid_is_gk(adapter, cam_id);
-	_exit_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinunlock_bh(&cam_ctl->lock);
 
 	return ret;
 }
@@ -1073,9 +1073,9 @@ s16 rtw_camid_search(_adapter *adapter, u8 *addr, s16 kid, s8 gk)
 	_irqL irqL;
 	s16 cam_id = -1;
 
-	_enter_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinlock_bh(&cam_ctl->lock);
 	cam_id = _rtw_camid_search(adapter, addr, kid, gk);
-	_exit_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinunlock_bh(&cam_ctl->lock);
 
 	return cam_id;
 }
@@ -1153,7 +1153,7 @@ s16 rtw_camid_alloc(_adapter *adapter, struct sta_info *sta, u8 kid, u8 gk, bool
 
 	*used = _FALSE;
 
-	_enter_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinlock_bh(&cam_ctl->lock);
 
 	if ((((mlmeinfo->state & 0x03) == WIFI_FW_AP_STATE) || ((mlmeinfo->state & 0x03) == WIFI_FW_ADHOC_STATE))
 	    && !sta) {
@@ -1205,7 +1205,7 @@ bitmap_handle:
 			rtw_sec_cam_map_set(&cam_ctl->used, cam_id + 1);
 	}
 
-	_exit_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinunlock_bh(&cam_ctl->lock);
 
 	return cam_id;
 }
@@ -1216,12 +1216,12 @@ void rtw_camid_set(_adapter *adapter, u8 cam_id)
 	struct cam_ctl_t *cam_ctl = &dvobj->cam_ctl;
 	_irqL irqL;
 
-	_enter_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinlock_bh(&cam_ctl->lock);
 
 	if (cam_id < cam_ctl->num)
 		rtw_sec_cam_map_set(&cam_ctl->used, cam_id);
 
-	_exit_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinunlock_bh(&cam_ctl->lock);
 }
 
 void rtw_camid_free(_adapter *adapter, u8 cam_id)
@@ -1230,12 +1230,12 @@ void rtw_camid_free(_adapter *adapter, u8 cam_id)
 	struct cam_ctl_t *cam_ctl = &dvobj->cam_ctl;
 	_irqL irqL;
 
-	_enter_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinlock_bh(&cam_ctl->lock);
 
 	if (cam_id < cam_ctl->num)
 		rtw_sec_cam_map_clr(&cam_ctl->used, cam_id);
 
-	_exit_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinunlock_bh(&cam_ctl->lock);
 }
 
 /*Must pause TX/RX before use this API*/
@@ -1256,7 +1256,7 @@ inline void rtw_sec_cam_swap(_adapter *adapter, u8 cam_id_a, u8 cam_id_b)
 	rtw_mi_update_ap_bmc_camid(adapter, cam_id_a, cam_id_b);
 
 	/*setp-1. backup org cam_info*/
-	_enter_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinlock_bh(&cam_ctl->lock);
 
 	cam_a_used = _rtw_sec_camid_is_used(cam_ctl, cam_id_a);
 	cam_b_used = _rtw_sec_camid_is_used(cam_ctl, cam_id_b);
@@ -1267,7 +1267,7 @@ inline void rtw_sec_cam_swap(_adapter *adapter, u8 cam_id_a, u8 cam_id_b)
 	if (cam_b_used)
 		_rtw_memcpy(&cache_b, &dvobj->cam_cache[cam_id_b], sizeof(struct sec_cam_ent));
 
-	_exit_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinunlock_bh(&cam_ctl->lock);
 
 	/*setp-2. clean cam_info*/
 	if (cam_a_used) {
@@ -1299,14 +1299,14 @@ s16 rtw_get_empty_cam_entry(_adapter *adapter, u8 start_camid)
 	int i;
 	s16 cam_id = -1;
 
-	_enter_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinlock_bh(&cam_ctl->lock);
 	for (i = start_camid; i < cam_ctl->num; i++) {
 		if (_FALSE == _rtw_sec_camid_is_used(cam_ctl, i)) {
 			cam_id = i;
 			break;
 		}
 	}
-	_exit_critical_bh(&cam_ctl->lock, &irqL);
+	_rtw_spinunlock_bh(&cam_ctl->lock);
 
 	return cam_id;
 }
@@ -2339,10 +2339,10 @@ void rtw_absorb_ssid_ifneed(_adapter *padapter, WLAN_BSSID_EX *bssid, u8 *pframe
 		}
 	}
 	
-	_enter_critical_bh(&padapter->mlmepriv.scanned_queue.lock, &irqL);
+	_rtw_spinlock_bh(&padapter->mlmepriv.scanned_queue.lock);
 	scanned = _rtw_find_network(&padapter->mlmepriv.scanned_queue, mac);
 	if (!scanned) {
-		_exit_critical_bh(&padapter->mlmepriv.scanned_queue.lock, &irqL);
+		_rtw_spinunlock_bh(&padapter->mlmepriv.scanned_queue.lock);
 		return;
 	}
 
@@ -2351,7 +2351,7 @@ void rtw_absorb_ssid_ifneed(_adapter *padapter, WLAN_BSSID_EX *bssid, u8 *pframe
 	if (hidden_ssid_ap(snetwork) && !hidden_ssid_ap(bssid)) {
 		p = rtw_get_ie(snetwork->IEs+ie_offset, _SSID_IE_, &ssid_len_ori, snetwork->IELength-ie_offset);
 		if (!p) {
-			_exit_critical_bh(&padapter->mlmepriv.scanned_queue.lock, &irqL);
+			_rtw_spinunlock_bh(&padapter->mlmepriv.scanned_queue.lock);
 			return;
 		}
 		next_ie = p + 2 + ssid_len_ori;
@@ -2366,7 +2366,7 @@ void rtw_absorb_ssid_ifneed(_adapter *padapter, WLAN_BSSID_EX *bssid, u8 *pframe
 		_rtw_memcpy(p+2+bssid->Ssid.SsidLength, backupIE, remain_len);
 		snetwork->IELength += bssid->Ssid.SsidLength;
 	}
-	_exit_critical_bh(&padapter->mlmepriv.scanned_queue.lock, &irqL);
+	_rtw_spinunlock_bh(&padapter->mlmepriv.scanned_queue.lock);
 }
 
 #ifdef DBG_RX_BCN
@@ -3972,7 +3972,7 @@ void rtw_alloc_macid(_adapter *padapter, struct sta_info *psta)
 		goto assigned;
 	}
 
-	_enter_critical_bh(&macid_ctl->lock, &irqL);
+	_rtw_spinlock_bh(&macid_ctl->lock);
 
 	for (i = last_id; i < macid_ctl->num; i++) {
 #ifdef CONFIG_MCC_MODE
@@ -4021,7 +4021,7 @@ void rtw_alloc_macid(_adapter *padapter, struct sta_info *psta)
 		last_id %= macid_ctl->num;
 	}
 
-	_exit_critical_bh(&macid_ctl->lock, &irqL);
+	_rtw_spinunlock_bh(&macid_ctl->lock);
 
 	if (i >= macid_ctl->num) {
 		psta->cmn.mac_id = macid_ctl->num;
@@ -4064,13 +4064,13 @@ void rtw_release_macid(_adapter *padapter, struct sta_info *psta)
 	if (psta->cmn.mac_id == RTW_DEFAULT_MGMT_MACID)
 		goto msg;
 
-	_enter_critical_bh(&macid_ctl->lock, &irqL);
+	_rtw_spinlock_bh(&macid_ctl->lock);
 
 	if (!rtw_macid_is_used(macid_ctl, psta->cmn.mac_id)) {
 		RTW_WARN(FUNC_ADPT_FMT" if%u, mac_addr:"MAC_FMT" macid:%u not used\n"
 			, FUNC_ADPT_ARG(padapter), padapter->iface_id + 1
 			, MAC_ARG(psta->cmn.mac_addr), psta->cmn.mac_id);
-		_exit_critical_bh(&macid_ctl->lock, &irqL);
+		_rtw_spinunlock_bh(&macid_ctl->lock);
 		rtw_warn_on(1);
 		goto exit;
 	}
@@ -4080,7 +4080,7 @@ void rtw_release_macid(_adapter *padapter, struct sta_info *psta)
 		RTW_WARN(FUNC_ADPT_FMT" if%u, mac_addr:"MAC_FMT" macid:%u not used by self\n"
 			, FUNC_ADPT_ARG(padapter), padapter->iface_id + 1
 			, MAC_ARG(psta->cmn.mac_addr), psta->cmn.mac_id);
-		_exit_critical_bh(&macid_ctl->lock, &irqL);
+		_rtw_spinunlock_bh(&macid_ctl->lock);
 		rtw_warn_on(1);
 		goto exit;
 	}
@@ -4109,7 +4109,7 @@ void rtw_release_macid(_adapter *padapter, struct sta_info *psta)
 		macid_ctl->sta[psta->cmn.mac_id] = NULL;
 	}
 
-	_exit_critical_bh(&macid_ctl->lock, &irqL);
+	_rtw_spinunlock_bh(&macid_ctl->lock);
 
 msg:
 	RTW_INFO(FUNC_ADPT_FMT" if%u, mac_addr:"MAC_FMT" macid:%u\n"
@@ -4128,16 +4128,15 @@ u8 rtw_search_max_mac_id(_adapter *padapter)
 	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
 	struct macid_ctl_t *macid_ctl = dvobj_to_macidctl(dvobj);
 	int i;
-	_irqL irqL;
 
 	/* TODO: Only search for connected macid? */
 
-	_enter_critical_bh(&macid_ctl->lock, &irqL);
+	_rtw_spinlock_bh(&macid_ctl->lock);
 	for (i = (macid_ctl->num - 1); i > 0 ; i--) {
 		if (rtw_macid_is_used(macid_ctl, i))
 			break;
 	}
-	_exit_critical_bh(&macid_ctl->lock, &irqL);
+	_rtw_spinunlock_bh(&macid_ctl->lock);
 	max_mac_id = i;
 
 	return max_mac_id;

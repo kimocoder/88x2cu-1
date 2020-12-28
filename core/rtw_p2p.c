@@ -59,7 +59,7 @@ static u32 go_add_group_info_attr(struct wifidirect_info *pwdinfo, u8 *pbuf)
 	pstart = pdata_attr;
 	pcur = pdata_attr;
 
-	_enter_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+	_rtw_spinlock_bh(&pstapriv->asoc_list_lock);
 	phead = &pstapriv->asoc_list;
 	plist = get_next(phead);
 
@@ -126,7 +126,7 @@ static u32 go_add_group_info_attr(struct wifidirect_info *pwdinfo, u8 *pbuf)
 
 
 	}
-	_exit_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+	_rtw_spinunlock_bh(&pstapriv->asoc_list_lock);
 
 	if (attr_len > 0)
 		len = rtw_set_p2p_attr_content(pbuf, P2P_ATTR_GROUP_INFO, attr_len, pdata_attr);
@@ -2392,7 +2392,7 @@ u32 process_p2p_devdisc_req(struct wifidirect_info *pwdinfo, u8 *pframe, uint le
 					_irqL irqL;
 					_list	*phead, *plist;
 
-					_enter_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+					_rtw_spinlock_bh(&pstapriv->asoc_list_lock);
 					phead = &pstapriv->asoc_list;
 					plist = get_next(phead);
 
@@ -2405,10 +2405,7 @@ u32 process_p2p_devdisc_req(struct wifidirect_info *pwdinfo, u8 *pframe, uint le
 						if (psta->is_p2p_device && (psta->dev_cap & P2P_DEVCAP_CLIENT_DISCOVERABILITY) &&
 						    _rtw_memcmp(psta->dev_addr, dev_addr, ETH_ALEN)) {
 
-							/* _exit_critical_bh(&pstapriv->asoc_list_lock, &irqL); */
-							/* issue GO Discoverability Request */
 							issue_group_disc_req(pwdinfo, psta->cmn.mac_addr);
-							/* _enter_critical_bh(&pstapriv->asoc_list_lock, &irqL); */
 
 							status = P2P_STATUS_SUCCESS;
 
@@ -2417,7 +2414,7 @@ u32 process_p2p_devdisc_req(struct wifidirect_info *pwdinfo, u8 *pframe, uint le
 							status = P2P_STATUS_FAIL_INFO_UNAVAILABLE;
 
 					}
-					_exit_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+					_rtw_spinunlock_bh(&pstapriv->asoc_list_lock);
 
 				} else
 					status = P2P_STATUS_FAIL_INVALID_PARAM;
@@ -3023,9 +3020,9 @@ void find_phase_handler(_adapter	*padapter)
 
 	rtw_p2p_set_state(pwdinfo, P2P_STATE_FIND_PHASE_SEARCH);
 
-	_enter_critical_bh(&pmlmepriv->lock, &irqL);
+	_rtw_spinlock_bh(&pmlmepriv->lock);
 	_status = rtw_sitesurvey_cmd(padapter, &parm);
-	_exit_critical_bh(&pmlmepriv->lock, &irqL);
+	_rtw_spinunlock_bh(&pmlmepriv->lock);
 
 
 }
@@ -4312,13 +4309,12 @@ static void pre_tx_scan_timer_process(void *FunctionContext)
 {
 	_adapter							*adapter = (_adapter *) FunctionContext;
 	struct	wifidirect_info				*pwdinfo = &adapter->wdinfo;
-	_irqL							irqL;
 	struct mlme_priv					*pmlmepriv = &adapter->mlmepriv;
 
 	if (rtw_p2p_chk_state(pwdinfo, P2P_STATE_NONE))
 		return;
 
-	_enter_critical_bh(&pmlmepriv->lock, &irqL);
+	_rtw_spinlock_bh(&pmlmepriv->lock);
 
 
 	if (rtw_p2p_chk_state(pwdinfo, P2P_STATE_TX_PROVISION_DIS_REQ)) {
@@ -4336,7 +4332,7 @@ static void pre_tx_scan_timer_process(void *FunctionContext)
 	} else
 		RTW_INFO("[%s] p2p_state is %d, ignore!!\n", __FUNCTION__, rtw_p2p_state(pwdinfo));
 
-	_exit_critical_bh(&pmlmepriv->lock, &irqL);
+	_rtw_spinunlock_bh(&pmlmepriv->lock);
 }
 
 static void find_phase_timer_process(void *FunctionContext)
