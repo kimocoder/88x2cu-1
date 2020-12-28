@@ -79,6 +79,18 @@ enum addba_rsp_ack_state {
 	RTW_RECV_ACK_OR_TIMEOUT,
 };
 
+#ifdef RTW_PHL_RX
+enum rtw_core_rx_state {
+	CORE_RX_CONTINUE = _SUCCESS,
+	CORE_RX_DONE,
+	CORE_RX_DROP, 
+	CORE_RX_FAIL,
+#ifdef CONFIG_RTW_CORE_RXSC
+	CORE_RX_GO_SHORTCUT,
+#endif
+};
+#endif
+
 /* for Rx reordering buffer control */
 struct recv_reorder_ctrl {
 	_adapter	*padapter;
@@ -679,6 +691,10 @@ struct recv_frame_hdr {
 	/* for A-MPDU Rx reordering buffer control */
 	struct recv_reorder_ctrl *preorder_ctrl;
 
+#ifdef RTW_PHL_RX
+	void *rx_req;
+#endif
+
 #ifdef CONFIG_WAPI_SUPPORT
 	u8 UserPriority;
 	u8 WapiTempPN[16];
@@ -709,6 +725,20 @@ enum rtw_rx_llc_hdl {
 };
 
 bool rtw_rframe_del_wfd_ie(union recv_frame *rframe, u8 ies_offset);
+#ifdef RTW_PHL_RX
+extern void dump_recv_frame(_adapter *adapter, union recv_frame *prframe);
+extern sint validate_recv_frame(_adapter *adapter, union recv_frame *precv_frame);
+extern s32 rtw_core_rx_data_pre_process(_adapter *adapter, union recv_frame *prframe);
+extern s32 rtw_core_rx_data_post_process(_adapter *adapter, union recv_frame *prframe);
+
+u32 rtw_core_rx_process(void *drv_priv);
+void process_pwrbit_data(_adapter *padapter, union recv_frame *precv_frame, struct sta_info *psta);
+void process_wmmps_data(_adapter *padapter, union recv_frame *precv_frame, struct sta_info *psta);
+#ifdef CONFIG_RTW_CORE_RXSC
+sint recv_ucast_pn_decache(union recv_frame *precv_frame);
+sint recv_bcast_pn_decache(union recv_frame *precv_frame);
+#endif /* CONFIG_RTW_CORE_RXSC */
+#endif
 
 typedef enum _RX_PACKET_TYPE {
 	NORMAL_RX,/* Normal rx packet */

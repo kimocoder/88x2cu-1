@@ -297,6 +297,10 @@ enum {
 	VENDOR_IE_SET ,
 	VENDOR_IE_GET ,
 #endif
+#if defined(RTW_PHL_TX) || defined(RTW_PHL_RX) || defined(CONFIG_PHL_TEST_SUITE)
+	PHL_TEST_SET,
+	PHL_TEST_GET,
+#endif
 #ifdef CONFIG_WOWLAN
 	MP_WOW_ENABLE,
 	MP_WOW_SET_PATTERN,

@@ -8452,6 +8452,24 @@ _clear_path:
 }
 #endif
 
+#if defined(RTW_PHL_TX) || defined(RTW_PHL_RX) || defined(CONFIG_PHL_TEST_SUITE)
+int rtw_phl_test_set(struct net_device *dev,
+	struct iw_request_info *info, union iwreq_data *wrqu, char *extra)
+{
+	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
+	u32 mode = 0;
+	u32 bytes = 0;
+	int ret = 0;
+
+#if defined(RTW_PHL_DBG_CMD)
+	core_cmd_phl_handler(padapter, extra);
+#endif
+
+exit:
+	return 0;
+}
+#endif
+
 static int rtw_mp_efuse_get(struct net_device *dev,
 			    struct iw_request_info *info,
 			    union iwreq_data *wdata, char *extra)
@@ -10480,6 +10498,12 @@ static int rtw_priv_set(struct net_device *dev,
 		rtw_vendor_ie_set(dev , info , wdata , extra);
 		break;
 #endif
+#if defined(RTW_PHL_TX) || defined(RTW_PHL_RX) || defined(CONFIG_PHL_TEST_SUITE)
+	case PHL_TEST_SET:
+		RTW_INFO("set case PHL_TEST_SET\n");
+		rtw_phl_test_set(dev , info , wdata , extra);
+		break;
+#endif
 	default:
 		return -EIO;
 	}
@@ -12355,6 +12379,10 @@ static const struct iw_priv_args rtw_private_args[] = {
 #ifdef CONFIG_APPEND_VENDOR_IE_ENABLE
 	{ VENDOR_IE_SET, IW_PRIV_TYPE_CHAR | 1024 , 0 , "vendor_ie_set" },
 	{ VENDOR_IE_GET, IW_PRIV_TYPE_CHAR | 1024, IW_PRIV_TYPE_CHAR | IW_PRIV_SIZE_MASK, "vendor_ie_get" },
+#endif
+#if defined(RTW_PHL_TX) || defined(RTW_PHL_RX) || defined(CONFIG_PHL_TEST_SUITE)
+	{ PHL_TEST_SET, IW_PRIV_TYPE_CHAR | 1024 , 0 , "phl_test" },
+	{ PHL_TEST_GET, IW_PRIV_TYPE_CHAR | 1024, IW_PRIV_TYPE_CHAR | IW_PRIV_SIZE_MASK, "" },
 #endif
 #if defined(CONFIG_RTL8723B)
 	{ MP_SetBT, IW_PRIV_TYPE_CHAR | 1024, IW_PRIV_TYPE_CHAR | IW_PRIV_SIZE_MASK, "mp_setbt" },

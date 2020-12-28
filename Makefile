@@ -91,6 +91,8 @@ CONFIG_IP_R_MONITOR = n #arp VOQ and high rate
 CONFIG_RTW_UP_MAPPING_RULE = tos
 CONFIG_RTW_MBO = n
 
+RTW_PHL_RX = y
+
 ########################## Android ###########################
 # CONFIG_RTW_ANDROID - 0: no Android, 4/5/6/7/8/9/10/11 : Android version
 CONFIG_RTW_ANDROID = 0
@@ -2328,6 +2330,14 @@ MODULE_NAME := $(USER_MODULE_NAME)
 endif
 
 ifneq ($(KERNELRELEASE),)
+
+########### COMMON #################################
+EXTRA_CFLAGS += -DPHL_PLATFORM_LINUX
+EXTRA_CFLAGS += -DCONFIG_PHL_ARCH
+
+ifeq ($(RTW_PHL_RX), y)
+EXTRA_CFLAGS += -DRTW_PHL_RX
+endif
 
 ########### this part for *.mk ############################
 include $(src)/hal/phydm/phydm.mk
