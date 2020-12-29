@@ -218,47 +218,6 @@ struct kfree_data_t {
 
 bool kfree_data_is_bb_gain_empty(struct kfree_data_t *data);
 
-struct hal_spec_t {
-	char *ic_name;
-	u8 macid_num;
-
-	u8 sec_cam_ent_num;
-	u8 sec_cap;
-	u8 wow_cap;
-	u8 macid_cap;
-	u16 macid_txrpt;
-	u8 macid_txrpt_pgsz;
-
-	u8 rfpath_num_2g:4;	/* used for tx power index path */
-	u8 rfpath_num_5g:4;	/* used for tx power index path */
-	u8 rf_reg_path_num;
-	u8 rf_reg_path_avail_num;
-	u8 rf_reg_trx_path_bmp; /* [7:4]TX path bmp, [0:3]RX path bmp */
-	u8 max_tx_cnt;
-
-	u8 tx_nss_num:4;
-	u8 rx_nss_num:4;
-
-	u8 band_cap;	/* value of BAND_CAP_XXX */
-	u8 bw_cap;		/* value of BW_CAP_XXX */
-	u8 port_num;
-	u8 proto_cap;	/* value of PROTO_CAP_XXX */
-
-	u8 txgi_max; /* maximum tx power gain index */
-	u8 txgi_pdbm; /* tx power gain index per dBm */
-
-	u8 wl_func;		/* value of WL_FUNC_XXX */
-
-	u8 tx_aclt_unit_factor; /* how many 32us */
-
-	u8 rx_tsf_filter:1;
-
-	u8 pg_txpwr_saddr; /* starting address of PG tx power info */
-	u8 pg_txgi_diff_factor; /* PG tx power gain index diff to tx power gain index */
-
-	u8 hci_type;	/* value of HCI Type */
-};
-
 #define HAL_SPEC_CHK_RF_PATH_2G(_spec, _path) ((_spec)->rfpath_num_2g > (_path))
 #define HAL_SPEC_CHK_RF_PATH_5G(_spec, _path) ((_spec)->rfpath_num_5g > (_path))
 #define HAL_SPEC_CHK_RF_PATH(_spec, _band, _path) ( \

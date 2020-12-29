@@ -125,7 +125,7 @@ static void hw_bcn_ctrl_set(_adapter *adapter, u8 hw_port, u8 bcn_ctl_val)
 {
 	u32 bcn_ctl_addr = 0;
 
-	if (hw_port >= MAX_HW_PORT) {
+	if (hw_port >= HW_PORT_MAX) {
 		RTW_ERR(FUNC_ADPT_FMT" HW Port(%d) invalid\n", FUNC_ADPT_ARG(adapter), hw_port);
 		rtw_warn_on(1);
 		return;
@@ -140,7 +140,7 @@ static void hw_bcn_ctrl_add(_adapter *adapter, u8 hw_port, u8 bcn_ctl_val)
 	u32 bcn_ctl_addr = 0;
 	u8 val8 = 0;
 
-	if (hw_port >= MAX_HW_PORT) {
+	if (hw_port >= HW_PORT_MAX) {
 		RTW_ERR(FUNC_ADPT_FMT" HW Port(%d) invalid\n", FUNC_ADPT_ARG(adapter), hw_port);
 		rtw_warn_on(1);
 		return;
@@ -156,7 +156,7 @@ static void hw_bcn_ctrl_clr(_adapter *adapter, u8 hw_port, u8 bcn_ctl_val)
 	u32 bcn_ctl_addr = 0;
 	u8 val8 = 0;
 
-	if (hw_port >= MAX_HW_PORT) {
+	if (hw_port >= HW_PORT_MAX) {
 		RTW_ERR(FUNC_ADPT_FMT" HW Port(%d) invalid\n", FUNC_ADPT_ARG(adapter), hw_port);
 		rtw_warn_on(1);
 		return;
@@ -1358,7 +1358,7 @@ void hw_tsf_reset(_adapter *adapter)
 	u32 tsf_rst_addr = 0;
 	u8 tsf_rst_bit = 0;
 
-	if (hw_port >= MAX_HW_PORT) {
+	if (hw_port >= HW_PORT_MAX) {
 		RTW_ERR(FUNC_ADPT_FMT" HW Port(%d) invalid\n", FUNC_ADPT_ARG(adapter), hw_port);
 		rtw_warn_on(1);
 		return;

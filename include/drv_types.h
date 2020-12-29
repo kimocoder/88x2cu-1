@@ -91,6 +91,7 @@ typedef struct _ADAPTER _adapter, ADAPTER, *PADAPTER;
 
 /*CONFIG_PHL_ARCH*/
 #include "rtw_phl.h"
+#include "../phl/phl_headers_core.h"
 
 #include <hal_intf.h>
 #include <hal_com.h>
@@ -1304,6 +1305,8 @@ struct dvobj_priv {
 	u8 iface_nums; /* total number of ifaces used runtime */
 	struct mi_state iface_state;
 
+	struct recv_priv recvpriv;
+
 #ifdef CONFIG_AP_MODE
 	#ifdef CONFIG_SUPPORT_MULTI_BCN
 	u8		nr_ap_if; /* total interface number of ap /go /mesh / nan mode. */
@@ -1617,15 +1620,6 @@ _adapter *dvobj_get_unregisterd_adapter(struct dvobj_priv *dvobj);
 _adapter *dvobj_get_adapter_by_addr(struct dvobj_priv *dvobj, u8 *addr);
 #define dvobj_get_primary_adapter(dvobj)	((dvobj)->padapters[IFACE_ID0])
 
-enum _hw_port {
-	HW_PORT0,
-	HW_PORT1,
-	HW_PORT2,
-	HW_PORT3,
-	HW_PORT4,
-	MAX_HW_PORT,
-};
-
 #ifdef CONFIG_CLIENT_PORT_CFG
 enum _client_port {
 	CLT_PORT0 = HW_PORT1,
@@ -1699,6 +1693,7 @@ struct _ADAPTER {
 	struct	io_priv	iopriv;
 	struct	xmit_priv	xmitpriv;
 	struct	recv_priv	recvpriv;
+	struct	recv_info	recvinfo;
 	struct	sta_priv	stapriv;
 	struct	security_priv	securitypriv;
 	_lock   security_key_mutex; /* add for CONFIG_IEEE80211W, none 11w also can use */

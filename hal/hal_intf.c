@@ -127,7 +127,7 @@ void rtw_hal_def_value_init(_adapter *padapter)
 		adapter_to_dvobj(padapter)->dft.mac_id = 0xFF;
 		#endif
 		#ifdef CONFIG_HW_P0_TSF_SYNC
-		adapter_to_dvobj(padapter)->p0_tsf.sync_port = MAX_HW_PORT;
+		adapter_to_dvobj(padapter)->p0_tsf.sync_port = HW_PORT_MAX;
 		adapter_to_dvobj(padapter)->p0_tsf.offset = 0;
 		#endif
 

@@ -1335,7 +1335,7 @@ int rtw_halmac_deinit_adapter(struct dvobj_priv *d)
 	return err;
 }
 
-static inline enum halmac_portid _hw_port_drv2halmac(enum _hw_port hwport)
+static inline enum halmac_portid _hw_port_drv2halmac(enum phl_hw_port hwport)
 {
 	enum halmac_portid port = HALMAC_PORTID_NUM;
 
@@ -1919,7 +1919,7 @@ int rtw_halmac_get_ac_queue_number(struct dvobj_priv *d, u8 *num)
  *
  * Return 0 for OK, otherwise fail.
  */
-int rtw_halmac_get_mac_address(struct dvobj_priv *d, enum _hw_port hwport, u8 *addr)
+int rtw_halmac_get_mac_address(struct dvobj_priv *d, enum phl_hw_port hwport, u8 *addr)
 {
 	struct halmac_adapter *halmac;
 	struct halmac_api *api;
@@ -1958,7 +1958,7 @@ out:
  *
  * Return 0 for OK, otherwise fail.
  */
-int rtw_halmac_get_network_type(struct dvobj_priv *d, enum _hw_port hwport, u8 *type)
+int rtw_halmac_get_network_type(struct dvobj_priv *d, enum phl_hw_port hwport, u8 *type)
 {
 #if 0
 	struct halmac_adapter *halmac;
@@ -2043,7 +2043,7 @@ out:
  *
  * Return 0 for OK, otherwise fail.
  */
-int rtw_halmac_get_bcn_ctrl(struct dvobj_priv *d, enum _hw_port hwport,
+int rtw_halmac_get_bcn_ctrl(struct dvobj_priv *d, enum phl_hw_port hwport,
 			struct rtw_halmac_bcn_ctrl *bcn_ctrl)
 {
 	struct halmac_adapter *halmac;
@@ -2149,7 +2149,7 @@ int rtw_halmac_set_max_dl_fw_size(struct dvobj_priv *d, u32 size)
  *
  * Return 0 for OK, otherwise fail.
  */
-int rtw_halmac_set_mac_address(struct dvobj_priv *d, enum _hw_port hwport, u8 *addr)
+int rtw_halmac_set_mac_address(struct dvobj_priv *d, enum phl_hw_port hwport, u8 *addr)
 {
 	struct halmac_adapter *halmac;
 	struct halmac_api *api;
@@ -2185,7 +2185,7 @@ out:
  *
  * Return 0 for OK, otherwise fail.
  */
-int rtw_halmac_set_bssid(struct dvobj_priv *d, enum _hw_port hwport, u8 *addr)
+int rtw_halmac_set_bssid(struct dvobj_priv *d, enum phl_hw_port hwport, u8 *addr)
 {
 	struct halmac_adapter *halmac;
 	struct halmac_api *api;
@@ -2220,7 +2220,7 @@ out:
  *
  * Return 0 for OK, otherwise fail.
  */
-int rtw_halmac_set_tx_address(struct dvobj_priv *d, enum _hw_port hwport, u8 *addr)
+int rtw_halmac_set_tx_address(struct dvobj_priv *d, enum phl_hw_port hwport, u8 *addr)
 {
 	struct halmac_adapter *halmac;
 	struct halmac_api *api;
@@ -2255,7 +2255,7 @@ out:
  *
  * Return 0 for OK, otherwise fail.
  */
-int rtw_halmac_set_network_type(struct dvobj_priv *d, enum _hw_port hwport, u8 type)
+int rtw_halmac_set_network_type(struct dvobj_priv *d, enum phl_hw_port hwport, u8 type)
 {
 	struct halmac_adapter *halmac;
 	struct halmac_api *api;
@@ -2289,7 +2289,7 @@ out:
  *
  * Return 0 for OK, otherwise fail.
  */
-int rtw_halmac_reset_tsf(struct dvobj_priv *d, enum _hw_port hwport)
+int rtw_halmac_reset_tsf(struct dvobj_priv *d, enum phl_hw_port hwport)
 {
 	struct halmac_adapter *halmac;
 	struct halmac_api *api;
@@ -2321,7 +2321,7 @@ out:
  *
  * Return 0 for OK, otherwise fail.
  */
-int rtw_halmac_set_bcn_interval(struct dvobj_priv *d, enum _hw_port hwport,
+int rtw_halmac_set_bcn_interval(struct dvobj_priv *d, enum phl_hw_port hwport,
 				u32 interval)
 {
 	struct halmac_adapter *halmac;
@@ -2354,7 +2354,7 @@ out:
  *
  * Return 0 for OK, otherwise fail.
  */
-int rtw_halmac_set_bcn_ctrl(struct dvobj_priv *d, enum _hw_port hwport,
+int rtw_halmac_set_bcn_ctrl(struct dvobj_priv *d, enum phl_hw_port hwport,
 			struct rtw_halmac_bcn_ctrl *bcn_ctrl)
 {
 	struct halmac_adapter *halmac;
@@ -2390,7 +2390,7 @@ out:
  *
  * Return 0 for OK, otherwise fail.
  */
-int rtw_halmac_set_aid(struct dvobj_priv *d, enum _hw_port hwport, u16 aid)
+int rtw_halmac_set_aid(struct dvobj_priv *d, enum phl_hw_port hwport, u16 aid)
 {
 	struct halmac_adapter *halmac;
 	struct halmac_api *api;

@@ -240,6 +240,10 @@ typedef	struct	net_device *_nic_hdl;
 typedef void		*_thread_hdl_;
 typedef int		thread_return;
 typedef void	*thread_context;
+struct thread_hdl {
+	_thread_hdl_ thread_handler;
+	u8 thread_status;
+};
 
 typedef void timer_hdl_return;
 typedef void *timer_hdl_context;

@@ -400,6 +400,42 @@ accesser of recv_priv: rtw_recv_entry(dispatch / passive level); recv_thread(pas
 using enter_critical section to protect
 */
 
+struct recv_info {
+	u64 rx_bytes;
+	u64 rx_pkts;
+	u64 rx_drop;
+
+	u64 dbg_rx_drop_count;
+	u64 dbg_rx_ampdu_drop_count;
+	u64 dbg_rx_ampdu_forced_indicate_count;
+	u64 dbg_rx_ampdu_loss_count;
+	u64 dbg_rx_dup_mgt_frame_drop_count;
+	u64 dbg_rx_ampdu_window_shift_cnt;
+	u64 dbg_rx_conflic_mac_addr_cnt;
+
+	/* For display the phy informatiom */
+	u8 is_signal_dbg;	/* for debug */
+	u8 signal_strength_dbg;	/* for debug */
+
+	/*RTW_WKARD_CORE_RSSI_V1 - GEORGIA MUST REFINE*/
+	u8 signal_strength;
+	u8 signal_qual;
+	s8 rssi;	/* rtw_phl_rssi_to_dbm(ptarget_wlan->network.PhyInfo.SignalStrength); */
+
+
+	#ifdef CONFIG_SIGNAL_STAT_PROCESS
+	_timer signal_stat_timer;
+	u32 signal_stat_sampling_interval;
+	#endif
+
+	/* u32 signal_stat_converging_constant; */
+	struct signal_stat signal_qual_data;
+	struct signal_stat signal_strength_data;
+
+
+	u16 sink_udpport, pre_rtp_rxseq, cur_rtp_rxseq;
+};
+
 #ifndef DBG_RX_BH_TRACKING
 #define DBG_RX_BH_TRACKING 0
 #endif

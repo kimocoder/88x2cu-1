@@ -4946,7 +4946,6 @@ void dump_rx_bh_tk(void *sel, struct recv_priv *recv)
 #endif /* DBG_RX_BH_TRACKING */
 
 
-#if 0 // NEO : do next time
 #ifdef RTW_PHL_RX
 void rx_dump_skb(struct sk_buff *skb)
 {
@@ -5256,7 +5255,6 @@ void rx_process_phy_info(union recv_frame *precvframe)
 	#endif
 }
 
-
 /*#define DBG_PHY_INFO*/
 void core_update_recvframe_phyinfo(union recv_frame *prframe, struct rtw_recv_pkt *rx_req)
 {
@@ -5361,6 +5359,8 @@ s32 core_rx_process_msdu(_adapter *adapter, union recv_frame *prframe)
 		return CORE_RX_DROP;
 	}
 
+	// NEO
+	#if 0 // mark off first for rtw_free_recvframe change
 	#if defined(CONFIG_AP_MODE)
 	if (act & RTW_RX_MSDU_ACT_FORWARD) {
 		recv_fwd_pkt_hdl(adapter, prframe->u.hdr.pkt, act, fwd_frame, &b2u_list);
@@ -5370,6 +5370,7 @@ s32 core_rx_process_msdu(_adapter *adapter, union recv_frame *prframe)
 			return CORE_RX_DONE;
 		}
 	}
+	#endif
 	#endif
 
 	if(rtw_recv_indicatepkt_check(prframe, 
@@ -5504,7 +5505,9 @@ s32 rtw_core_update_recvframe(struct dvobj_priv *dvobj,
 	}
 	else {
 		/*clone bcmc frame for all active adapter*/
+		#ifdef CONFIG_CONCURRENT_MODE // NEO
 		rtw_mi_buddy_clone_bcmc_packet(primary_padapter, prframe);
+		#endif
 	}
 
 exit:
@@ -5513,6 +5516,8 @@ exit:
 	return rx_state;
 }
 
+// NEO : mark off first
+#if 0
 u32 rtw_core_rx_process(void *drv_priv)
 {
 	struct dvobj_priv *dvobj = (struct dvobj_priv *)drv_priv;
@@ -5585,5 +5590,5 @@ rx_error:
 	}
 	return RTW_PHL_STATUS_SUCCESS;
 }
+#endif
 #endif /*RTW_PHL_RX*/
-#endif // if 0 NEO

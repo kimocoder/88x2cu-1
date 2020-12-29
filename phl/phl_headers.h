@@ -15,11 +15,11 @@
 #ifndef _PHL_HEADERS_H_
 #define _PHL_HEADERS_H_
 
-#if 0 //Neo
 /*
  * Basic components
  */
 #include "rtw_general_def.h"
+#if 0 //Neo
 #include "phl_list.h"
 #include "phl_status.h"
 #include "pltfm_ops.h"

@@ -138,22 +138,22 @@ int rtw_halmac_get_tx_dma_ch_map(struct dvobj_priv *d, u8 *dma_ch_map, u8 map_si
 int rtw_halmac_get_ori_h2c_size(struct dvobj_priv *d, u32 *size);
 int rtw_halmac_get_oqt_size(struct dvobj_priv *d, u8 *size);
 int rtw_halmac_get_ac_queue_number(struct dvobj_priv *d, u8 *num);
-int rtw_halmac_get_mac_address(struct dvobj_priv *d, enum _hw_port hwport, u8 *addr);
-int rtw_halmac_get_network_type(struct dvobj_priv *d, enum _hw_port hwport, u8 *type);
-int rtw_halmac_get_bcn_ctrl(struct dvobj_priv *d, enum _hw_port hwport, struct rtw_halmac_bcn_ctrl *bcn_ctrl);
+int rtw_halmac_get_mac_address(struct dvobj_priv *d, enum phl_hw_port hwport, u8 *addr);
+int rtw_halmac_get_network_type(struct dvobj_priv *d, enum phl_hw_port hwport, u8 *type);
+int rtw_halmac_get_bcn_ctrl(struct dvobj_priv *d, enum phl_hw_port hwport, struct rtw_halmac_bcn_ctrl *bcn_ctrl);
 /*int rtw_halmac_get_wow_reason(struct dvobj_priv *, u8 *reason);*/
 
 /* Set operations */
 int rtw_halmac_config_rx_info(struct dvobj_priv *d, enum halmac_drv_info info);
 int rtw_halmac_set_max_dl_fw_size(struct dvobj_priv *d, u32 size);
-int rtw_halmac_set_mac_address(struct dvobj_priv *d, enum _hw_port hwport, u8 *addr);
-int rtw_halmac_set_bssid(struct dvobj_priv *d, enum _hw_port hwport, u8 *addr);
-int rtw_halmac_set_tx_address(struct dvobj_priv *d, enum _hw_port hwport, u8 *addr);
-int rtw_halmac_set_network_type(struct dvobj_priv *d, enum _hw_port hwport, u8 type);
-int rtw_halmac_reset_tsf(struct dvobj_priv *d, enum _hw_port hwport);
-int rtw_halmac_set_bcn_interval(struct dvobj_priv *d, enum _hw_port hwport, u32 space);
-int rtw_halmac_set_bcn_ctrl(struct dvobj_priv *d, enum _hw_port hwport, struct rtw_halmac_bcn_ctrl *bcn_ctrl);
-int rtw_halmac_set_aid(struct dvobj_priv *d, enum _hw_port hwport, u16 aid);
+int rtw_halmac_set_mac_address(struct dvobj_priv *d, enum phl_hw_port hwport, u8 *addr);
+int rtw_halmac_set_bssid(struct dvobj_priv *d, enum phl_hw_port hwport, u8 *addr);
+int rtw_halmac_set_tx_address(struct dvobj_priv *d, enum phl_hw_port hwport, u8 *addr);
+int rtw_halmac_set_network_type(struct dvobj_priv *d, enum phl_hw_port hwport, u8 type);
+int rtw_halmac_reset_tsf(struct dvobj_priv *d, enum phl_hw_port hwport);
+int rtw_halmac_set_bcn_interval(struct dvobj_priv *d, enum phl_hw_port hwport, u32 space);
+int rtw_halmac_set_bcn_ctrl(struct dvobj_priv *d, enum phl_hw_port hwport, struct rtw_halmac_bcn_ctrl *bcn_ctrl);
+int rtw_halmac_set_aid(struct dvobj_priv *d, enum phl_hw_port hwport, u16 aid);
 int rtw_halmac_set_bandwidth(struct dvobj_priv *d, u8 channel, u8 pri_ch_idx, u8 bw);
 int rtw_halmac_set_edca(struct dvobj_priv *d, u8 queue, u8 aifs, u8 cw, u16 txop);
 int rtw_halmac_set_rts_full_bw(struct dvobj_priv *d, u8 enable);

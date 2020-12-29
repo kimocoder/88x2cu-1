@@ -1115,7 +1115,7 @@ void rtw_hal_hw_port_enable(_adapter *adapter)
 	bcn_ctrl.rx_bssid_fit = 1;
 	bcn_ctrl.rxbcn_rpt = 1;
 
-	/*rtw_halmac_get_bcn_ctrl(struct dvobj_priv *d, enum _hw_port hwport,
+	/*rtw_halmac_get_bcn_ctrl(struct dvobj_priv *d, enum phl_hw_port hwport,
 				struct rtw_halmac_bcn_ctrl *bcn_ctrl)*/
 	if (rtw_halmac_set_bcn_ctrl(dvobj, get_hw_port(adapter), &bcn_ctrl) == -1) {
 		RTW_ERR(ADPT_FMT" - hw port(%d) enable fail!!\n", ADPT_ARG(adapter), get_hw_port(adapter));
@@ -3223,7 +3223,7 @@ u16 rtw_hal_bcn_interval_adjust(_adapter *adapter, u16 bcn_interval)
 #else
 
 #ifndef RTW_HALMAC
-static u32 _get_macaddr_reg(enum _hw_port hwport)
+static u32 _get_macaddr_reg(enum phl_hw_port hwport)
 {
 	u32 reg_macaddr = REG_MACID;
 
@@ -3246,7 +3246,7 @@ static u32 _get_macaddr_reg(enum _hw_port hwport)
 
 static void rtw_hal_set_macaddr_port(_adapter *adapter, u8 *mac_addr)
 {
-	enum _hw_port hwport;
+	enum phl_hw_port hwport;
 
 	if (mac_addr == NULL)
 		return;
@@ -3270,7 +3270,7 @@ static void rtw_hal_set_macaddr_port(_adapter *adapter, u8 *mac_addr)
 
 static void rtw_hal_get_macaddr_port(_adapter *adapter, u8 *mac_addr)
 {
-	enum _hw_port hwport;
+	enum phl_hw_port hwport;
 
 	if (mac_addr == NULL)
 		return;
@@ -3295,7 +3295,7 @@ static void rtw_hal_get_macaddr_port(_adapter *adapter, u8 *mac_addr)
 #endif/*#ifdef CONFIG_MI_WITH_MBSSID_CAM*/
 
 #ifndef RTW_HALMAC
-static u32 _get_bssid_reg(enum _hw_port hw_port)
+static u32 _get_bssid_reg(enum phl_hw_port hw_port)
 {
 	u32 reg_bssid = REG_BSSID;
 
@@ -3317,7 +3317,7 @@ static u32 _get_bssid_reg(enum _hw_port hw_port)
 #endif /*!RTW_HALMAC*/
 static void rtw_hal_set_bssid(_adapter *adapter, u8 *val)
 {
-	enum _hw_port hw_port = rtw_hal_get_port(adapter);
+	enum phl_hw_port hw_port = rtw_hal_get_port(adapter);
 #ifdef RTW_HALMAC
 
 	rtw_halmac_set_bssid(adapter_to_dvobj(adapter), hw_port, val);

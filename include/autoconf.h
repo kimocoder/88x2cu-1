@@ -15,6 +15,8 @@
 #define CONFIG_SINGLE_IMG
 /* #define CONFIG_DISABLE_ODM */
 
+//#define RTW_WKARD_CORE_RSSI_V1
+
 /*
  * Public  General Config
  */
