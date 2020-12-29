@@ -641,6 +641,8 @@ typedef struct rtw_if_operations {
 	#include <drv_types_pci.h>
 #endif
 
+#include <rtw_trx.h>
+
 #define get_hw_port(adapter) (adapter->hw_port)
 
 #ifdef CONFIG_CONCURRENT_MODE
@@ -1410,6 +1412,8 @@ struct dvobj_priv {
 	u8 tx_aval_int_thr_mode;/* if 0=>threhold set by reques(default) ;if 1=>fixed by proc; if 2: fixed by sdio_tx_max_len */
 	u8 tx_aval_int_thr_value;
 #endif/*CONFIG_SDIO_TX_ENABLE_AVAL_INT*/
+
+	struct rtw_intf_ops *intf_ops;
 
 	struct trx_data_buf_q litexmitbuf_q;
 	struct trx_data_buf_q litexmit_extbuf_q;
