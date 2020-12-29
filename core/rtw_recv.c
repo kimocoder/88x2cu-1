@@ -75,15 +75,13 @@ sint rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter)
 	/* We don't need to memset padapter->XXX to zero, because adapter is allocated by rtw_zvmalloc(). */
 	/* _rtw_memset((unsigned char *)precvpriv, 0, sizeof (struct  recv_priv)); */
 
-	_rtw_spinlock_init(&precvpriv->lock);
-
 #ifdef CONFIG_RECV_THREAD_MODE
 	_rtw_init_sema(&precvpriv->recv_sema, 0);
 
 #endif
 
 	_rtw_init_queue(&precvpriv->free_recv_queue);
-	_rtw_init_queue(&precvpriv->recv_pending_queue);
+	//_rtw_init_queue(&precvpriv->recv_pending_queue);
 	_rtw_init_queue(&precvpriv->uc_swdec_pending_queue);
 
 	precvpriv->adapter = padapter;
@@ -163,13 +161,12 @@ exit:
 void rtw_mfree_recv_priv_lock(struct recv_priv *precvpriv);
 void rtw_mfree_recv_priv_lock(struct recv_priv *precvpriv)
 {
-	_rtw_spinlock_free(&precvpriv->lock);
 #ifdef CONFIG_RECV_THREAD_MODE
 	_rtw_free_sema(&precvpriv->recv_sema);
 #endif
 
 	_rtw_spinlock_free(&precvpriv->free_recv_queue.lock);
-	_rtw_spinlock_free(&precvpriv->recv_pending_queue.lock);
+	//_rtw_spinlock_free(&precvpriv->recv_pending_queue.lock);
 
 	_rtw_spinlock_free(&precvpriv->free_recv_buf_queue.lock);
 
@@ -400,7 +397,6 @@ u32 rtw_free_uc_swdec_pending_queue(_adapter *adapter)
 
 	return cnt;
 }
-
 
 #ifndef CONFIG_RECVBUF_QUEUE_LOCK_BH
 #ifdef CONFIG_SDIO_HCI

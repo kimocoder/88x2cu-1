@@ -441,7 +441,6 @@ struct recv_info {
 #endif
 
 struct recv_priv {
-	_lock	lock;
 
 #ifdef CONFIG_RECV_THREAD_MODE
 	_sema	recv_sema;
@@ -450,7 +449,7 @@ struct recv_priv {
 
 	/* _queue	blk_strms[MAX_RX_NUMBLKS];    */ /* keeping the block ack frame until return ack */
 	_queue	free_recv_queue;
-	_queue	recv_pending_queue;
+	//_queue	recv_pending_queue;
 	_queue	uc_swdec_pending_queue;
 
 
