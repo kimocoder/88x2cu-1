@@ -371,6 +371,15 @@ __inline static int _rtw_mutex_lock(_mutex *pmutex)
 	return ret;
 }
 
+__inline static void _rtw_mutex_unlock(_mutex *pmutex)
+{
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37))
+	mutex_unlock(pmutex);
+#else
+	up(pmutex);
+#endif
+}
+
 __inline static void _exit_critical_mutex(_mutex *pmutex, _irqL *pirqL)
 {
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37))

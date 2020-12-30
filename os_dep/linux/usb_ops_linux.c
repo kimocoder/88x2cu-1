@@ -56,7 +56,6 @@ int g6_usbctrl_vendorreq(struct dvobj_priv *pdvobjpriv, u8 request, u16 value, u
 	_rtw_mutex_lock(&dvobj_to_usb(pdvobjpriv)->usb_vendor_req_mutex);
 #endif
 
-#if 0 // NEO TODO
 
 	/* Acquire IO memory for vendorreq */
 #ifdef CONFIG_USB_VENDOR_REQ_BUFFER_PREALLOC
@@ -157,7 +156,6 @@ release_mutex:
 #ifdef CONFIG_USB_VENDOR_REQ_MUTEX
 	_rtw_mutex_unlock(&dvobj_to_usb(pdvobjpriv)->usb_vendor_req_mutex);
 #endif
-#endif // if 0 NEO
 exit:
 	return status;
 
