@@ -79,6 +79,8 @@ int rtw_os_urb_resource_alloc(struct data_urb *dataurb);
 void rtw_os_urb_resource_free(struct data_urb *dataurb);
 
 int usbctrl_vendorreq(struct intf_hdl *pintfhdl, u8 request, u16 value, u16 index, void *pdata, u16 len, u8 requesttype);
+int g6_usbctrl_vendorreq(struct dvobj_priv *pdvobjpriv, u8 request, u16 value, u16 index,
+			 void *pdata, u16 len, u8 requesttype);
 #ifdef CONFIG_USB_SUPPORT_ASYNC_VDN_REQ
 int _usbctrl_vendorreq_async_write(struct usb_device *udev, u8 request,
 		u16 value, u16 index, void *pdata, u16 len, u8 requesttype);

@@ -18,6 +18,153 @@
 #include <hal_data.h>
 #include <rtw_sreset.h>
 
+
+int g6_usbctrl_vendorreq(struct dvobj_priv *pdvobjpriv, u8 request, u16 value, u16 index, void *pdata, u16 len, u8 requesttype)
+{
+	int status = 0;
+#if 0 // NEO TODO
+	struct usb_device *udev = dvobj_to_usb(pdvobjpriv)->pusbdev;
+
+	unsigned int pipe;
+	int status = 0;
+#ifdef CONFIG_USB_VENDOR_REQ_BUFFER_DYNAMIC_ALLOCATE
+	u32 tmp_buflen = 0;
+#endif
+	u8 reqtype;
+	u8 *pIo_buf;
+	int vendorreq_times = 0;
+
+#ifdef CONFIG_USB_VENDOR_REQ_BUFFER_DYNAMIC_ALLOCATE
+	u8 *tmp_buf;
+#else /* use stack memory */
+	#ifndef CONFIG_USB_VENDOR_REQ_BUFFER_PREALLOC
+	u8 tmp_buf[MAX_USB_IO_CTL_SIZE];
+	#endif
+#endif
+
+	/* RTW_INFO("%s %s:%d\n",__FUNCTION__, current->comm, current->pid); */
+
+	if (RTW_CANNOT_IO(pdvobjpriv)) {
+		status = -EPERM;
+		goto exit;
+	}
+
+	if (len > MAX_VENDOR_REQ_CMD_SIZE) {
+		RTW_INFO("[%s] Buffer len error ,vendor request failed\n", __FUNCTION__);
+		status = -EINVAL;
+		goto exit;
+	}
+
+#ifdef CONFIG_USB_VENDOR_REQ_MUTEX
+	_rtw_mutex_lock(&dvobj_to_usb(pdvobjpriv)->usb_vendor_req_mutex);
+#endif
+
+
+	/* Acquire IO memory for vendorreq */
+#ifdef CONFIG_USB_VENDOR_REQ_BUFFER_PREALLOC
+	pIo_buf = dvobj_to_usb(pdvobjpriv)->usb_vendor_req_buf;
+#else
+	#ifdef CONFIG_USB_VENDOR_REQ_BUFFER_DYNAMIC_ALLOCATE
+	tmp_buf = rtw_malloc((u32) len + ALIGNMENT_UNIT);
+	tmp_buflen = (u32)len + ALIGNMENT_UNIT;
+	#else /* use stack memory */
+	tmp_buflen = MAX_USB_IO_CTL_SIZE;
+	#endif
+
+	/* Added by Albert 2010/02/09 */
+	/* For mstar platform, mstar suggests the address for USB IO should be 16 bytes alignment. */
+	/* Trying to fix it here. */
+	pIo_buf = (tmp_buf == NULL) ? NULL : tmp_buf + ALIGNMENT_UNIT - ((SIZE_PTR)(tmp_buf) & 0x0f);
+#endif
+
+	if (pIo_buf == NULL) {
+		RTW_INFO("[%s] pIo_buf == NULL\n", __FUNCTION__);
+		status = -ENOMEM;
+		goto release_mutex;
+	}
+
+	while (++vendorreq_times <= MAX_USBCTRL_VENDORREQ_TIMES) {
+		_rtw_memset(pIo_buf, 0, len);
+
+		if (requesttype == 0x01) {
+			pipe = usb_rcvctrlpipe(udev, 0);/* read_in */
+			reqtype =  REALTEK_USB_VENQT_READ;
+		} else {
+			pipe = usb_sndctrlpipe(udev, 0);/* write_out */
+			reqtype =  REALTEK_USB_VENQT_WRITE;
+			_rtw_memcpy(pIo_buf, pdata, len);
+		}
+
+		status = rtw_usb_control_msg(udev, pipe, request, reqtype, value, index, pIo_buf, len, RTW_USB_CONTROL_MSG_TIMEOUT);
+
+		if (status == len) {  /* Success this control transfer. */
+			rtw_reset_continual_io_error(pdvobjpriv);
+			if (requesttype == 0x01) {
+				/* For Control read transfer, we have to copy the read data from pIo_buf to pdata. */
+				_rtw_memcpy(pdata, pIo_buf,  len);
+			}
+		} else { /* error cases */
+			switch (len) {
+				case 1:
+					RTW_INFO("reg 0x%x, usb %s %u fail, status:%d value=0x%x, vendorreq_times:%d\n"
+						, (index << 16 | value), (requesttype == 0x01) ? "read" : "write" , len, status, *(u8 *)pdata, vendorreq_times);
+				break;
+				case 2:
+					RTW_INFO("reg 0x%x, usb %s %u fail, status:%d value=0x%x, vendorreq_times:%d\n"
+						, (index << 16 | value), (requesttype == 0x01) ? "read" : "write" , len, status, *(u16 *)pdata, vendorreq_times);
+				break;
+				case 4:
+					RTW_INFO("reg 0x%x, usb %s %u fail, status:%d value=0x%x, vendorreq_times:%d\n"
+						, (index << 16 | value), (requesttype == 0x01) ? "read" : "write" , len, status, *(u32 *)pdata, vendorreq_times);
+				break;
+				default:
+					RTW_INFO("reg 0x%x, usb %s %u fail, status:%d, vendorreq_times:%d\n"
+						, (index << 16 | value), (requesttype == 0x01) ? "read" : "write" , len, status, vendorreq_times);
+				break;
+			}
+
+			if (status < 0) {
+				if (status == (-ESHUTDOWN)	|| status == -ENODEV)
+					dev_set_surprise_removed(pdvobjpriv);
+				else {
+
+				}
+			} else { /* status != len && status >= 0 */
+				if (status > 0) {
+					if (requesttype == 0x01) {
+						/* For Control read transfer, we have to copy the read data from pIo_buf to pdata. */
+						_rtw_memcpy(pdata, pIo_buf,  len);
+					}
+				}
+			}
+
+			if (rtw_inc_and_chk_continual_io_error(pdvobjpriv) == _TRUE) {
+				dev_set_surprise_removed(pdvobjpriv);
+				break;
+			}
+
+		}
+
+		if (status == len)
+			break;
+
+	}
+
+	/* release IO memory used by vendorreq */
+#ifdef CONFIG_USB_VENDOR_REQ_BUFFER_DYNAMIC_ALLOCATE
+	rtw_mfree(tmp_buf, tmp_buflen);
+#endif
+
+release_mutex:
+#ifdef CONFIG_USB_VENDOR_REQ_MUTEX
+	_rtw_mutex_unlock(&dvobj_to_usb(pdvobjpriv)->usb_vendor_req_mutex);
+#endif
+exit:
+#endif // if 0 NEO
+	return status;
+
+}
+
 struct rtw_async_write_data {
 	u8 data[VENDOR_CMD_MAX_DATA_LEN];
 	struct usb_ctrlrequest dr;

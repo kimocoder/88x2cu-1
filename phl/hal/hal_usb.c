@@ -18,7 +18,7 @@
 
 #ifdef CONFIG_USB_HCI
 //NEO : TODO test_usb_read8 -> usb_read8 to replace the original one
-u8 test_usb_read8(struct rtw_hal_com_t *hal, u32 addr)
+u8 g6_usb_read8(struct rtw_hal_com_t *hal, u32 addr)
 {
 	u8 request;
 	u8 requesttype;
@@ -34,8 +34,8 @@ u8 test_usb_read8(struct rtw_hal_com_t *hal, u32 addr)
 	len = 1;
 
 	// NEO : TODO usb_ctrl_vendorreq to replace the original one
-	//_os_usbctrl_vendorreq(hal->drv_priv, request, wvalue, index,
-	//			&data, len, requesttype);
+	_os_usbctrl_vendorreq(hal->drv_priv, request, wvalue, index,
+				&data, len, requesttype);
 
 	return data;
 }

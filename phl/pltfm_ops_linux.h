@@ -719,15 +719,12 @@ static inline int _os_write32_pcie(void *d, u32 addr, u32 val)
 
 #ifdef CONFIG_USB_HCI
 #include <usb_ops_linux.h>
-//NEO TODO
-#if 0
 static inline int _os_usbctrl_vendorreq(void *d, u8 request, u16 value,
 				u16 index, void *pdata, u16 len, u8 requesttype)
 {
-	return usbctrl_vendorreq((struct dvobj_priv *)d, request, value,
+	return g6_usbctrl_vendorreq((struct dvobj_priv *)d, request, value,
 				index, pdata, len, requesttype);
 }
-#endif
 static __inline u8 os_out_token_alloc(void *drv_priv)
 {
 	return 0; // RTW_PHL_STATUS_SUCCESS
