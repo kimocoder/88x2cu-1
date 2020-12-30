@@ -641,6 +641,19 @@ typedef struct rtw_if_operations {
 	#include <drv_types_pci.h>
 #endif
 
+#ifdef CONFIG_SDIO_HCI
+	#include <drv_types_sdio.h>
+#endif
+#ifdef CONFIG_GSPI_HCI
+	#include <drv_types_gspi.h>
+#endif
+#ifdef CONFIG_PCI_HCI
+	#include <drv_types_pci.h>
+#endif
+#ifdef CONFIG_USB_HCI
+	#include <drv_types_usb.h>
+#endif
+
 #include <rtw_trx.h>
 
 #define get_hw_port(adapter) (adapter->hw_port)
@@ -1243,17 +1256,6 @@ struct protsel {
 	u32 sel;		/* save the last sel port */
 };
 
-#ifdef CONFIG_RTL8814B
-#define MAX_BULKOUT_NUM 7
-#ifdef CONFIG_USB_HCI
-#define MAX_ENDPOINT_NUM 8
-#endif
-#else
-#define MAX_BULKOUT_NUM 4
-#ifdef CONFIG_USB_HCI
-#define MAX_ENDPOINT_NUM 6
-#endif
-#endif
 
 struct dvobj_priv {
 	/*-------- below is common data --------*/
@@ -1400,6 +1402,19 @@ struct dvobj_priv {
 #endif
 
 	/*-------- below is for PCIE/USB/SDIO INTERFACE --------*/
+
+	#ifdef CONFIG_SDIO_HCI
+	SDIO_DATA sdio_data;
+	#endif
+	#ifdef CONFIG_GSPI_HCI
+	GSPI_DATA gspi_data;
+	#endif
+	#ifdef CONFIG_PCI_HCI
+	PCI_DATA pci_data;
+	#endif
+	#ifdef CONFIG_USB_HCI
+	USB_DATA usb_data;
+	#endif
 
 #ifdef INTF_DATA
 	INTF_DATA intf_data;
@@ -1577,6 +1592,31 @@ struct dvobj_priv {
 #endif
 #define dvobj_to_rfctl(dvobj) (&(dvobj->rf_ctl))
 #define rfctl_to_dvobj(rfctl) container_of((rfctl), struct dvobj_priv, rf_ctl)
+
+#ifdef CONFIG_PCI_HCI
+static inline PCI_DATA *dvobj_to_pci(struct dvobj_priv *dvobj)
+{
+	return &dvobj->pci_data;
+}
+#endif
+#ifdef CONFIG_USB_HCI
+static inline USB_DATA *dvobj_to_usb(struct dvobj_priv *dvobj)
+{
+	return &dvobj->usb_data;
+}
+#endif
+#ifdef CONFIG_SDIO_HCI
+static inline SDIO_DATA *dvobj_to_sdio(struct dvobj_priv *dvobj)
+{
+	return &dvobj->sdio_data;
+}
+#endif
+#ifdef CONFIG_GSPI_HCI
+static inline GSPI_DATA *dvobj_to_gspi(struct dvobj_priv *dvobj)
+{
+	return &dvobj->gspi_data;
+}
+#endif
 
 static inline void dev_set_surprise_removed(struct dvobj_priv *dvobj)
 {
