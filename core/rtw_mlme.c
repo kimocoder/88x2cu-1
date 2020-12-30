@@ -3492,7 +3492,7 @@ void rtw_stadel_event_callback(_adapter *adapter, u8 *pbuf)
 			rtw_set_to_roam(adapter, 0);
 #endif /* CONFIG_LAYER2_ROAMING */
 
-		rtw_free_uc_swdec_pending_queue(adapter);
+		//rtw_free_uc_swdec_pending_queue(adapter);
 
 		rtw_free_assoc_resources(adapter, _TRUE);
 		rtw_free_mlme_priv_ie_data(pmlmepriv);

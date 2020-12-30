@@ -13924,7 +13924,7 @@ u8 disconnect_hdl(_adapter *padapter, unsigned char *pbuf)
 	
 	rtw_mlmeext_disconnect(padapter);
 
-	rtw_free_uc_swdec_pending_queue(padapter);
+	//rtw_free_uc_swdec_pending_queue(padapter);
 
 	return	H2C_SUCCESS;
 }

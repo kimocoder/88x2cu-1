@@ -81,8 +81,7 @@ sint rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter)
 #endif
 
 	_rtw_init_queue(&precvpriv->free_recv_queue);
-	//_rtw_init_queue(&precvpriv->recv_pending_queue);
-	_rtw_init_queue(&precvpriv->uc_swdec_pending_queue);
+	//_rtw_init_queue(&precvpriv->uc_swdec_pending_queue);
 
 	precvpriv->adapter = padapter;
 
@@ -180,7 +179,7 @@ void _rtw_free_recv_priv(struct recv_priv *precvpriv)
 	_adapter	*padapter = precvpriv->adapter;
 
 
-	rtw_free_uc_swdec_pending_queue(padapter);
+	//rtw_free_uc_swdec_pending_queue(padapter);
 
 	rtw_mfree_recv_priv_lock(precvpriv);
 
@@ -383,6 +382,7 @@ void rtw_free_recvframe_queue(_queue *pframequeue,  _queue *pfree_recv_queue)
 
 }
 
+/*
 u32 rtw_free_uc_swdec_pending_queue(_adapter *adapter)
 {
 	u32 cnt = 0;
@@ -397,6 +397,7 @@ u32 rtw_free_uc_swdec_pending_queue(_adapter *adapter)
 
 	return cnt;
 }
+*/
 
 #ifndef CONFIG_RECVBUF_QUEUE_LOCK_BH
 #ifdef CONFIG_SDIO_HCI
@@ -4087,6 +4088,7 @@ int recv_func(_adapter *padapter, union recv_frame *rframe)
 		}
 	}
 #endif
+	#if 0 // G6 doesn't have sw dec yet
 		/* check if need to handle uc_swdec_pending_queue*/
 		if (check_fwstate(mlmepriv, WIFI_STATION_STATE) && psecuritypriv->busetkipkey) {
 			union recv_frame *pending_frame;
@@ -4102,12 +4104,13 @@ int recv_func(_adapter *padapter, union recv_frame *rframe)
 				RTW_INFO(FUNC_ADPT_FMT" dequeue %d from uc_swdec_pending_queue\n",
 					 FUNC_ADPT_ARG(padapter), cnt);
 		}
+	#endif
 
 	DBG_COUNTER(padapter->rx_logs.core_rx);
 	ret = recv_func_prehandle(padapter, rframe);
 
 	if (ret == _SUCCESS) {
-
+	#if 0 // G6 doesn't have sw dec yet
 		/* check if need to enqueue into uc_swdec_pending_queue*/
 		if (check_fwstate(mlmepriv, WIFI_STATION_STATE) &&
 		    !IS_MCAST(prxattrib->ra) && prxattrib->encrypt > 0 &&
@@ -4126,6 +4129,7 @@ int recv_func(_adapter *padapter, union recv_frame *rframe)
 			}
 			goto exit;
 		}
+	#endif
 
 do_posthandle:
 		ret = recv_func_posthandle(padapter, rframe);
