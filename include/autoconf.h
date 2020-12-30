@@ -193,7 +193,8 @@
 /*#define CONFIG_RESUME_IN_WORKQUEUE */
 /*#define CONFIG_SET_SCAN_DENY_TIMER */
 #define CONFIG_LONG_DELAY_ISSUE
-#define CONFIG_NEW_SIGNAL_STAT_PROCESS
+// NEO : G6 doesnt implement this yet
+//#define CONFIG_NEW_SIGNAL_STAT_PROCESS
 /* #define CONFIG_SIGNAL_DISPLAY_DBM */ /*display RX signal with dbm */
 #ifdef CONFIG_SIGNAL_DISPLAY_DBM
 /* #define CONFIG_BACKGROUND_NOISE_MONITOR */
