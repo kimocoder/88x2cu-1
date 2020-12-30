@@ -2092,19 +2092,20 @@ __inline static void RTW_ENABLE_FUNC(_adapter *padapter, int func_bit)
 	(rtw_is_surprise_removed(padapter) || \
 	 rtw_is_drv_stopped(padapter))
 
-#define RTW_IS_FUNC_DISABLED(padapter, func_bit) (ATOMIC_READ(&adapter_to_dvobj(padapter)->disable_func) & (func_bit))
+#define RTW_IS_FUNC_DISABLED(dvobj, func_bit) \
+	(ATOMIC_READ(&(dvobj->disable_func)) & (func_bit))
 
-#define RTW_CANNOT_IO(padapter) \
-	(rtw_is_surprise_removed(padapter) || \
-	 RTW_IS_FUNC_DISABLED((padapter), DF_IO_BIT))
+#define RTW_CANNOT_IO(dvobj) \
+	(dev_is_surprise_removed(dvobj) || \
+	 RTW_IS_FUNC_DISABLED((dvobj), DF_IO_BIT))
 
 #define RTW_CANNOT_RX(padapter) \
 	(RTW_CANNOT_RUN(padapter) || \
-	 RTW_IS_FUNC_DISABLED((padapter), DF_RX_BIT))
+	 RTW_IS_FUNC_DISABLED((adapter_to_dvobj(padapter)), DF_RX_BIT))
 
 #define RTW_CANNOT_TX(padapter) \
 	(RTW_CANNOT_RUN(padapter) || \
-	 RTW_IS_FUNC_DISABLED((padapter), DF_TX_BIT))
+	 RTW_IS_FUNC_DISABLED((adapter_to_dvobj(padapter)), DF_TX_BIT))
 
 #ifdef CONFIG_PNO_SUPPORT
 int rtw_parse_ssid_list_tlv(char **list_str, pno_ssid_t *ssid, int max, int *bytes_left);

@@ -3822,7 +3822,7 @@ int rtw_halmac_txfifo_wait_empty(struct dvobj_priv *d, u32 timeout)
 			if (pass_time > timeout)
 				break;
 		}
-		if (RTW_CANNOT_IO(a)) {
+		if (RTW_CANNOT_IO(adapter_to_dvobj(a))) {
 			RTW_WARN("%s: Interrupted by I/O forbiden!\n", __FUNCTION__);
 			break;
 		}
@@ -3837,7 +3837,7 @@ int rtw_halmac_txfifo_wait_empty(struct dvobj_priv *d, u32 timeout)
 		u8 i;
 		u32 val;
 
-		if (!RTW_CANNOT_IO(a)) {
+		if (!RTW_CANNOT_IO(adapter_to_dvobj(a))) {
 			for (i = 0; i < ARRAY_SIZE(dbg_reg); i++) {
 				val = rtw_read32(a, dbg_reg[i]);
 				RTW_ERR("REG_%X:0x%08x\n", dbg_reg[i], val);

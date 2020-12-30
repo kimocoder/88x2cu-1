@@ -2803,7 +2803,7 @@ static u8 mcc_get_reg_hdl(PADAPTER adapter, const u8 *val)
 	}
 
 	_enter_critical_mutex(&mccobjpriv->mcc_dbg_reg_mutex, NULL);
-	if (!RTW_CANNOT_IO(adapter)) {
+	if (!RTW_CANNOT_IO(adapter_to_dvobj(adapter))) {
 		/* RTW_INFO("=================================\n");
 		RTW_INFO(ADPT_FMT": cur_order:%d\n", ADPT_ARG(cur_iface), cur_order); */
 		

@@ -21,8 +21,6 @@
 
 int g6_usbctrl_vendorreq(struct dvobj_priv *pdvobjpriv, u8 request, u16 value, u16 index, void *pdata, u16 len, u8 requesttype)
 {
-	int status = 0;
-#if 0 // NEO TODO
 	struct usb_device *udev = dvobj_to_usb(pdvobjpriv)->pusbdev;
 
 	unsigned int pipe;
@@ -43,12 +41,12 @@ int g6_usbctrl_vendorreq(struct dvobj_priv *pdvobjpriv, u8 request, u16 value, u
 #endif
 
 	/* RTW_INFO("%s %s:%d\n",__FUNCTION__, current->comm, current->pid); */
-
 	if (RTW_CANNOT_IO(pdvobjpriv)) {
 		status = -EPERM;
 		goto exit;
 	}
 
+#if 0 // NEO TODO
 	if (len > MAX_VENDOR_REQ_CMD_SIZE) {
 		RTW_INFO("[%s] Buffer len error ,vendor request failed\n", __FUNCTION__);
 		status = -EINVAL;
@@ -159,8 +157,8 @@ release_mutex:
 #ifdef CONFIG_USB_VENDOR_REQ_MUTEX
 	_rtw_mutex_unlock(&dvobj_to_usb(pdvobjpriv)->usb_vendor_req_mutex);
 #endif
-exit:
 #endif // if 0 NEO
+exit:
 	return status;
 
 }
@@ -202,7 +200,7 @@ int usbctrl_vendorreq(struct intf_hdl *pintfhdl, u8 request, u16 value, u16 inde
 
 	/* RTW_INFO("%s %s:%d\n",__FUNCTION__, current->comm, current->pid); */
 
-	if (RTW_CANNOT_IO(padapter)) {
+	if (RTW_CANNOT_IO(adapter_to_dvobj(padapter))) {
 		status = -EPERM;
 		goto exit;
 	}

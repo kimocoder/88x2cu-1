@@ -6394,7 +6394,7 @@ static int rtw_dbg_port(struct net_device *dev,
 
 				test_cnts = extra_arg;
 				for (i = 0; i < test_cnts; i++) {
-					if (RTW_CANNOT_IO(padapter))
+					if (RTW_CANNOT_IO(adapter_to_dvobj(padapter)))
 						break;
 
 					rtw_write8(padapter, 0x07, test_code);

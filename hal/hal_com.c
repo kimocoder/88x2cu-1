@@ -1585,7 +1585,7 @@ int hal_read_mac_hidden_rpt(_adapter *adapter)
 	do {
 		cnt++;
 		id = rtw_read8(adapter, REG_C2HEVT_MSG_NORMAL);
-		if (id == C2H_MAC_HIDDEN_RPT || RTW_CANNOT_IO(adapter))
+		if (id == C2H_MAC_HIDDEN_RPT || RTW_CANNOT_IO(adapter_to_dvobj(adapter)))
 			break;
 		rtw_msleep_os(10);
 	} while (rtw_get_passing_time_ms(start) < timeout_ms || cnt < min_cnt);
