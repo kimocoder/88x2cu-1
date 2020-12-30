@@ -91,7 +91,7 @@ int usb_write8(struct intf_hdl *pintfhdl, u32 addr, u8 val);
 int usb_write16(struct intf_hdl *pintfhdl, u32 addr, u16 val);
 int usb_write32(struct intf_hdl *pintfhdl, u32 addr, u32 val);
 int usb_writeN(struct intf_hdl *pintfhdl, u32 addr, u32 length, u8 *pdata);
-u32 usb_read_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *rmem);
+u32 rtw_usb_read_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *rmem);
 void usb_recv_tasklet(void *priv);
 
 #ifdef CONFIG_USB_INTERRUPT_IN_PIPE

@@ -25,7 +25,7 @@ void rtl8822cu_set_intf_ops(struct _io_ops *pops)
 	pops->_read16 = &usb_read16;
 	pops->_read32 = &usb_read32;
 	pops->_read_mem = &usb_read_mem;
-	pops->_read_port = &usb_read_port;
+	pops->_read_port = &rtw_usb_read_port;
 
 	pops->_write8 = &usb_write8;
 	pops->_write16 = &usb_write16;

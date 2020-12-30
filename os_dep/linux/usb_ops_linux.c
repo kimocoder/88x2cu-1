@@ -860,7 +860,7 @@ void usb_read_port_complete(struct urb *purb, struct pt_regs *regs)
 
 }
 
-u32 usb_read_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *rmem)
+u32 rtw_usb_read_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *rmem)
 {
 	int err;
 	unsigned int pipe;
@@ -1021,7 +1021,7 @@ exit:
 	return;
 }
 
-u32 usb_read_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *rmem)
+u32 rtw_usb_read_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *rmem)
 {
 	int err;
 	unsigned int pipe;
