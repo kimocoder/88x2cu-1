@@ -91,6 +91,8 @@ CONFIG_IP_R_MONITOR = n #arp VOQ and high rate
 CONFIG_RTW_UP_MAPPING_RULE = tos
 CONFIG_RTW_MBO = n
 
+CONFIG_PHL_ARCH = y
+
 RTW_PHL_RX = y
 
 ########################## Android ###########################
@@ -2339,6 +2341,8 @@ ifeq ($(RTW_PHL_RX), y)
 EXTRA_CFLAGS += -DRTW_PHL_RX
 endif
 
+include $(src)/phl/phl.mk
+
 ########### this part for *.mk ############################
 include $(src)/hal/phydm/phydm.mk
 
@@ -2442,6 +2446,7 @@ $(MODULE_NAME)-y += $(_HAL_INTFS_FILES)
 $(MODULE_NAME)-y += $(_PHYDM_FILES)
 $(MODULE_NAME)-y += $(_BTC_FILES)
 $(MODULE_NAME)-y += $(_PLATFORM_FILES)
+$(MODULE_NAME)-y += $(OBJS)
 
 $(MODULE_NAME)-$(CONFIG_MP_INCLUDED) += core/rtw_mp.o
 
@@ -2517,7 +2522,7 @@ clean:
 	cd hal ; rm -fr */*/*/*.mod.c */*/*/*.mod */*/*/*.o */*/*/.*.cmd */*/*/*.ko
 	cd hal ; rm -fr */*/*.mod.c */*/*.mod */*/*.o */*/.*.cmd */*/*.ko
 	cd hal ; rm -fr */*.mod.c */*.mod */*.o */.*.cmd */*.ko
-	cd hal ; rm -fr *.mod.c *.mod *.o .*.cmd *.ko
+	cd hal ; rm -fr *.mod.c *.mod *.o .*.cmd *.o.cmd *.ko
 	cd core ; rm -fr */*.mod.c */*.mod */*.o */.*.cmd */*.ko
 	cd core ; rm -fr *.mod.c *.mod *.o .*.cmd *.ko
 	cd os_dep/linux ; rm -fr *.mod.c *.mod *.o .*.cmd *.ko

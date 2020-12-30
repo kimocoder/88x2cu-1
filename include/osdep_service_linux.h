@@ -244,6 +244,12 @@ struct thread_hdl {
 	_thread_hdl_ thread_handler;
 	u8 thread_status;
 };
+#define THREAD_STATUS_STARTED BIT(0)
+#define THREAD_STATUS_STOPPED BIT(1)
+#define RST_THREAD_STATUS(t) (t->thread_status = 0)
+#define SET_THREAD_STATUS(t, s) 	(t->thread_status |= s)
+#define CLR_THREAD_STATUS(t, cl)	(t->thread_status &= ~(cl))
+#define CHK_THREAD_STATUS(t, ck) (t->thread_status & ck)
 
 typedef void timer_hdl_return;
 typedef void *timer_hdl_context;
