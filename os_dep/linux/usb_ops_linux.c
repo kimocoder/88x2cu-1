@@ -46,7 +46,6 @@ int g6_usbctrl_vendorreq(struct dvobj_priv *pdvobjpriv, u8 request, u16 value, u
 		goto exit;
 	}
 
-#if 0 // NEO TODO
 	if (len > MAX_VENDOR_REQ_CMD_SIZE) {
 		RTW_INFO("[%s] Buffer len error ,vendor request failed\n", __FUNCTION__);
 		status = -EINVAL;
@@ -57,6 +56,7 @@ int g6_usbctrl_vendorreq(struct dvobj_priv *pdvobjpriv, u8 request, u16 value, u
 	_rtw_mutex_lock(&dvobj_to_usb(pdvobjpriv)->usb_vendor_req_mutex);
 #endif
 
+#if 0 // NEO TODO
 
 	/* Acquire IO memory for vendorreq */
 #ifdef CONFIG_USB_VENDOR_REQ_BUFFER_PREALLOC
@@ -212,7 +212,7 @@ int usbctrl_vendorreq(struct intf_hdl *pintfhdl, u8 request, u16 value, u16 inde
 	}
 
 #ifdef CONFIG_USB_VENDOR_REQ_MUTEX
-	_enter_critical_mutex_lock(&pdvobjpriv->usb_vendor_req_mutex, NULL);
+	_rtw_mutex_lock(&pdvobjpriv->usb_vendor_req_mutex);
 #endif
 
 

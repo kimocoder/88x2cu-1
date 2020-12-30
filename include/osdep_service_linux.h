@@ -360,7 +360,7 @@ __inline static int _enter_critical_mutex(_mutex *pmutex, _irqL *pirqL)
 }
 
 
-__inline static int _enter_critical_mutex_lock(_mutex *pmutex, _irqL *pirqL)
+__inline static int _rtw_mutex_lock(_mutex *pmutex)
 {
 	int ret = 0;
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37))
