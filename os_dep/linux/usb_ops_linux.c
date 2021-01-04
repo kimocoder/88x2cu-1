@@ -704,6 +704,24 @@ void rtw_usb_write_port_cancel(struct intf_hdl *pintfhdl)
 	_adapter	*padapter = pintfhdl->padapter;
 	struct xmit_buf *pxmitbuf = (struct xmit_buf *)padapter->xmitpriv.pxmitbuf;
 
+	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
+	struct data_urb *xmiturb = (struct data_urb *)dvobj->xmit_urb_q.urb_buf;
+	u32 xmiturb_nr = RTW_XMITURB_NR;
+
+	if (dvobj == NULL) {
+		RTW_ERR("%s dvobj is NULL\n", __func__);
+		rtw_warn_on(1);
+		return;
+	}
+
+	RTW_INFO("%s\n", __func__);
+
+	for (i = 0; i < xmiturb_nr; i++) {
+		usb_kill_urb(xmiturb->urb);
+		xmiturb++;
+	}
+
+#if 0
 	RTW_INFO("%s\n", __func__);
 
 	for (i = 0; i < NR_XMITBUFF; i++) {
@@ -722,6 +740,7 @@ void rtw_usb_write_port_cancel(struct intf_hdl *pintfhdl)
 		}
 		pxmitbuf++;
 	}
+#endif
 }
 
 void usb_init_recvbuf(_adapter *padapter, struct recv_buf *precvbuf)
