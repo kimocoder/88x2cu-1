@@ -263,6 +263,14 @@
 	#endif
 #endif /* CONFIG_PCI_HCI */
 
+#ifdef RTW_PHL_TX
+enum CORE_TX_TYPE {
+	RTW_TX_OS = 0,
+	RTW_TX_OS_MAC80211,
+	RTW_TX_DRV_MGMT,
+};
+#endif
+
 enum TXDESC_SC {
 	SC_DONT_CARE = 0x00,
 	SC_UPPER = 0x01,

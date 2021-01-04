@@ -5574,6 +5574,55 @@ s32 core_tx_update_pkt(_adapter *padapter, struct xmit_frame *pxframe, struct sk
 	return SUCCESS;
 }
 
+s32 core_tx_update_xmitframe(_adapter *padapter,
+	struct xmit_frame *pxframe, struct sk_buff **pskb, struct sta_info *psta, u8 type)
+{
+	pxframe->xftype = type;
+	pxframe->pkt = *pskb;
+
+	PHLTX_LOG;
+
+#if 1
+	if (pxframe->xftype == RTW_TX_OS) {
+		if (update_attrib(padapter, *pskb, &pxframe->attrib) != _SUCCESS)
+			return FAIL;
+	}
+#else
+	pxframe->pkt = *pskb;
+
+	if (update_xmitframe_from_hdr(padapter, pxframe) == FAIL)
+		return FAIL;
+
+	PHLTX_LOG;
+
+	if (update_xmitframe_qos(padapter, pxframe) == FAIL)
+		return FAIL;
+
+	PHLTX_LOG;
+
+	if (update_xmitframe_security(padapter, pxframe) == FAIL)
+		return FAIL;
+
+	PHLTX_LOG;
+
+	//if (update_xmitframe_hw(padapter, pxframe) == FAIL)
+		//return FAIL;
+
+	PHLTX_LOG;
+
+	if (pxframe->xftype == RTW_TX_OS) {
+		if (pxframe->attrib.bswenc
+			&& (skb_shared(*pskb) || skb_cloned(*pskb))
+			&& (rtw_core_replace_skb(pskb, RTW_MAX_WL_HEAD, RTW_MAX_WL_TAIL) == FAIL))
+		return FAIL;
+	}
+#endif
+
+	PHLTX_LOG;
+
+	return SUCCESS;
+}
+
 #ifdef CONFIG_TDLS
 sint xmitframe_enqueue_for_tdls_sleeping_sta(_adapter *padapter, struct xmit_frame *pxmitframe)
 {
