@@ -26,12 +26,12 @@ void rtw_hal_write32(void *h, u32 addr, u32 val);
 u32 rtw_hal_read_macreg(void *h, u32 offset, u32 bit_mask);
 void rtw_hal_write_macreg(void *h,
 			u32 offset, u32 bit_mask, u32 data);
-u32 rtw_hal_read_bbreg(void *h, u32 offset, u32 bit_mask);
-void rtw_hal_write_bbreg(void *h,
+u32 rtw_hal_g6_read_bbreg(void *h, u32 offset, u32 bit_mask);
+void rtw_hal_g6_write_bbreg(void *h,
 			u32 offset, u32 bit_mask, u32 data);
-u32 rtw_hal_read_rfreg(void *h,
+u32 rtw_hal_g6_read_rfreg(void *h,
 			enum rf_path path, u32 offset, u32 bit_mask);
-void rtw_hal_write_rfreg(void *h,
+void rtw_hal_g6_write_rfreg(void *h,
 			enum rf_path path, u32 offset, u32 bit_mask, u32 data);
 
 #ifdef PHL_PLATFORM_LINUX
@@ -46,9 +46,9 @@ rtw_hal_get_addr_cam(void *h, u16 num, u8 *buf, u16 size);
 enum rtw_hal_status
 rtw_hal_get_sec_cam(void *h, u16 num, u8 *buf, u16 size);
 
-void rtw_hal_enable_interrupt(struct rtw_phl_com_t *phl_com, void *h);
-void rtw_hal_disable_interrupt(struct rtw_phl_com_t *phl_com, void *h);
-void rtw_hal_config_interrupt(void *h, enum rtw_phl_config_int int_mode);
+void rtw_hal_g6_enable_interrupt(struct rtw_phl_com_t *phl_com, void *h);
+void rtw_hal_g6_disable_interrupt(struct rtw_phl_com_t *phl_com, void *h);
+void rtw_hal_g6_config_interrupt(void *h, enum rtw_phl_config_int int_mode);
 bool rtw_hal_recognize_interrupt(void *h);
 bool rtw_hal_recognize_halt_c2h_interrupt(void *h);
 void rtw_hal_clear_interrupt(void *h);
@@ -59,16 +59,16 @@ void rtw_hal_restore_rx_interrupt(void *h);
 
 enum rtw_hal_status rtw_hal_get_pwr_state(void *h, u8 *pwr_state);
 
-enum rtw_hal_status rtw_hal_init(void *drv_priv,
+enum rtw_hal_status rtw_hal_g6_init(void *drv_priv,
 	struct rtw_phl_com_t *phl_com, void **hal, enum rtl_ic_id chip_id);
 struct rtw_hal_com_t *rtw_hal_get_halcom(void *hal);
-void rtw_hal_deinit(struct rtw_phl_com_t *phl_com, void *hal);
+void rtw_hal_g6_deinit(struct rtw_phl_com_t *phl_com, void *hal);
 
 bool rtw_hal_is_inited(struct rtw_phl_com_t *phl_com, void *hal);
 
 u32 rtw_hal_hci_cfg(struct rtw_phl_com_t *phl_com, void *hal,
 					struct rtw_ic_info *ic_info);
-u32 rtw_hal_read_chip_info(struct rtw_phl_com_t *phl_com, void *hal);
+u32 rtw_hal_g6_read_chip_info(struct rtw_phl_com_t *phl_com, void *hal);
 
 void rtw_hal_set_default_var(void *hal);
 
@@ -97,7 +97,7 @@ void rtw_hal_fw_dbg_dump(void *hal, u8 is_low_power);
 
 enum rtw_hal_status rtw_hal_preload(struct rtw_phl_com_t *phl_com, void *hal);
 enum rtw_hal_status rtw_hal_start(struct rtw_phl_com_t *phl_com, void *hal);
-void rtw_hal_stop(struct rtw_phl_com_t *phl_com, void *hal);
+void rtw_hal_g6_stop(struct rtw_phl_com_t *phl_com, void *hal);
 enum rtw_hal_status rtw_hal_restart(struct rtw_phl_com_t *phl_com, void *hal);
 
 #ifdef CONFIG_WOWLAN

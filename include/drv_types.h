@@ -1340,6 +1340,7 @@ struct dvobj_priv {
 	u8 union_offset_bak;
 
 	_adapter *padapters[CONFIG_IFACE_NUMBER];/*IFACE_ID_MAX*/
+	u8 virtual_iface_num;/*from registary*/
 	u8 iface_nums; /* total number of ifaces used runtime */
 	struct mi_state iface_state;
 
@@ -1367,6 +1368,13 @@ struct dvobj_priv {
 #endif
 	systime periodic_tsf_update_etime;
 	_timer periodic_tsf_update_end_timer;
+
+	/*CONFIG_PHL_ARCH*/
+	void *phl;
+	struct rtw_phl_com_t *phl_com;
+	#ifdef DBG_PHL_MEM_ALLOC
+	ATOMIC_T phl_mem;
+	#endif
 
 	struct macid_ctl_t macid_ctl;
 
@@ -1955,7 +1963,11 @@ struct _ADAPTER {
 #endif
 
 	/* for debug purpose */
+#define NO_FIX_RATE		0xFFFF
+#define GET_FIX_RATE(v)		((v) & 0x0FFF)
+#define GET_FIX_RATE_SGI(v)	(((v) & 0x7000) >> 12)
 	u8 fix_rate;
+#define NO_FIX_BW		0xFF
 	u8 fix_bw;
 	u8 data_fb; /* data rate fallback, valid only when fix_rate is not 0xff */
 	u8 power_offset;

@@ -710,7 +710,7 @@ void odm_initialize_timer(struct dm_struct *dm, struct phydm_timer_list *timer,
 #elif (DM_ODM_SUPPORT_TYPE & ODM_CE)
 	struct _ADAPTER *adapter = dm->adapter;
 
-	_init_timer(timer, adapter->pnetdev, call_back_func, dm);
+	_init_timer(timer, call_back_func, dm);
 #elif (DM_ODM_SUPPORT_TYPE & ODM_WIN)
 	void *adapter = dm->adapter;
 

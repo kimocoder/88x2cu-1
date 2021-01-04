@@ -92,7 +92,7 @@ int dbg_hal_sd_iwrite32(struct rtw_hal_com_t *hal, u32 addr, u32 val, const char
 
 #else /* DBG_IO */
 #define hal_read8(hal, addr) _hal_read8((hal), (addr))
-#define hal_read16(hal, addr) _hal_read16((hal), (addr))
+//#define hal_read16(hal, addr) _hal_read16((hal), (addr))
 #define hal_read32(hal, addr) _hal_read32((hal), (addr))
 
 #define  hal_write8(hal, addr, val) _hal_write8((hal), (addr), (val))

@@ -20,11 +20,10 @@
  */
 #include "rtw_general_def.h"
 #include "phl_list.h"
-#if 0 //Neo
 #include "phl_status.h"
 #include "pltfm_ops.h"
 #include "phl_config.h"
-#include "hal_g6/hal_config.h"
+#include "hal/hal_config.h"
 #include "phl_types.h"
 #include "phl_util.h"
 #include "phl_def.h"
@@ -36,12 +35,7 @@
 #include "phl_regulation_def.h"
 #include "phl_scan_instance.h"
 #include "phl_regulation.h"
-
-#endif // Neo if 0
-
 #include "phl_trx_def.h"
-
-#if 0 // Neo 
 #include "phl_wow_def.h"
 #include "phl_btc_def.h"
 #include "phl_cmd_dispatch.h"
@@ -111,14 +105,12 @@
 #include "hal_g6/hal_api.h"
 #else
 /*temporarily*/
-#include "hal_g6/hal_general_def.h"
-#include "hal_g6/hal_def.h"
-#include "hal_g6/hal_api.h"
+#include "hal/hal_general_def.h"
+#include "hal/hal_def.h"
+#include "hal/hal_api.h"
 #endif
 
 #ifdef CONFIG_WIFI_7
 #endif
-
-#endif // Neo if 0
 
 #endif /*_PHL_HEADERS_H_*/

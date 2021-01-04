@@ -9,7 +9,8 @@ phl_path :=
 phl_path_d1 := $(src)/$(HAL)
 endif
 
-_HAL_FILES := 
+_HAL_FILES :=	$(phl_path)$(HAL)/hal_api_mac.o \
+			$(phl_path)$(HAL)/hal_cam.o
 
 #_HAL_FILES :=	$(phl_path)$(HAL)/hal_api_mac.o \
 			$(phl_path)$(HAL)/hal_api_bb.o \
@@ -67,7 +68,7 @@ _HAL_FILES += $(phl_path)$(HAL)/test/mp/hal_test_mp_txpwr.o
 endif
 
 #_HAL_FILES += $(phl_path)$(HAL)/efuse/hal_efuse.o
-#include $(phl_path_d1)/mac/mac.mk
+include $(phl_path_d1)/mac/mac.mk
 
 ifeq ($(USE_TRUE_PHY), y)
 #include $(phl_path_d1)/phy/bb/bb.mk

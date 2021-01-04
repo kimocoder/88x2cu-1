@@ -30,7 +30,6 @@
 #include "../phl_test_def.h"
 #include "../phl_ser_def.h"
 #include "../phl_regulation_def.h"
-#if 0 //NEO
 #include "../phl_btc_def.h"
 #include "../phl_led_def.h"
 #include "../phl_acs.h"
@@ -44,7 +43,6 @@
 #ifdef CONFIG_SDIO_HCI
 #include "../hci/phl_trx_def_sdio.h"
 #endif
-#endif // if 0 NEO
 
 #include "hal_general_def.h"
 #include "hal_def.h"
@@ -54,7 +52,6 @@
 #include "hal_struct.h"
 #include "hal_io.h"
 
-#if 0 // NEO
 #include "hal_api_mac.h"
 #include "hal_api_bb.h"
 #include "hal_api_rf.h"
@@ -82,7 +79,5 @@
 #include "hal_ld_file.h"
 
 #define hal_to_drvpriv(_halinfo) (_halinfo->hal_com->drv_priv)
-
-#endif // if 0 NEO
 
 #endif /*_HAL_HEADERS_H_*/

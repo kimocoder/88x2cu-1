@@ -350,15 +350,12 @@ static inline int _os_mem_cmp(void *d, const void *dest, const void *src, size_t
 	return memcmp(dest, src, size);
 }
 
-// NEO : TODO
-#if 0
 static inline void _os_init_timer(void *d, _os_timer *timer,
 		void (*call_back_func)(void *context), void *context,
 		const char *sz_id)
 {
 	_init_timer(timer, call_back_func, context);
 }
-#endif
 
 static inline void _os_set_timer(void *d, _os_timer *timer, u32 ms_delay)
 {
@@ -389,8 +386,6 @@ static inline void _os_mutex_deinit(void *d, _os_mutex *mutex)
 	_rtw_mutex_free(mutex);
 }
 
-// NEO TODO
-#if 0
 static inline void _os_mutex_lock(void *d, _os_mutex *mutex)
 {
 	_rtw_mutex_lock_interruptible(mutex);
@@ -400,7 +395,6 @@ static inline void _os_mutex_unlock(void *d, _os_mutex *mutex)
 {
 	_rtw_mutex_unlock(mutex);
 }
-#endif
 
 static inline void _os_sema_init(void *d, _os_sema *sema, int int_cnt)
 {
@@ -719,14 +713,12 @@ static inline int _os_write32_pcie(void *d, u32 addr, u32 val)
 
 #ifdef CONFIG_USB_HCI
 #include <usb_ops_linux.h>
-#if 0
 static inline int _os_usbctrl_vendorreq(void *d, u8 request, u16 value,
 				u16 index, void *pdata, u16 len, u8 requesttype)
 {
 	return g6_usbctrl_vendorreq((struct dvobj_priv *)d, request, value,
 				index, pdata, len, requesttype);
 }
-#endif
 static __inline u8 os_out_token_alloc(void *drv_priv)
 {
 	return 0; // RTW_PHL_STATUS_SUCCESS

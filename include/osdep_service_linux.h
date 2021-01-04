@@ -195,6 +195,55 @@ __inline static void _rtw_spinunlock_bh(_lock *plock)
 #else
 	typedef struct semaphore	_mutex;
 #endif
+
+static inline void _rtw_mutex_init(_mutex *pmutex)
+{
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37))
+	mutex_init(pmutex);
+#else
+	init_MUTEX(pmutex);
+#endif
+}
+
+static inline void _rtw_mutex_free(_mutex *pmutex)
+{
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37))
+	mutex_destroy(pmutex);
+#else
+#endif
+}
+__inline static int _rtw_mutex_lock_interruptible(_mutex *pmutex)
+{
+	int ret = 0;
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37))
+	/* mutex_lock(pmutex); */
+	ret = mutex_lock_interruptible(pmutex);
+#else
+	ret = down_interruptible(pmutex);
+#endif
+	return ret;
+}
+
+__inline static int _rtw_mutex_lock(_mutex *pmutex)
+{
+	int ret = 0;
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37))
+	mutex_lock(pmutex);
+#else
+	down(pmutex);
+#endif
+	return ret;
+}
+
+__inline static void _rtw_mutex_unlock(_mutex *pmutex)
+{
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37))
+	mutex_unlock(pmutex);
+#else
+	up(pmutex);
+#endif
+}
+
 struct rtw_timer_list {
 	struct timer_list timer;
 	void (*function)(void *);
@@ -423,26 +472,6 @@ __inline static int _enter_critical_mutex(_mutex *pmutex, _irqL *pirqL)
 }
 
 
-__inline static int _rtw_mutex_lock(_mutex *pmutex)
-{
-	int ret = 0;
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37))
-	mutex_lock(pmutex);
-#else
-	down(pmutex);
-#endif
-	return ret;
-}
-
-__inline static void _rtw_mutex_unlock(_mutex *pmutex)
-{
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37))
-	mutex_unlock(pmutex);
-#else
-	up(pmutex);
-#endif
-}
-
 __inline static void _exit_critical_mutex(_mutex *pmutex, _irqL *pirqL)
 {
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37))
@@ -471,7 +500,7 @@ static inline void timer_hdl(unsigned long cntx)
 	ptimer->function(ptimer->arg);
 }
 
-__inline static void _init_timer(_timer *ptimer, _nic_hdl nic_hdl, void *pfunc, void *cntx)
+__inline static void _init_timer(_timer *ptimer, void *pfunc, void *cntx)
 {
 	ptimer->function = pfunc;
 	ptimer->arg = cntx;

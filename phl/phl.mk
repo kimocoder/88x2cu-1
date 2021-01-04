@@ -17,6 +17,7 @@ phl_path :=
 phl_path_d1 := $(src)/$(HAL)
 endif
 
+_PHL_FILES := $(phl_path)phl_sec.o
 #_PHL_FILES := $(phl_path)phl_init.o \
 			$(phl_path)phl_debug.o \
 			$(phl_path)phl_tx.o \
@@ -95,7 +96,7 @@ _PHL_FILES += $(phl_path)test/verify/phl_test_verify.o
 _PHL_FILES += $(phl_path)test/verify/dbcc/phl_test_dbcc.o
 endif
 
-#OBJS += $(_PHL_FILES)
+OBJS += $(_PHL_FILES)
 
 EXTRA_CFLAGS += -I$(phl_path_d1)
 include $(phl_path_d1)/hal.mk

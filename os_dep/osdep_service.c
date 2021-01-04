@@ -1163,13 +1163,13 @@ void rtw_init_timer(_timer *ptimer, void *padapter, void *pfunc, void *ctx)
 	_adapter *adapter = (_adapter *)padapter;
 
 #ifdef PLATFORM_LINUX
-	_init_timer(ptimer, adapter->pnetdev, pfunc, ctx);
+	_init_timer(ptimer, pfunc, ctx);
 #endif
 #ifdef PLATFORM_FREEBSD
-	_init_timer(ptimer, adapter->pifp, pfunc, ctx);
+	_init_timer(ptimer, pfunc, ctx);
 #endif
 #ifdef PLATFORM_WINDOWS
-	_init_timer(ptimer, adapter->hndis_adapter, pfunc, ctx);
+	_init_timer(ptimer, pfunc, ctx);
 #endif
 }
 
@@ -1303,56 +1303,6 @@ inline void _rtw_wait_for_comp(_completion *comp)
 {
 #ifdef PLATFORM_LINUX
 	wait_for_completion(comp);
-#endif
-}
-
-void	_rtw_mutex_init(_mutex *pmutex)
-{
-#ifdef PLATFORM_LINUX
-
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37))
-	mutex_init(pmutex);
-#else
-	init_MUTEX(pmutex);
-#endif
-
-#endif
-#ifdef PLATFORM_FREEBSD
-	mtx_init(pmutex, "", NULL, MTX_DEF | MTX_RECURSE);
-#endif
-#ifdef PLATFORM_OS_XP
-
-	KeInitializeMutex(pmutex, 0);
-
-#endif
-
-#ifdef PLATFORM_OS_CE
-	*pmutex =  CreateMutex(NULL, _FALSE, NULL);
-#endif
-}
-
-void	_rtw_mutex_free(_mutex *pmutex);
-void	_rtw_mutex_free(_mutex *pmutex)
-{
-#ifdef PLATFORM_LINUX
-
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37))
-	mutex_destroy(pmutex);
-#else
-#endif
-
-#ifdef PLATFORM_FREEBSD
-	sema_destroy(pmutex);
-#endif
-
-#endif
-
-#ifdef PLATFORM_OS_XP
-
-#endif
-
-#ifdef PLATFORM_OS_CE
-
 #endif
 }
 

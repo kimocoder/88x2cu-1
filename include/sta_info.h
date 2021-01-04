@@ -271,6 +271,10 @@ struct sta_info {
 	/* _list sleep_list; */ /* sleep_q */
 	/* _list wakeup_list; */ /* wakeup_q */
 	_adapter *padapter;
+
+	struct rtw_phl_stainfo_t *phl_sta;
+
+	/* move to phl station info */
 	struct cmn_sta_info cmn;
 
 	struct sta_xmit_priv sta_xmitpriv;
