@@ -31,20 +31,14 @@
 
 #include "phl_util.h"
 
-//Neo : mark off first
-#if 0
 /* Exported structure/definition from PHL */
 #include "phl_regulation_def.h"
 #include "phl_scan_instance.h"
-#endif // if 0 Neo
 
 #include "phl_def.h"
 #include "phl_trx_def.h"
 
-//Neo : mark off first
-#if 0
 #include "phl_wow_def.h"
-
 #include "phl_btc_def.h"
 #include "test/trx_test.h"
 #include "test/cmd_disp_test.h"
@@ -59,6 +53,5 @@
 #include "phl_connect.h"
 #include "phl_pkt_ofld.h"
 #include "phl_ps_api.h"
-#endif // if 0 Neo
 
 #endif /*_PHL_HEADERS_CORE_H_*/
