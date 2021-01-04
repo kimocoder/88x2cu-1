@@ -394,6 +394,147 @@ struct	hw_xmit	{
 };
 
 struct pkt_attrib {
+//updated by rtw_core_update_xmitframe
+	u32	sz_payload_per_frag;
+
+	u32	sz_wlan_head;
+	u32	sz_wlan_tail;
+
+	u32	sz_phl_head;
+	u32	sz_phl_tail;
+
+	u8	nr_frags;
+	u32	frag_len;
+	u32	frag_datalen;
+#ifdef CONFIG_CORE_TXSC
+	u32 frag_len_txsc;
+#endif
+
+//updated by
+	u16	ether_type;
+	u8	src[ETH_ALEN];
+	u8	dst[ETH_ALEN];
+	u8	ta[ETH_ALEN];
+	u8	ra[ETH_ALEN];
+
+	u8	dhcp_pkt;
+	u8	icmp_pkt;
+	u8	hipriority_pkt; /* high priority packet */
+
+	u16	pkt_hdrlen;	/* the original 802.3 pkt header len */
+
+// WLAN HDR
+	u16	hdrlen;		/* the WLAN Header Len */
+	u8	type;
+	u8	subtype;
+	u8	qos_en;
+	u16	seqnum;
+	u8	ampdu_en;/* tx ampdu enable */
+	u8	ack_policy;
+	u8	amsdu;
+	u8	mdata;/* more data bit */
+	u8	eosp;
+	u8	priority;
+
+//Security
+	u8	bswenc;
+	/*
+	 * encrypt
+	 * indicate the encrypt algorithm, ref: enum security_type.
+	 * 0: indicate no encrypt.
+	 */
+	u8	encrypt;	/* when 0 indicate no encrypt. when non-zero, indicate the encrypt algorith */
+	u8	iv_len;
+	u8	icv_len;
+	u8	iv[18];
+	u8	icv[16];
+	u8	key_idx;
+	union Keytype	dot11tkiptxmickey;
+	/* union Keytype	dot11tkiprxmickey; */
+	union Keytype	dot118021x_UncstKey;
+
+//updated by rtw_core_update_xmitframe
+	u8	hw_ssn_sel;	/* for HW_SEQ0,1,2,3 */
+	u32	pktlen;		/* the original 802.3 pkt raw_data len (not include ether_hdr data) */
+	u32	last_txcmdsz;
+
+	u8	bmc_camid;
+
+	u8	mac_id;
+	u8	vcs_mode;	/* virtual carrier sense method */
+#ifdef CONFIG_RTW_WDS
+	u8	wds;
+#endif
+#ifdef CONFIG_RTW_MESH
+	u8	mda[ETH_ALEN];	/* mesh da */
+	u8	msa[ETH_ALEN];	/* mesh sa */
+	u8	meshctrl_len;	/* Length of Mesh Control field */
+	u8	mesh_frame_mode;
+	#if CONFIG_RTW_MESH_DATA_BMC_TO_UC
+	u8 mb2u;
+	#endif
+	u8 mfwd_ttl;
+	u32 mseq;
+#endif
+#ifdef CONFIG_TCP_CSUM_OFFLOAD_TX
+	u8	hw_csum;
+#endif
+
+	u8	ht_en;
+	u8	raid;/* rate adpative id */
+	u8	bwmode;
+	u8	ch_offset;/* PRIME_CHNL_OFFSET */
+	u8	sgi;/* short GI */
+	u8	ampdu_spacing; /* ampdu_min_spacing for peer sta's rx */
+	u8	amsdu_ampdu_en;/* tx amsdu in ampdu enable */
+	u8	pctrl;/* per packet txdesc control enable */
+	u8	triggered;/* for ap mode handling Power Saving sta */
+	u8	qsel;
+	u8	order;/* order bit */
+	u8	rate;
+	u8	intel_proxim;
+	u8	retry_ctrl;
+	u8   mbssid;
+	u8	ldpc;
+	u8	stbc;
+#ifdef CONFIG_WMMPS_STA
+	u8	trigger_frame;
+#endif /* CONFIG_WMMPS_STA */
+
+	struct sta_info *psta;
+
+	u8 rtsen;
+	u8 cts2self;
+
+#ifdef CONFIG_TDLS
+	u8 direct_link;
+	struct sta_info *ptdls_sta;
+#endif /* CONFIG_TDLS */
+	u8 key_type;
+
+
+#ifdef CONFIG_BEAMFORMING
+	u16 txbf_p_aid;/*beamforming Partial_AID*/
+	u16 txbf_g_id;/*beamforming Group ID*/
+
+	/*
+	 * 2'b00: Unicast NDPA
+	 * 2'b01: Broadcast NDPA
+	 * 2'b10: Beamforming Report Poll
+	 * 2'b11: Final Beamforming Report Poll
+	 */
+	u8 bf_pkt_type;
+#endif
+
+#ifdef CONFIG_RTW_MGMT_QUEUE
+	u8 ps_dontq; /* 1: this frame can't be queued at PS state */
+#endif
+	u8 wdinfo_en;/*FPGA_test*/
+	u8 dma_ch;/*FPGA_test*/
+};
+
+#if 0 //ndef RTW_PHL_TX
+struct pkt_attrib {
 	u8	type;
 	u8	subtype;
 	u8	bswenc;
@@ -498,6 +639,7 @@ struct pkt_attrib {
 	u8 ps_dontq; /* 1: this frame can't be queued at PS state */
 #endif
 };
+#endif // if 0
 
 #ifdef CONFIG_RTW_WDS
 #define XATTRIB_GET_WDS(xattrib) ((xattrib)->wds)

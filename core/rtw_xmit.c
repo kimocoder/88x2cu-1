@@ -5623,6 +5623,43 @@ s32 core_tx_update_xmitframe(_adapter *padapter,
 	return SUCCESS;
 }
 
+void get_wl_frag_paras(_adapter *padapter, struct xmit_frame *pxframe,
+	u32 *frag_perfr, u32 *wl_frags)
+{
+	u32 wl_head, wl_tail, payload_totalsz, payload_fragsz, wl_frag_num;
+	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
+
+	wl_head = wl_tail = payload_totalsz = 0;
+
+	wl_head += pxframe->attrib.hdrlen;
+	wl_tail += RTW_SZ_FCS;
+	if (pxframe->attrib.encrypt) {
+		wl_head += pxframe->attrib.iv_len;
+		wl_tail += pxframe->attrib.icv_len;
+	}
+
+	payload_fragsz = pxmitpriv->frag_len - wl_head - wl_tail;
+
+	payload_totalsz = pxframe->attrib.pktlen;
+	if (pxframe->xftype == RTW_TX_OS)
+		payload_totalsz += RTW_SZ_LLC;
+	if (pxframe->attrib.encrypt == _TKIP_)
+		payload_totalsz += RTW_TKIP_MIC_LEN;
+
+	if (pxframe->attrib.amsdu)
+		wl_frag_num = 1;
+	else if (payload_fragsz < payload_totalsz)
+		wl_frag_num = RTW_DIV_ROUND_UP(payload_totalsz, payload_fragsz);
+	else
+		wl_frag_num = 1;
+
+	pxframe->attrib.frag_datalen = *frag_perfr = payload_fragsz;
+	pxframe->attrib.nr_frags = *wl_frags = wl_frag_num;
+#ifdef CONFIG_CORE_TXSC
+	pxframe->attrib.frag_len_txsc = payload_fragsz - (payload_totalsz - pxframe->attrib.pktlen);
+#endif
+}
+
 #ifdef CONFIG_TDLS
 sint xmitframe_enqueue_for_tdls_sleeping_sta(_adapter *padapter, struct xmit_frame *pxmitframe)
 {
