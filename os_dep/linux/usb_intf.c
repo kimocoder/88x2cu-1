@@ -527,7 +527,7 @@ static struct dvobj_priv *usb_dvobj_init(struct usb_interface *usb_intf, const s
 
 	pusb_data = dvobj_to_usb(dvobj);
 	pusb_data->pusbintf = dvobj->pusbintf = usb_intf ;
-	pusbd = pusb_data->pusbdev = dvobj->pusbdev = interface_to_usbdev(usb_intf);
+	pusbd = pusb_data->pusbdev = interface_to_usbdev(usb_intf);
 	usb_set_intfdata(usb_intf, dvobj);
 
 	pusb_data->RtNumInPipes = 0;
@@ -1142,7 +1142,7 @@ _adapter *rtw_usb_primary_adapter_init(struct dvobj_priv *dvobj,
 #ifdef CONFIG_PM
 #if (LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 18))
 	if (dvobj_to_pwrctl(dvobj)->bSupportRemoteWakeup) {
-		dvobj->pusbdev->do_remote_wakeup = 1;
+		dvobj_to_usb(dvobj)->pusbdev->do_remote_wakeup = 1;
 		pusb_intf->needs_remote_wakeup = 1;
 		device_init_wakeup(&pusb_intf->dev, 1);
 		RTW_INFO("pwrctrlpriv.bSupportRemoteWakeup~~~~~~\n");

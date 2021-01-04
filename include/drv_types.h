@@ -1469,7 +1469,7 @@ struct dvobj_priv {
 
 #ifdef PLATFORM_LINUX
 	struct usb_interface *pusbintf;
-	struct usb_device *pusbdev;
+	//struct usb_device *pusbdev;
 #endif/* PLATFORM_LINUX */
 
 #ifdef PLATFORM_FREEBSD

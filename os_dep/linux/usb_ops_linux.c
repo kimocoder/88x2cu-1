@@ -22,10 +22,9 @@
 //int g6_usbctrl_vendorreq(struct dvobj_priv *pdvobjpriv, u8 request, u16 value, u16 index, void *pdata, u16 len, u8 requesttype)
 int usbctrl_vendorreq(struct intf_hdl *pintfhdl, u8 request, u16 value, u16 index, void *pdata, u16 len, u8 requesttype)
 {
-	//struct usb_device *udev = dvobj_to_usb(pdvobjpriv)->pusbdev;
 	_adapter	*padapter = pintfhdl->padapter;
 	struct dvobj_priv  *pdvobjpriv = adapter_to_dvobj(padapter);
-	struct usb_device *udev = pdvobjpriv->pusbdev;
+	struct usb_device *udev = dvobj_to_usb(pdvobjpriv)->pusbdev;
 
 	unsigned int pipe;
 	int status = 0;
@@ -278,11 +277,12 @@ exit:
 
 #endif /* CONFIG_USB_SUPPORT_ASYNC_VDN_REQ */
 
-unsigned int ffaddr2pipehdl(struct dvobj_priv *pdvobj, u32 addr)
+unsigned int bulkid2pipe(struct dvobj_priv *pdvobj, u32 addr, u8 bulk_out)
 {
 	unsigned int pipe = 0, ep_num = 0;
-	struct usb_device *pusbd = pdvobj->pusbdev;
 	PUSB_DATA pusb_data = dvobj_to_usb(pdvobj);
+	struct usb_device *pusbd = pusb_data->pusbdev;
+
 
 	if (addr == RECV_BULK_IN_ADDR)
 		pipe = usb_rcvbulkpipe(pusbd, pusb_data->RtInPipe[0]);
@@ -522,7 +522,8 @@ u32 usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *wmem)
 	struct xmit_priv	*pxmitpriv = &padapter->xmitpriv;
 	struct xmit_buf *pxmitbuf = (struct xmit_buf *)wmem;
 	struct xmit_frame *pxmitframe = (struct xmit_frame *)pxmitbuf->priv_data;
-	struct usb_device *pusbd = pdvobj->pusbdev;
+	PUSB_DATA pusb_data = dvobj_to_usb(pdvobj);
+	struct usb_device *pusbd = pusb_data->pusbdev;
 
 	if (RTW_CANNOT_TX(padapter)) {
 #ifdef DBG_TX
@@ -567,9 +568,9 @@ u32 usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *wmem)
 
 	/* translate DMA FIFO addr to pipehandle */
 #ifdef RTW_HALMAC
-	pipe = ffaddr2pipehdl(pdvobj, pxmitbuf->bulkout_id);
+	pipe = bulkid2pipe(pdvobj, pxmitbuf->bulkout_id, _TRUE);
 #else
-	pipe = ffaddr2pipehdl(pdvobj, addr);
+	pipe = bulkid2pipe(pdvobj, addr, _TRUE);
 #endif
 
 #ifdef CONFIG_REDUCE_USB_TX_INT
@@ -806,7 +807,7 @@ u32 rtw_usb_read_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *rmem)
 		purb = precvbuf->purb;
 
 		/* translate DMA FIFO addr to pipehandle */
-		pipe = ffaddr2pipehdl(pdvobj, addr);
+		pipe = bulkid2pipe(pdvobj, addr, _FALSE);
 
 		usb_fill_bulk_urb(purb, pusbd, pipe,
 			precvbuf->pbuf,
@@ -952,7 +953,8 @@ u32 rtw_usb_read_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *rmem)
 	_adapter		*adapter = pintfhdl->padapter;
 	struct dvobj_priv	*pdvobj = adapter_to_dvobj(adapter);
 	struct recv_priv	*precvpriv = &adapter->recvpriv;
-	struct usb_device	*pusbd = pdvobj->pusbdev;
+	PUSB_DATA 		pusb_data = dvobj_to_usb(pdvobj);
+	struct usb_device 	*pusbd = pusb_data->pusbdev;
 
 
 	if (RTW_CANNOT_RX(adapter) || (precvbuf == NULL)) {
@@ -996,7 +998,7 @@ recv_buf_hook:
 	purb = precvbuf->purb;
 
 	/* translate DMA FIFO addr to pipehandle */
-	pipe = ffaddr2pipehdl(pdvobj, addr);
+	pipe = bulkid2pipe(pdvobj, addr, _FALSE);
 
 	usb_fill_bulk_urb(purb, pusbd, pipe,
 		precvbuf->pbuf,
@@ -1083,7 +1085,7 @@ u32 usb_read_interrupt(struct intf_hdl *pintfhdl, u32 addr)
 	}
 
 	/*translate DMA FIFO addr to pipehandle*/
-	pipe = ffaddr2pipehdl(pdvobj, addr);
+	pipe = bulkid2pipe(pdvobj, addr, _FALSE);
 
 	usb_fill_int_urb(precvpriv->int_in_urb, pusbd, pipe,
 			precvpriv->int_in_buf,

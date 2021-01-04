@@ -63,7 +63,8 @@ static u32 usb_write_port_not_xmitframe(struct dvobj_priv *d, u8 addr, u32 cnt, 
 	u32 ret = _FAIL, bwritezero = _FALSE;
 	PURB	purb = NULL;
 	struct dvobj_priv	*pdvobj = adapter_to_dvobj(padapter);
-	struct usb_device *pusbd = pdvobj->pusbdev;
+	PUSB_DATA pusb_data = dvobj_to_usb(pdvobj);
+	struct usb_device *pusbd = pusb_data->pusbdev;
 
 
 	purb	= usb_alloc_urb(0, GFP_KERNEL);
@@ -73,7 +74,7 @@ static u32 usb_write_port_not_xmitframe(struct dvobj_priv *d, u8 addr, u32 cnt, 
 	}
 
 	/* translate DMA FIFO addr to pipehandle */
-	pipe = ffaddr2pipehdl(pdvobj, addr);
+	pipe = bulkid2pipe(pdvobj, addr, _TRUE);
 
 
 	usb_fill_bulk_urb(purb, pusbd, pipe,
