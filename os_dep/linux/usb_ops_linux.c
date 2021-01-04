@@ -608,7 +608,8 @@ u32 rtw_usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 len, u8 *wmem)
 
 	_exit_critical(&pxmitpriv->lock, &irqL);
 
-	purb	= pxmitbuf->pxmit_urb[0];
+	//purb	= pxmitbuf->pxmit_urb[0];
+	purb = xmiturb->urb;
 
 	/* translate DMA FIFO addr to pipehandle */
 #ifdef RTW_HALMAC

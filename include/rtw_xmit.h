@@ -584,7 +584,7 @@ struct xmit_buf {
 	u8 bulkout_id; /* for halmac */
 #endif /* RTW_HALMAC */
 
-	PURB	pxmit_urb[8];
+	//PURB	pxmit_urb[8];
 	dma_addr_t dma_transfer_addr;	/* (in) dma addr for transfer_buffer */
 
 	u8 bpending[8];

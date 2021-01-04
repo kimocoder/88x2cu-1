@@ -135,6 +135,7 @@ int rtw_os_xmit_resource_alloc(_adapter *padapter, struct xmit_buf *pxmitbuf, u3
 	}
 
 	if (flag) {
+#if 0 // NEO : move to dataurb
 #ifdef CONFIG_USB_HCI
 		int i;
 		for (i = 0; i < 8; i++) {
@@ -145,6 +146,7 @@ int rtw_os_xmit_resource_alloc(_adapter *padapter, struct xmit_buf *pxmitbuf, u3
 			}
 		}
 #endif
+#endif // if 0 NEO
 	}
 
 	return _SUCCESS;
@@ -153,6 +155,7 @@ int rtw_os_xmit_resource_alloc(_adapter *padapter, struct xmit_buf *pxmitbuf, u3
 void rtw_os_xmit_resource_free(_adapter *padapter, struct xmit_buf *pxmitbuf, u32 free_sz, u8 flag)
 {
 	if (flag) {
+#if 0 // NEO : move to dataurb
 #ifdef CONFIG_USB_HCI
 		int i;
 
@@ -163,6 +166,7 @@ void rtw_os_xmit_resource_free(_adapter *padapter, struct xmit_buf *pxmitbuf, u3
 			}
 		}
 #endif
+#endif // if 0 NEO
 	}
 
 	if (free_sz > 0) {
