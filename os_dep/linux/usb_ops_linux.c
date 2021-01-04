@@ -332,6 +332,68 @@ void rtw_os_urb_resource_free(struct data_urb *dataurb)
 	}
 }
 
+struct data_urb *rtw_alloc_dataurb(struct trx_urb_buf_q *urb_q)
+{
+	struct data_urb *urb =  NULL;
+	_list *urb_list, *urb_head;
+	_queue *free_urb_q = &urb_q->free_urb_buf_queue;
+	unsigned long sp_flags;
+
+	/* RTW_INFO("+rtw_alloc_litexmitbuf\n"); */
+
+	_rtw_spinlock_irq(&free_urb_q->lock, &sp_flags);
+
+	if (_rtw_queue_empty(free_urb_q) == _TRUE)
+		urb = NULL;
+	else {
+
+		urb_head = get_list_head(free_urb_q);
+
+		urb_list = get_next(urb_head);
+
+		urb = LIST_CONTAINOR(urb_list,
+			struct data_urb, list);
+
+		rtw_list_delete(&(urb->list));
+	}
+
+	if (urb !=  NULL)
+		urb_q->free_urb_buf_cnt--;
+
+
+	_rtw_spinunlock_irq(&free_urb_q->lock, &sp_flags);
+
+
+	return urb;
+}
+
+s32 rtw_free_dataurb(struct trx_urb_buf_q *urb_q,
+	struct data_urb *urb)
+{
+	_queue *free_urb_q = &urb_q->free_urb_buf_queue;
+	unsigned long sp_flags;
+
+	/* RTW_INFO("+rtw_free_xmiturb\n"); */
+
+	if (urb_q == NULL)
+		return _FAIL;
+
+	if (urb == NULL)
+		return _FAIL;
+
+	_rtw_spinlock_irq(&free_urb_q->lock, &sp_flags);
+
+	rtw_list_delete(&urb->list);
+
+	rtw_list_insert_tail(&(urb->list),
+		get_list_head(free_urb_q));
+
+	urb_q->free_urb_buf_cnt++;
+
+	_rtw_spinunlock_irq(&free_urb_q->lock, &sp_flags);
+
+	return _SUCCESS;
+}
 
 struct zero_bulkout_context {
 	void *pbuf;
