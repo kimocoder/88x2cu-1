@@ -1252,7 +1252,7 @@ struct rtw_phl_stainfo_t {
 
 struct hal_spec_t {
 	char *ic_name;
-	u8 macid_num;
+	u16 macid_num;
 
 	u8 sec_cam_ent_num;
 	u8 sec_cap;
@@ -1290,7 +1290,7 @@ struct hal_spec_t {
 
 	u8 wl_func;		/* value of WL_FUNC_XXX */
 
-	#if 1 // Neo : G6 function
+	#if 1 // Neo : rtk_wifi_driver
 	u8 tx_aclt_unit_factor; /* how many 32us */
 
 	u8 rx_tsf_filter:1;
@@ -1301,7 +1301,6 @@ struct hal_spec_t {
 	u8 hci_type;	/* value of HCI Type */
 	#endif
 
-	#if 1 // Neo : rtk_wifi_driver
 	/********* xmit ************/
 
 
@@ -1328,7 +1327,6 @@ struct hal_spec_t {
 	u8 max_bf_ent_nr;
 	u8 max_su_sta_nr;
 	u8 max_mu_sta_nr;
-	#endif
 };
 
 #define phl_get_hci_type(_phlcom) (_phlcom->hci_type)
