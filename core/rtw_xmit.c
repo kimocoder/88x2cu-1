@@ -4064,6 +4064,40 @@ void core_tx_init_xmitframe(struct xmit_frame *pxframe)
 	pxframe->txfree_cnt = 0;
 }
 
+s32 core_tx_alloc_xmitframe(_adapter *padapter, struct xmit_frame **pxmitframe, u16 os_qid)
+{
+	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
+	struct xmit_frame *pxframe = NULL;
+	_queue *pfree_xmit_queue = &pxmitpriv->free_xmit_queue;
+	_list *plist, *phead;
+
+	PHLTX_LOG;
+
+	_rtw_spinlock_bh(&pfree_xmit_queue->lock);
+
+	if (_rtw_queue_empty(pfree_xmit_queue) == _TRUE) {
+		_rtw_spinunlock_bh(&pfree_xmit_queue->lock);
+		return FAIL;
+	} else {
+		phead = get_list_head(pfree_xmit_queue);
+
+		plist = get_next(phead);
+
+		pxframe = LIST_CONTAINOR(plist, struct xmit_frame, list);
+
+		rtw_list_delete(&pxframe->list);
+		pxmitpriv->free_xmitframe_cnt--;
+		pxframe->os_qid = os_qid;
+	}
+
+	_rtw_spinunlock_bh(&pfree_xmit_queue->lock);
+	rtw_os_check_stop_queue(pxmitpriv->adapter, os_qid);
+	core_tx_init_xmitframe(pxframe);
+
+	*pxmitframe = pxframe;
+	return SUCCESS;
+}
+
 struct xmit_frame *rtw_alloc_xmitframe(struct xmit_priv *pxmitpriv, u16 os_qid)
 {
 	/*

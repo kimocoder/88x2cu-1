@@ -671,6 +671,37 @@ typedef struct rtw_if_operations {
 
 #define GetDefaultAdapter(padapter)	padapter
 
+
+#ifdef RTW_PHL_TX
+
+#if 1
+#define	PHLTX_ENTER //printk("eric-tx [%s][%d] ++\n", __FUNCTION__, __LINE__)
+#define	PHLTX_LOG 	//printk("eric-tx [%s][%d]\n", __FUNCTION__, __LINE__)
+#define	PHLTX_EXIT 	//printk("eric-tx [%s][%d] --\n", __FUNCTION__, __LINE__)
+#define	PHLTX_ERR 	//printk("PHLTX_ERR [%s][%d]\n", __FUNCTION__, __LINE__)
+#else
+#define	PHLTX_ENTER printk("eric-tx [%s][%d] ++\n", __FUNCTION__, __LINE__)
+#define	PHLTX_LOG 	printk("eric-tx [%s][%d]\n", __FUNCTION__, __LINE__)
+#define	PHLTX_EXIT 	printk("eric-tx [%s][%d] --\n", __FUNCTION__, __LINE__)
+
+#define	PHLTX_ERR 	printk("PHLTX_ERR [%s][%d]\n", __FUNCTION__, __LINE__)
+#endif
+
+
+#define SZ_TXREQ 	(sizeof(struct rtw_xmit_req))
+#define SZ_HEAD_BUF	100
+#define SZ_TAIL_BUF	30
+
+#define NUM_PKT_LIST_PER_TXREQ	8
+#define SZ_PKT_LIST (sizeof(struct rtw_pkt_buf_list))
+
+
+#define SZ_TX_RING 		(SZ_TXREQ+SZ_HEAD_BUF+SZ_TAIL_BUF+(SZ_PKT_LIST*NUM_PKT_LIST_PER_TXREQ))
+#define SZ_MGT_RING		(SZ_TXREQ + SZ_PKT_LIST)/* MGT_TXREQ_QMGT */
+
+#define MAX_TX_RING_NUM 	4096
+#endif
+
 enum _IFACE_ID {
 	IFACE_ID0, /*PRIMARY_ADAPTER*/
 	IFACE_ID1,
