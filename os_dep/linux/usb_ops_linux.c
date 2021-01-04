@@ -698,7 +698,7 @@ exit:
 
 }
 
-void usb_write_port_cancel(struct intf_hdl *pintfhdl)
+void rtw_usb_write_port_cancel(struct intf_hdl *pintfhdl)
 {
 	int i, j;
 	_adapter	*padapter = pintfhdl->padapter;

@@ -73,7 +73,7 @@ void usb_write_mem(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *wmem);
 void usb_read_port_cancel(struct intf_hdl *pintfhdl);
 
 u32 rtw_usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *wmem);
-void usb_write_port_cancel(struct intf_hdl *pintfhdl);
+void rtw_usb_write_port_cancel(struct intf_hdl *pintfhdl);
 
 int rtw_os_urb_resource_alloc(struct data_urb *dataurb);
 void rtw_os_urb_resource_free(struct data_urb *dataurb);

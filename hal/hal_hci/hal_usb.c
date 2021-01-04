@@ -559,7 +559,7 @@ void usb_set_intf_ops(_adapter *padapter, struct _io_ops *pops)
 	pops->_write_port = &rtw_usb_write_port;
 
 	pops->_read_port_cancel = &usb_read_port_cancel;
-	pops->_write_port_cancel = &usb_write_port_cancel;
+	pops->_write_port_cancel = &rtw_usb_write_port_cancel;
 
 #ifdef CONFIG_USB_INTERRUPT_IN_PIPE
 	pops->_read_interrupt = &usb_read_interrupt;
