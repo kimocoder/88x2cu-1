@@ -4870,6 +4870,48 @@ void rtw_init_hwxmits(struct hw_xmit *phwxmit, sint entry)
 	}
 }
 
+u32 rtw_get_ff_hwaddr(struct xmit_frame *pxmitframe)
+{
+	u32 addr;
+	struct pkt_attrib *pattrib = &pxmitframe->attrib;
+
+	switch (pattrib->qsel) {
+	case 0:
+	case 3:
+		addr = BE_QUEUE_INX;
+		break;
+	case 1:
+	case 2:
+		addr = BK_QUEUE_INX;
+		break;
+	case 4:
+	case 5:
+		addr = VI_QUEUE_INX;
+		break;
+	case 6:
+	case 7:
+		addr = VO_QUEUE_INX;
+		break;
+	case 0x10:
+		addr = BCN_QUEUE_INX;
+		break;
+	case 0x11: /* BC/MC in PS (HIQ) */
+		addr = HIGH_QUEUE_INX;
+		break;
+	case 0x13:
+		addr = TXCMD_QUEUE_INX;
+		break;
+	case 0x12:
+	default:
+		addr = MGT_QUEUE_INX;
+		break;
+
+	}
+
+	return addr;
+
+}
+
 #ifdef CONFIG_BR_EXT
 int rtw_br_client_tx(_adapter *padapter, struct sk_buff **pskb)
 {
@@ -5044,48 +5086,6 @@ int rtw_br_client_tx(_adapter *padapter, struct sk_buff **pskb)
 	return 0;
 }
 #endif /* CONFIG_BR_EXT */
-
-u32 rtw_get_ff_hwaddr(struct xmit_frame *pxmitframe)
-{
-	u32 addr;
-	struct pkt_attrib *pattrib = &pxmitframe->attrib;
-
-	switch (pattrib->qsel) {
-	case 0:
-	case 3:
-		addr = BE_QUEUE_INX;
-		break;
-	case 1:
-	case 2:
-		addr = BK_QUEUE_INX;
-		break;
-	case 4:
-	case 5:
-		addr = VI_QUEUE_INX;
-		break;
-	case 6:
-	case 7:
-		addr = VO_QUEUE_INX;
-		break;
-	case 0x10:
-		addr = BCN_QUEUE_INX;
-		break;
-	case 0x11: /* BC/MC in PS (HIQ) */
-		addr = HIGH_QUEUE_INX;
-		break;
-	case 0x13:
-		addr = TXCMD_QUEUE_INX;
-		break;
-	case 0x12:
-	default:
-		addr = MGT_QUEUE_INX;
-		break;
-
-	}
-
-	return addr;
-
-}
 
 static void do_queue_select(_adapter	*padapter, struct pkt_attrib *pattrib)
 {
@@ -5530,6 +5530,48 @@ s32 rtw_xmit(_adapter *padapter, struct sk_buff **ppkt, u16 os_qid)
 	res = rtw_xmit_posthandle(padapter, pxmitframe, *ppkt);
 
 	return res;
+}
+
+#ifdef CONFIG_BR_EXT
+s32 core_br_client_tx(_adapter *padapter, struct xmit_frame *pxframe, struct sk_buff **pskb)
+{
+	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
+
+	if (!adapter_use_wds(padapter) && check_fwstate(&padapter->mlmepriv, WIFI_STATION_STATE | WIFI_ADHOC_STATE) == _TRUE) {
+		void *br_port = NULL;
+
+		#if (LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 35))
+		br_port = padapter->pnetdev->br_port;
+		#else
+		rcu_read_lock();
+		br_port = rcu_dereference(padapter->pnetdev->rx_handler_data);
+		rcu_read_unlock();
+		#endif
+
+		if (br_port) {
+			if (rtw_br_client_tx(padapter, pskb) == FAIL) {
+				core_tx_free_xmitframe(padapter, pxframe);
+				DBG_COUNTER(padapter->tx_logs.core_tx_err_brtx);
+				return FAIL;
+			}
+		}
+	}
+	return SUCCESS;
+}
+#endif
+
+s32 core_tx_update_pkt(_adapter *padapter, struct xmit_frame *pxframe, struct sk_buff **pskb)
+{
+	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
+	struct sk_buff *skb_orig = *pskb;
+
+	PHLTX_LOG;
+
+//rtw_phl_tx todo, BR EXT
+	if (core_br_client_tx(padapter, pxframe, pskb) == FAIL)
+		return FAIL;
+
+	return SUCCESS;
 }
 
 #ifdef CONFIG_TDLS
