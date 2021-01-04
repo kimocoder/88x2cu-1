@@ -1203,6 +1203,9 @@ struct lite_data_buf {
 	struct data_urb *dataurb;
 #endif
 	struct submit_ctx *sctx;
+
+	// NEO : TODO : will take off when ready
+	struct xmit_buf *pxmitbuf;
 };
 
 #ifdef RTW_HALMAC

@@ -277,6 +277,10 @@ exit:
 
 #endif /* CONFIG_USB_SUPPORT_ASYNC_VDN_REQ */
 
+
+#define rtw_usb_write_port_complete(purb, regs)\
+	rtw_usb_write_port_complete(purb)
+
 unsigned int bulkid2pipe(struct dvobj_priv *pdvobj, u32 addr, u8 bulk_out)
 {
 	unsigned int pipe = 0, ep_num = 0;
@@ -437,15 +441,16 @@ void usb_read_port_cancel(struct intf_hdl *pintfhdl)
 #endif
 }
 
-static void usb_write_port_complete(struct urb *purb, struct pt_regs *regs)
+static void rtw_usb_write_port_complete(struct urb *purb, struct pt_regs *regs)
 {
 	_irqL irqL;
-	struct xmit_buf *pxmitbuf = (struct xmit_buf *)purb->context;
-	/* struct xmit_frame *pxmitframe = (struct xmit_frame *)pxmitbuf->priv_data; */
-	/* _adapter			*padapter = pxmitframe->padapter; */
+	struct lite_data_buf *litexmitbuf =
+		(struct lite_data_buf *)purb->context;
+	struct xmit_buf *pxmitbuf = litexmitbuf->pxmitbuf;
+	struct data_urb *xmiturb = litexmitbuf->dataurb;
+	struct dvobj_priv *pdvobj = litexmitbuf->dvobj;
 	_adapter	*padapter = pxmitbuf->padapter;
 	struct xmit_priv	*pxmitpriv = &padapter->xmitpriv;
-	/* struct pkt_attrib *pattrib = &pxmitframe->attrib; */
 
 
 	switch (pxmitbuf->flags) {
@@ -465,47 +470,6 @@ static void usb_write_port_complete(struct urb *purb, struct pt_regs *regs)
 		break;
 	}
 
-
-	/*
-		_enter_critical(&pxmitpriv->lock, &irqL);
-
-		pxmitpriv->txirp_cnt--;
-
-		switch(pattrib->priority)
-		{
-			case 1:
-			case 2:
-				pxmitpriv->bkq_cnt--;
-
-				break;
-			case 4:
-			case 5:
-				pxmitpriv->viq_cnt--;
-
-				break;
-			case 6:
-			case 7:
-				pxmitpriv->voq_cnt--;
-
-				break;
-			case 0:
-			case 3:
-			default:
-				pxmitpriv->beq_cnt--;
-
-				break;
-
-		}
-
-		_exit_critical(&pxmitpriv->lock, &irqL);
-
-
-		if(pxmitpriv->txirp_cnt==0)
-		{
-			_rtw_up_sema(&(pxmitpriv->tx_retevt));
-		}
-	*/
-	/* rtw_free_xmitframe(pxmitpriv, pxmitframe); */
 
 	if (RTW_CANNOT_TX(padapter)) {
 		RTW_INFO("%s(): TX Warning! bDriverStopped(%s) OR bSurpriseRemoved(%s) pxmitbuf->buf_tag(%x)\n"
@@ -562,9 +526,10 @@ check_completion:
 		purb->status ? RTW_SCTX_DONE_WRITE_PORT_ERR : RTW_SCTX_DONE_SUCCESS);
 	_exit_critical(&pxmitpriv->lock_sctx, &irqL);
 
+	rtw_free_litedatabuf(&pdvobj->litexmitbuf_q, litexmitbuf);
+	rtw_free_dataurb(&pdvobj->xmit_urb_q, xmiturb);
 	rtw_free_xmitbuf(pxmitpriv, pxmitbuf);
 
-	/* if(rtw_txframes_pending(padapter))	 */
 	{
 		tasklet_hi_schedule(&pxmitpriv->xmit_tasklet);
 	}
@@ -572,7 +537,7 @@ check_completion:
 
 }
 
-u32 rtw_usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *wmem)
+u32 rtw_usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 len, u8 *wmem)
 {
 	_irqL irqL;
 	unsigned int pipe;
@@ -586,6 +551,23 @@ u32 rtw_usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *wmem)
 	struct xmit_frame *pxmitframe = (struct xmit_frame *)pxmitbuf->priv_data;
 	PUSB_DATA pusb_data = dvobj_to_usb(pdvobj);
 	struct usb_device *pusbd = pusb_data->pusbdev;
+
+	struct lite_data_buf *litexmitbuf = NULL;
+	struct data_urb *xmiturb = NULL;
+
+
+	litexmitbuf = rtw_alloc_litedatabuf(&pdvobj->litexmitbuf_q);
+	if (litexmitbuf == NULL) {
+		RTW_INFO("%s,%d Can't alloc lite xmit buf\n",
+			__func__, __LINE__);
+		goto exit;
+	}
+	xmiturb = rtw_alloc_dataurb(&pdvobj->xmit_urb_q);
+	if (xmiturb == NULL) {
+		RTW_INFO("%s,%d Can't alloc lite xmit urb\n",
+			__func__, __LINE__);
+		goto exit;
+	}
 
 	if (RTW_CANNOT_TX(padapter)) {
 #ifdef DBG_TX
@@ -645,12 +627,16 @@ u32 rtw_usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *wmem)
 	}
 #endif
 
+	litexmitbuf->dvobj = pdvobj;
+	litexmitbuf->pbuf = pxmitframe->buf_addr;
+	litexmitbuf->dataurb = xmiturb;
+	litexmitbuf->pxmitbuf = pxmitbuf;
 
 	usb_fill_bulk_urb(purb, pusbd, pipe,
-			  pxmitframe->buf_addr, /* = pxmitbuf->pbuf */
-			  cnt,
-			  usb_write_port_complete,
-			  pxmitbuf);/* context is pxmitbuf */
+			  litexmitbuf->pbuf,
+			  len,
+			  rtw_usb_write_port_complete,
+			  litexmitbuf);
 
 #ifdef CONFIG_USE_USB_BUFFER_ALLOC_TX
 	purb->transfer_dma = pxmitbuf->dma_transfer_addr;
@@ -704,8 +690,10 @@ u32 rtw_usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *wmem)
 
 
 exit:
-	if (ret != _SUCCESS)
+	if (ret != _SUCCESS) {
+		rtw_free_litedatabuf(&pdvobj->litexmitbuf_q, litexmitbuf);
 		rtw_free_xmitbuf(pxmitpriv, pxmitbuf);
+	}
 	return ret;
 
 }
