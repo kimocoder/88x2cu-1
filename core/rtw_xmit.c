@@ -4048,6 +4048,8 @@ Must be very very cautious...
 
 */
 
+#ifdef RTW_PHL_TX
+
 void core_tx_init_xmitframe(struct xmit_frame *pxframe)
 {
 	if (!pxframe)
@@ -4097,6 +4099,95 @@ s32 core_tx_alloc_xmitframe(_adapter *padapter, struct xmit_frame **pxmitframe, 
 	*pxmitframe = pxframe;
 	return SUCCESS;
 }
+
+s32 core_tx_free_xmitframe(_adapter *padapter, struct xmit_frame *pxframe)
+{
+	struct xmit_priv 	*pxmitpriv = &padapter->xmitpriv;
+	_queue *queue = NULL;
+	/* TXREQ_QMGT */
+	struct xmit_txreq_buf *ptxreq_buf = NULL;
+	int i;
+	struct rtw_xmit_req *txreq = NULL;
+	struct rtw_pkt_buf_list *pkt_list = NULL;
+
+	PHLTX_LOG;
+
+	if (pxframe == NULL)
+		goto exit;
+
+	/* TXREQ_QMGT */
+	ptxreq_buf = pxframe->ptxreq_buf;
+
+	pxframe->txfree_cnt++;
+
+	/* ?? shall detail check, like free 1 2 3, not free 2 2 3 */
+	/* ?? rtw_alloc_xmitframe_once case, seems no one use*/
+
+	if (pxframe->txfree_cnt < pxframe->txreq_cnt)
+		goto exit;
+
+	#if 0 /*CONFIG_CORE_XMITBUF*/
+	if (pxframe->pxmitbuf)
+		rtw_free_xmitbuf(pxmitpriv, pxframe->pxmitbuf);
+	#endif
+
+	for (i = 0; i < pxframe->txreq_cnt; i++) {
+		if (!pxframe->buf_need_free)
+			break;
+		if (!(pxframe->buf_need_free & BIT(i)))
+			continue;
+		pxframe->buf_need_free &= ~BIT(i);
+
+		txreq = &pxframe->phl_txreq[i];
+		rtw_warn_on(txreq->pkt_cnt != 1);
+		pkt_list = (struct rtw_pkt_buf_list *)txreq->pkt_list;
+		if (pkt_list->vir_addr && pkt_list->length)
+			rtw_mfree(pkt_list->vir_addr, pkt_list->length);
+	}
+
+	if (ptxreq_buf) {
+		queue = &padapter->free_txreq_queue;
+		_rtw_spinlock_bh(&queue->lock);
+
+		rtw_list_delete(&ptxreq_buf->list);
+		rtw_list_insert_tail(&ptxreq_buf->list, get_list_head(queue));
+
+		padapter->free_txreq_cnt++;
+		_rtw_spinunlock_bh(&queue->lock);
+	} else {
+		if (pxframe->ext_tag == 0)
+			;//printk("%s:tx recyele: ptxreq_buf=NULL\n", __FUNCTION__);
+	}
+
+	rtw_os_xmit_complete(padapter, pxframe);
+
+	if (pxframe->ext_tag == 0)
+		queue = &pxmitpriv->free_xmit_queue;
+	else if (pxframe->ext_tag == 1)
+		queue = &pxmitpriv->free_xframe_ext_queue;
+	else
+		rtw_warn_on(1);
+
+	_rtw_spinlock_bh(&queue->lock);
+
+	rtw_list_delete(&pxframe->list);
+	rtw_list_insert_tail(&pxframe->list, get_list_head(queue));
+
+	if (pxframe->ext_tag == 0)
+		pxmitpriv->free_xmitframe_cnt++;
+	else if (pxframe->ext_tag == 1)
+		pxmitpriv->free_xframe_ext_cnt++;
+
+	_rtw_spinunlock_bh(&queue->lock);
+
+	if (queue == &pxmitpriv->free_xmit_queue)
+		rtw_os_check_wakup_queue(padapter, pxframe->os_qid);
+
+exit:
+	return _SUCCESS;
+}
+
+#endif
 
 struct xmit_frame *rtw_alloc_xmitframe(struct xmit_priv *pxmitpriv, u16 os_qid)
 {

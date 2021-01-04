@@ -1995,6 +1995,16 @@ struct _ADAPTER {
 	struct int_logs int_logs;
 #endif
 
+#ifdef RTW_PHL_TX
+	u8 *pxmit_txreq_buf;
+	_queue	free_txreq_queue;
+	u32 free_txreq_cnt;
+	u32 txreq_full_cnt;
+
+	u32 tx_ring_idx;
+	u8 *tx_pool_ring [MAX_TX_RING_NUM];
+#endif
+
 #ifdef CONFIG_MCC_MODE
 	struct mcc_adapter_priv mcc_adapterpriv;
 #endif /* CONFIG_MCC_MODE */

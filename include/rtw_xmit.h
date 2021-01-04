@@ -625,6 +625,20 @@ struct xmit_buf {
 
 };
 
+struct xmit_txreq_buf {
+	_list	list;
+	u8 *txreq;
+	u8 *head;
+	u8 *tail;
+	u8 *pkt_list;
+#ifdef CONFIG_CORE_TXSC
+	u8 *pkt[MAX_TXSC_SKB_NUM];
+	u8 pkt_cnt;
+	_adapter *adapter;
+	u8 macid;
+	u8 txsc_id;
+#endif
+};
 
 struct xmit_frame {
 	_list	list;
