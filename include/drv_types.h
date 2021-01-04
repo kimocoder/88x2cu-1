@@ -1355,8 +1355,8 @@ struct dvobj_priv {
 #endif
 
 	/* In /Out Pipe information */
-	int	RtInPipe[2];
-	int	RtOutPipe[MAX_BULKOUT_NUM];
+	//int	RtInPipe[2];
+	//int	RtOutPipe[MAX_BULKOUT_NUM];
 
 	u8	irq_alloc;
 	ATOMIC_T continual_io_error;
@@ -1438,24 +1438,24 @@ struct dvobj_priv {
 
 #ifdef CONFIG_USB_HCI
 
-	u8	usb_speed; /* 1.1, 2.0 or 3.0 */
-	u8	nr_endpoint;
-	u8	RtNumInPipes;
-	u8	RtNumOutPipes;
-	int	ep_num[MAX_ENDPOINT_NUM]; /* endpoint number */
+	//u8	usb_speed; /* 1.1, 2.0 or 3.0 */
+	//u8	nr_endpoint;
+	//u8	RtNumInPipes;
+	//u8	RtNumOutPipes;
+	//int	ep_num[MAX_ENDPOINT_NUM]; /* endpoint number */
 
 	int	RegUsbSS;
 
 	_sema	usb_suspend_sema;
 
-#ifdef CONFIG_USB_VENDOR_REQ_MUTEX
-	_mutex  usb_vendor_req_mutex;
-#endif
+//#ifdef CONFIG_USB_VENDOR_REQ_MUTEX
+//	_mutex  usb_vendor_req_mutex;
+//#endif
 
-#ifdef CONFIG_USB_VENDOR_REQ_BUFFER_PREALLOC
-	u8 *usb_alloc_vendor_req_buf;
-	u8 *usb_vendor_req_buf;
-#endif
+//#ifdef CONFIG_USB_VENDOR_REQ_BUFFER_PREALLOC
+//	u8 *usb_alloc_vendor_req_buf;
+//	u8 *usb_vendor_req_buf;
+//#endif
 
 	/*-------- below is merged from G6 --------*/
 	u8	Queue2Pipe[HW_QUEUE_ENTRY];/* for out pipe mapping */

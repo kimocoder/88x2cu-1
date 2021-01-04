@@ -3492,7 +3492,7 @@ static int init_mac_flow(struct dvobj_priv *d)
 		goto out;
 
 #ifdef CONFIG_USB_HCI
-	status = api->halmac_set_bulkout_num(halmac, d->RtNumOutPipes);
+	status = api->halmac_set_bulkout_num(halmac, dvobj_to_usb(d)->RtNumOutPipes);
 	if (status != HALMAC_RET_SUCCESS)
 		goto out;
 #endif /* CONFIG_USB_HCI */

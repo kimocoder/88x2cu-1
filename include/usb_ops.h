@@ -121,9 +121,9 @@ void rtl8192fu_interrupt_handler(_adapter *padapter, u16 pkt_len, u8 *pbuf);
 #endif /* CONFIG_SUPPORT_USB_INT */
 #endif /* CONFIG_RTL8192F */
 
-#define IS_FULL_SPEED_USB(Adapter)	(adapter_to_dvobj(Adapter)->usb_speed == RTW_USB_SPEED_FULL)
-#define IS_HIGH_SPEED_USB(Adapter)	(adapter_to_dvobj(Adapter)->usb_speed == RTW_USB_SPEED_HIGH)
-#define IS_SUPER_SPEED_USB(Adapter)	(adapter_to_dvobj(Adapter)->usb_speed == RTW_USB_SPEED_SUPER)
+#define IS_FULL_SPEED_USB(Adapter)	(dvobj_to_usb(adapter_to_dvobj(Adapter))->usb_speed == RTW_USB_SPEED_FULL)
+#define IS_HIGH_SPEED_USB(Adapter)	(dvobj_to_usb(adapter_to_dvobj(Adapter))->usb_speed == RTW_USB_SPEED_HIGH)
+#define IS_SUPER_SPEED_USB(Adapter)	(dvobj_to_usb(adapter_to_dvobj(Adapter))->usb_speed == RTW_USB_SPEED_SUPER)
 
 #define USB_SUPER_SPEED_BULK_SIZE	1024	/* usb 3.0 */
 #define USB_HIGH_SPEED_BULK_SIZE	512		/* usb 2.0 */

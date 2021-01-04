@@ -34,8 +34,8 @@ u8 g6_usb_read8(struct rtw_hal_com_t *hal, u32 addr)
 	len = 1;
 
 	// NEO : TODO usb_ctrl_vendorreq to replace the original one
-	_os_usbctrl_vendorreq(hal->drv_priv, request, wvalue, index,
-				&data, len, requesttype);
+	//_os_usbctrl_vendorreq(hal->drv_priv, request, wvalue, index,
+	//			&data, len, requesttype);
 
 	return data;
 }

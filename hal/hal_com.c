@@ -877,17 +877,18 @@ _OneOutPipeMapping(
 		PADAPTER	pAdapter
 )
 {
-	struct dvobj_priv	*pdvobjpriv = adapter_to_dvobj(pAdapter);
+	struct dvobj_priv	*dvobj = adapter_to_dvobj(pAdapter);
+	PUSB_DATA pusb_data = dvobj_to_usb(dvobj);
 
-	pdvobjpriv->Queue2Pipe[0] = pdvobjpriv->RtOutPipe[0];/* VO */
-	pdvobjpriv->Queue2Pipe[1] = pdvobjpriv->RtOutPipe[0];/* VI */
-	pdvobjpriv->Queue2Pipe[2] = pdvobjpriv->RtOutPipe[0];/* BE */
-	pdvobjpriv->Queue2Pipe[3] = pdvobjpriv->RtOutPipe[0];/* BK */
+	dvobj->Queue2Pipe[0] = pusb_data->RtOutPipe[0];/* VO */
+	dvobj->Queue2Pipe[1] = pusb_data->RtOutPipe[0];/* VI */
+	dvobj->Queue2Pipe[2] = pusb_data->RtOutPipe[0];/* BE */
+	dvobj->Queue2Pipe[3] = pusb_data->RtOutPipe[0];/* BK */
 
-	pdvobjpriv->Queue2Pipe[4] = pdvobjpriv->RtOutPipe[0];/* BCN */
-	pdvobjpriv->Queue2Pipe[5] = pdvobjpriv->RtOutPipe[0];/* MGT */
-	pdvobjpriv->Queue2Pipe[6] = pdvobjpriv->RtOutPipe[0];/* HIGH */
-	pdvobjpriv->Queue2Pipe[7] = pdvobjpriv->RtOutPipe[0];/* TXCMD */
+	dvobj->Queue2Pipe[4] = pusb_data->RtOutPipe[0];/* BCN */
+	dvobj->Queue2Pipe[5] = pusb_data->RtOutPipe[0];/* MGT */
+	dvobj->Queue2Pipe[6] = pusb_data->RtOutPipe[0];/* HIGH */
+	dvobj->Queue2Pipe[7] = pusb_data->RtOutPipe[0];/* TXCMD */
 }
 
 static void
@@ -896,7 +897,8 @@ _TwoOutPipeMapping(
 		BOOLEAN		bWIFICfg
 )
 {
-	struct dvobj_priv	*pdvobjpriv = adapter_to_dvobj(pAdapter);
+	struct dvobj_priv	*dvobj = adapter_to_dvobj(pAdapter);
+	PUSB_DATA pusb_data = dvobj_to_usb(dvobj);
 
 	if (bWIFICfg) { /* WMM */
 
@@ -904,15 +906,15 @@ _TwoOutPipeMapping(
 		/* {  0, 	1, 	0, 	1, 	0, 	0, 	0, 	0, 		0	}; */
 		/* 0:ep_0 num, 1:ep_1 num */
 
-		pdvobjpriv->Queue2Pipe[0] = pdvobjpriv->RtOutPipe[1];/* VO */
-		pdvobjpriv->Queue2Pipe[1] = pdvobjpriv->RtOutPipe[0];/* VI */
-		pdvobjpriv->Queue2Pipe[2] = pdvobjpriv->RtOutPipe[1];/* BE */
-		pdvobjpriv->Queue2Pipe[3] = pdvobjpriv->RtOutPipe[0];/* BK */
+		dvobj->Queue2Pipe[0] = pusb_data->RtOutPipe[1];/* VO */
+		dvobj->Queue2Pipe[1] = pusb_data->RtOutPipe[0];/* VI */
+		dvobj->Queue2Pipe[2] = pusb_data->RtOutPipe[1];/* BE */
+		dvobj->Queue2Pipe[3] = pusb_data->RtOutPipe[0];/* BK */
 
-		pdvobjpriv->Queue2Pipe[4] = pdvobjpriv->RtOutPipe[0];/* BCN */
-		pdvobjpriv->Queue2Pipe[5] = pdvobjpriv->RtOutPipe[0];/* MGT */
-		pdvobjpriv->Queue2Pipe[6] = pdvobjpriv->RtOutPipe[0];/* HIGH */
-		pdvobjpriv->Queue2Pipe[7] = pdvobjpriv->RtOutPipe[0];/* TXCMD */
+		dvobj->Queue2Pipe[4] = pusb_data->RtOutPipe[0];/* BCN */
+		dvobj->Queue2Pipe[5] = pusb_data->RtOutPipe[0];/* MGT */
+		dvobj->Queue2Pipe[6] = pusb_data->RtOutPipe[0];/* HIGH */
+		dvobj->Queue2Pipe[7] = pusb_data->RtOutPipe[0];/* TXCMD */
 
 	} else { /* typical setting */
 
@@ -921,15 +923,15 @@ _TwoOutPipeMapping(
 		/* {  1, 	1, 	0, 	0, 	0, 	0, 	0, 	0, 		0	};			 */
 		/* 0:ep_0 num, 1:ep_1 num */
 
-		pdvobjpriv->Queue2Pipe[0] = pdvobjpriv->RtOutPipe[0];/* VO */
-		pdvobjpriv->Queue2Pipe[1] = pdvobjpriv->RtOutPipe[0];/* VI */
-		pdvobjpriv->Queue2Pipe[2] = pdvobjpriv->RtOutPipe[1];/* BE */
-		pdvobjpriv->Queue2Pipe[3] = pdvobjpriv->RtOutPipe[1];/* BK */
+		dvobj->Queue2Pipe[0] = pusb_data->RtOutPipe[0];/* VO */
+		dvobj->Queue2Pipe[1] = pusb_data->RtOutPipe[0];/* VI */
+		dvobj->Queue2Pipe[2] = pusb_data->RtOutPipe[1];/* BE */
+		dvobj->Queue2Pipe[3] = pusb_data->RtOutPipe[1];/* BK */
 
-		pdvobjpriv->Queue2Pipe[4] = pdvobjpriv->RtOutPipe[0];/* BCN */
-		pdvobjpriv->Queue2Pipe[5] = pdvobjpriv->RtOutPipe[0];/* MGT */
-		pdvobjpriv->Queue2Pipe[6] = pdvobjpriv->RtOutPipe[0];/* HIGH */
-		pdvobjpriv->Queue2Pipe[7] = pdvobjpriv->RtOutPipe[0];/* TXCMD	 */
+		dvobj->Queue2Pipe[4] = pusb_data->RtOutPipe[0];/* BCN */
+		dvobj->Queue2Pipe[5] = pusb_data->RtOutPipe[0];/* MGT */
+		dvobj->Queue2Pipe[6] = pusb_data->RtOutPipe[0];/* HIGH */
+		dvobj->Queue2Pipe[7] = pusb_data->RtOutPipe[0];/* TXCMD	 */
 
 	}
 
@@ -940,7 +942,8 @@ static void _ThreeOutPipeMapping(
 		BOOLEAN		bWIFICfg
 )
 {
-	struct dvobj_priv	*pdvobjpriv = adapter_to_dvobj(pAdapter);
+	struct dvobj_priv	*dvobj = adapter_to_dvobj(pAdapter);
+	PUSB_DATA pusb_data = dvobj_to_usb(dvobj);
 
 	if (bWIFICfg) { /* for WMM */
 
@@ -948,15 +951,15 @@ static void _ThreeOutPipeMapping(
 		/* {  1, 	2, 	1, 	0, 	0, 	0, 	0, 	0, 		0	}; */
 		/* 0:H, 1:N, 2:L */
 
-		pdvobjpriv->Queue2Pipe[0] = pdvobjpriv->RtOutPipe[0];/* VO */
-		pdvobjpriv->Queue2Pipe[1] = pdvobjpriv->RtOutPipe[1];/* VI */
-		pdvobjpriv->Queue2Pipe[2] = pdvobjpriv->RtOutPipe[2];/* BE */
-		pdvobjpriv->Queue2Pipe[3] = pdvobjpriv->RtOutPipe[1];/* BK */
+		dvobj->Queue2Pipe[0] = pusb_data->RtOutPipe[0];/* VO */
+		dvobj->Queue2Pipe[1] = pusb_data->RtOutPipe[1];/* VI */
+		dvobj->Queue2Pipe[2] = pusb_data->RtOutPipe[2];/* BE */
+		dvobj->Queue2Pipe[3] = pusb_data->RtOutPipe[1];/* BK */
 
-		pdvobjpriv->Queue2Pipe[4] = pdvobjpriv->RtOutPipe[0];/* BCN */
-		pdvobjpriv->Queue2Pipe[5] = pdvobjpriv->RtOutPipe[0];/* MGT */
-		pdvobjpriv->Queue2Pipe[6] = pdvobjpriv->RtOutPipe[0];/* HIGH */
-		pdvobjpriv->Queue2Pipe[7] = pdvobjpriv->RtOutPipe[0];/* TXCMD */
+		dvobj->Queue2Pipe[4] = pusb_data->RtOutPipe[0];/* BCN */
+		dvobj->Queue2Pipe[5] = pusb_data->RtOutPipe[0];/* MGT */
+		dvobj->Queue2Pipe[6] = pusb_data->RtOutPipe[0];/* HIGH */
+		dvobj->Queue2Pipe[7] = pusb_data->RtOutPipe[0];/* TXCMD */
 
 	} else { /* typical setting */
 
@@ -965,15 +968,15 @@ static void _ThreeOutPipeMapping(
 		/* {  2, 	2, 	1, 	0, 	0, 	0, 	0, 	0, 		0	};			 */
 		/* 0:H, 1:N, 2:L */
 
-		pdvobjpriv->Queue2Pipe[0] = pdvobjpriv->RtOutPipe[0];/* VO */
-		pdvobjpriv->Queue2Pipe[1] = pdvobjpriv->RtOutPipe[1];/* VI */
-		pdvobjpriv->Queue2Pipe[2] = pdvobjpriv->RtOutPipe[2];/* BE */
-		pdvobjpriv->Queue2Pipe[3] = pdvobjpriv->RtOutPipe[2];/* BK */
+		dvobj->Queue2Pipe[0] = pusb_data->RtOutPipe[0];/* VO */
+		dvobj->Queue2Pipe[1] = pusb_data->RtOutPipe[1];/* VI */
+		dvobj->Queue2Pipe[2] = pusb_data->RtOutPipe[2];/* BE */
+		dvobj->Queue2Pipe[3] = pusb_data->RtOutPipe[2];/* BK */
 
-		pdvobjpriv->Queue2Pipe[4] = pdvobjpriv->RtOutPipe[0];/* BCN */
-		pdvobjpriv->Queue2Pipe[5] = pdvobjpriv->RtOutPipe[0];/* MGT */
-		pdvobjpriv->Queue2Pipe[6] = pdvobjpriv->RtOutPipe[0];/* HIGH */
-		pdvobjpriv->Queue2Pipe[7] = pdvobjpriv->RtOutPipe[0];/* TXCMD	 */
+		dvobj->Queue2Pipe[4] = pusb_data->RtOutPipe[0];/* BCN */
+		dvobj->Queue2Pipe[5] = pusb_data->RtOutPipe[0];/* MGT */
+		dvobj->Queue2Pipe[6] = pusb_data->RtOutPipe[0];/* HIGH */
+		dvobj->Queue2Pipe[7] = pusb_data->RtOutPipe[0];/* TXCMD	 */
 	}
 
 }

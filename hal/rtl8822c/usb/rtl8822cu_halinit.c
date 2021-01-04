@@ -411,7 +411,8 @@ static u8 usb_set_queue_pipe_mapping(PADAPTER padapter, u8 NumInPipe, u8 NumOutP
 void rtl8822cu_interface_configure(PADAPTER padapter)
 {
 	HAL_DATA_TYPE *pHalData = GET_HAL_DATA(padapter);
-	struct dvobj_priv *pdvobjpriv = adapter_to_dvobj(padapter);
+	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
+	PUSB_DATA pusb_data = dvobj_to_usb(dvobj);
 
 	if (IS_SUPER_SPEED_USB(padapter))
 		pHalData->UsbBulkOutSize = USB_SUPER_SPEED_BULK_SIZE;
@@ -423,7 +424,7 @@ void rtl8822cu_interface_configure(PADAPTER padapter)
 #ifdef CONFIG_USB_TX_AGGREGATION
 	/* according to value defined by halmac */
 	pHalData->UsbTxAggMode		= 1;
-	rtw_halmac_usb_get_txagg_desc_num(pdvobjpriv, &pHalData->UsbTxAggDescNum);
+	rtw_halmac_usb_get_txagg_desc_num(dvobj, &pHalData->UsbTxAggDescNum);
 #endif /* CONFIG_USB_TX_AGGREGATION */
 
 #ifdef CONFIG_USB_RX_AGGREGATION
@@ -440,5 +441,5 @@ void rtl8822cu_interface_configure(PADAPTER padapter)
 #endif /* CONFIG_USB_RX_AGGREGATION */
 
 	usb_set_queue_pipe_mapping(padapter,
-			   pdvobjpriv->RtNumInPipes, pdvobjpriv->RtNumOutPipes);
+			   pusb_data->RtNumInPipes, pusb_data->RtNumOutPipes);
 }

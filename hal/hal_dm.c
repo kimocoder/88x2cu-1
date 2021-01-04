@@ -494,7 +494,7 @@ void Init_ODM_ComInfo(_adapter *adapter)
 	odm_cmn_info_hook(pDM_Odm, ODM_CMNINFO_RFDEFAULTPATH, &pHalData->ant_path);
 #endif /*CONFIG_RTL8723B*/
 #ifdef CONFIG_USB_HCI
-	odm_cmn_info_hook(pDM_Odm, ODM_CMNINFO_HUBUSBMODE, &(dvobj->usb_speed));
+	odm_cmn_info_hook(pDM_Odm, ODM_CMNINFO_HUBUSBMODE, &(dvobj_to_usb(dvobj)->usb_speed));
 #endif
 
 #ifdef CONFIG_DYNAMIC_SOML

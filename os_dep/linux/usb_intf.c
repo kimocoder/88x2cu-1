@@ -382,21 +382,22 @@ static inline int RT_usb_endpoint_num(const struct usb_endpoint_descriptor *epd)
 static u8 rtw_init_intf_priv(struct dvobj_priv *dvobj)
 {
 	u8 rst = _SUCCESS;
+	PUSB_DATA pusb_data = dvobj_to_usb(dvobj);
 
 #ifdef CONFIG_USB_VENDOR_REQ_MUTEX
-	_rtw_mutex_init(&dvobj->usb_vendor_req_mutex);
+	_rtw_mutex_init(&pusb_data->usb_vendor_req_mutex);
 #endif
 
 
 #ifdef CONFIG_USB_VENDOR_REQ_BUFFER_PREALLOC
-	dvobj->usb_alloc_vendor_req_buf = rtw_zmalloc(MAX_USB_IO_CTL_SIZE);
-	if (dvobj->usb_alloc_vendor_req_buf == NULL) {
+	pusb_data->usb_alloc_vendor_req_buf = rtw_zmalloc(MAX_USB_IO_CTL_SIZE);
+	if (pusb_data->usb_alloc_vendor_req_buf == NULL) {
 		RTW_INFO("alloc usb_vendor_req_buf failed... /n");
 		rst = _FAIL;
 		goto exit;
 	}
-	dvobj->usb_vendor_req_buf  =
-		(u8 *)N_BYTE_ALIGMENT((SIZE_PTR)(dvobj->usb_alloc_vendor_req_buf), ALIGNMENT_UNIT);
+	pusb_data->usb_vendor_req_buf =
+		(u8 *)N_BYTE_ALIGMENT((SIZE_PTR)(pusb_data->usb_alloc_vendor_req_buf), ALIGNMENT_UNIT);
 exit:
 #endif
 
@@ -407,14 +408,15 @@ exit:
 static u8 rtw_deinit_intf_priv(struct dvobj_priv *dvobj)
 {
 	u8 rst = _SUCCESS;
+	PUSB_DATA pusb_data = dvobj_to_usb(dvobj);
 
 #ifdef CONFIG_USB_VENDOR_REQ_BUFFER_PREALLOC
-	if (dvobj->usb_vendor_req_buf)
-		rtw_mfree(dvobj->usb_alloc_vendor_req_buf, MAX_USB_IO_CTL_SIZE);
+	if (pusb_data->usb_vendor_req_buf)
+		rtw_mfree(pusb_data->usb_alloc_vendor_req_buf, MAX_USB_IO_CTL_SIZE);
 #endif
 
 #ifdef CONFIG_USB_VENDOR_REQ_MUTEX
-	_rtw_mutex_free(&dvobj->usb_vendor_req_mutex);
+	_rtw_mutex_free(&pusb_data->usb_vendor_req_mutex);
 #endif
 
 	return rst;
@@ -508,7 +510,7 @@ static struct dvobj_priv *usb_dvobj_init(struct usb_interface *usb_intf, const s
 {
 	int	i;
 	int	status = _FAIL;
-	struct dvobj_priv *pdvobjpriv;
+	struct dvobj_priv *dvobj;
 	struct usb_device_descriptor	*pdev_desc;
 	struct usb_host_config			*phost_conf;
 	struct usb_config_descriptor		*pconf_desc;
@@ -517,23 +519,22 @@ static struct dvobj_priv *usb_dvobj_init(struct usb_interface *usb_intf, const s
 	struct usb_host_endpoint		*phost_endp;
 	struct usb_endpoint_descriptor	*pendp_desc;
 	struct usb_device				*pusbd;
+	PUSB_DATA pusb_data;
 
-
-
-	pdvobjpriv = devobj_init();
-	if (pdvobjpriv == NULL)
+	dvobj = devobj_init();
+	if (dvobj == NULL)
 		goto exit;
 
+	pusb_data = dvobj_to_usb(dvobj);
+	pusb_data->pusbintf = dvobj->pusbintf = usb_intf ;
+	pusbd = pusb_data->pusbdev = dvobj->pusbdev = interface_to_usbdev(usb_intf);
+	usb_set_intfdata(usb_intf, dvobj);
 
-	pdvobjpriv->pusbintf = usb_intf ;
-	pusbd = pdvobjpriv->pusbdev = interface_to_usbdev(usb_intf);
-	usb_set_intfdata(usb_intf, pdvobjpriv);
-
-	pdvobjpriv->RtNumInPipes = 0;
-	pdvobjpriv->RtNumOutPipes = 0;
+	pusb_data->RtNumInPipes = 0;
+	pusb_data->RtNumOutPipes = 0;
 
 	/* padapter->EepromAddressSize = 6; */
-	/* pdvobjpriv->nr_endpoint = 6; */
+	/* dvobj->nr_endpoint = 6; */
 
 	pdev_desc = &pusbd->descriptor;
 
@@ -564,11 +565,11 @@ static struct dvobj_priv *usb_dvobj_init(struct usb_interface *usb_intf, const s
 	phost_iface = &usb_intf->altsetting[0];
 	piface_desc = &phost_iface->desc;
 
-	pdvobjpriv->nr_endpoint = piface_desc->bNumEndpoints;
+	pusb_data->nr_endpoint = piface_desc->bNumEndpoints;
 
 	/* RTW_INFO("\ndump usb_endpoint_descriptor:\n"); */
 
-	for (i = 0; i < pdvobjpriv->nr_endpoint; i++) {
+	for (i = 0; i < pusb_data->nr_endpoint; i++) {
 		phost_endp = phost_iface->endpoint + i;
 		if (phost_endp) {
 			pendp_desc = &phost_endp->desc;
@@ -585,79 +586,79 @@ static struct dvobj_priv *usb_dvobj_init(struct usb_interface *usb_intf, const s
 
 			if (RT_usb_endpoint_is_bulk_in(pendp_desc)) {
 				RTW_INFO("RT_usb_endpoint_is_bulk_in = %x\n", RT_usb_endpoint_num(pendp_desc));
-				pdvobjpriv->RtInPipe[pdvobjpriv->RtNumInPipes] = RT_usb_endpoint_num(pendp_desc);
-				pdvobjpriv->RtNumInPipes++;
+				pusb_data->RtInPipe[pusb_data->RtNumInPipes] = RT_usb_endpoint_num(pendp_desc);
+				pusb_data->RtNumInPipes++;
 			} else if (RT_usb_endpoint_is_int_in(pendp_desc)) {
 				RTW_INFO("RT_usb_endpoint_is_int_in = %x, Interval = %x\n", RT_usb_endpoint_num(pendp_desc), pendp_desc->bInterval);
-				pdvobjpriv->RtInPipe[pdvobjpriv->RtNumInPipes] = RT_usb_endpoint_num(pendp_desc);
-				pdvobjpriv->RtNumInPipes++;
+				pusb_data->RtInPipe[pusb_data->RtNumInPipes] = RT_usb_endpoint_num(pendp_desc);
+				pusb_data->RtNumInPipes++;
 			} else if (RT_usb_endpoint_is_bulk_out(pendp_desc)) {
 				RTW_INFO("RT_usb_endpoint_is_bulk_out = %x\n", RT_usb_endpoint_num(pendp_desc));
-				pdvobjpriv->RtOutPipe[pdvobjpriv->RtNumOutPipes] = RT_usb_endpoint_num(pendp_desc);
-				pdvobjpriv->RtNumOutPipes++;
+				pusb_data->RtOutPipe[pusb_data->RtNumOutPipes] = RT_usb_endpoint_num(pendp_desc);
+				pusb_data->RtNumOutPipes++;
 			}
-			pdvobjpriv->ep_num[i] = RT_usb_endpoint_num(pendp_desc);
+			/* pusb_data->ep_num[i] = RT_usb_endpoint_num(pendp_desc); */
 		}
 	}
 
-	RTW_INFO("nr_endpoint=%d, in_num=%d, out_num=%d\n\n", pdvobjpriv->nr_endpoint, pdvobjpriv->RtNumInPipes, pdvobjpriv->RtNumOutPipes);
+	RTW_INFO("nr_endpoint=%d, in_num=%d, out_num=%d\n\n", pusb_data->nr_endpoint, pusb_data->RtNumInPipes, pusb_data->RtNumOutPipes);
 
 	switch (pusbd->speed) {
 	case USB_SPEED_LOW:
 		RTW_INFO("USB_SPEED_LOW\n");
-		pdvobjpriv->usb_speed = RTW_USB_SPEED_LOW;
+		pusb_data->usb_speed = RTW_USB_SPEED_LOW;
 		break;
 	case USB_SPEED_FULL:
 		RTW_INFO("USB_SPEED_FULL\n");
-		pdvobjpriv->usb_speed = RTW_USB_SPEED_FULL;
+		pusb_data->usb_speed = RTW_USB_SPEED_FULL;
 		break;
 	case USB_SPEED_HIGH:
 		RTW_INFO("USB_SPEED_HIGH\n");
-		pdvobjpriv->usb_speed = RTW_USB_SPEED_HIGH;
+		pusb_data->usb_speed = RTW_USB_SPEED_HIGH;
 		break;
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31))
 	case USB_SPEED_SUPER:
 		RTW_INFO("USB_SPEED_SUPER\n");
-		pdvobjpriv->usb_speed = RTW_USB_SPEED_SUPER;
+		pusb_data->usb_speed = RTW_USB_SPEED_SUPER;
 		break;
 #endif
 	default:
 		RTW_INFO("USB_SPEED_UNKNOWN(%x)\n", pusbd->speed);
-		pdvobjpriv->usb_speed = RTW_USB_SPEED_UNKNOWN;
+		pusb_data->usb_speed = RTW_USB_SPEED_UNKNOWN;
 		break;
 	}
 
-	if (pdvobjpriv->usb_speed == RTW_USB_SPEED_UNKNOWN) {
+	if (pusb_data->usb_speed == RTW_USB_SPEED_UNKNOWN) {
 		RTW_INFO("UNKNOWN USB SPEED MODE, ERROR !!!\n");
 		goto free_dvobj;
 	}
 
-	if (rtw_init_intf_priv(pdvobjpriv) == _FAIL) {
+	if (rtw_init_intf_priv(dvobj) == _FAIL) {
 		goto free_dvobj;
 	}
 
 	/*step 1-1., decide the chip_type via driver_info*/
-	pdvobjpriv->interface_type = RTW_USB;
-	rtw_decide_chip_type_by_usb_info(pdvobjpriv, pdid);
+	dvobj->interface_type = RTW_USB;
+	rtw_decide_chip_type_by_usb_info(dvobj, pdid);
 
 	/* .3 misc */
-	_rtw_init_sema(&(pdvobjpriv->usb_suspend_sema), 0);
-	rtw_reset_continual_io_error(pdvobjpriv);
+	_rtw_init_sema(&(dvobj->usb_suspend_sema), 0);
+	rtw_reset_continual_io_error(dvobj);
 
 	usb_get_dev(pusbd);
 
 	status = _SUCCESS;
 
 free_dvobj:
-	if (status != _SUCCESS && pdvobjpriv) {
+	if (status != _SUCCESS && dvobj) {
 		usb_set_intfdata(usb_intf, NULL);
 
-		devobj_deinit(pdvobjpriv);
+		devobj_deinit(dvobj);
 
-		pdvobjpriv = NULL;
+		dvobj = NULL;
 	}
 exit:
-	return pdvobjpriv;
+	return dvobj;
 }
 
 static void usb_dvobj_deinit(struct usb_interface *usb_intf)
