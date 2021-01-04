@@ -268,6 +268,69 @@ typedef unsigned long systime;
 typedef ktime_t sysptime;
 typedef struct tasklet_struct _tasklet;
 
+typedef void (*tasklet_fn_t)(unsigned long);
+
+#if 1
+static inline void rtw_tasklet_init(_tasklet *t, tasklet_fn_t func,
+							unsigned long data)
+{
+	tasklet_init(t, func, data);
+}
+static inline void rtw_tasklet_kill(_tasklet *t)
+{
+	tasklet_kill(t);
+}
+
+static inline void rtw_tasklet_schedule(_tasklet *t)
+{
+	tasklet_schedule(t);
+}
+static inline void rtw_tasklet_hi_schedule(_tasklet *t)
+{
+	tasklet_hi_schedule(t);
+}
+#else
+#define rtw_tasklet_init tasklet_init
+#define rtw_tasklet_kill tasklet_kill
+#define rtw_tasklet_schedule tasklet_schedule
+#define rtw_tasklet_hi_schedule tasklet_hi_schedule
+#endif
+
+/*skb_buffer*/
+static inline struct sk_buff *_rtw_skb_alloc(u32 sz)
+{
+	return __dev_alloc_skb(sz, in_interrupt() ? GFP_ATOMIC : GFP_KERNEL);
+}
+
+static inline void _rtw_skb_free(struct sk_buff *skb)
+{
+	dev_kfree_skb_any(skb);
+}
+
+static inline struct sk_buff *_rtw_skb_copy(const struct sk_buff *skb)
+{
+	return skb_copy(skb, in_interrupt() ? GFP_ATOMIC : GFP_KERNEL);
+}
+
+static inline struct sk_buff *_rtw_skb_clone(struct sk_buff *skb)
+{
+	return skb_clone(skb, in_interrupt() ? GFP_ATOMIC : GFP_KERNEL);
+}
+
+static inline int _rtw_skb_linearize(struct sk_buff *skb)
+{
+	return skb_linearize(skb);
+}
+
+static inline struct sk_buff *_rtw_pskb_copy(struct sk_buff *skb)
+{
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36))
+	return pskb_copy(skb, in_interrupt() ? GFP_ATOMIC : GFP_KERNEL);
+#else
+	return skb_clone(skb, in_interrupt() ? GFP_ATOMIC : GFP_KERNEL);
+#endif
+}
+
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 22))
 /* Porting from linux kernel, for compatible with old kernel. */
 static inline unsigned char *skb_tail_pointer(const struct sk_buff *skb)

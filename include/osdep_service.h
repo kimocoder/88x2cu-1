@@ -169,6 +169,7 @@ struct sk_buff *dbg_rtw_skb_alloc(unsigned int size, const enum mstat_f flags, c
 void dbg_rtw_skb_free(struct sk_buff *skb, const enum mstat_f flags, const char *func, const int line);
 struct sk_buff *dbg_rtw_skb_copy(const struct sk_buff *skb, const enum mstat_f flags, const char *func, const int line);
 struct sk_buff *dbg_rtw_skb_clone(struct sk_buff *skb, const enum mstat_f flags, const char *func, const int line);
+int dbg_rtw_skb_linearize(struct sk_buff *skb, const enum mstat_f flags, const char *func, int line);
 int dbg_rtw_netif_rx(_nic_hdl ndev, struct sk_buff *skb, const enum mstat_f flags, const char *func, int line);
 #ifdef CONFIG_RTW_NAPI
 int dbg_rtw_netif_receive_skb(_nic_hdl ndev, struct sk_buff *skb, const enum mstat_f flags, const char *func, int line);
@@ -212,6 +213,7 @@ void dbg_rtw_usb_buffer_free(struct usb_device *dev, size_t size, void *addr, dm
 #define rtw_skb_clone(skb)	dbg_rtw_skb_clone((skb), MSTAT_TYPE_SKB, __FUNCTION__, __LINE__)
 #define rtw_skb_copy_f(skb, mstat_f)	dbg_rtw_skb_copy((skb), ((mstat_f) & 0xff00) | MSTAT_TYPE_SKB, __FUNCTION__, __LINE__)
 #define rtw_skb_clone_f(skb, mstat_f)	dbg_rtw_skb_clone((skb), ((mstat_f) & 0xff00) | MSTAT_TYPE_SKB, __FUNCTION__, __LINE__)
+#define rtw_skb_linearize(skb)			dbg_rtw_skb_linearize((skb), MSTAT_TYPE_SKB, __func__, __LINE__)
 #define rtw_netif_rx(ndev, skb)	dbg_rtw_netif_rx(ndev, skb, MSTAT_TYPE_SKB, __FUNCTION__, __LINE__)
 #ifdef CONFIG_RTW_NAPI
 #define rtw_netif_receive_skb(ndev, skb) dbg_rtw_netif_receive_skb(ndev, skb, MSTAT_TYPE_SKB, __FUNCTION__, __LINE__)
@@ -286,6 +288,7 @@ void _rtw_usb_buffer_free(struct usb_device *dev, size_t size, void *addr, dma_a
 #define rtw_skb_clone(skb)	_rtw_skb_clone((skb))
 #define rtw_skb_copy_f(skb, mstat_f)	_rtw_skb_copy((skb))
 #define rtw_skb_clone_f(skb, mstat_f)	_rtw_skb_clone((skb))
+#define rtw_skb_linearize(skb)			_rtw_skb_linearize(skb)
 #define rtw_netif_rx(ndev, skb) _rtw_netif_rx(ndev, skb)
 #ifdef CONFIG_RTW_NAPI
 #define rtw_netif_receive_skb(ndev, skb) _rtw_netif_receive_skb(ndev, skb)

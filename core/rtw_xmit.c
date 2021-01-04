@@ -5532,6 +5532,213 @@ s32 rtw_xmit(_adapter *padapter, struct sk_buff **ppkt, u16 os_qid)
 	return res;
 }
 
+#ifdef RTW_PHL_TX
+
+#ifdef RTW_PHL_TEST_FPGA
+u32 test_seq;
+#endif
+
+u8 *get_head_from_txreq(_adapter *padapter, struct xmit_frame *pxframe, u8 frag_idx)
+{
+	return 0;
+}
+
+u8 *get_tail_from_txreq(_adapter *padapter, struct xmit_frame *pxframe, u8 frag_idx)
+{
+	return 0;
+}
+
+void dump_pkt(u8 *start, u32 len)
+{
+	u32 idx = 0;
+	for (idx = 0; idx < len; idx++) {
+		printk("%02x ", start[idx]);
+		if ((idx % 20) == 19)
+			printk("\n");
+	}
+	printk("\n");
+}
+
+/* TXREQ_QMGT */
+u8 *get_txreq_buffer(_adapter *padapter, u8 **txreq, u8 **pkt_list, u8 **head, u8 **tail)
+{
+	struct xmit_txreq_buf *ptxreq_buf = NULL;
+	_list *plist, *phead;
+	_queue *pfree_txreq_queue = &padapter->free_txreq_queue;
+#ifdef CONFIG_CORE_TXSC
+	u8 i = 0;
+#endif
+
+	_rtw_spinlock_bh(&pfree_txreq_queue->lock);
+	if (_rtw_queue_empty(pfree_txreq_queue) == _TRUE) {
+		padapter->txreq_full_cnt++;
+	} else {
+		phead = get_list_head(pfree_txreq_queue);
+		plist = get_next(phead);
+		ptxreq_buf = LIST_CONTAINOR(plist, struct xmit_txreq_buf, list);
+		rtw_list_delete(&ptxreq_buf->list);
+
+		padapter->free_txreq_cnt--;
+	}
+	_rtw_spinunlock_bh(&pfree_txreq_queue->lock);
+
+	if (ptxreq_buf) {
+
+		if (txreq)
+			*txreq = ptxreq_buf->txreq;
+
+		if (head)
+			*head = ptxreq_buf->head;
+
+		if (tail)
+			*tail = ptxreq_buf->tail;
+
+		if (pkt_list)
+			*pkt_list = ptxreq_buf->pkt_list;
+
+#ifdef CONFIG_CORE_TXSC
+		for (i = 0; i < MAX_TXSC_SKB_NUM; i++)
+			ptxreq_buf->pkt[i] = NULL;
+		ptxreq_buf->pkt_cnt = 0;
+#endif
+	}
+
+	return (u8 *)ptxreq_buf;
+}
+
+static void _fill_txreq_list_skb(_adapter *padapter,
+	struct rtw_xmit_req *txreq, struct rtw_pkt_buf_list **pkt_list,
+	struct sk_buff *skb, u32 *req_sz, s32 *req_offset)
+{
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 4, 0))
+	#define skb_frag_off(f)	((f)->page_offset)
+#endif
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 2, 0))
+	#define skb_frag_page(f) ((f)->page)
+	#define skb_frag_size(f) ((f)->size)
+#endif
+#define PKT_LIST_APPEND(_addr, _len)	do {				\
+		u32 __len = _len;					\
+		if (__len == 0)						\
+			break;						\
+		list->vir_addr = _addr;					\
+		list->length = __len;					\
+		txreq->pkt_cnt++;					\
+		txreq->total_len += __len;				\
+		list++;							\
+		*pkt_list = list;					\
+	} while (0)
+
+	struct rtw_pkt_buf_list *list = *pkt_list;
+	u8 nr_frags = skb_shinfo(skb)->nr_frags;
+	s32 offset = *req_offset;
+	u32 rem_sz = *req_sz;
+	u32 cur_frag_total, cur_frag_rem;
+	int i;
+
+	/* skb head frag */
+	cur_frag_total = skb_headlen(skb);
+
+	if (cur_frag_total > offset) {
+		cur_frag_rem = rtw_min(cur_frag_total - offset, rem_sz);
+		PKT_LIST_APPEND(skb->data + offset, cur_frag_rem);
+		rem_sz -= cur_frag_rem;
+		offset = 0;
+	} else {
+		offset -= cur_frag_total;
+	}
+
+	for (i = 0; i < skb_shinfo(skb)->nr_frags; i++) {
+		skb_frag_t *frag = &skb_shinfo(skb)->frags[i];
+		u8 *addr;
+
+		addr = ((void *)page_address(skb_frag_page(frag))) + skb_frag_off(frag);
+		cur_frag_total = skb_frag_size(frag);
+
+		if (offset < cur_frag_total) {
+			cur_frag_rem = cur_frag_total - offset;
+
+			if (rem_sz < cur_frag_rem) {
+				PKT_LIST_APPEND(addr + offset, rem_sz);
+				RTW_WARN("%s:%d, size(rem_sz)=%d cur_frag_rem=%d txreq->total_length = %d\n",
+					 __func__, __LINE__, rem_sz, cur_frag_rem, txreq->total_len);
+				rem_sz = 0;
+				break;
+			} else {
+				PKT_LIST_APPEND(addr + offset, cur_frag_rem);
+				RTW_DBG("%s:%d, size=%d txreq->total_length = %d\n",
+					__func__, __LINE__, cur_frag_rem, txreq->total_len);
+				rem_sz -= cur_frag_rem;
+			}
+
+			offset = 0;
+		} else {
+			offset -= cur_frag_total;
+		}
+	}
+
+	*req_sz = rem_sz;
+	*req_offset = offset;
+
+#undef PKT_LIST_APPEND
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 4, 0))
+	#undef skb_frag_off
+#endif
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 2, 0))
+	#undef skb_frag_page
+	#undef skb_frag_size
+#endif
+}
+
+static int skb_total_frag_nr(struct sk_buff *head_skb)
+{
+	struct sk_buff *skb;
+	int nr;
+
+	nr = 1 + skb_shinfo(head_skb)->nr_frags;
+
+	skb_walk_frags(head_skb, skb)
+		nr += 1 + skb_shinfo(skb)->nr_frags;
+
+	return nr;
+}
+
+static void fill_txreq_list_skb(_adapter *padapter,
+	struct rtw_xmit_req *txreq, struct rtw_pkt_buf_list **pkt_list,
+	struct sk_buff *head_skb, u32 req_sz, s32 offset)
+{
+	struct sk_buff *skb;
+
+	if (skb_total_frag_nr(head_skb) > NUM_PKT_LIST_PER_TXREQ - 2) {
+		rtw_skb_linearize(head_skb);
+		RTW_WARN("skb total frag nr over %d\n", NUM_PKT_LIST_PER_TXREQ - 2);
+	}
+
+	_fill_txreq_list_skb(padapter, txreq, pkt_list, head_skb, &req_sz, &offset);
+
+	skb_walk_frags(head_skb, skb)
+		_fill_txreq_list_skb(padapter, txreq, pkt_list, skb, &req_sz, &offset);
+
+	if (req_sz != 0)
+		RTW_WARN("remain req_sz=%d should be zero\n", req_sz);
+}
+
+s32 rtw_core_replace_skb(struct sk_buff **pskb, u32 need_head, u32 need_tail)
+{
+	struct sk_buff *newskb;
+	struct sk_buff *skb = *pskb;
+
+	newskb = rtw_skb_copy(skb);
+
+	if (newskb == NULL)
+		return FAIL;
+
+	rtw_skb_free(skb);
+	*pskb = newskb;
+
+	return SUCCESS;
+}
+
 #ifdef CONFIG_BR_EXT
 s32 core_br_client_tx(_adapter *padapter, struct xmit_frame *pxframe, struct sk_buff **pskb)
 {
@@ -5659,6 +5866,151 @@ void get_wl_frag_paras(_adapter *padapter, struct xmit_frame *pxframe,
 	pxframe->attrib.frag_len_txsc = payload_fragsz - (payload_totalsz - pxframe->attrib.pktlen);
 #endif
 }
+
+u8 fill_txreq_pkt_perfrag_txos(struct _ADAPTER *padapter,
+			       struct xmit_frame *pxframe,
+			       u32 frag_perfr, u32 wl_frags)
+{
+	struct rtw_xmit_req *xf_txreq = NULL;
+	struct rtw_pkt_buf_list *pkt_list = NULL;
+	struct sk_buff *skb = pxframe->pkt;
+	u8 *txreq, *head, *tail, *list;
+	u32 head_sz, tail_sz, wlan_tail;
+	u32 payload_sz, payload_offset;
+	u8 idx;
+	u8 *wlhdr[RTW_MAX_FRAG_NUM] = {NULL};
+	u8 *wltail[RTW_MAX_FRAG_NUM] = {NULL};
+	/* TXREQ_QMGT */
+	struct xmit_txreq_buf *txreq_buf = NULL;
+
+	PHLTX_ENTER;
+
+	//printk("pxframe->attrib.pkt_hdrlen=%d pxframe->attrib.hdrlen=%d pxframe->attrib.iv_len=%d \n", pxframe->attrib.pkt_hdrlen, pxframe->attrib.hdrlen, pxframe->attrib.iv_len);
+
+	pxframe->txreq_cnt = wl_frags;
+
+	head_sz = pxframe->attrib.hdrlen + (pxframe->attrib.amsdu ? 0 : RTW_SZ_LLC);
+	tail_sz = 0;
+	if (pxframe->attrib.encrypt) {
+		head_sz += pxframe->attrib.iv_len;
+		if (pxframe->attrib.encrypt == _TKIP_)
+			tail_sz += RTW_TKIP_MIC_LEN;
+		if (pxframe->attrib.bswenc)
+			tail_sz += pxframe->attrib.icv_len;
+	}
+
+	PHLTX_LOG;
+
+	//get_txreq_resources(padapter, pxframe, &txreq, &list, &head, &tail);
+	/* TXREQ_QMGT */
+	txreq_buf = (struct xmit_txreq_buf *)get_txreq_buffer(padapter, &txreq, &list, &head, &tail);
+	if (txreq_buf == NULL) {
+		//do this in core_tx_init_xmitframe
+		//pxframe->phl_txreq = NULL;
+		//pxframe->ptxreq_buf = NULL;
+
+		//free in rtw_core_tx
+		//pxframe->pkt = NULL;//for not recycle in abort_core_tx
+		goto fail;
+	}
+#ifdef USE_PREV_WLHDR_BUF /* CONFIG_CORE_TXSC */
+	txreq_buf->macid = 0xff;
+	txreq_buf->txsc_id = 0xff;
+#endif
+	pxframe->ptxreq_buf = txreq_buf;
+
+	PHLTX_LOG;
+
+#if 0
+	payload = skb->data+pxframe->attrib.pkt_hdrlen;
+	printk("num_txreq=%d, hw_head=%d, hw_tail=%d, list=0x%p\n",
+		num_txreq, hw_head, hw_tail, (void *)list);
+
+	printk("p:txreq=0x%p, head=0x%p, tail=0x%p, payload=0x%p\n",
+		(void *)txreq, (void *)head, (void *)tail, (void *)payload);
+#endif
+
+	pxframe->phl_txreq = xf_txreq = (struct rtw_xmit_req *)txreq;
+	pkt_list = (struct rtw_pkt_buf_list *)list;
+#ifdef CONFIG_CORE_TXSC
+	xf_txreq->shortcut_id = 0;
+	xf_txreq->treq_type = RTW_PHL_TREQ_TYPE_NORMAL;
+#endif
+
+	PHLTX_LOG;
+
+	/* move to first payload position */
+	payload_offset = pxframe->attrib.pkt_hdrlen;
+
+	for (idx = 0; idx < wl_frags; idx++) {
+		/* for no memset */
+		xf_txreq->pkt_cnt = 0;
+		xf_txreq->total_len = 0;
+		xf_txreq->pkt_list = (u8 *)pkt_list;
+
+		/* fill head into txreq */
+		wlhdr[idx] = head;
+		pkt_list->vir_addr = head;
+		pkt_list->length = head_sz;
+		if (idx) {
+			/* deduct LLC size if not first fragment */
+			pkt_list->length -= RTW_SZ_LLC;
+		}
+		head += pkt_list->length;
+		xf_txreq->pkt_cnt++;
+		xf_txreq->total_len += pkt_list->length;
+		pkt_list++;
+
+		/* fill payload into txreq */
+		if (idx == (wl_frags - 1)) {
+			/* last payload size */
+			payload_sz = skb->len - payload_offset;
+		} else if (idx == 0) {
+			/* first payload size should deduct LLC size */
+			payload_sz = frag_perfr - RTW_SZ_LLC;
+		} else {
+			payload_sz = frag_perfr;
+		}
+		/* xf_txreq would be update and pkt_list++ inside */
+		fill_txreq_list_skb(padapter, xf_txreq, &pkt_list, skb,
+				    payload_sz, payload_offset);
+		payload_offset += payload_sz;
+
+		/* fill tail(if alloc) into txreq */
+		if (tail_sz) {
+			wlan_tail = tail_sz;
+			if ((pxframe->attrib.encrypt == _TKIP_) && (idx != (wl_frags - 1))) {
+				/* deduct MIC size if not last fragment with TKIP */
+				wlan_tail -= RTW_TKIP_MIC_LEN;
+			}
+			if (wlan_tail) {
+				wltail[idx] = tail;
+				pkt_list->vir_addr = tail;
+				pkt_list->length = wlan_tail;
+				tail += pkt_list->length;
+				xf_txreq->pkt_cnt++;
+				xf_txreq->total_len += pkt_list->length;
+				pkt_list++;
+			}
+		}
+
+		if (xf_txreq->pkt_cnt > NUM_PKT_LIST_PER_TXREQ)
+			RTW_WARN("xf_txreq->pkt_cnt=%d > NUM_PKT_LIST_PER_TXREQ\n",
+				 xf_txreq->pkt_cnt);
+
+		xf_txreq++;
+	}
+
+	_rtw_memcpy(pxframe->wlhdr, wlhdr, sizeof(wlhdr));
+	_rtw_memcpy(pxframe->wltail, wltail, sizeof(wltail));
+	PHLTX_EXIT;
+	return _SUCCESS;
+
+fail:
+	return _FAIL;
+}
+
+#endif // RTW_PHL_TX
 
 #ifdef CONFIG_TDLS
 sint xmitframe_enqueue_for_tdls_sleeping_sta(_adapter *padapter, struct xmit_frame *pxmitframe)

@@ -275,58 +275,6 @@ struct sk_buff *skb_clone(const struct sk_buff *skb)
 
 #endif /* PLATFORM_FREEBSD */
 
-inline struct sk_buff *_rtw_skb_alloc(u32 sz)
-{
-#ifdef PLATFORM_LINUX
-	return __dev_alloc_skb(sz, in_interrupt() ? GFP_ATOMIC : GFP_KERNEL);
-#endif /* PLATFORM_LINUX */
-
-#ifdef PLATFORM_FREEBSD
-	return dev_alloc_skb(sz);
-#endif /* PLATFORM_FREEBSD */
-}
-
-inline void _rtw_skb_free(struct sk_buff *skb)
-{
-	dev_kfree_skb_any(skb);
-}
-
-inline struct sk_buff *_rtw_skb_copy(const struct sk_buff *skb)
-{
-#ifdef PLATFORM_LINUX
-	return skb_copy(skb, in_interrupt() ? GFP_ATOMIC : GFP_KERNEL);
-#endif /* PLATFORM_LINUX */
-
-#ifdef PLATFORM_FREEBSD
-	return NULL;
-#endif /* PLATFORM_FREEBSD */
-}
-
-inline struct sk_buff *_rtw_skb_clone(struct sk_buff *skb)
-{
-#ifdef PLATFORM_LINUX
-	return skb_clone(skb, in_interrupt() ? GFP_ATOMIC : GFP_KERNEL);
-#endif /* PLATFORM_LINUX */
-
-#ifdef PLATFORM_FREEBSD
-	return skb_clone(skb);
-#endif /* PLATFORM_FREEBSD */
-}
-inline struct sk_buff *_rtw_pskb_copy(struct sk_buff *skb)
-{
-#ifdef PLATFORM_LINUX
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36))
-	return pskb_copy(skb, in_interrupt() ? GFP_ATOMIC : GFP_KERNEL);
-#else
-	return skb_clone(skb, in_interrupt() ? GFP_ATOMIC : GFP_KERNEL);
-#endif
-#endif /* PLATFORM_LINUX */
-
-#ifdef PLATFORM_FREEBSD
-	return NULL;
-#endif /* PLATFORM_FREEBSD */
-}
-
 inline int _rtw_netif_rx(_nic_hdl ndev, struct sk_buff *skb)
 {
 #if defined(PLATFORM_LINUX)
@@ -746,6 +694,20 @@ inline struct sk_buff *dbg_rtw_skb_clone(struct sk_buff *skb, const enum mstat_f
 	);
 
 	return skb_cl;
+}
+
+inline int dbg_rtw_skb_linearize(struct sk_buff *skb, const enum mstat_f flags, const char *func, int line)
+{
+	unsigned int truesize = 0;
+	int ret;
+
+	dbg_rtw_skb_mstat_aid(skb, flags, MSTAT_FREE);
+
+	ret = _rtw_skb_linearize(skb);
+
+	dbg_rtw_skb_mstat_aid(skb, flags, MSTAT_ALLOC_SUCCESS);
+
+	return ret;
 }
 
 inline int dbg_rtw_netif_rx(_nic_hdl ndev, struct sk_buff *skb, const enum mstat_f flags, const char *func, int line)
