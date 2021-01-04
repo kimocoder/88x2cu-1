@@ -94,6 +94,7 @@ CONFIG_RTW_MBO = n
 CONFIG_PHL_ARCH = y
 
 RTW_PHL_RX = y
+RTW_PHL_TX = y
 
 ########################## Android ###########################
 # CONFIG_RTW_ANDROID - 0: no Android, 4/5/6/7/8/9/10/11 : Android version
@@ -2339,6 +2340,10 @@ EXTRA_CFLAGS += -DCONFIG_PHL_ARCH
 
 ifeq ($(RTW_PHL_RX), y)
 EXTRA_CFLAGS += -DRTW_PHL_RX
+endif
+
+ifeq ($(RTW_PHL_TX), y)
+EXTRA_CFLAGS += -DRTW_PHL_TX
 endif
 
 include $(src)/phl/phl.mk

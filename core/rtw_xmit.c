@@ -4047,6 +4047,23 @@ Otherwise, we must use _enter/_exit critical to protect free_xmit_queue...
 Must be very very cautious...
 
 */
+
+void core_tx_init_xmitframe(struct xmit_frame *pxframe)
+{
+	if (!pxframe)
+		return;
+	#if 0 /*CONFIG_CORE_XMITBUF*/
+	pxframe->pxmitbuf = NULL;
+	#endif
+	_rtw_memset(&pxframe->attrib, 0, sizeof(struct pkt_attrib));
+	/* TXREQ_QMGT */
+	pxframe->ptxreq_buf = NULL;
+	pxframe->phl_txreq = NULL;
+
+	pxframe->txreq_cnt = 0;
+	pxframe->txfree_cnt = 0;
+}
+
 struct xmit_frame *rtw_alloc_xmitframe(struct xmit_priv *pxmitpriv, u16 os_qid)
 {
 	/*

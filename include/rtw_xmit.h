@@ -130,6 +130,14 @@
 #define HW_QUEUE_ENTRY	(8 + CONFIG_IFACE_NUMBER - 1)
 #endif
 
+#ifdef RTW_PHL_TX
+#define RTW_MAX_FRAG_NUM 10 //max scatter number of a packet to xmit
+#define RTW_MAX_WL_HEAD	100
+#define RTW_MAX_WL_TAIL 100
+#define RTW_SZ_LLC	(SNAP_SIZE + sizeof(u16))
+#define RTW_SZ_FCS	4
+#endif
+
 #ifdef CONFIG_PCI_HCI
 	#ifdef CONFIG_TRX_BD_ARCH
 		#define TX_BD_NUM			(128+1)	/* +1 result from ring buffer */
@@ -652,6 +660,28 @@ struct xmit_frame {
 
 	u8 *alloc_addr; /* the actual address this xmitframe allocated */
 	u8 ext_tag; /* 0:data, 1:mgmt */
+
+#ifdef RTW_PHL_TX
+	u8 xftype;
+
+	//struct sk_buff		*skb;
+	//struct sta_info 		*psta;
+	//struct pkt_attrib	tx_attrib;
+
+	u8 alloc_hdr;
+	u8 alloc_tail;
+	u8 *wlhdr[RTW_MAX_FRAG_NUM];
+	u8 *wltail[RTW_MAX_FRAG_NUM];
+
+	u32 txring_idx;
+	u32 txreq_cnt;
+	struct rtw_xmit_req 	*phl_txreq;
+	u32 txfree_cnt;
+
+	struct xmit_txreq_buf	*ptxreq_buf;/* TXREQ_QMGT for recycle*/
+
+	u16 buf_need_free; /* size is realted to RTW_MAX_FRAG_NUM */
+#endif
 
 };
 
