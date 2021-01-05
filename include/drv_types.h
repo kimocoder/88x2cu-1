@@ -1510,7 +1510,7 @@ struct dvobj_priv {
 	ATOMIC_T rx_pending_cnt;/* urb counts for sumit to host  */
 
 #ifdef PLATFORM_LINUX
-	struct usb_interface *pusbintf;
+	//struct usb_interface *pusbintf;
 	//struct usb_device *pusbdev;
 #endif/* PLATFORM_LINUX */
 
@@ -1679,6 +1679,7 @@ static inline void dev_clr_drv_stopped(struct dvobj_priv *dvobj)
 #define dev_is_surprise_removed(dvobj)	(ATOMIC_READ(&dvobj->bSurpriseRemoved) == _TRUE)
 #define dev_is_drv_stopped(dvobj)		(ATOMIC_READ(&dvobj->bDriverStopped) == _TRUE)
 
+
 #ifdef PLATFORM_LINUX
 static inline struct device *dvobj_to_dev(struct dvobj_priv *dvobj)
 {
@@ -1687,16 +1688,16 @@ static inline struct device *dvobj_to_dev(struct dvobj_priv *dvobj)
 #endif
 
 #ifdef CONFIG_USB_HCI
-	return &dvobj->pusbintf->dev;
+	return &dvobj->usb_data.pusbintf->dev;
 #endif
 #ifdef CONFIG_SDIO_HCI
-	return &dvobj->intf_data.func->dev;
+	return &dvobj->sdio_data.func->dev;
 #endif
 #ifdef CONFIG_GSPI_HCI
-	return &dvobj->intf_data.func->dev;
+	return &dvobj->gspi_data.func->dev;
 #endif
 #ifdef CONFIG_PCI_HCI
-	return &dvobj->ppcidev->dev;
+	return &dvobj->pci_data.ppcidev->dev;
 #endif
 }
 #endif

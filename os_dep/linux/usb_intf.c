@@ -528,7 +528,7 @@ static struct dvobj_priv *usb_dvobj_init(struct usb_interface *usb_intf,
 		goto exit;
 
 	pusb_data = dvobj_to_usb(dvobj);
-	pusb_data->pusbintf = dvobj->pusbintf = usb_intf ;
+	pusb_data->pusbintf = usb_intf ;
 	pusbd = pusb_data->pusbdev = interface_to_usbdev(usb_intf);
 	usb_set_intfdata(usb_intf, dvobj);
 
@@ -1226,9 +1226,9 @@ static void rtw_usb_primary_adapter_deinit(_adapter *padapter)
 #ifdef CONFIG_BT_COEXIST
 	if (1 == pwrctl->autopm_cnt) {
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33))
-		usb_autopm_put_interface(adapter_to_dvobj(padapter)->pusbintf);
+		usb_autopm_put_interface(adapter_to_dvobj(padapter)->usb_data.pusbintf);
 #elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 20))
-		usb_autopm_enable(adapter_to_dvobj(padapter)->pusbintf);
+		usb_autopm_enable(adapter_to_dvobj(padapter)->usb_data.pusbintf);
 #else
 		usb_autosuspend_device(adapter_to_dvobj(padapter)->pusbdev, 1);
 #endif
