@@ -705,6 +705,7 @@ struct recv_frame_hdr {
 	struct sk_buff *pkt;
 
 	_adapter  *adapter;
+	struct dvobj_priv *dvobj;
 
 	u8 fragcnt;
 

@@ -125,7 +125,9 @@ sint rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter)
 
 		precvframe->u.hdr.len = 0;
 
+		precvframe->u.hdr.dvobj = dvobj;
 		precvframe->u.hdr.adapter = padapter;
+		precvframe->u.hdr.rx_req = NULL;
 		precvframe++;
 
 	}
