@@ -1369,6 +1369,9 @@ struct dvobj_priv {
 	systime periodic_tsf_update_etime;
 	_timer periodic_tsf_update_end_timer;
 
+	enum rtl_ic_id ic_id;
+	//enum rtw_hci_type interface_type;
+
 	/*CONFIG_PHL_ARCH*/
 	void *phl;
 	struct rtw_phl_com_t *phl_com;

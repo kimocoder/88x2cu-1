@@ -422,6 +422,43 @@ static u8 rtw_deinit_intf_priv(struct dvobj_priv *dvobj)
 
 	return rst;
 }
+
+static unsigned int rtw_endpoint_max_bpi(struct usb_device *dev,
+					 struct usb_host_endpoint *ep)
+{
+	u16 psize;
+	u16 mult = 1;
+	int max_size_1 = 0, max_size_2 = 0;
+
+	switch (dev->speed) {
+	case USB_SPEED_SUPER:
+#if ((LINUX_VERSION_CODE >= KERNEL_VERSION(4, 4, 20) && LINUX_VERSION_CODE < KERNEL_VERSION(4, 5, 0)) ||\
+		LINUX_VERSION_CODE >= KERNEL_VERSION(4, 6, 0))
+	case USB_SPEED_SUPER_PLUS:
+		max_size_1 = le16_to_cpu(ep->ss_ep_comp.wBytesPerInterval);
+		max_size_2 = usb_endpoint_maxp(&ep->desc);
+#endif
+		break;
+	case USB_SPEED_HIGH:
+		psize = usb_endpoint_maxp(&ep->desc);
+		#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 9, 71))
+		mult = usb_endpoint_maxp_mult(&ep->desc);
+		max_size_1 = psize * mult;
+		#endif
+		max_size_2 = usb_endpoint_maxp(&ep->desc);
+		break;
+	case USB_SPEED_WIRELESS:
+		max_size_1 = max_size_2 = usb_endpoint_maxp(&ep->desc);
+		break;
+	default:
+		max_size_1 = max_size_2 = usb_endpoint_maxp(&ep->desc);
+		break;
+
+	}
+	RTW_INFO("USB EP MAX_PKT_SZ:%d-%d\n",max_size_1, max_size_2);
+	return max_size_1;
+}
+
 static void rtw_decide_chip_type_by_usb_info(struct dvobj_priv *pdvobjpriv, const struct usb_device_id *pdid)
 {
 	pdvobjpriv->chip_type = pdid->driver_info;
@@ -568,6 +605,11 @@ static struct dvobj_priv *usb_dvobj_init(struct usb_interface *usb_intf,
 	piface_desc = &phost_iface->desc;
 
 	pusb_data->nr_endpoint = piface_desc->bNumEndpoints;
+	if (pusb_data->nr_endpoint > MAX_ENDPOINT_NUM) {
+		RTW_ERR("USB EP_Number : %d > RT DEF-MAX_EP_NUM :%d\n",
+				pusb_data->nr_endpoint, MAX_ENDPOINT_NUM);
+		rtw_warn_on(1);
+	}
 
 	/* RTW_INFO("\ndump usb_endpoint_descriptor:\n"); */
 
@@ -586,46 +628,62 @@ static struct dvobj_priv *usb_dvobj_init(struct usb_interface *usb_intf,
 			/* RTW_INFO("bRefresh=%x\n",pendp_desc->bRefresh); */
 			/* RTW_INFO("bSynchAddress=%x\n",pendp_desc->bSynchAddress); */
 
+
 			if (RT_usb_endpoint_is_bulk_in(pendp_desc)) {
 				RTW_INFO("RT_usb_endpoint_is_bulk_in = %x\n", RT_usb_endpoint_num(pendp_desc));
 				pusb_data->RtInPipe[pusb_data->RtNumInPipes] = RT_usb_endpoint_num(pendp_desc);
+				pusb_data->inpipe_type[pusb_data->RtNumInPipes] = REALTEK_USB_BULK_IN_EP_IDX;
 				pusb_data->RtNumInPipes++;
+				RTW_INFO("USB#%d bulkin size:%d", pusb_data->RtNumOutPipes,
+					rtw_endpoint_max_bpi(pusbd, phost_endp));
 			} else if (RT_usb_endpoint_is_int_in(pendp_desc)) {
 				RTW_INFO("RT_usb_endpoint_is_int_in = %x, Interval = %x\n", RT_usb_endpoint_num(pendp_desc), pendp_desc->bInterval);
 				pusb_data->RtInPipe[pusb_data->RtNumInPipes] = RT_usb_endpoint_num(pendp_desc);
+				pusb_data->inpipe_type[pusb_data->RtNumInPipes] = REALTEK_USB_IN_INT_EP_IDX;
 				pusb_data->RtNumInPipes++;
 			} else if (RT_usb_endpoint_is_bulk_out(pendp_desc)) {
 				RTW_INFO("RT_usb_endpoint_is_bulk_out = %x\n", RT_usb_endpoint_num(pendp_desc));
 				pusb_data->RtOutPipe[pusb_data->RtNumOutPipes] = RT_usb_endpoint_num(pendp_desc);
+				RTW_INFO("USB#%d bulkout size:%d", pusb_data->RtNumOutPipes,
+					rtw_endpoint_max_bpi(pusbd, phost_endp));
 				pusb_data->RtNumOutPipes++;
 			}
-			/* pusb_data->ep_num[i] = RT_usb_endpoint_num(pendp_desc); */
+			/*pusb_data->ep_num[i] = RT_usb_endpoint_num(pendp_desc);*/
 		}
 	}
 
-	RTW_INFO("nr_endpoint=%d, in_num=%d, out_num=%d\n\n", pusb_data->nr_endpoint, pusb_data->RtNumInPipes, pusb_data->RtNumOutPipes);
+	RTW_INFO("nr_endpoint=%d, in_num=%d, out_num=%d\n\n",
+		pusb_data->nr_endpoint, pusb_data->RtNumInPipes, pusb_data->RtNumOutPipes);
 
 	switch (pusbd->speed) {
 	case USB_SPEED_LOW:
-		RTW_INFO("USB_SPEED_LOW\n");
-		pusb_data->usb_speed = RTW_USB_SPEED_LOW;
-		break;
 	case USB_SPEED_FULL:
 		RTW_INFO("USB_SPEED_FULL\n");
-		pusb_data->usb_speed = RTW_USB_SPEED_FULL;
+		pusb_data->usb_speed = RTW_USB_SPEED_FULL;/*U2- 1.1 - 1.5MBs*/
+		pusb_data->usb_bulkout_size = USB_FULL_SPEED_BULK_SIZE;
 		break;
 	case USB_SPEED_HIGH:
 		RTW_INFO("USB_SPEED_HIGH\n");
-		pusb_data->usb_speed = RTW_USB_SPEED_HIGH;
+		pusb_data->usb_speed = RTW_USB_SPEED_HIGH;/*U2- 2.1 - 60MBs*/
+		pusb_data->usb_bulkout_size = USB_HIGH_SPEED_BULK_SIZE;
 		break;
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 31))
 	case USB_SPEED_SUPER:
 		RTW_INFO("USB_SPEED_SUPER\n");
-		pusb_data->usb_speed = RTW_USB_SPEED_SUPER;
+		pusb_data->usb_speed = RTW_USB_SPEED_SUPER;/*U3- 3.0 - 640MBs*/
+		pusb_data->usb_bulkout_size = USB_SUPER_SPEED_BULK_SIZE;
+		break;
+#if ((LINUX_VERSION_CODE >= KERNEL_VERSION(4, 4, 20) && LINUX_VERSION_CODE < KERNEL_VERSION(4, 5, 0)) ||\
+		LINUX_VERSION_CODE >= KERNEL_VERSION(4, 6, 0))
+	case USB_SPEED_SUPER_PLUS:
+		RTW_INFO("USB_SPEED_SUPER_PLUS\n");
+		pusb_data->usb_speed = RTW_USB_SPEED_SUPER_10G;/*U3- 3.1 - 1280MBs*/
+		pusb_data->usb_bulkout_size = USB_SUPER_SPEED_BULK_SIZE;
 		break;
 #endif
+#endif
 	default:
-		RTW_INFO("USB_SPEED_UNKNOWN(%x)\n", pusbd->speed);
+		RTW_INFO("USB_SPEED_UNKNOWN(%d)\n", pusbd->speed);
 		pusb_data->usb_speed = RTW_USB_SPEED_UNKNOWN;
 		break;
 	}
@@ -640,8 +698,12 @@ static struct dvobj_priv *usb_dvobj_init(struct usb_interface *usb_intf,
 	}
 
 	/*step 1-1., decide the chip_type via driver_info*/
-	dvobj->interface_type = RTW_USB;
+	dvobj->interface_type = RTW_HCI_USB;
+	// NEO : TODO : take off hardware type
 	rtw_decide_chip_type_by_usb_info(dvobj, pdid);
+	dvobj->ic_id = pdid->driver_info;
+	dvobj->intf_ops = &usb_ops;
+	
 
 	/* .3 misc */
 	_rtw_init_sema(&(dvobj->usb_suspend_sema), 0);
