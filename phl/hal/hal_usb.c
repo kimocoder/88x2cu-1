@@ -44,9 +44,8 @@ u8 g6_usb_read8(struct rtw_hal_com_t *hal, u32 addr)
 	return data;
 }
 
-#if 0 // NEO
 
-u16 usb_read16(struct rtw_hal_com_t *hal, u32 addr)
+u16 g6_usb_read16(struct rtw_hal_com_t *hal, u32 addr)
 {
 	u8 request;
 	u8 requesttype;
@@ -57,8 +56,14 @@ u16 usb_read16(struct rtw_hal_com_t *hal, u32 addr)
 
 	request = 0x05;
 	requesttype = 0x01;/* read_in */
+#if defined(CONFIG_RTL8822C)
+	index = 0;
+	wvalue = (u16)(addr & 0x0000ffff);
+#endif
+#if defined(CONFIG_RTL8852A)
 	index = (u16)((addr & 0x00ff0000) >> 16);
 	wvalue = (u16)(addr & 0x0000ffff);
+#endif
 	len = 2;
 
 	_os_usbctrl_vendorreq(hal->drv_priv, request, wvalue, index,
@@ -67,7 +72,7 @@ u16 usb_read16(struct rtw_hal_com_t *hal, u32 addr)
 
 }
 
-u32 usb_read32(struct rtw_hal_com_t *hal, u32 addr)
+u32 g6_usb_read32(struct rtw_hal_com_t *hal, u32 addr)
 {
 	u8 request;
 	u8 requesttype;
@@ -78,8 +83,14 @@ u32 usb_read32(struct rtw_hal_com_t *hal, u32 addr)
 
 	request = 0x05;
 	requesttype = 0x01;/* read_in */
+#if defined(CONFIG_RTL8822C)
+	index = 0;
+	wvalue = (u16)(addr & 0x0000ffff);
+#endif
+#if defined(CONFIG_RTL8852A)
 	index = (u16)((addr & 0x00ff0000) >> 16);
 	wvalue = (u16)(addr & 0x0000ffff);
+#endif
 	len = 4;
 
 	_os_usbctrl_vendorreq(hal->drv_priv, request, wvalue, index,
@@ -87,7 +98,7 @@ u32 usb_read32(struct rtw_hal_com_t *hal, u32 addr)
 	return le32_to_cpu(data);
 }
 
-int usb_write8(struct rtw_hal_com_t *hal, u32 addr, u8 val)
+int g6_usb_write8(struct rtw_hal_com_t *hal, u32 addr, u8 val)
 {
 	u8 request;
 	u8 requesttype;
@@ -100,8 +111,14 @@ int usb_write8(struct rtw_hal_com_t *hal, u32 addr, u8 val)
 
 	request = 0x05;
 	requesttype = 0x00;/* write_out */
+#if defined(CONFIG_RTL8822C)
+	index = 0;
+	wvalue = (u16)(addr & 0x0000ffff);
+#endif
+#if defined(CONFIG_RTL8852A)
 	index = (u16)((addr & 0x00ff0000) >> 16);
 	wvalue = (u16)(addr & 0x0000ffff);
+#endif
 	len = 1;
 	data = val;
 
@@ -110,7 +127,7 @@ int usb_write8(struct rtw_hal_com_t *hal, u32 addr, u8 val)
 	return ret;
 }
 
-int usb_write16(struct rtw_hal_com_t *hal, u32 addr, u16 val)
+int g6_usb_write16(struct rtw_hal_com_t *hal, u32 addr, u16 val)
 {
 	u8 request;
 	u8 requesttype;
@@ -122,8 +139,14 @@ int usb_write16(struct rtw_hal_com_t *hal, u32 addr, u16 val)
 
 	request = 0x05;
 	requesttype = 0x00;/* write_out */
+#if defined(CONFIG_RTL8822C)
+	index = 0;
+	wvalue = (u16)(addr & 0x0000ffff);
+#endif
+#if defined(CONFIG_RTL8852A)
 	index = (u16)((addr & 0x00ff0000) >> 16);
 	wvalue = (u16)(addr & 0x0000ffff);
+#endif
 	len = 2;
 	data = cpu_to_le16(val);
 
@@ -134,7 +157,7 @@ int usb_write16(struct rtw_hal_com_t *hal, u32 addr, u16 val)
 
 }
 
-int usb_write32(struct rtw_hal_com_t *hal, u32 addr, u32 val)
+int g6_usb_write32(struct rtw_hal_com_t *hal, u32 addr, u32 val)
 {
 	u8 request;
 	u8 requesttype;
@@ -146,8 +169,14 @@ int usb_write32(struct rtw_hal_com_t *hal, u32 addr, u32 val)
 
 	request = 0x05;
 	requesttype = 0x00;/* write_out */
+#if defined(CONFIG_RTL8822C)
+	index = 0;
+	wvalue = (u16)(addr & 0x0000ffff);
+#endif
+#if defined(CONFIG_RTL8852A)
 	index = (u16)((addr & 0x00ff0000) >> 16);
 	wvalue = (u16)(addr & 0x0000ffff);
+#endif
 	len = 4;
 	data = cpu_to_le32(val);
 
@@ -158,7 +187,7 @@ int usb_write32(struct rtw_hal_com_t *hal, u32 addr, u32 val)
 
 }
 
-int usb_write_mem(struct rtw_hal_com_t *hal, u32 addr, u32 length, u8 *pdata)
+int g6_usb_write_mem(struct rtw_hal_com_t *hal, u32 addr, u32 length, u8 *pdata)
 {
 	u8 request;
 	u8 requesttype;
@@ -170,8 +199,14 @@ int usb_write_mem(struct rtw_hal_com_t *hal, u32 addr, u32 length, u8 *pdata)
 
 	request = 0x05;
 	requesttype = 0x00;/* write_out */
+#if defined(CONFIG_RTL8822C)
+	index = 0;
+	wvalue = (u16)(addr & 0x0000ffff);
+#endif
+#if defined(CONFIG_RTL8852A)
 	index = (u16)((addr & 0x00ff0000) >> 16);
 	wvalue = (u16)(addr & 0x0000ffff);
+#endif
 	len = (u16)length;
 
 	_os_mem_cpy(hal->drv_priv, buf, pdata, len);
@@ -183,6 +218,7 @@ int usb_write_mem(struct rtw_hal_com_t *hal, u32 addr, u32 length, u8 *pdata)
 
 }
 
+#if 0 // NEO : 8822C doesn't need it
 static int usb_write_post_cfg(struct rtw_hal_com_t *hal, u32 addr, u32 val)
 {
 	struct hal_info_t	*hal_info = hal->hal_priv;
@@ -196,23 +232,29 @@ static int usb_write_post_cfg(struct rtw_hal_com_t *hal, u32 addr, u32 val)
 
 	return hal_status;
 }
+#endif
 
 static void hal_usb_set_io_ops_gen(struct rtw_hal_com_t *hal, struct hal_io_ops *pops)
 {
 	/*_rtw_memset((u8 *)pops, 0, sizeof(struct hal_io_ops));*/
 	_os_mem_set(hal->drv_priv, (u8 *)pops, 0, sizeof(struct hal_io_ops));
 
-	pops->_read8 = &usb_read8;
-	pops->_read16 = &usb_read16;
-	pops->_read32 = &usb_read32;
+	pops->_read8 = &g6_usb_read8;
+	pops->_read16 = &g6_usb_read16;
+	pops->_read32 = &g6_usb_read32;
 	pops->_read_mem = NULL;
 
-	pops->_write8 = &usb_write8;
-	pops->_write16 = &usb_write16;
-	pops->_write32 = &usb_write32;
-	pops->_write_mem = &usb_write_mem;
+	pops->_write8 = &g6_usb_write8;
+	pops->_write16 = &g6_usb_write16;
+	pops->_write32 = &g6_usb_write32;
+	pops->_write_mem = &g6_usb_write_mem;
 
+#ifdef CONFIG_8852A
 	pops->_write_post_cfg = &usb_write_post_cfg;
+#endif
+#ifdef CONFIG_8822C
+	pops->_write_post_cfg = NULL;
+#endif
 }
 
 void hal_usb_set_io_ops(struct rtw_hal_com_t *hal, struct hal_io_ops *pops)
@@ -222,6 +264,7 @@ void hal_usb_set_io_ops(struct rtw_hal_com_t *hal, struct hal_io_ops *pops)
 }
 
 
+#if 0 // NEO
 /* To avoid RX affect TX throughput */
 #ifdef CONFIG_PHL_USB_RX_AGGREGATION
 void rtw_hal_usb_adjust_txagg(void *h)
