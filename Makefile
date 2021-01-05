@@ -2420,6 +2420,10 @@ rtk_core :=	core/rtw_cmd.o \
 		core/efuse/rtw_efuse.o \
 		core/rtw_roch.o
 
+ifeq ($(CONFIG_USB_HCI), y)
+rtk_core += core/rtw_trx_usb.o
+endif
+
 ifeq ($(CONFIG_SDIO_HCI), y)
 rtk_core += core/rtw_sdio.o
 endif

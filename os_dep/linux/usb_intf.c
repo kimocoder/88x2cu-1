@@ -18,6 +18,7 @@
 #include <hal_data.h>
 
 #include <platform_ops.h>
+#include <rtw_trx_usb.h>
 
 #ifndef CONFIG_USB_HCI
 #error "CONFIG_USB_HCI shall be on!\n"
@@ -506,7 +507,8 @@ static void rtw_decide_chip_type_by_usb_info(struct dvobj_priv *pdvobjpriv, cons
 #endif /* CONFIG_RTL8723F */
 }
 
-static struct dvobj_priv *usb_dvobj_init(struct usb_interface *usb_intf, const struct usb_device_id *pdid)
+static struct dvobj_priv *usb_dvobj_init(struct usb_interface *usb_intf,
+					 const struct usb_device_id *pdid)
 {
 	int	i;
 	int	status = _FAIL;
@@ -652,9 +654,7 @@ static struct dvobj_priv *usb_dvobj_init(struct usb_interface *usb_intf, const s
 free_dvobj:
 	if (status != _SUCCESS && dvobj) {
 		usb_set_intfdata(usb_intf, NULL);
-
 		devobj_deinit(dvobj);
-
 		dvobj = NULL;
 	}
 exit:
