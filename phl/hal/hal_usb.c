@@ -17,7 +17,6 @@
 #include "hal_usb.h"
 
 #ifdef CONFIG_USB_HCI
-//NEO : TODO test_usb_read8 -> usb_read8 to replace the original one
 u8 g6_usb_read8(struct rtw_hal_com_t *hal, u32 addr)
 {
 	u8 request;
@@ -29,13 +28,18 @@ u8 g6_usb_read8(struct rtw_hal_com_t *hal, u32 addr)
 
 	request = 0x05;
 	requesttype = 0x01;/* read_in */
+#if defined(CONFIG_RTL8822C)
+	index = 0;
+	wvalue = (u16)(addr & 0x0000ffff);
+#endif
+#if defined(CONFIG_RTL8852A)
 	index = (u16)((addr & 0x00ff0000) >> 16);
 	wvalue = (u16)(addr & 0x0000ffff);
+#endif
 	len = 1;
 
-	// NEO : TODO usb_ctrl_vendorreq to replace the original one
-	//_os_usbctrl_vendorreq(hal->drv_priv, request, wvalue, index,
-	//			&data, len, requesttype);
+	_os_usbctrl_vendorreq(hal->drv_priv, request, wvalue, index,
+			&data, len, requesttype);
 
 	return data;
 }

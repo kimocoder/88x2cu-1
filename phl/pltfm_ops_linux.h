@@ -716,7 +716,7 @@ static inline int _os_write32_pcie(void *d, u32 addr, u32 val)
 static inline int _os_usbctrl_vendorreq(void *d, u8 request, u16 value,
 				u16 index, void *pdata, u16 len, u8 requesttype)
 {
-	return g6_usbctrl_vendorreq((struct dvobj_priv *)d, request, value,
+	return usbctrl_vendorreq((struct dvobj_priv *)d, request, value,
 				index, pdata, len, requesttype);
 }
 static __inline u8 os_out_token_alloc(void *drv_priv)
