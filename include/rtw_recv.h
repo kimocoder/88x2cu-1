@@ -441,6 +441,7 @@ struct recv_info {
 #endif
 
 struct recv_priv {
+	struct dvobj_priv *dvobj;
 
 #ifdef CONFIG_RECV_THREAD_MODE
 	_sema	recv_sema;

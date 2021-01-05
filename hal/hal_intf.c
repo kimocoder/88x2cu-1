@@ -924,6 +924,7 @@ void	rtw_hal_free_xmit_priv(_adapter *padapter)
 	padapter->hal_func.free_xmit_priv(padapter);
 }
 
+#if 0 // move to rtw_trx_ops.h
 s32	rtw_hal_init_recv_priv(_adapter *padapter)
 {
 	return padapter->hal_func.init_recv_priv(padapter);
@@ -932,6 +933,7 @@ void	rtw_hal_free_recv_priv(_adapter *padapter)
 {
 	padapter->hal_func.free_recv_priv(padapter);
 }
+#endif
 
 void rtw_sta_ra_registed(_adapter *padapter, struct sta_info *psta)
 {

@@ -69,6 +69,7 @@ sint rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter)
 	sint i;
 
 	union recv_frame *precvframe;
+	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
 	sint	res = _SUCCESS;
 
 
@@ -84,6 +85,7 @@ sint rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter)
 	//_rtw_init_queue(&precvpriv->uc_swdec_pending_queue);
 
 	precvpriv->adapter = padapter;
+	precvpriv->dvobj = dvobj;
 
 	precvpriv->free_recvframe_cnt = NR_RECVFRAME;
 
@@ -136,7 +138,7 @@ sint rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter)
 
 #endif
 
-	res = rtw_hal_init_recv_priv(padapter);
+	res = rtw_intf_init_recv_priv(adapter_to_dvobj(padapter));
 
 #ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS
 	rtw_init_timer(&precvpriv->signal_stat_timer, padapter, rtw_signal_stat_timer_hdl, padapter);
@@ -188,7 +190,7 @@ void _rtw_free_recv_priv(struct recv_priv *precvpriv)
 	if (precvpriv->pallocated_frame_buf)
 		rtw_vmfree(precvpriv->pallocated_frame_buf, NR_RECVFRAME * sizeof(union recv_frame) + RXFRAME_ALIGN_SZ);
 
-	rtw_hal_free_recv_priv(padapter);
+	rtw_intf_free_recv_priv(adapter_to_dvobj(padapter));
 
 
 }

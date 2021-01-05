@@ -769,8 +769,10 @@ s32	rtw_hal_mgnt_xmit(_adapter *padapter, struct xmit_frame *pmgntframe);
 s32	rtw_hal_init_xmit_priv(_adapter *padapter);
 void	rtw_hal_free_xmit_priv(_adapter *padapter);
 
+#if 0 // Move to rtw_trx_ops.h
 s32	rtw_hal_init_recv_priv(_adapter *padapter);
 void	rtw_hal_free_recv_priv(_adapter *padapter);
+#endif
 
 void rtw_hal_update_ra_mask(struct sta_info *psta);
 
