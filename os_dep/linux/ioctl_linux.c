@@ -699,8 +699,8 @@ static inline char   *iwe_stream_rssi_process(_adapter *padapter,
 
 	if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE &&
 	    is_same_network(&pmlmepriv->cur_network.network, &pnetwork->network, 0)) {
-		ss = padapter->recvpriv.signal_strength;
-		sq = padapter->recvpriv.signal_qual;
+		ss = adapter_to_dvobj(padapter)->recvpriv.signal_strength;
+		sq = adapter_to_dvobj(padapter)->recvpriv.signal_qual;
 	} else {
 		ss = pnetwork->network.PhyInfo.SignalStrength;
 		sq = pnetwork->network.PhyInfo.SignalQuality;
@@ -1537,9 +1537,7 @@ static int rtw_wx_get_sens(struct net_device *dev,
 	*  For rockchip platform's wpa_driver_wext_get_rssi
 	*/
 	if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE) {
-		/* wrqu->sens.value=-padapter->recvpriv.signal_strength; */
-		wrqu->sens.value = -padapter->recvpriv.rssi;
-		/* RTW_INFO("%s: %d\n", __FUNCTION__, wrqu->sens.value); */
+		wrqu->sens.value = adapter_to_dvobj(padapter)->recvpriv.rssi;
 		wrqu->sens.fixed = 0; /* no auto select */
 	} else
 #endif
@@ -3463,7 +3461,7 @@ static int rtw_wx_get_sensitivity(struct net_device *dev,
 
 	/*	Modified by Albert 20110914 */
 	/*	This is in dbm format for MTK platform. */
-	wrqu->qual.level = padapter->recvpriv.rssi;
+	wrqu->qual.level = adapter_to_dvobj(padapter)->recvpriv.rssi;
 	RTW_INFO(" level = %u\n",  wrqu->qual.level);
 #endif
 	return 0;
@@ -5836,12 +5834,12 @@ static int rtw_dbg_port(struct net_device *dev,
 	case 0x76:
 		switch (minor_cmd) {
 		case 0x00: /* normal mode, */
-			padapter->recvpriv.is_signal_dbg = 0;
+			adapter_to_dvobj(padapter)->recvpriv.is_signal_dbg = 0;
 			break;
 		case 0x01: /* dbg mode */
-			padapter->recvpriv.is_signal_dbg = 1;
+			adapter_to_dvobj(padapter)->recvpriv.is_signal_dbg = 1;
 			extra_arg = extra_arg > 100 ? 100 : extra_arg;
-			padapter->recvpriv.signal_strength_dbg = extra_arg;
+			adapter_to_dvobj(padapter)->recvpriv.signal_strength_dbg = extra_arg;
 			break;
 		}
 		break;
@@ -6094,7 +6092,7 @@ static int rtw_dbg_port(struct net_device *dev,
 			break;
 		case 0x08: {
 			struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
-			struct recv_priv  *precvpriv = &padapter->recvpriv;
+			struct recv_priv  *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 
 			RTW_INFO("free_xmitbuf_cnt=%d, free_xmitframe_cnt=%d"
 				", free_xmit_extbuf_cnt=%d, free_xframe_ext_cnt=%d"
@@ -7832,7 +7830,7 @@ static int rtw_wx_set_priv(struct net_device *dev,
 		struct	wlan_network	*pcur_network = &pmlmepriv->cur_network;
 
 		if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE)
-			sprintf(ext, "%s rssi %d", pcur_network->network.Ssid.Ssid, padapter->recvpriv.rssi);
+			sprintf(ext, "%s rssi %d", pcur_network->network.Ssid.Ssid, adapter_to_dvobj(padapter)->recvpriv.rssi);
 		else
 			sprintf(ext, "OK");
 	}
@@ -12546,12 +12544,12 @@ static struct iw_statistics *rtw_get_wireless_stats(struct net_device *dev)
 		/* RTW_INFO("No link  level:%d, qual:%d, noise:%d\n", tmp_level, tmp_qual, tmp_noise); */
 	} else {
 #ifdef CONFIG_SIGNAL_DISPLAY_DBM
-		tmp_level = translate_percentage_to_dbm(padapter->recvpriv.signal_strength);
+		tmp_level = translate_percentage_to_dbm(adapter_to_dvobj(padapter)->recvpriv.signal_strength);
 #else
-		tmp_level = padapter->recvpriv.signal_strength;
+		tmp_level = adapter_to_dvobj(padapter)->recvpriv.signal_strength;
 #endif
 
-		tmp_qual = padapter->recvpriv.signal_qual;
+		tmp_qual = adapter_to_dvobj(padapter)->recvpriv.signal_qual;
 		#ifdef CONFIG_BACKGROUND_NOISE_MONITOR
 		if (IS_NM_ENABLE(padapter)) {
 			tmp_noise = rtw_noise_measure_curchan(padapter);
@@ -12560,7 +12558,6 @@ static struct iw_statistics *rtw_get_wireless_stats(struct net_device *dev)
 			#endif
 		}
 		#endif
-		/* RTW_INFO("level:%d, qual:%d, noise:%d, rssi (%d)\n", tmp_level, tmp_qual, tmp_noise,padapter->recvpriv.rssi); */
 
 		piwstats->qual.level = tmp_level;
 		piwstats->qual.qual = tmp_qual;

@@ -1631,7 +1631,7 @@ static struct net_device_stats *rtw_net_get_stats(struct net_device *pnetdev)
 {
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(pnetdev);
 	struct xmit_priv *pxmitpriv = &(padapter->xmitpriv);
-	struct recv_priv *precvpriv = &(padapter->recvpriv);
+	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 
 	padapter->stats.tx_packets = pxmitpriv->tx_pkts;/* pxmitpriv->tx_pkts++; */
 	padapter->stats.rx_packets = precvpriv->rx_pkts;/* precvpriv->rx_pkts++; */
@@ -2070,7 +2070,7 @@ static void rtw_ethtool_get_stats(struct net_device *dev,
 	padapter = (_adapter *)rtw_netdev_priv(dev);
 	if (padapter) {
 		pxmitpriv = &(padapter->xmitpriv);
-		precvpriv = &(padapter->recvpriv);
+		precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 
 		data[i++] = precvpriv->rx_pkts;
 		data[i++] = precvpriv->rx_bytes;
@@ -2419,7 +2419,7 @@ void rtw_stop_drv_threads(_adapter *padapter)
 #ifdef CONFIG_RECV_THREAD_MODE
 	if (is_primary_adapter(padapter) && padapter->recvThread) {
 		/* Below is to termindate rx_thread... */
-		_rtw_up_sema(&padapter->recvpriv.recv_sema);
+		_rtw_up_sema(&adapter_to_dvobj(padapter)->recvpriv.recv_sema);
 		rtw_thread_stop(padapter->recvThread);
 		padapter->recvThread = NULL;
 	}
@@ -2756,7 +2756,7 @@ u8 rtw_reset_drv_sw(_adapter *padapter)
 	padapter->bLinkInfoDump = 0;
 
 	padapter->xmitpriv.tx_pkts = 0;
-	padapter->recvpriv.rx_pkts = 0;
+	adapter_to_dvobj(padapter)->recvpriv.rx_pkts = 0;
 
 	pmlmepriv->LinkDetectInfo.bBusyTraffic = _FALSE;
 
@@ -2776,7 +2776,7 @@ u8 rtw_reset_drv_sw(_adapter *padapter)
 	mlmeext_set_scan_state(&padapter->mlmeextpriv, SCAN_DISABLE);
 
 #ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS
-	rtw_set_signal_stat_timer(&padapter->recvpriv);
+	rtw_set_signal_stat_timer(&adapter_to_dvobj(padapter)->recvpriv);
 #endif
 
 	return ret8;
@@ -2949,7 +2949,7 @@ u8 rtw_init_drv_sw(_adapter *padapter)
 		goto exit;
 	}
 
-	if (rtw_init_recv_priv(&padapter->recvpriv, padapter) == _FAIL) {
+	if (rtw_init_recv_priv(&adapter_to_dvobj(padapter)->recvpriv, padapter) == _FAIL) {
 		RTW_INFO("Can't rtw_init_recv_priv\n");
 		ret8 = _FAIL;
 		goto exit;
@@ -3082,7 +3082,7 @@ void rtw_cancel_all_timer(_adapter *padapter)
 #endif
 
 #ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS
-	_cancel_timer_ex(&padapter->recvpriv.signal_stat_timer);
+	_cancel_timer_ex(&adapter_to_dvobj(padapter)->recvpriv.signal_stat_timer);
 #endif
 
 #ifdef CONFIG_LPS_RPWM_TIMER
@@ -3161,7 +3161,7 @@ u8 rtw_free_drv_sw(_adapter *padapter)
 
 	_rtw_free_sta_priv(&padapter->stapriv); /* will free bcmc_stainfo here */
 
-	_rtw_free_recv_priv(&padapter->recvpriv);
+	_rtw_free_recv_priv(&adapter_to_dvobj(padapter)->recvpriv);
 
 	rtw_free_pwrctrl_priv(padapter);
 

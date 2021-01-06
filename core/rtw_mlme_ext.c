@@ -1592,7 +1592,7 @@ void mgt_dispatcher(_adapter *padapter, union recv_frame *precv_frame)
 	u8 bc_addr[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 	u8 *pframe = precv_frame->u.hdr.rx_data;
 	struct sta_info *psta = rtw_get_stainfo(&padapter->stapriv, get_addr2_ptr(pframe));
-	struct recv_priv  *precvpriv = &padapter->recvpriv;
+	struct recv_priv  *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 
 
 #if 0
@@ -12788,7 +12788,7 @@ void linked_status_chk(_adapter *padapter, u8 from_timer)
 	struct sta_priv		*pstapriv = &padapter->stapriv;
 	struct mlme_priv	*pmlmepriv = &padapter->mlmepriv;
 #ifdef CONFIG_LAYER2_ROAMING
-	struct recv_priv	*precvpriv = &padapter->recvpriv;
+	struct recv_priv	*precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 #endif
 
 #ifdef CONFIG_RTW_WDS

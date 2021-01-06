@@ -833,8 +833,8 @@ void update_network(WLAN_BSSID_EX *dst, WLAN_BSSID_EX *src,
 	/* The rule below is 1/5 for sample value, 4/5 for history value */
 	if (check_fwstate(&padapter->mlmepriv, WIFI_ASOC_STATE) && is_same_network(&(padapter->mlmepriv.cur_network.network), src, 0)) {
 		/* Take the recvpriv's value for the connected AP*/
-		ss_final = padapter->recvpriv.signal_strength;
-		sq_final = padapter->recvpriv.signal_qual;
+		ss_final = adapter_to_dvobj(padapter)->recvpriv.signal_strength;
+		sq_final = adapter_to_dvobj(padapter)->recvpriv.signal_qual;
 		/* the rssi value here is undecorated, and will be used for antenna diversity */
 		if (sq_smp != 101) /* from the right channel */
 			rssi_final = (src->Rssi + dst->Rssi * 4) / 5;
@@ -2357,7 +2357,7 @@ static void free_scanqueue(struct	mlme_priv *pmlmepriv)
 
 void rtw_reset_rx_info(_adapter *adapter)
 {
-	struct recv_priv  *precvpriv = &adapter->recvpriv;
+	struct recv_priv  *precvpriv = &adapter_to_dvobj(adapter)->recvpriv;
 
 	precvpriv->dbg_rx_ampdu_drop_count = 0;
 	precvpriv->dbg_rx_ampdu_forced_indicate_count = 0;
@@ -2860,17 +2860,17 @@ static void rtw_joinbss_update_network(_adapter *padapter, struct wlan_network *
 #ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS
 	rtw_set_signal_stat_timer(&padapter->recvpriv);
 #endif
-	padapter->recvpriv.signal_strength = ptarget_wlan->network.PhyInfo.SignalStrength;
-	padapter->recvpriv.signal_qual = ptarget_wlan->network.PhyInfo.SignalQuality;
+	adapter_to_dvobj(padapter)->recvpriv.signal_strength = ptarget_wlan->network.PhyInfo.SignalStrength;
+	adapter_to_dvobj(padapter)->recvpriv.signal_qual = ptarget_wlan->network.PhyInfo.SignalQuality;
 	/* the ptarget_wlan->network.Rssi is raw data, we use ptarget_wlan->network.PhyInfo.SignalStrength instead (has scaled) */
-	padapter->recvpriv.rssi = translate_percentage_to_dbm(ptarget_wlan->network.PhyInfo.SignalStrength);
+	adapter_to_dvobj(padapter)->recvpriv.rssi = translate_percentage_to_dbm(ptarget_wlan->network.PhyInfo.SignalStrength);
 #if defined(DBG_RX_SIGNAL_DISPLAY_PROCESSING) && 1
 	RTW_INFO(FUNC_ADPT_FMT" signal_strength:%3u, rssi:%3d, signal_qual:%3u"
 		 "\n"
 		 , FUNC_ADPT_ARG(padapter)
-		 , padapter->recvpriv.signal_strength
-		 , padapter->recvpriv.rssi
-		 , padapter->recvpriv.signal_qual
+		 , adapter_to_dvobj(padapter)->recvpriv.signal_strength
+		 , adapter_to_dvobj(padapter)->recvpriv.rssi
+		 , adapter_to_dvobj(padapter)->recvpriv.signal_qual
 		);
 #endif
 #ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS

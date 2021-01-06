@@ -20,7 +20,7 @@
 int	usb_init_recv_priv(_adapter *padapter, u16 ini_in_buf_sz)
 {
 	struct registry_priv *regsty = adapter_to_regsty(padapter);
-	struct recv_priv	*precvpriv = &padapter->recvpriv;
+	struct recv_priv	*precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	int	i, res = _SUCCESS;
 	struct recv_buf *precvbuf;
 
@@ -154,7 +154,7 @@ void usb_free_recv_priv(_adapter *padapter, u16 ini_in_buf_sz)
 	int i;
 	struct registry_priv *regsty = &padapter->registrypriv;
 	struct recv_buf *precvbuf;
-	struct recv_priv	*precvpriv = &padapter->recvpriv;
+	struct recv_priv	*precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 
 	precvbuf = (struct recv_buf *)precvpriv->precv_buf;
 

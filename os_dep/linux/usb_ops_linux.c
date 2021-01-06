@@ -421,7 +421,7 @@ void usb_read_port_cancel(struct intf_hdl *pintfhdl)
 	struct recv_buf *precvbuf;
 	_adapter	*padapter = pintfhdl->padapter;
 	struct registry_priv *regsty = adapter_to_regsty(padapter);
-	precvbuf = (struct recv_buf *)padapter->recvpriv.precv_buf;
+	precvbuf = (struct recv_buf *)adapter_to_dvobj(padapter)->recvpriv.precv_buf;
 
 	RTW_INFO("%s\n", __func__);
 
@@ -435,7 +435,7 @@ void usb_read_port_cancel(struct intf_hdl *pintfhdl)
 	}
 
 #ifdef CONFIG_USB_INTERRUPT_IN_PIPE
-	usb_kill_urb(padapter->recvpriv.int_in_urb);
+	usb_kill_urb(adapter_to_dvobj(padapter)->recvpriv.int_in_urb);
 #endif
 }
 
@@ -765,7 +765,7 @@ void usb_recv_tasklet(void *priv)
 {
 	struct recv_buf *precvbuf = NULL;
 	_adapter	*padapter = (_adapter *)priv;
-	struct recv_priv	*precvpriv = &padapter->recvpriv;
+	struct recv_priv	*precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 
 	while (NULL != (precvbuf = rtw_dequeue_recvbuf(&precvpriv->recv_buf_pending_queue))) {
 		if (RTW_CANNOT_RUN(padapter)) {
@@ -785,7 +785,7 @@ void usb_read_port_complete(struct urb *purb, struct pt_regs *regs)
 {
 	struct recv_buf	*precvbuf = (struct recv_buf *)purb->context;
 	_adapter			*padapter = (_adapter *)precvbuf->adapter;
-	struct recv_priv	*precvpriv = &padapter->recvpriv;
+	struct recv_priv	*precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 
 	ATOMIC_DEC(&(precvpriv->rx_pending_cnt));
 
@@ -860,7 +860,7 @@ u32 rtw_usb_read_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *rmem)
 	_adapter		*adapter = pintfhdl->padapter;
 	struct dvobj_priv	*pdvobj = adapter_to_dvobj(adapter);
 	struct pwrctrl_priv *pwrctl = dvobj_to_pwrctl(pdvobj);
-	struct recv_priv	*precvpriv = &adapter->recvpriv;
+	struct recv_priv	*precvpriv = &adapter_to_dvobj(adapter)->recvpriv;
 	struct usb_device	*pusbd = pdvobj->pusbdev;
 
 
@@ -903,7 +903,7 @@ void usb_recv_tasklet(void *priv)
 {
 	struct sk_buff		*pskb;
 	_adapter		*padapter = (_adapter *)priv;
-	struct recv_priv	*precvpriv = &padapter->recvpriv;
+	struct recv_priv	*precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	struct recv_buf	*precvbuf = NULL;
 
 	while (NULL != (pskb = skb_dequeue(&precvpriv->rx_skb_queue))) {
@@ -938,7 +938,7 @@ void usb_read_port_complete(struct urb *purb, struct pt_regs *regs)
 {
 	struct recv_buf	*precvbuf = (struct recv_buf *)purb->context;
 	_adapter			*padapter = (_adapter *)precvbuf->adapter;
-	struct recv_priv	*precvpriv = &padapter->recvpriv;
+	struct recv_priv	*precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 
 	ATOMIC_DEC(&(precvpriv->rx_pending_cnt));
 
@@ -1020,7 +1020,7 @@ u32 rtw_usb_read_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *rmem)
 	struct recv_buf	*precvbuf = (struct recv_buf *)rmem;
 	_adapter		*adapter = pintfhdl->padapter;
 	struct dvobj_priv	*pdvobj = adapter_to_dvobj(adapter);
-	struct recv_priv	*precvpriv = &adapter->recvpriv;
+	struct recv_priv	*precvpriv = &adapter_to_dvobj(adapter)->recvpriv;
 	PUSB_DATA 		pusb_data = dvobj_to_usb(pdvobj);
 	struct usb_device 	*pusbd = pusb_data->pusbdev;
 
@@ -1144,7 +1144,7 @@ u32 usb_read_interrupt(struct intf_hdl *pintfhdl, u32 addr)
 	u32	ret = _SUCCESS;
 	_adapter			*adapter = pintfhdl->padapter;
 	struct dvobj_priv	*pdvobj = adapter_to_dvobj(adapter);
-	struct recv_priv	*precvpriv = &adapter->recvpriv;
+	struct recv_priv	*precvpriv = &adapter_to_dvobj(adapter)->recvpriv;
 	struct usb_device	*pusbd = pdvobj->pusbdev;
 
 

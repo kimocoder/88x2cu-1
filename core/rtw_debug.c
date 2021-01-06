@@ -502,7 +502,7 @@ void rf_reg_dump(void *sel, _adapter *adapter)
 
 void rtw_sink_rtp_seq_dbg(_adapter *adapter, u8 *ehdr_pos)
 {
-	struct recv_priv *precvpriv = &(adapter->recvpriv);
+	struct recv_priv *precvpriv = &adapter_to_dvobj(adapter)->recvpriv;
 	if (precvpriv->sink_udpport > 0) {
 		if (*((u16 *)(ehdr_pos + 0x24)) == cpu_to_be16(precvpriv->sink_udpport)) {
 			precvpriv->pre_rtp_rxseq = precvpriv->cur_rtp_rxseq;
@@ -2278,7 +2278,7 @@ int proc_get_survey_info(struct seq_file *m, void *v)
 
 		if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE &&
 		    is_same_network(&pmlmepriv->cur_network.network, &pnetwork->network, 0)) {
-			notify_signal = translate_percentage_to_dbm(padapter->recvpriv.signal_strength);/* dbm */
+			notify_signal = translate_percentage_to_dbm(adapter_to_dvobj(padapter)->recvpriv.signal_strength);/* dbm */
 		} else {
 			notify_signal = translate_percentage_to_dbm(pnetwork->network.PhyInfo.SignalStrength);/* dbm */
 		}
@@ -2592,7 +2592,7 @@ ssize_t proc_reset_trx_info(struct file *file, const char __user *buffer, size_t
 {
 	struct net_device *dev = data;
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
-	struct recv_priv  *precvpriv = &padapter->recvpriv;
+	struct recv_priv  *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	char cmd[32] = {0};
 	u8 cnt = 0;
 
@@ -2633,7 +2633,7 @@ int proc_get_trx_info(struct seq_file *m, void *v)
 	int i;
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
 	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
-	struct recv_priv  *precvpriv = &padapter->recvpriv;
+	struct recv_priv  *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	struct hw_xmit *phwxmit;
 	u16 vo_params[4], vi_params[4], be_params[4], bk_params[4];
 
@@ -2669,7 +2669,7 @@ int proc_get_trx_info(struct seq_file *m, void *v)
 	RTW_PRINT_SEL(m, "rx_urb_pending_cn=%d\n", ATOMIC_READ(&(precvpriv->rx_pending_cnt)));
 #endif
 
-	dump_rx_bh_tk(m, &GET_PRIMARY_ADAPTER(padapter)->recvpriv);
+	dump_rx_bh_tk(m, &adapter_to_dvobj(GET_PRIMARY_ADAPTER(padapter))->recvpriv);
 
 	/* Folowing are RX info */
 	RTW_PRINT_SEL(m, "RX: Count of Packets dropped by Driver: %llu\n", (unsigned long long)precvpriv->dbg_rx_drop_count);
@@ -3502,7 +3502,7 @@ int proc_get_huawei_trx_info(struct seq_file *sel, void *v)
 #ifdef DBG_RX_SIGNAL_DISPLAY_RAW_DATA
 	u8 isCCKrate, rf_path;
 	struct hal_spec_t *hal_spec = GET_HAL_SPEC(padapter);
-	struct rx_raw_rssi *psample_pkt_rssi = &padapter->recvpriv.raw_rssi_info;
+	struct rx_raw_rssi *psample_pkt_rssi = &adapter_to_dvobj(padapter)->recvpriv.raw_rssi_info;
 #endif
 
 	if (!dm->is_linked) {
@@ -3565,7 +3565,7 @@ int proc_get_rx_signal(struct seq_file *m, void *v)
 	struct net_device *dev = m->private;
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
 
-	RTW_PRINT_SEL(m, "rssi:%d\n", padapter->recvpriv.rssi);
+	RTW_PRINT_SEL(m, "rssi:%d\n", adapter_to_dvobj(padapter)->recvpriv.rssi);
 #ifdef CONFIG_MP_INCLUDED
 	if (padapter->registrypriv.mp_mode == 1) {
 		struct dm_struct *odm = adapter_to_phydm(padapter);
@@ -3591,9 +3591,9 @@ int proc_get_rx_signal(struct seq_file *m, void *v)
 	} else 
 #endif
 	{
-		/* RTW_PRINT_SEL(m, "rxpwdb:%d\n", padapter->recvpriv.rxpwdb); */
-		RTW_PRINT_SEL(m, "signal_strength:%u\n", padapter->recvpriv.signal_strength);
-		RTW_PRINT_SEL(m, "signal_qual:%u\n", padapter->recvpriv.signal_qual);
+		/* RTW_PRINT_SEL(m, "rxpwdb:%d\n", adapter_to_dvobj(padapter)->recvpriv.rxpwdb); */
+		RTW_PRINT_SEL(m, "signal_strength:%u\n", adapter_to_dvobj(padapter)->recvpriv.signal_strength);
+		RTW_PRINT_SEL(m, "signal_qual:%u\n", adapter_to_dvobj(padapter)->recvpriv.signal_qual);
 	}
 #ifdef DBG_RX_SIGNAL_DISPLAY_RAW_DATA
 	rtw_odm_get_perpkt_rssi(m, padapter);
@@ -3631,8 +3631,8 @@ ssize_t proc_set_rx_signal(struct file *file, const char __user *buffer, size_t 
 
 		signal_strength = signal_strength > 100 ? 100 : signal_strength;
 
-		padapter->recvpriv.is_signal_dbg = is_signal_dbg;
-		padapter->recvpriv.signal_strength_dbg = signal_strength;
+		adapter_to_dvobj(padapter)->recvpriv.is_signal_dbg = is_signal_dbg;
+		adapter_to_dvobj(padapter)->recvpriv.signal_strength_dbg = signal_strength;
 
 		if (is_signal_dbg)
 			RTW_INFO("set %s %u\n", "DBG_SIGNAL_STRENGTH", signal_strength);
@@ -4398,7 +4398,7 @@ int proc_get_two_path_rssi(struct seq_file *m, void *v)
 
 	if(padapter)
 		RTW_PRINT_SEL(m, "%d %d\n",
-			padapter->recvpriv.RxRssi[0], padapter->recvpriv.RxRssi[1]);
+			adapter_to_dvobj(padapter)->recvpriv.RxRssi[0], padapter->recvpriv.RxRssi[1]);
 
 	return 0;
 }
@@ -4847,7 +4847,7 @@ int proc_get_rtkm_info(struct seq_file *m, void *v)
 #ifdef CONFIG_USB_HCI
 	struct net_device *dev = m->private;
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
-	struct recv_priv	*precvpriv = &padapter->recvpriv;
+	struct recv_priv	*precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	struct recv_buf *precvbuf;
 
 	precvbuf = (struct recv_buf *)precvpriv->precv_buf;
@@ -5395,7 +5395,7 @@ int proc_get_rx_ring(struct seq_file *m, void *v)
 	struct net_device *dev = m->private;
 	_adapter *padapter = (_adapter *) rtw_netdev_priv(dev);
 	struct dvobj_priv *pdvobjpriv = adapter_to_dvobj(padapter);
-	struct recv_priv *precvpriv = &padapter->recvpriv;
+	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	struct rtw_rx_ring *rx_ring = &precvpriv->rx_ring[RX_MPDU_QUEUE];
 	int i, j;
 

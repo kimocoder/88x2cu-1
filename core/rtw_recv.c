@@ -230,7 +230,7 @@ union recv_frame *_rtw_alloc_recvframe(_queue *pfree_recv_queue)
 		rtw_list_delete(&precvframe->u.hdr.list);
 		padapter = precvframe->u.hdr.adapter;
 		if (padapter != NULL) {
-			precvpriv = &padapter->recvpriv;
+			precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 			if (pfree_recv_queue == &precvpriv->free_recv_queue)
 				precvpriv->free_recvframe_cnt--;
 		}
@@ -265,12 +265,12 @@ void rtw_init_recvframe(union recv_frame *precvframe, struct recv_priv *precvpri
 int rtw_free_recvframe(union recv_frame *precvframe, _queue *pfree_recv_queue)
 {
 	_adapter *padapter = precvframe->u.hdr.adapter;
-	struct recv_priv *precvpriv = &padapter->recvpriv;
+	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 
 
 #ifdef CONFIG_CONCURRENT_MODE
 	padapter = GET_PRIMARY_ADAPTER(padapter);
-	precvpriv = &padapter->recvpriv;
+	precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	pfree_recv_queue = &precvpriv->free_recv_queue;
 	precvframe->u.hdr.adapter = padapter;
 #endif
@@ -312,7 +312,7 @@ sint _rtw_enqueue_recvframe(union recv_frame *precvframe, _queue *queue)
 {
 
 	_adapter *padapter = precvframe->u.hdr.adapter;
-	struct recv_priv *precvpriv = &padapter->recvpriv;
+	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 
 
 	/* _rtw_init_listhead(&(precvframe->u.hdr.list)); */
@@ -732,7 +732,7 @@ union recv_frame *decryptor(_adapter *padapter, union recv_frame *precv_frame)
 	#endif
 
 	if (res == _FAIL) {
-		rtw_free_recvframe(return_packet, &padapter->recvpriv.free_recv_queue);
+		rtw_free_recvframe(return_packet, &adapter_to_dvobj(padapter)->recvpriv.free_recv_queue);
 		return_packet = NULL;
 	} else
 		prxattrib->bdecrypted = _TRUE;
@@ -788,7 +788,7 @@ union recv_frame *portctrl(_adapter *adapter, union recv_frame *precv_frame)
 				prtnframe = precv_frame;
 			else {
 				/* free this frame */
-				rtw_free_recvframe(precv_frame, &adapter->recvpriv.free_recv_queue);
+				rtw_free_recvframe(precv_frame, &adapter_to_dvobj(adapter)->recvpriv.free_recv_queue);
 				prtnframe = NULL;
 			}
 		} else {
@@ -1242,7 +1242,7 @@ void count_rx_stats(_adapter *padapter, union recv_frame *prframe, struct sta_in
 	struct sta_info		*psta = NULL;
 	struct stainfo_stats	*pstats = NULL;
 	struct rx_pkt_attrib	*pattrib = &prframe->u.hdr.attrib;
-	struct recv_priv		*precvpriv = &padapter->recvpriv;
+	struct recv_priv		*precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 
 	sz = get_recvframe_len(prframe);
 	precvpriv->rx_bytes += sz;
@@ -2172,9 +2172,9 @@ pre_validate_status_chk:
 		pattrib->ack_policy = GetAckpolicy((ptr + WLAN_HDR_A3_LEN + a4_shift));
 		pattrib->hdrlen = WLAN_HDR_A3_QOS_LEN + a4_shift;
 		if (pattrib->priority != 0 && pattrib->priority != 3)
-			adapter->recvpriv.is_any_non_be_pkts = _TRUE;
+			adapter_to_dvobj(adapter)->recvpriv.is_any_non_be_pkts = _TRUE;
 		else
-			adapter->recvpriv.is_any_non_be_pkts = _FALSE;
+			adapter_to_dvobj(adapter)->recvpriv.is_any_non_be_pkts = _FALSE;
 	} else {
 		pattrib->priority = 0;
 		pattrib->hdrlen = WLAN_HDR_A3_LEN + a4_shift;
@@ -2261,7 +2261,7 @@ sint validate_recv_frame(_adapter *adapter, union recv_frame *precv_frame)
 	sint retval = _SUCCESS;
 
 	struct rx_pkt_attrib *pattrib = &precv_frame->u.hdr.attrib;
-	struct recv_priv  *precvpriv = &adapter->recvpriv;
+	struct recv_priv  *precvpriv = &adapter_to_dvobj(adapter)->recvpriv;
 
 	u8 *ptr = precv_frame->u.hdr.rx_data;
 	u8  ver = (unsigned char)(*ptr) & 0x3 ;
@@ -2566,7 +2566,7 @@ union recv_frame *recvframe_defrag(_adapter *adapter, _queue *defrag_q)
 
 
 	curfragnum = 0;
-	pfree_recv_queue = &adapter->recvpriv.free_recv_queue;
+	pfree_recv_queue = &adapter_to_dvobj(adapter)->recvpriv.free_recv_queue;
 
 	phead = get_list_head(defrag_q);
 	plist = get_next(phead);
@@ -2660,7 +2660,7 @@ union recv_frame *recvframe_chk_defrag(PADAPTER padapter, union recv_frame *prec
 
 	pfhdr = &precv_frame->u.hdr;
 
-	pfree_recv_queue = &padapter->recvpriv.free_recv_queue;
+	pfree_recv_queue = &adapter_to_dvobj(padapter)->recvpriv.free_recv_queue;
 
 	/* need to define struct of wlan header frame ctrl */
 	ismfrag = pfhdr->attrib.mfrag;
@@ -2752,7 +2752,7 @@ union recv_frame *recvframe_chk_defrag(PADAPTER padapter, union recv_frame *prec
 static int rtw_recv_indicatepkt_check(union recv_frame *rframe, u8 *ehdr_pos, u32 pkt_len)
 {
 	_adapter *adapter = rframe->u.hdr.adapter;
-	struct recv_priv *recvpriv = &adapter->recvpriv;
+	struct recv_priv *recvpriv = &adapter_to_dvobj(adapter)->recvpriv;
 	struct ethhdr *ehdr = (struct ethhdr *)ehdr_pos;
 	struct rx_pkt_attrib *pattrib = &rframe->u.hdr.attrib;
 #ifdef DBG_IP_R_MONITOR
@@ -2926,7 +2926,7 @@ int amsdu_to_msdu(_adapter *padapter, union recv_frame *prframe)
 	u8	nr_subframes, i;
 	u8	*pdata;
 	struct sk_buff *sub_pkt, *subframes[MAX_SUBFRAME_COUNT];
-	struct recv_priv *precvpriv = &padapter->recvpriv;
+	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	_queue *pfree_recv_queue = &(precvpriv->free_recv_queue);
 	const u8 *da, *sa;
 	int act;
@@ -3074,7 +3074,7 @@ move_to_next:
 
 static int recv_process_mpdu(_adapter *padapter, union recv_frame *prframe)
 {
-	_queue *pfree_recv_queue = &padapter->recvpriv.free_recv_queue;
+	_queue *pfree_recv_queue = &adapter_to_dvobj(padapter)->recvpriv.free_recv_queue;
 	struct rx_pkt_attrib *pattrib = &prframe->u.hdr.attrib;
 	int ret;
 
@@ -3195,7 +3195,7 @@ exit:
 static int check_indicate_seq(struct recv_reorder_ctrl *preorder_ctrl, u16 seq_num)
 {
 	PADAPTER padapter = preorder_ctrl->padapter;
-	struct recv_priv  *precvpriv = &padapter->recvpriv;
+	struct recv_priv  *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	u8	wsize = preorder_ctrl->wsize_b;
 	u16	wend;
 
@@ -3301,7 +3301,7 @@ static int enqueue_reorder_recvframe(struct recv_reorder_ctrl *preorder_ctrl, un
 
 static void recv_indicatepkts_pkt_loss_cnt(_adapter *padapter, u64 prev_seq, u64 current_seq)
 {
-	struct recv_priv *precvpriv = &padapter->recvpriv;
+	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 
 	if (current_seq < prev_seq) {
 		precvpriv->dbg_rx_ampdu_loss_count += (4096 + current_seq - prev_seq);
@@ -3320,7 +3320,7 @@ static int recv_indicatepkts_in_order(_adapter *padapter, struct recv_reorder_ct
 	struct rx_pkt_attrib *pattrib;
 	/* u8 index = 0; */
 	int bPktInBuf = _FALSE;
-	struct recv_priv *precvpriv = &padapter->recvpriv;
+	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	_queue *ppending_recvframe_queue = &preorder_ctrl->pending_recvframe_queue;
 
 	DBG_COUNTER(padapter->rx_logs.core_rx_post_indicate_in_oder);
@@ -3452,7 +3452,7 @@ static int recv_indicatepkt_reorder(_adapter *padapter, union recv_frame *prfram
 	struct rx_pkt_attrib *pattrib = &prframe->u.hdr.attrib;
 	struct recv_reorder_ctrl *preorder_ctrl = prframe->u.hdr.preorder_ctrl;
 	_queue *ppending_recvframe_queue = preorder_ctrl ? &preorder_ctrl->pending_recvframe_queue : NULL;
-	struct recv_priv  *precvpriv = &padapter->recvpriv;
+	struct recv_priv  *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 
 	if (!pattrib->qos || !preorder_ctrl || preorder_ctrl->enable == _FALSE)
 		goto _success_exit;
@@ -3738,7 +3738,7 @@ int mp_recv_frame(_adapter *padapter, union recv_frame *rframe)
 {
 	int ret = _SUCCESS;
 	struct rx_pkt_attrib *pattrib = &rframe->u.hdr.attrib;
-	_queue *pfree_recv_queue = &padapter->recvpriv.free_recv_queue;
+	_queue *pfree_recv_queue = &adapter_to_dvobj(padapter)->recvpriv.free_recv_queue;
 #ifdef CONFIG_MP_INCLUDED
 	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
 	struct mp_priv *pmppriv = &padapter->mppriv;
@@ -3866,7 +3866,7 @@ exit:
 int recv_frame_monitor(_adapter *padapter, union recv_frame *rframe)
 {
 	int ret = _SUCCESS;
-	_queue *pfree_recv_queue = &padapter->recvpriv.free_recv_queue;
+	_queue *pfree_recv_queue = &adapter_to_dvobj(padapter)->recvpriv.free_recv_queue;
 
 #ifdef CONFIG_WIFI_MONITOR
 	struct net_device *ndev = padapter->pnetdev;
@@ -3918,7 +3918,7 @@ int recv_func_prehandle(_adapter *padapter, union recv_frame *rframe)
 #ifdef DBG_RX_COUNTER_DUMP
 	struct rx_pkt_attrib *pattrib = &rframe->u.hdr.attrib;
 #endif
-	_queue *pfree_recv_queue = &padapter->recvpriv.free_recv_queue;
+	_queue *pfree_recv_queue = &adapter_to_dvobj(padapter)->recvpriv.free_recv_queue;
 
 #ifdef DBG_RX_COUNTER_DUMP
 	if (padapter->dump_rx_cnt_mode & DUMP_DRV_RX_COUNTER) {
@@ -3954,8 +3954,8 @@ int recv_func_posthandle(_adapter *padapter, union recv_frame *prframe)
 	int ret = _SUCCESS;
 	union recv_frame *orig_prframe = prframe;
 	struct rx_pkt_attrib *pattrib = &prframe->u.hdr.attrib;
-	struct recv_priv *precvpriv = &padapter->recvpriv;
-	_queue *pfree_recv_queue = &padapter->recvpriv.free_recv_queue;
+	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
+	_queue *pfree_recv_queue = &adapter_to_dvobj(padapter)->recvpriv.free_recv_queue;
 #ifdef CONFIG_TDLS
 	u8 *psnap_type, *pcategory;
 #endif /* CONFIG_TDLS */
@@ -4061,7 +4061,7 @@ int recv_func(_adapter *padapter, union recv_frame *rframe)
 {
 	int ret;
 	struct rx_pkt_attrib *prxattrib = &rframe->u.hdr.attrib;
-	struct recv_priv *recvpriv = &padapter->recvpriv;
+	struct recv_priv *recvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	struct security_priv *psecuritypriv = &padapter->securitypriv;
 	struct mlme_priv *mlmepriv = &padapter->mlmepriv;
 	u8 *ptr = rframe->u.hdr.rx_data;
@@ -4154,7 +4154,7 @@ s32 rtw_recv_entry(union recv_frame *precvframe)
 
 	padapter = precvframe->u.hdr.adapter;
 
-	precvpriv = &padapter->recvpriv;
+	precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 
 
 	ret = recv_func(padapter, precvframe);
@@ -4184,7 +4184,7 @@ _recv_entry_drop:
 static void rtw_signal_stat_timer_hdl(void *ctx)
 {
 	_adapter *adapter = (_adapter *)ctx;
-	struct recv_priv *recvpriv = &adapter->recvpriv;
+	struct recv_priv *recvpriv = &adapter_to_dvobj(adapter)->recvpriv;
 
 	u32 tmp_s, tmp_q;
 	u8 avg_signal_strength = 0;
@@ -4284,7 +4284,7 @@ static void rx_process_rssi(_adapter *padapter, union recv_frame *prframe)
 {
 	struct rx_pkt_attrib *pattrib = &prframe->u.hdr.attrib;
 #ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS
-	struct signal_stat *signal_stat = &padapter->recvpriv.signal_strength_data;
+	struct signal_stat *signal_stat = &adapter_to_dvobj(padapter)->recvpriv.signal_strength_data;
 #else /* CONFIG_NEW_SIGNAL_STAT_PROCESS */
 	u32 last_rssi, tmp_val;
 #endif /* CONFIG_NEW_SIGNAL_STAT_PROCESS */
@@ -4305,26 +4305,26 @@ static void rx_process_rssi(_adapter *padapter, union recv_frame *prframe)
 #else /* CONFIG_NEW_SIGNAL_STAT_PROCESS */
 
 		/* Adapter->RxStats.RssiCalculateCnt++;	 */ /* For antenna Test */
-		if (padapter->recvpriv.signal_strength_data.total_num++ >= PHY_RSSI_SLID_WIN_MAX) {
-			padapter->recvpriv.signal_strength_data.total_num = PHY_RSSI_SLID_WIN_MAX;
-			last_rssi = padapter->recvpriv.signal_strength_data.elements[padapter->recvpriv.signal_strength_data.index];
-			padapter->recvpriv.signal_strength_data.total_val -= last_rssi;
+		if (adapter_to_dvobj(padapter)->recvpriv.signal_strength_data.total_num++ >= PHY_RSSI_SLID_WIN_MAX) {
+			adapter_to_dvobj(padapter)->recvpriv.signal_strength_data.total_num = PHY_RSSI_SLID_WIN_MAX;
+			last_rssi = adapter_to_dvobj(padapter)->recvpriv.signal_strength_data.elements[adapter_to_dvobj(padapter)->recvpriv.signal_strength_data.index];
+			adapter_to_dvobj(padapter)->recvpriv.signal_strength_data.total_val -= last_rssi;
 		}
-		padapter->recvpriv.signal_strength_data.total_val  += pattrib->phy_info.signal_strength;
+		adapter_to_dvobj(padapter)->recvpriv.signal_strength_data.total_val  += pattrib->phy_info.signal_strength;
 
-		padapter->recvpriv.signal_strength_data.elements[padapter->recvpriv.signal_strength_data.index++] = pattrib->phy_info.signal_strength;
-		if (padapter->recvpriv.signal_strength_data.index >= PHY_RSSI_SLID_WIN_MAX)
-			padapter->recvpriv.signal_strength_data.index = 0;
+		adapter_to_dvobj(padapter)->recvpriv.signal_strength_data.elements[adapter_to_dvobj(padapter)->recvpriv.signal_strength_data.index++] = pattrib->phy_info.signal_strength;
+		if (adapter_to_dvobj(padapter)->recvpriv.signal_strength_data.index >= PHY_RSSI_SLID_WIN_MAX)
+			adapter_to_dvobj(padapter)->recvpriv.signal_strength_data.index = 0;
 
 
-		tmp_val = padapter->recvpriv.signal_strength_data.total_val / padapter->recvpriv.signal_strength_data.total_num;
+		tmp_val = adapter_to_dvobj(padapter)->recvpriv.signal_strength_data.total_val / adapter_to_dvobj(padapter)->recvpriv.signal_strength_data.total_num;
 
-		if (padapter->recvpriv.is_signal_dbg) {
-			padapter->recvpriv.signal_strength = padapter->recvpriv.signal_strength_dbg;
-			padapter->recvpriv.rssi = (s8)translate_percentage_to_dbm(padapter->recvpriv.signal_strength_dbg);
+		if (adapter_to_dvobj(padapter)->recvpriv.is_signal_dbg) {
+			adapter_to_dvobj(padapter)->recvpriv.signal_strength = adapter_to_dvobj(padapter)->recvpriv.signal_strength_dbg;
+			adapter_to_dvobj(padapter)->recvpriv.rssi = (s8)translate_percentage_to_dbm(adapter_to_dvobj(padapter)->recvpriv.signal_strength_dbg);
 		} else {
-			padapter->recvpriv.signal_strength = tmp_val;
-			padapter->recvpriv.rssi = (s8)translate_percentage_to_dbm(tmp_val);
+			adapter_to_dvobj(padapter)->recvpriv.signal_strength = tmp_val;
+			adapter_to_dvobj(padapter)->recvpriv.rssi = (s8)translate_percentage_to_dbm(tmp_val);
 		}
 
 #endif /* CONFIG_NEW_SIGNAL_STAT_PROCESS */
@@ -4345,7 +4345,7 @@ static void rx_process_link_qual(_adapter *padapter, union recv_frame *prframe)
 
 	pattrib = &prframe->u.hdr.attrib;
 #ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS
-	signal_stat = &padapter->recvpriv.signal_qual_data;
+	signal_stat = &adapter_to_dvobj(padapter)->recvpriv.signal_qual_data;
 #endif /* CONFIG_NEW_SIGNAL_STAT_PROCESS */
 
 	/* RTW_INFO("process_link_qual=> pattrib->signal_qual(%d)\n ",pattrib->signal_qual); */
@@ -4366,21 +4366,21 @@ static void rx_process_link_qual(_adapter *padapter, union recv_frame *prframe)
 		/*  */
 		/* 1. Record the general EVM to the sliding window. */
 		/*  */
-		if (padapter->recvpriv.signal_qual_data.total_num++ >= PHY_LINKQUALITY_SLID_WIN_MAX) {
-			padapter->recvpriv.signal_qual_data.total_num = PHY_LINKQUALITY_SLID_WIN_MAX;
-			last_evm = padapter->recvpriv.signal_qual_data.elements[padapter->recvpriv.signal_qual_data.index];
-			padapter->recvpriv.signal_qual_data.total_val -= last_evm;
+		if (adapter_to_dvobj(padapter)->recvpriv.signal_qual_data.total_num++ >= PHY_LINKQUALITY_SLID_WIN_MAX) {
+			adapter_to_dvobj(padapter)->recvpriv.signal_qual_data.total_num = PHY_LINKQUALITY_SLID_WIN_MAX;
+			last_evm = adapter_to_dvobj(padapter)->recvpriv.signal_qual_data.elements[adapter_to_dvobj(padapter)->recvpriv.signal_qual_data.index];
+			adapter_to_dvobj(padapter)->recvpriv.signal_qual_data.total_val -= last_evm;
 		}
-		padapter->recvpriv.signal_qual_data.total_val += pattrib->phy_info.signal_quality;
+		adapter_to_dvobj(padapter)->recvpriv.signal_qual_data.total_val += pattrib->phy_info.signal_quality;
 
-		padapter->recvpriv.signal_qual_data.elements[padapter->recvpriv.signal_qual_data.index++] = pattrib->phy_info.signal_quality;
-		if (padapter->recvpriv.signal_qual_data.index >= PHY_LINKQUALITY_SLID_WIN_MAX)
-			padapter->recvpriv.signal_qual_data.index = 0;
+		adapter_to_dvobj(padapter)->recvpriv.signal_qual_data.elements[adapter_to_dvobj(padapter)->recvpriv.signal_qual_data.index++] = pattrib->phy_info.signal_quality;
+		if (adapter_to_dvobj(padapter)->recvpriv.signal_qual_data.index >= PHY_LINKQUALITY_SLID_WIN_MAX)
+			adapter_to_dvobj(padapter)->recvpriv.signal_qual_data.index = 0;
 
 
 		/* <1> Showed on UI for user, in percentage. */
-		tmpVal = padapter->recvpriv.signal_qual_data.total_val / padapter->recvpriv.signal_qual_data.total_num;
-		padapter->recvpriv.signal_qual = (u8)tmpVal;
+		tmpVal = adapter_to_dvobj(padapter)->recvpriv.signal_qual_data.total_val / adapter_to_dvobj(padapter)->recvpriv.signal_qual_data.total_num;
+		adapter_to_dvobj(padapter)->recvpriv.signal_qual = (u8)tmpVal;
 
 	}
 #endif /* CONFIG_NEW_SIGNAL_STAT_PROCESS */
@@ -4415,7 +4415,7 @@ void rx_query_phy_status(
 	u8 is_ra_bmc;
 	struct sta_priv *pstapriv;
 	struct sta_info *psta = NULL;
-	struct recv_priv  *precvpriv = &padapter->recvpriv;
+	struct recv_priv  *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	/* _irqL		irqL; */
 
 	pkt_info.is_packet_match_bssid = _FALSE;
@@ -4612,7 +4612,7 @@ s32 pre_recv_entry(union recv_frame *precvframe, u8 *pphy_status)
 				RTW_INFO("%s [WARN] Cannot find appropriate adapter - mac_addr : "MAC_FMT"\n"
 					, __func__, MAC_ARG(ra));
 
-			rtw_free_recvframe(precvframe, &precvframe->u.hdr.adapter->recvpriv.free_recv_queue);
+			rtw_free_recvframe(precvframe, &precvframe->u.hdr.dvobj->recvpriv.free_recv_queue);
 			goto exit;
 		}
 		#ifdef CONFIG_CONCURRENT_MODE
@@ -4642,7 +4642,7 @@ s32 pre_recv_entry(union recv_frame *precvframe, u8 *pphy_status)
 		if (GetFrameType(pbuf) == WIFI_DATA_TYPE
 			&& !adapter_allow_bmc_data_rx(precvframe->u.hdr.adapter)
 		) {
-			rtw_free_recvframe(precvframe, &precvframe->u.hdr.adapter->recvpriv.free_recv_queue);
+			rtw_free_recvframe(precvframe, &precvframe->u.hdr.dvobj->recvpriv.free_recv_queue);
 			goto exit;
 		}
 	}
@@ -4668,7 +4668,7 @@ exit:
 thread_return rtw_recv_thread(thread_context context)
 {
 	_adapter *adapter = (_adapter *)context;
-	struct recv_priv *recvpriv = &adapter->recvpriv;
+	struct recv_priv *recvpriv = &adapter_to_dvobj(adapter)->recvpriv;
 	s32 err = _SUCCESS;
 #ifdef RTW_RECV_THREAD_HIGH_PRIORITY
 #ifdef PLATFORM_LINUX

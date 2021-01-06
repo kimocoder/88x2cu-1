@@ -1210,7 +1210,7 @@ static ssize_t proc_set_rx_info_msg(struct file *file, const char __user *buffer
 
 	struct net_device *dev = data;
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
-	struct recv_priv *precvpriv = &(padapter->recvpriv);
+	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	char tmp[32] = {0};
 	int phy_info_flag = 0;
 
@@ -2321,7 +2321,7 @@ static int proc_get_udpport(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
-	struct recv_priv *precvpriv = &(padapter->recvpriv);
+	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 
 	RTW_PRINT_SEL(m, "%d\n", precvpriv->sink_udpport);
 	return 0;
@@ -2330,7 +2330,7 @@ static ssize_t proc_set_udpport(struct file *file, const char __user *buffer, si
 {
 	struct net_device *dev = data;
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
-	struct recv_priv *precvpriv = &(padapter->recvpriv);
+	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	int sink_udpport = 0;
 	char tmp[32];
 

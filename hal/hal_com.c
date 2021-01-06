@@ -14400,7 +14400,7 @@ void rtw_dump_rx_dframe_info(_adapter *padapter, void *sel)
 
 	_irqL irqL;
 	u8 isCCKrate, rf_path;
-	struct recv_priv *precvpriv = &(padapter->recvpriv);
+	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	struct hal_spec_t *hal_spec = GET_HAL_SPEC(padapter);
 	struct sta_priv *pstapriv = &padapter->stapriv;
 	struct sta_info *psta;
@@ -14474,12 +14474,12 @@ void rtw_store_phy_info(_adapter *padapter, union recv_frame *prframe)
 #ifdef DBG_RX_DFRAME_RAW_DATA
 	struct sta_recv_dframe_info *psta_dframe_info;
 #endif
-	struct recv_priv *precvpriv = &(padapter->recvpriv);
+	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	struct hal_spec_t *hal_spec = GET_HAL_SPEC(padapter);
 	struct rx_pkt_attrib *pattrib = &prframe->u.hdr.attrib;
 	struct sta_info *psta = prframe->u.hdr.psta;
 	struct phydm_phyinfo_struct *p_phy_info = &pattrib->phy_info;
-	struct rx_raw_rssi *psample_pkt_rssi = &padapter->recvpriv.raw_rssi_info;
+	struct rx_raw_rssi *psample_pkt_rssi = &adapter_to_dvobj(padapter)->recvpriv.raw_rssi_info;
 	psample_pkt_rssi->data_rate = pattrib->data_rate;
 	ptr = prframe->u.hdr.rx_data;
 	dframe_type = GetFrameType(ptr);
@@ -15653,7 +15653,7 @@ void rtw_reset_phy_rx_counters(_adapter *padapter)
 #ifdef DBG_RX_COUNTER_DUMP
 void rtw_dump_drv_rx_counters(_adapter *padapter, struct dbg_rx_counter *rx_counter)
 {
-	struct recv_priv *precvpriv = &padapter->recvpriv;
+	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	if (!rx_counter) {
 		rtw_warn_on(1);
 		return;
@@ -15664,7 +15664,7 @@ void rtw_dump_drv_rx_counters(_adapter *padapter, struct dbg_rx_counter *rx_coun
 }
 void rtw_reset_drv_rx_counters(_adapter *padapter)
 {
-	struct recv_priv *precvpriv = &padapter->recvpriv;
+	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	padapter->drv_rx_cnt_ok = 0;
 	padapter->drv_rx_cnt_crcerror = 0;
 	padapter->drv_rx_cnt_drop = precvpriv->rx_drop;

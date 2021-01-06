@@ -266,7 +266,7 @@ u32 rtl8822cu_inirp_init(PADAPTER padapter)
 	struct recv_buf *precvbuf;
 	struct dvobj_priv *pdev = adapter_to_dvobj(padapter);
 	struct intf_hdl *pintfhdl = &padapter->iopriv.intf;
-	struct recv_priv *precvpriv = &(padapter->recvpriv);
+	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	u32(*_read_port)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);
 #ifdef CONFIG_USB_INTERRUPT_IN_PIPE
 	HAL_DATA_TYPE *pHalData = GET_HAL_DATA(padapter);

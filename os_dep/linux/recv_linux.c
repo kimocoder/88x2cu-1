@@ -384,7 +384,7 @@ struct sk_buff *rtw_os_alloc_msdu_pkt(union recv_frame *prframe, const u8 *da, c
 static int napi_recv(_adapter *padapter, int budget)
 {
 	struct sk_buff *pskb;
-	struct recv_priv *precvpriv = &padapter->recvpriv;
+	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	int work_done = 0;
 	struct registry_priv *pregistrypriv = &padapter->registrypriv;
 	u8 rx_ok;
@@ -430,7 +430,7 @@ int rtw_recv_napi_poll(struct napi_struct *napi, int budget)
 {
 	_adapter *padapter = container_of(napi, _adapter, napi);
 	int work_done = 0;
-	struct recv_priv *precvpriv = &padapter->recvpriv;
+	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 
 
 	work_done = napi_recv(padapter, budget);
@@ -470,7 +470,7 @@ void dynamic_napi_th_chk (_adapter *adapter)
 void rtw_os_recv_indicate_pkt(_adapter *padapter, struct sk_buff *pkt, union recv_frame *rframe)
 {
 	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
-	struct recv_priv *precvpriv = &(padapter->recvpriv);
+	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	struct registry_priv	*pregistrypriv = &padapter->registrypriv;
 #ifdef CONFIG_BR_EXT
 	void *br_port = NULL;
@@ -518,7 +518,7 @@ void rtw_os_recv_indicate_pkt(_adapter *padapter, struct sk_buff *pkt, union rec
 		pkt->dev = padapter->pnetdev;
 		pkt->ip_summed = CHECKSUM_NONE; /* CONFIG_TCP_CSUM_OFFLOAD_RX */
 
-		if (padapter->recvpriv.ip_statistic.enabled)
+		if (adapter_to_dvobj(padapter)->recvpriv.ip_statistic.enabled)
 			rtw_rx_dbg_monitor_ip_statistic(padapter, pkt);
 
 #ifdef CONFIG_TCP_CSUM_OFFLOAD_RX
@@ -695,7 +695,7 @@ int rtw_recv_indicatepkt(_adapter *padapter, union recv_frame *precv_frame)
 	struct recv_priv *precvpriv;
 	_queue	*pfree_recv_queue;
 
-	precvpriv = &(padapter->recvpriv);
+	precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	pfree_recv_queue = &(precvpriv->free_recv_queue);
 
 	if (precv_frame->u.hdr.pkt == NULL)
@@ -716,7 +716,7 @@ _recv_indicatepkt_drop:
 void rtw_os_read_port(_adapter *padapter, struct recv_buf *precvbuf)
 {
 #ifdef CONFIG_USB_HCI
-	struct recv_priv *precvpriv = &padapter->recvpriv;
+	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 
 	precvbuf->ref_cnt--;
 

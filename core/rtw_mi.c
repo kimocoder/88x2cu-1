@@ -985,9 +985,9 @@ static u8 _rtw_mi_traffic_statistics(_adapter *padapter , void *data)
 	pdvobjpriv->traffic_stat.tx_drop += padapter->xmitpriv.tx_drop;
 
 	/* Rx */
-	pdvobjpriv->traffic_stat.rx_bytes += padapter->recvpriv.rx_bytes;
-	pdvobjpriv->traffic_stat.rx_pkts += padapter->recvpriv.rx_pkts;
-	pdvobjpriv->traffic_stat.rx_drop += padapter->recvpriv.rx_drop;
+	pdvobjpriv->traffic_stat.rx_bytes += adapter_to_dvobj(padapter)->recvpriv.rx_bytes;
+	pdvobjpriv->traffic_stat.rx_pkts += adapter_to_dvobj(padapter)->recvpriv.rx_pkts;
+	pdvobjpriv->traffic_stat.rx_drop += adapter_to_dvobj(padapter)->recvpriv.rx_drop;
 	return _TRUE;
 }
 u8 rtw_mi_traffic_statistics(_adapter *padapter)
@@ -1414,7 +1414,7 @@ void rtw_mi_buddy_clone_bcmc_packet(_adapter *padapter, union recv_frame *precvf
 	s32 ret = _SUCCESS;
 	_adapter *iface = NULL;
 	union recv_frame *pcloneframe = NULL;
-	struct recv_priv *precvpriv = &padapter->recvpriv;/*primary_padapter*/
+	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;/*primary_padapter*/
 	_queue *pfree_recv_queue = &precvpriv->free_recv_queue;
 	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
 	u8 *fhead = get_recvframe_data(precvframe);

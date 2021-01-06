@@ -43,7 +43,7 @@ static u8 recvbuf2recvframe_proccess_normal_rx
 (PADAPTER padapter, u8 *pbuf, struct rx_pkt_attrib *pattrib, union recv_frame *precvframe, struct sk_buff *pskb)
 {
 	u8 ret = _SUCCESS;
-	struct recv_priv *precvpriv = &padapter->recvpriv;
+	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	_queue *pfree_recv_queue = &precvpriv->free_recv_queue;
 
 #ifdef CONFIG_RX_PACKET_APPEND_FCS
@@ -79,7 +79,7 @@ int recvbuf2recvframe(PADAPTER padapter, void *ptr)
 	union recv_frame *precvframe = NULL;
 	struct rx_pkt_attrib *pattrib = NULL;
 	HAL_DATA_TYPE *pHalData = GET_HAL_DATA(padapter);
-	struct recv_priv *precvpriv = &padapter->recvpriv;
+	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	_queue *pfree_recv_queue = &precvpriv->free_recv_queue;
 	struct sk_buff *pskb;
 

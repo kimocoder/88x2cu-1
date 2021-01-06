@@ -743,7 +743,7 @@ u32	rtw_free_stainfo(_adapter *padapter , struct sta_info *psta)
 		_list	*phead, *plist;
 		union recv_frame *prframe;
 		_queue *ppending_recvframe_queue;
-		_queue *pfree_recv_queue = &padapter->recvpriv.free_recv_queue;
+		_queue *pfree_recv_queue = &adapter_to_dvobj(padapter)->recvpriv.free_recv_queue;
 
 		preorder_ctrl = &psta->recvreorder_ctrl[i];
 		rtw_clear_bit(RTW_RECV_ACK_OR_TIMEOUT, &preorder_ctrl->rec_abba_rsp_ack);

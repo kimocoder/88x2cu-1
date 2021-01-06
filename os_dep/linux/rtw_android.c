@@ -373,7 +373,7 @@ int rtw_android_get_rssi(struct net_device *net, char *command, int total_len)
 
 	if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE) {
 		bytes_written += snprintf(&command[bytes_written], total_len, "%s rssi %d",
-			pcur_network->network.Ssid.Ssid, padapter->recvpriv.rssi);
+			pcur_network->network.Ssid.Ssid, adapter_to_dvobj(padapter)->recvpriv.rssi);
 	}
 
 	return bytes_written;

@@ -5666,7 +5666,7 @@ err_out:
 inline u8 rtw_rx_dbg_monitor_condition_chk(
 	_adapter *padapter, u8 *ip, u32 port, u8 condition)
 {
-	struct recv_priv  *precvpriv = &(padapter->recvpriv);
+	struct recv_priv  *precvpriv = &(adapter_to_dvobj(padapter)->recvpriv);
 	u8 need_chk = _FALSE;
 
 	if (precvpriv->ip_statistic.enabled == _FALSE)
@@ -5691,7 +5691,7 @@ exit:
 
 void rtw_dbg_rx_iperf_udp_data_chk(_adapter *padapter, u8 *pdata)
 {
-	struct recv_priv *precvpriv = &(padapter->recvpriv);
+	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	struct rtw_ip_dbg_cnt_statistic *st = &(precvpriv->ip_statistic);
 	u8 iperf_start_seq, iperf_seq_offset;
 	u16 udp_data_len;
@@ -5727,7 +5727,7 @@ void rtw_dbg_rx_iperf_udp_data_chk(_adapter *padapter, u8 *pdata)
 
 void rtw_rx_dbg_monitor_ip_statistic(_adapter *padapter, struct sk_buff *pkt)
 {
-	struct recv_priv *precvpriv = &(padapter->recvpriv);
+	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	u8 *ip_hdr, frag_flag, src_ip[4], frag_drop = _FALSE;
 	u16 ip_seq, frag_offset, sport = 0 , dport = 0;
 	u32 i;

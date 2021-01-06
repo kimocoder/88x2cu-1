@@ -603,7 +603,7 @@ void rtw_hal_turbo_edca(_adapter *adapter)
 {
 	HAL_DATA_TYPE		*hal_data = GET_HAL_DATA(adapter);
 	struct dvobj_priv		*dvobj = adapter_to_dvobj(adapter);
-	struct recv_priv		*precvpriv = &(adapter->recvpriv);
+	struct recv_priv		*precvpriv = &adapter_to_dvobj(adapter)->recvpriv;
 	struct registry_priv		*pregpriv = &adapter->registrypriv;
 	struct mlme_ext_priv	*pmlmeext = &(adapter->mlmeextpriv);
 	struct mlme_ext_info	*pmlmeinfo = &(pmlmeext->mlmext_info);
