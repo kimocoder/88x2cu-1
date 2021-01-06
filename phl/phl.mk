@@ -17,7 +17,9 @@ phl_path :=
 phl_path_d1 := $(src)/$(HAL)
 endif
 
-_PHL_FILES := $(phl_path)phl_sec.o
+_PHL_FILES := $(phl_path)phl_init.o \
+		$(phl_path)phl_sec.o
+
 #_PHL_FILES := $(phl_path)phl_init.o \
 			$(phl_path)phl_debug.o \
 			$(phl_path)phl_tx.o \
