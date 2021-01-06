@@ -1153,7 +1153,7 @@ inline void rtw_regsty_init_unassoc_sta_param(struct registry_priv *regsty)
 }
 #endif
 
-uint loadparam(_adapter *padapter)
+uint rtw_load_registry(_adapter *padapter)
 {
 	uint status = _SUCCESS;
 	struct registry_priv  *registry_par = &padapter->registrypriv;
@@ -3385,7 +3385,7 @@ _adapter *rtw_drv_add_vir_if(_adapter *primary_padapter,
 	if (padapter == NULL)
 		goto exit;
 
-	if (loadparam(padapter) != _SUCCESS)
+	if (rtw_load_registry(padapter) != _SUCCESS)
 		goto free_adapter;
 
 	_rtw_memcpy(padapter, primary_padapter, sizeof(_adapter));

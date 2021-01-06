@@ -1149,7 +1149,7 @@ _adapter *rtw_usb_primary_adapter_init(struct dvobj_priv *dvobj,
 	if (padapter == NULL)
 		goto exit;
 
-	if (loadparam(padapter) != _SUCCESS)
+	if (rtw_load_registry(padapter) != _SUCCESS)
 		goto free_adapter;
 
 	padapter->dvobj = dvobj;

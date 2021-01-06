@@ -77,8 +77,6 @@ void rtw_cancel_dynamic_chk_timer(_adapter *padapter);
 #endif
 void rtw_cancel_all_timer(_adapter *padapter);
 
-uint loadparam(_adapter *adapter);
-
 #ifdef PLATFORM_LINUX
 int rtw_ioctl(struct net_device *dev, struct ifreq *rq, int cmd);
 
