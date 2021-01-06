@@ -10,6 +10,7 @@ phl_path_d1 := $(src)/$(HAL)
 endif
 
 _HAL_FILES :=	$(phl_path)$(HAL)/hal_api_mac.o \
+			$(phl_path)$(HAL)/hal_io.o \
 			$(phl_path)$(HAL)/hal_cam.o
 
 #_HAL_FILES :=	$(phl_path)$(HAL)/hal_api_mac.o \
@@ -19,7 +20,6 @@ _HAL_FILES :=	$(phl_path)$(HAL)/hal_api_mac.o \
 			$(phl_path)$(HAL)/hal_api_efuse.o \
 			$(phl_path)$(HAL)/hal_com_i.o \
 			$(phl_path)$(HAL)/hal_init.o \
-			$(phl_path)$(HAL)/hal_io.o \
 			$(phl_path)$(HAL)/hal_rx.o \
 			$(phl_path)$(HAL)/hal_tx.o \
 			$(phl_path)$(HAL)/hal_sta.o \
