@@ -3149,7 +3149,7 @@ void rtw_sta_media_status_rpt(_adapter *adapter, struct sta_info *sta, bool conn
 
 u8 rtw_sta_media_status_rpt_cmd(_adapter *adapter, struct sta_info *sta, bool connected)
 {
-	struct cmd_priv	*cmdpriv = &adapter->cmdpriv;
+	struct cmd_priv	*cmdpriv = &adapter_to_dvobj(adapter)->cmdpriv;
 	struct cmd_obj *cmdobj;
 	struct drvextra_cmd_parm *cmd_parm;
 	struct sta_media_status_rpt_cmd_parm *rpt_parm;
@@ -4461,7 +4461,7 @@ sint rtw_set_auth(_adapter *adapter, struct security_priv *psecuritypriv)
 {
 	struct	cmd_obj *pcmd;
 	struct	setauth_parm *psetauthparm;
-	struct	cmd_priv	*pcmdpriv = &(adapter->cmdpriv);
+	struct	cmd_priv	*pcmdpriv = &adapter_to_dvobj(adapter)->cmdpriv;
 	sint		res = _SUCCESS;
 
 
@@ -4506,7 +4506,7 @@ sint rtw_set_key(_adapter *adapter, struct security_priv *psecuritypriv, sint ke
 	u8	keylen;
 	struct cmd_obj		*pcmd;
 	struct setkey_parm	*psetkeyparm;
-	struct cmd_priv		*pcmdpriv = &(adapter->cmdpriv);
+	struct cmd_priv		*pcmdpriv = &adapter_to_dvobj(adapter)->cmdpriv;
 	sint	res = _SUCCESS;
 
 

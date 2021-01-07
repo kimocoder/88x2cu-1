@@ -26,9 +26,10 @@ Caller and the rtw_cmd_thread can protect cmd_q by spin_lock.
 No irqsave is necessary.
 */
 
-u32	rtw_init_cmd_priv(struct	cmd_priv *pcmdpriv)
+u32	rtw_init_cmd_priv(struct dvobj_priv *dvobj)
 {
 	u32 res = _SUCCESS;
+	struct cmd_priv *pcmdpriv = &dvobj->cmdpriv;
 
 
 	_rtw_init_sema(&(pcmdpriv->cmd_queue_sema), 0);
@@ -211,23 +212,22 @@ void _rtw_free_evt_priv(struct	evt_priv *pevtpriv)
 
 }
 
-void rtw_free_cmd_priv(struct	cmd_priv *pcmdpriv)
+void rtw_free_cmd_priv(struct dvobj_priv *dvobj)
 {
+	struct cmd_priv *pcmdpriv = &dvobj->cmdpriv;
 
-	if (pcmdpriv) {
-		_rtw_spinlock_free(&(pcmdpriv->cmd_queue.lock));
-		_rtw_free_sema(&(pcmdpriv->cmd_queue_sema));
-		/* _rtw_free_sema(&(pcmdpriv->cmd_done_sema)); */
-		_rtw_free_sema(&(pcmdpriv->start_cmdthread_sema));
+	_rtw_spinlock_free(&(pcmdpriv->cmd_queue.lock));
+	_rtw_free_sema(&(pcmdpriv->cmd_queue_sema));
+	/* _rtw_free_sema(&(pcmdpriv->cmd_done_sema)); */
+	_rtw_free_sema(&(pcmdpriv->start_cmdthread_sema));
 
-		if (pcmdpriv->cmd_allocated_buf)
-			rtw_mfree(pcmdpriv->cmd_allocated_buf, MAX_CMDSZ + CMDBUFF_ALIGN_SZ);
+	if (pcmdpriv->cmd_allocated_buf)
+		rtw_mfree(pcmdpriv->cmd_allocated_buf, MAX_CMDSZ + CMDBUFF_ALIGN_SZ);
 
-		if (pcmdpriv->rsp_allocated_buf)
-			rtw_mfree(pcmdpriv->rsp_allocated_buf, MAX_RSPSZ + 4);
+	if (pcmdpriv->rsp_allocated_buf)
+		rtw_mfree(pcmdpriv->rsp_allocated_buf, MAX_RSPSZ + 4);
 
-		_rtw_mutex_free(&pcmdpriv->sctx_mutex);
-	}
+	_rtw_mutex_free(&pcmdpriv->sctx_mutex);
 }
 
 /*
@@ -500,7 +500,7 @@ void rtw_free_cmd_obj(struct cmd_obj *pcmd)
 void rtw_stop_cmd_thread(_adapter *adapter)
 {
 	if (adapter->cmdThread) {
-		_rtw_up_sema(&adapter->cmdpriv.cmd_queue_sema);
+		_rtw_up_sema(&adapter_to_dvobj(adapter)->cmdpriv.cmd_queue_sema);
 		rtw_thread_stop(adapter->cmdThread);
 		adapter->cmdThread = NULL;
 	}
@@ -516,7 +516,7 @@ thread_return rtw_cmd_thread(thread_context context)
 	u8(*cmd_hdl)(_adapter *padapter, u8 *pbuf);
 	void (*pcmd_callback)(_adapter *dev, struct cmd_obj *pcmd);
 	PADAPTER padapter = (PADAPTER)context;
-	struct cmd_priv *pcmdpriv = &(padapter->cmdpriv);
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	struct drvextra_cmd_parm *extra_parm = NULL;
 	_irqL irqL;
 
@@ -639,7 +639,7 @@ _next:
 
 post_process:
 
-		_enter_critical_mutex(&(pcmd->padapter->cmdpriv.sctx_mutex), NULL);
+		_enter_critical_mutex(&(adapter_to_dvobj(pcmd->padapter)->cmdpriv.sctx_mutex), NULL);
 		if (pcmd->sctx) {
 			if (0)
 				RTW_PRINT(FUNC_ADPT_FMT" pcmd->sctx\n", FUNC_ADPT_ARG(pcmd->padapter));
@@ -648,7 +648,7 @@ post_process:
 			else
 				rtw_sctx_done_err(&pcmd->sctx, RTW_SCTX_DONE_CMD_ERROR);
 		}
-		_exit_critical_mutex(&(pcmd->padapter->cmdpriv.sctx_mutex), NULL);
+		_exit_critical_mutex(&(adapter_to_dvobj(pcmd->padapter)->cmdpriv.sctx_mutex), NULL);
 
 		cmd_process_time = rtw_get_passing_time_ms(cmd_start_time);
 		if (cmd_process_time > 1000) {
@@ -702,13 +702,13 @@ post_process:
 			adapter_to_rfctl(padapter)->csa_ch = 0;
 		#endif
 
-		_enter_critical_mutex(&(pcmd->padapter->cmdpriv.sctx_mutex), NULL);
+		_enter_critical_mutex(&(adapter_to_dvobj(pcmd->padapter)->cmdpriv.sctx_mutex), NULL);
 		if (pcmd->sctx) {
 			if (0)
 				RTW_PRINT(FUNC_ADPT_FMT" pcmd->sctx\n", FUNC_ADPT_ARG(pcmd->padapter));
 			rtw_sctx_done_err(&pcmd->sctx, RTW_SCTX_DONE_CMD_DROP);
 		}
-		_exit_critical_mutex(&(pcmd->padapter->cmdpriv.sctx_mutex), NULL);
+		_exit_critical_mutex(&(adapter_to_dvobj(pcmd->padapter)->cmdpriv.sctx_mutex), NULL);
 
 		rtw_free_cmd_obj(pcmd);
 	} while (1);
@@ -800,7 +800,7 @@ u8 rtw_sitesurvey_cmd(_adapter *padapter, struct sitesurvey_parm *pparm)
 	u8 res = _FAIL;
 	struct cmd_obj		*ph2c;
 	struct sitesurvey_parm	*psurveyPara;
-	struct cmd_priv	*pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv	*pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	struct mlme_priv	*pmlmepriv = &padapter->mlmepriv;
 
 #ifdef CONFIG_LPS
@@ -870,7 +870,7 @@ static u8 rtw_createbss_cmd(_adapter  *adapter, int flags, bool adhoc
 {
 	struct cmd_obj *cmdobj;
 	struct createbss_parm *parm;
-	struct cmd_priv *pcmdpriv = &adapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(adapter)->cmdpriv;
 	struct submit_ctx sctx;
 	u8 res = _SUCCESS;
 
@@ -971,7 +971,7 @@ u8 rtw_joinbss_cmd(_adapter  *padapter, struct wlan_network *pnetwork)
 	uint	t_len = 0;
 	WLAN_BSSID_EX		*psecnetwork;
 	struct cmd_obj		*pcmd;
-	struct cmd_priv		*pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv		*pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	struct mlme_priv		*pmlmepriv = &padapter->mlmepriv;
 	struct qos_priv		*pqospriv = &pmlmepriv->qospriv;
 	struct security_priv	*psecuritypriv = &padapter->securitypriv;
@@ -1171,8 +1171,8 @@ u8 rtw_disassoc_cmd(_adapter *padapter, u32 deauth_timeout_ms, int flags) /* for
 {
 	struct cmd_obj *cmdobj = NULL;
 	struct disconnect_parm *param = NULL;
-	struct cmd_priv *cmdpriv = &padapter->cmdpriv;
-	struct cmd_priv *pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv *cmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	struct submit_ctx sctx;
 	u8 res = _SUCCESS;
 
@@ -1223,7 +1223,7 @@ u8 rtw_stop_ap_cmd(_adapter  *adapter, u8 flags)
 {
 	struct cmd_obj *cmdobj;
 	struct drvextra_cmd_parm *parm;
-	struct cmd_priv *pcmdpriv = &adapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(adapter)->cmdpriv;
 	struct submit_ctx sctx;
 	u8 res = _SUCCESS;
 
@@ -1277,7 +1277,7 @@ u8 rtw_tx_control_cmd(_adapter *adapter)
 {
 	struct cmd_obj		*ph2c;
 	struct drvextra_cmd_parm	*pdrvextra_cmd_parm;
-	struct cmd_priv *pcmdpriv = &adapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(adapter)->cmdpriv;
 
 	u8 res = _SUCCESS;
 	
@@ -1311,7 +1311,7 @@ u8 rtw_setopmode_cmd(_adapter  *adapter, NDIS_802_11_NETWORK_INFRASTRUCTURE netw
 {
 	struct cmd_obj *cmdobj;
 	struct setopmode_parm *parm;
-	struct cmd_priv *pcmdpriv = &adapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(adapter)->cmdpriv;
 	struct submit_ctx sctx;
 	u8 res = _SUCCESS;
 
@@ -1363,7 +1363,7 @@ u8 rtw_setstakey_cmd(_adapter *padapter, struct sta_info *sta, u8 key_type, bool
 {
 	struct cmd_obj			*ph2c;
 	struct set_stakey_parm	*psetstakey_para;
-	struct cmd_priv			*pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv			*pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	struct set_stakey_rsp		*psetstakey_rsp = NULL;
 
 	struct mlme_priv			*pmlmepriv = &padapter->mlmepriv;
@@ -1437,7 +1437,7 @@ u8 rtw_clearstakey_cmd(_adapter *padapter, struct sta_info *sta, u8 enqueue)
 {
 	struct cmd_obj			*ph2c;
 	struct set_stakey_parm	*psetstakey_para;
-	struct cmd_priv			*pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv			*pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	struct set_stakey_rsp		*psetstakey_rsp = NULL;
 	s16 cam_id = 0;
 	u8	res = _SUCCESS;
@@ -1495,7 +1495,7 @@ exit:
 
 u8 rtw_addbareq_cmd(_adapter *padapter, u8 tid, u8 *addr)
 {
-	struct cmd_priv		*pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv		*pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	struct cmd_obj		*ph2c;
 	struct addBaReq_parm	*paddbareq_parm;
 
@@ -1533,7 +1533,7 @@ exit:
 
 u8 rtw_addbarsp_cmd(_adapter *padapter, u8 *addr, u16 tid, u8 status, u8 size, u16 start_seq)
 {
-	struct cmd_priv *pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	struct cmd_obj *ph2c;
 	struct addBaRsp_parm *paddBaRsp_parm;
 	u8 res = _SUCCESS;
@@ -1573,7 +1573,7 @@ u8 rtw_reset_securitypriv_cmd(_adapter *padapter)
 {
 	struct cmd_obj		*ph2c;
 	struct drvextra_cmd_parm  *pdrvextra_cmd_parm;
-	struct cmd_priv	*pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv	*pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	u8	res = _SUCCESS;
 
 
@@ -1617,7 +1617,7 @@ u8 rtw_free_assoc_resources_cmd(_adapter *padapter, u8 lock_scanned_queue, int f
 {
 	struct cmd_obj *cmd;
 	struct drvextra_cmd_parm  *pdrvextra_cmd_parm;
-	struct cmd_priv	*pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv	*pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	struct submit_ctx sctx;
 	u8	res = _SUCCESS;
 
@@ -1668,7 +1668,7 @@ u8 rtw_dynamic_chk_wk_cmd(_adapter *padapter)
 {
 	struct cmd_obj		*ph2c;
 	struct drvextra_cmd_parm  *pdrvextra_cmd_parm;
-	struct cmd_priv	*pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv	*pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	u8	res = _SUCCESS;
 
 
@@ -1707,7 +1707,7 @@ exit:
 u8 rtw_iqk_cmd(_adapter *padapter, u8 flags)
 {
 	struct cmd_obj *pcmdobj;
-	struct cmd_priv *pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	struct submit_ctx sctx;
 	u8 res = _SUCCESS;
 
@@ -1749,7 +1749,7 @@ u8 rtw_set_chbw_cmd(_adapter *padapter, u8 ch, u8 bw, u8 ch_offset, u8 flags)
 {
 	struct cmd_obj *pcmdobj;
 	struct set_ch_parm *set_ch_parm;
-	struct cmd_priv *pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	struct submit_ctx sctx;
 	u8 res = _SUCCESS;
 
@@ -1816,7 +1816,7 @@ static u8 _rtw_set_chplan_cmd(_adapter *adapter, int flags, u8 chplan, const str
 {
 	struct cmd_obj *cmdobj;
 	struct	SetChannelPlan_param *parm;
-	struct cmd_priv *pcmdpriv = &adapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(adapter)->cmdpriv;
 	struct submit_ctx sctx;
 	u8 res = _SUCCESS;
 
@@ -1969,7 +1969,7 @@ u8 rtw_get_chplan_cmd(_adapter *adapter, int flags, struct get_chplan_resp **res
 {
 	struct cmd_obj *cmdobj;
 	struct get_channel_plan_param *parm;
-	struct cmd_priv *pcmdpriv = &adapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(adapter)->cmdpriv;
 	struct submit_ctx sctx;
 	u8 res = _FAIL;
 
@@ -2036,7 +2036,7 @@ u8 rtw_led_blink_cmd(_adapter *padapter, void *pLed)
 {
 	struct	cmd_obj	*pcmdobj;
 	struct	LedBlink_param *ledBlink_param;
-	struct	cmd_priv   *pcmdpriv = &padapter->cmdpriv;
+	struct	cmd_priv   *pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 
 	u8	res = _SUCCESS;
 
@@ -2069,7 +2069,7 @@ exit:
 u8 rtw_set_csa_cmd(_adapter *adapter)
 {
 	struct cmd_obj *cmdobj;
-	struct cmd_priv *cmdpriv = &adapter->cmdpriv;
+	struct cmd_priv *cmdpriv = &adapter_to_dvobj(adapter)->cmdpriv;
 	u8	res = _SUCCESS;
 
 	cmdobj = rtw_zmalloc(sizeof(struct cmd_obj));
@@ -2092,7 +2092,7 @@ u8 rtw_tdls_cmd(_adapter *padapter, u8 *addr, u8 option)
 	struct	cmd_obj	*pcmdobj;
 	struct	TDLSoption_param	*TDLSoption;
 	struct	mlme_priv *pmlmepriv = &padapter->mlmepriv;
-	struct	cmd_priv   *pcmdpriv = &padapter->cmdpriv;
+	struct	cmd_priv   *pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 
 	pcmdobj = (struct	cmd_obj *)rtw_zmalloc(sizeof(struct	cmd_obj));
 	if (pcmdobj == NULL) {
@@ -2125,7 +2125,7 @@ u8 rtw_enable_hw_update_tsf_cmd(_adapter *padapter)
 {
 	struct cmd_obj *ph2c;
 	struct drvextra_cmd_parm	*pdrvextra_cmd_parm;
-	struct cmd_priv *pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	u8	res = _SUCCESS;
 
 
@@ -2159,7 +2159,7 @@ u8 rtw_periodic_tsf_update_end_cmd(_adapter *adapter)
 {
 	struct cmd_obj *cmdobj;
 	struct drvextra_cmd_parm *parm;
-	struct cmd_priv *cmdpriv = &adapter->cmdpriv;
+	struct cmd_priv *cmdpriv = &adapter_to_dvobj(adapter)->cmdpriv;
 	u8 res = _SUCCESS;
 
 	cmdobj = (struct cmd_obj *)rtw_zmalloc(sizeof(struct cmd_obj));
@@ -2208,7 +2208,7 @@ u8 rtw_ssmps_wk_cmd(_adapter *adapter, struct sta_info *sta, u8 smps, u8 enqueue
 	struct cmd_obj *cmdobj;
 	struct drvextra_cmd_parm *cmd_parm;
 	struct ssmps_cmd_parm *ssmp_param;
-	struct cmd_priv	*pcmdpriv = &adapter->cmdpriv;
+	struct cmd_priv	*pcmdpriv = &adapter_to_dvobj(adapter)->cmdpriv;
 	u8	res = _SUCCESS;
 
 	if (enqueue) {
@@ -2391,7 +2391,7 @@ u8 rtw_ctrl_txss_wk_cmd(_adapter *adapter, struct sta_info *sta, bool tx_1ss, u8
 	struct cmd_obj *cmdobj;
 	struct drvextra_cmd_parm *cmd_parm;
 	struct txss_cmd_parm *txss_param;
-	struct cmd_priv *pcmdpriv = &adapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(adapter)->cmdpriv;
 	struct submit_ctx sctx;
 	u8	res = _SUCCESS;
 
@@ -3117,7 +3117,7 @@ static u8 _rtw_lps_ctrl_wk_cmd(_adapter *adapter, u8 lps_ctrl_type, s8 lps_level
 	struct cmd_obj *cmdobj;
 	struct drvextra_cmd_parm *parm;
 	struct lps_ctrl_wk_parm *wk_parm = NULL;
-	struct cmd_priv	*pcmdpriv = &adapter->cmdpriv;
+	struct cmd_priv	*pcmdpriv = &adapter_to_dvobj(adapter)->cmdpriv;
 	struct submit_ctx sctx;
 	u8	res = _SUCCESS;
 
@@ -3212,7 +3212,7 @@ u8 rtw_dm_in_lps_wk_cmd(_adapter *padapter)
 {
 	struct cmd_obj	*ph2c;
 	struct drvextra_cmd_parm	*pdrvextra_cmd_parm;
-	struct cmd_priv	*pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv	*pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	u8	res = _SUCCESS;
 
 
@@ -3287,7 +3287,7 @@ u8 rtw_lps_change_dtim_cmd(_adapter *padapter, u8 dtim)
 {
 	struct cmd_obj	*ph2c;
 	struct drvextra_cmd_parm	*pdrvextra_cmd_parm;
-	struct cmd_priv	*pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv	*pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	u8	res = _SUCCESS;
 	/*
 	#ifdef CONFIG_CONCURRENT_MODE
@@ -3335,7 +3335,7 @@ u8 rtw_rpt_timer_cfg_cmd(_adapter *padapter, u16 minRptTime)
 {
 	struct cmd_obj		*ph2c;
 	struct drvextra_cmd_parm	*pdrvextra_cmd_parm;
-	struct cmd_priv	*pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv	*pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 
 	u8	res = _SUCCESS;
 
@@ -3377,7 +3377,7 @@ u8 rtw_antenna_select_cmd(_adapter *padapter, u8 antenna, u8 enqueue)
 {
 	struct cmd_obj		*ph2c;
 	struct drvextra_cmd_parm	*pdrvextra_cmd_parm;
-	struct cmd_priv	*pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv	*pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
 	u8	bSupportAntDiv = _FALSE;
 	u8	res = _SUCCESS;
@@ -3433,7 +3433,7 @@ u8 rtw_dm_ra_mask_wk_cmd(_adapter *padapter, u8 *psta)
 {
 	struct cmd_obj	*ph2c;
 	struct drvextra_cmd_parm	*pdrvextra_cmd_parm;
-	struct cmd_priv	*pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv	*pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	u8	res = _SUCCESS;
 
 
@@ -3482,7 +3482,7 @@ u8 p2p_protocol_wk_cmd(_adapter *padapter, int intCmdType)
 	struct cmd_obj	*ph2c;
 	struct drvextra_cmd_parm	*pdrvextra_cmd_parm;
 	struct wifidirect_info	*pwdinfo = &(padapter->wdinfo);
-	struct cmd_priv	*pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv	*pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	u8	res = _SUCCESS;
 
 
@@ -3577,7 +3577,7 @@ inline u8 rtw_mgnt_tx_cmd(_adapter *adapter, u8 tx_ch, u8 no_cck, const u8 *buf,
 	struct cmd_obj *cmdobj;
 	struct drvextra_cmd_parm *parm;
 	struct mgnt_tx_parm *mgnt_parm;
-	struct cmd_priv *pcmdpriv = &adapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(adapter)->cmdpriv;
 	struct submit_ctx sctx;
 	u8	res = _SUCCESS;
 
@@ -3649,7 +3649,7 @@ u8 rtw_ps_cmd(_adapter *padapter)
 {
 	struct cmd_obj		*ppscmd;
 	struct drvextra_cmd_parm	*pdrvextra_cmd_parm;
-	struct cmd_priv	*pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv	*pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 
 	u8	res = _SUCCESS;
 
@@ -3846,7 +3846,7 @@ u8 rtw_chk_hi_queue_cmd(_adapter *padapter)
 {
 	struct cmd_obj	*ph2c;
 	struct drvextra_cmd_parm	*pdrvextra_cmd_parm;
-	struct cmd_priv	*pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv	*pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	u8	res = _SUCCESS;
 
 	ph2c = (struct cmd_obj *)rtw_zmalloc(sizeof(struct cmd_obj));
@@ -3981,7 +3981,7 @@ u8 rtw_dfs_rd_cmd(_adapter *adapter, bool enqueue)
 {
 	struct cmd_obj *cmdobj;
 	struct drvextra_cmd_parm *parm;
-	struct cmd_priv *cmdpriv = &adapter->cmdpriv;
+	struct cmd_priv *cmdpriv = &adapter_to_dvobj(adapter)->cmdpriv;
 	u8 res = _FAIL;
 
 	if (enqueue) {
@@ -4220,7 +4220,7 @@ u8 rtw_dfs_rd_en_decision_cmd(_adapter *adapter)
 {
 	struct cmd_obj *cmdobj;
 	struct drvextra_cmd_parm *parm;
-	struct cmd_priv *cmdpriv = &adapter->cmdpriv;
+	struct cmd_priv *cmdpriv = &adapter_to_dvobj(adapter)->cmdpriv;
 	u8 res = _FAIL;
 
 	cmdobj = rtw_zmalloc(sizeof(struct cmd_obj));
@@ -4361,7 +4361,7 @@ u8 rtw_btinfo_cmd(_adapter *adapter, u8 *buf, u16 len)
 	struct cmd_obj *ph2c;
 	struct drvextra_cmd_parm *pdrvextra_cmd_parm;
 	u8 *btinfo;
-	struct cmd_priv *pcmdpriv = &adapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(adapter)->cmdpriv;
 	u8	res = _SUCCESS;
 
 	ph2c = (struct cmd_obj *)rtw_zmalloc(sizeof(struct cmd_obj));
@@ -4413,7 +4413,7 @@ u8 rtw_btc_reduce_wl_txpwr_cmd(_adapter *adapter, u32 val)
 {
 	struct cmd_obj *pcmdobj;
 	struct drvextra_cmd_parm *pdrvextra_cmd_parm;
-	struct cmd_priv *pcmdpriv = &adapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(adapter)->cmdpriv;
 	u8	res = _SUCCESS;
 
 	pcmdobj = (struct cmd_obj *)rtw_zmalloc(sizeof(struct cmd_obj));
@@ -4448,7 +4448,7 @@ u8 rtw_test_h2c_cmd(_adapter *adapter, u8 *buf, u8 len)
 	struct cmd_obj *pcmdobj;
 	struct drvextra_cmd_parm *pdrvextra_cmd_parm;
 	u8 *ph2c_content;
-	struct cmd_priv *pcmdpriv = &adapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(adapter)->cmdpriv;
 	u8	res = _SUCCESS;
 
 	pcmdobj = (struct cmd_obj *)rtw_zmalloc(sizeof(struct cmd_obj));
@@ -4615,7 +4615,7 @@ u8 rtw_mp_cmd(_adapter *adapter, u8 mp_cmd_id, u8 flags)
 {
 	struct cmd_obj *cmdobj;
 	struct drvextra_cmd_parm *parm;
-	struct cmd_priv *pcmdpriv = &adapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(adapter)->cmdpriv;
 	struct submit_ctx sctx;
 	u8	res = _SUCCESS;
 
@@ -4687,7 +4687,7 @@ static u8 rtw_customer_str_cmd(_adapter *adapter, u8 write, const u8 *cstr)
 	struct cmd_obj *cmdobj;
 	struct drvextra_cmd_parm *parm;
 	u8 *str = NULL;
-	struct cmd_priv *pcmdpriv = &adapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(adapter)->cmdpriv;
 	struct submit_ctx sctx;
 	u8 res = _SUCCESS;
 
@@ -4760,7 +4760,7 @@ u8 rtw_c2h_wk_cmd(PADAPTER padapter, u8 *pbuf, u16 length, u8 type)
 {
 	struct cmd_obj *ph2c;
 	struct drvextra_cmd_parm *pdrvextra_cmd_parm;
-	struct cmd_priv *pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	u8 *extra_cmd_buf;
 	u8 res = _SUCCESS;
 
@@ -4815,7 +4815,7 @@ inline u8 rtw_c2h_packet_wk_cmd(_adapter *adapter, u8 *c2h_evt, u16 length)
 
 static u8 _rtw_run_in_thread_cmd(_adapter *adapter, void (*func)(void *), void *context, s32 timeout_ms)
 {
-	struct cmd_priv *cmdpriv = &adapter->cmdpriv;
+	struct cmd_priv *cmdpriv = &adapter_to_dvobj(adapter)->cmdpriv;
 	struct cmd_obj *cmdobj;
 	struct RunInThread_param *parm;
 	struct submit_ctx sctx;
@@ -4898,7 +4898,7 @@ exit:
 
 u8 session_tracker_cmd(_adapter *adapter, u8 cmd, struct sta_info *sta, u8 *local_naddr, u8 *local_port, u8 *remote_naddr, u8 *remote_port)
 {
-	struct cmd_priv	*cmdpriv = &adapter->cmdpriv;
+	struct cmd_priv	*cmdpriv = &adapter_to_dvobj(adapter)->cmdpriv;
 	struct cmd_obj *cmdobj;
 	struct drvextra_cmd_parm *cmd_parm;
 	struct st_cmd_parm *st_parm;
@@ -5206,7 +5206,7 @@ u8 rtw_req_per_cmd(_adapter *adapter)
 {
 	struct cmd_obj *cmdobj;
 	struct drvextra_cmd_parm *parm;
-	struct cmd_priv *pcmdpriv = &adapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(adapter)->cmdpriv;
 	struct submit_ctx sctx;
 	u8 res = _SUCCESS;
 
@@ -5609,7 +5609,7 @@ u8 set_txq_params_cmd(_adapter *adapter, u32 ac_parm, u8 ac_type)
 {
 	struct cmd_obj *cmdobj;
 	struct drvextra_cmd_parm *pdrvextra_cmd_parm;
-	struct cmd_priv *pcmdpriv = &adapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(adapter)->cmdpriv;
 	u8 *ac_parm_buf = NULL;
 	u8 sz;
 	u8 res = _SUCCESS;
@@ -5657,7 +5657,7 @@ u8 rtw_write_bcnlen_to_fw_cmd(_adapter *padapter, u16 bcn_len)
 {
 	struct cmd_obj *pcmd;
 	struct write_bcnlen_param *parm;
-	struct cmd_priv *pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	u8 res = _SUCCESS;
 
 	pcmd = (struct cmd_obj *)rtw_zmalloc(sizeof(struct cmd_obj));

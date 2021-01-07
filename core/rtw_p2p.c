@@ -4210,7 +4210,7 @@ u8 p2p_ps_wk_cmd(_adapter *padapter, u8 p2p_ps_state, u8 enqueue)
 	struct cmd_obj	*ph2c;
 	struct drvextra_cmd_parm	*pdrvextra_cmd_parm;
 	struct wifidirect_info	*pwdinfo = &(padapter->wdinfo);
-	struct cmd_priv	*pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv	*pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	u8	res = _SUCCESS;
 
 

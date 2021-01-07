@@ -2741,7 +2741,7 @@ exit:
 
 u8 rtw_ap_set_sta_key(_adapter *adapter, const u8 *addr, u8 alg, const u8 *key, u8 keyid, u8 gk)
 {
-	struct cmd_priv *cmdpriv = &adapter->cmdpriv;
+	struct cmd_priv *cmdpriv = &adapter_to_dvobj(adapter)->cmdpriv;
 	struct cmd_obj *cmd;
 	struct set_stakey_parm *param;
 	u8	res = _SUCCESS;
@@ -2792,7 +2792,7 @@ static int rtw_ap_set_key(_adapter *padapter, u8 *key, u8 alg, int keyid, u8 set
 	u8 keylen;
 	struct cmd_obj *pcmd;
 	struct setkey_parm *psetkeyparm;
-	struct cmd_priv	*pcmdpriv = &(padapter->cmdpriv);
+	struct cmd_priv	*pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	int res = _SUCCESS;
 
 	/* RTW_INFO("%s\n", __FUNCTION__); */

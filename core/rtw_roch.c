@@ -291,7 +291,7 @@ u8 rtw_roch_wk_cmd(_adapter *padapter, int intCmdType, struct rtw_roch_parm *roc
 {
 	struct cmd_obj	*ph2c = NULL;
 	struct drvextra_cmd_parm	*pdrvextra_cmd_parm = NULL;
-	struct cmd_priv	*pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv	*pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	struct submit_ctx sctx;
 	u8	res = _SUCCESS;
 

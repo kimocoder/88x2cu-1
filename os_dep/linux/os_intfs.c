@@ -2366,7 +2366,7 @@ u32 rtw_start_drv_threads(_adapter *padapter)
 				_status = _FAIL;
 			}
 			else
-				_rtw_down_sema(&padapter->cmdpriv.start_cmdthread_sema); /* wait for cmd_thread to run */
+				_rtw_down_sema(&adapter_to_dvobj(padapter)->cmdpriv.start_cmdthread_sema); /* wait for cmd_thread to run */
 		}
 	}
 
@@ -2795,6 +2795,12 @@ u8 devobj_trx_resource_init(struct dvobj_priv *dvobj)
 		goto exit;
 #endif
 
+	ret = rtw_init_cmd_priv(dvobj);
+	if (ret == _FAIL) {
+		RTW_ERR("%s rtw_init_cmd_priv failed\n", __func__);
+		goto exit;
+	}
+
 exit:
 	return ret;
 }
@@ -2805,6 +2811,7 @@ void devobj_trx_resource_deinit(struct dvobj_priv *dvobj)
 	rtw_free_lite_xmit_resource(dvobj);
 	rtw_free_lite_recv_resource(dvobj);
 #endif
+	rtw_free_cmd_priv(dvobj);
 }
 
 
@@ -2876,12 +2883,14 @@ u8 rtw_init_drv_sw(_adapter *padapter)
 
 	ret8 = rtw_init_default_value(padapter);
 
+#if 0 // NEO : move to devobj_trx_resource_init
 	if ((rtw_init_cmd_priv(&padapter->cmdpriv)) == _FAIL) {
 		ret8 = _FAIL;
 		goto exit;
 	}
+#endif // if 0 NEO
 
-	padapter->cmdpriv.padapter = padapter;
+	adapter_to_dvobj(padapter)->cmdpriv.padapter = padapter;
 
 	if ((rtw_init_evt_priv(&padapter->evtpriv)) == _FAIL) {
 		ret8 = _FAIL;
@@ -3146,7 +3155,8 @@ u8 rtw_free_drv_sw(_adapter *padapter)
 	rtw_free_rm_priv(padapter);
 #endif
 
-	rtw_free_cmd_priv(&padapter->cmdpriv);
+	// NEO : move to devobj_trx_resource_deinit()
+	//rtw_free_cmd_priv(&padapter->cmdpriv);
 
 	rtw_free_evt_priv(&padapter->evtpriv);
 
@@ -4768,7 +4778,7 @@ void rtw_dev_unload(PADAPTER padapter)
 	struct pwrctrl_priv *pwrctl = adapter_to_pwrctl(padapter);
 	struct dvobj_priv *pobjpriv = padapter->dvobj;
 	struct debug_priv *pdbgpriv = &pobjpriv->drv_dbg;
-	struct cmd_priv *pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 
 	if (padapter->bup == _TRUE) {
 		RTW_INFO("==> "FUNC_ADPT_FMT"\n", FUNC_ADPT_ARG(padapter));

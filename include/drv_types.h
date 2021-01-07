@@ -1775,7 +1775,7 @@ struct _ADAPTER {
 	struct dvobj_priv *dvobj;
 	struct	mlme_priv mlmepriv;
 	struct	mlme_ext_priv mlmeextpriv;
-	struct	cmd_priv	cmdpriv;
+	//struct	cmd_priv	cmdpriv;
 	struct	evt_priv	evtpriv;
 
 #ifdef CONFIG_RTW_80211K

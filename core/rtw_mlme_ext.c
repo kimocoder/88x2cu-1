@@ -11731,7 +11731,7 @@ void report_survey_event(_adapter *padapter, union recv_frame *precv_frame)
 		return;
 
 	pmlmeext = &padapter->mlmeextpriv;
-	pcmdpriv = &padapter->cmdpriv;
+	pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 
 	pcmd_obj = (struct cmd_obj *)rtw_zmalloc(sizeof(struct cmd_obj));
 	if (pcmd_obj == NULL)
@@ -11787,7 +11787,7 @@ void report_surveydone_event(_adapter *padapter, bool acs)
 	struct surveydone_event *psurveydone_evt;
 	struct rtw_evt_header *evt_hdr;
 	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
-	struct cmd_priv *pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 
 	pcmd_obj = (struct cmd_obj *)rtw_zmalloc(sizeof(struct cmd_obj));
 	if (pcmd_obj == NULL)
@@ -11836,7 +11836,7 @@ u32 report_join_res(_adapter *padapter, int aid_res, u16 status)
 	struct rtw_evt_header *evt_hdr;
 	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
 	struct mlme_ext_info *pmlmeinfo = &(pmlmeext->mlmext_info);
-	struct cmd_priv *pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	u32 ret = _FAIL;
 
 	pcmd_obj = (struct cmd_obj *)rtw_zmalloc(sizeof(struct cmd_obj));
@@ -11888,7 +11888,7 @@ void report_wmm_edca_update(_adapter *padapter)
 	struct wmm_event *pwmm_event;
 	struct rtw_evt_header *evt_hdr;
 	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
-	struct cmd_priv *pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 
 	pcmd_obj = (struct cmd_obj *)rtw_zmalloc(sizeof(struct cmd_obj));
 	if (pcmd_obj == NULL)
@@ -11934,7 +11934,7 @@ u32 report_del_sta_event(_adapter *padapter, unsigned char *MacAddr, unsigned sh
 	struct stadel_event *pdel_sta_evt;
 	struct rtw_evt_header *evt_hdr;
 	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
-	struct cmd_priv *pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	u8 res = _SUCCESS;
 
 	/* prepare cmd parameter */
@@ -12000,7 +12000,7 @@ void report_add_sta_event(_adapter *padapter, unsigned char *MacAddr)
 	struct stassoc_event *padd_sta_evt;
 	struct rtw_evt_header *evt_hdr;
 	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
-	struct cmd_priv *pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 
 	pcmd_obj = (struct cmd_obj *)rtw_zmalloc(sizeof(struct cmd_obj));
 	if (pcmd_obj == NULL)
@@ -13042,7 +13042,7 @@ void survey_timer_hdl(void *ctx)
 	_adapter *padapter = (_adapter *)ctx;
 	struct cmd_obj *cmd;
 	struct sitesurvey_parm *psurveyPara;
-	struct cmd_priv *pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
 
 	if (mlmeext_scan_state(pmlmeext) > SCAN_DISABLE) {
@@ -13300,7 +13300,7 @@ void report_sta_timeout_event(_adapter *padapter, u8 *MacAddr, unsigned short re
 	struct stadel_event *pdel_sta_evt;
 	struct rtw_evt_header *evt_hdr;
 	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
-	struct cmd_priv *pcmdpriv = &padapter->cmdpriv;
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 
 	pcmd_obj = (struct cmd_obj *)rtw_zmalloc(sizeof(struct cmd_obj));
 	if (pcmd_obj == NULL)
@@ -15615,7 +15615,7 @@ exit:
 u8 chk_bmc_sleepq_cmd(_adapter *padapter)
 {
 	struct cmd_obj *ph2c;
-	struct cmd_priv *pcmdpriv = &(padapter->cmdpriv);
+	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	u8 res = _SUCCESS;
 
 
@@ -15639,7 +15639,7 @@ u8 set_tx_beacon_cmd(_adapter *padapter, u8 flags)
 {
 	struct cmd_obj	*ph2c;
 	struct Tx_Beacon_param	*ptxBeacon_parm;
-	struct cmd_priv	*pcmdpriv = &(padapter->cmdpriv);
+	struct cmd_priv	*pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 	struct mlme_ext_priv	*pmlmeext = &padapter->mlmeextpriv;
 	struct mlme_ext_info	*pmlmeinfo = &(pmlmeext->mlmext_info);
 	struct submit_ctx sctx;
