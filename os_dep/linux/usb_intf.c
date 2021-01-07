@@ -1075,8 +1075,8 @@ static int rtw_resume_process(_adapter *padapter)
 	 * But they will not be clear in intf_start during wow resume flow.
 	 * It should move to os_intf in the feature.
 	 */
-	RTW_ENABLE_FUNC(padapter, DF_RX_BIT);
-	RTW_ENABLE_FUNC(padapter, DF_TX_BIT);
+	RTW_ENABLE_FUNC(adapter_to_dvobj(padapter), DF_RX_BIT);
+	RTW_ENABLE_FUNC(adapter_to_dvobj(padapter), DF_TX_BIT);
 
 	ret =  rtw_resume_common(padapter);
 

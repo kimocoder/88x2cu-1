@@ -5128,8 +5128,8 @@ static u8 rtw_hal_pause_rx_dma(_adapter *adapter)
 			/* stop interface before leave */
 			if (_TRUE == hal->usb_intf_start) {
 				rtw_intf_stop(adapter);
-				RTW_ENABLE_FUNC(adapter, DF_RX_BIT);
-				RTW_ENABLE_FUNC(adapter, DF_TX_BIT);
+				RTW_ENABLE_FUNC(adapter_to_dvobj(adapter), DF_RX_BIT);
+				RTW_ENABLE_FUNC(adapter_to_dvobj(adapter), DF_TX_BIT);
 			}
 #endif /* CONFIG_USB_HCI */
 
@@ -10385,7 +10385,7 @@ static void rtw_hal_wow_enable(_adapter *adapter)
 		/* Start Usb TxDMA */
 		if(iface) {
 			RTW_INFO(ADPT_FMT "enable TX\n", ADPT_ARG(iface));
-			RTW_ENABLE_FUNC(iface, DF_TX_BIT);
+			RTW_ENABLE_FUNC(adapter_to_dvobj(iface), DF_TX_BIT);
 		}
 	}
 

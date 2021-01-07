@@ -2481,8 +2481,8 @@ u8 rtw_init_default_value(_adapter *padapter)
 #endif /* CONFIG_MCC_MODE */
 
 	/* misc. */
-	RTW_ENABLE_FUNC(padapter, DF_RX_BIT);
-	RTW_ENABLE_FUNC(padapter, DF_TX_BIT);
+	RTW_ENABLE_FUNC(adapter_to_dvobj(padapter), DF_RX_BIT);
+	RTW_ENABLE_FUNC(adapter_to_dvobj(padapter), DF_TX_BIT);
 	padapter->bLinkInfoDump = 0;
 	padapter->bNotifyChannelChange = _FALSE;
 #ifdef CONFIG_P2P
@@ -2750,8 +2750,8 @@ u8 rtw_reset_drv_sw(_adapter *padapter)
 	/* hal_priv */
 	rtw_hal_def_value_init(padapter);
 
-	RTW_ENABLE_FUNC(padapter, DF_RX_BIT);
-	RTW_ENABLE_FUNC(padapter, DF_TX_BIT);
+	RTW_ENABLE_FUNC(adapter_to_dvobj(padapter), DF_RX_BIT);
+	RTW_ENABLE_FUNC(adapter_to_dvobj(padapter), DF_TX_BIT);
 
 	padapter->bLinkInfoDump = 0;
 

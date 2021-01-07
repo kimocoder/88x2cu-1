@@ -7932,8 +7932,8 @@ static int rtw_wowlan_ctrl(struct net_device *dev,
 
 	else if (_rtw_memcmp(extra, "disable", 7)) {
 #ifdef CONFIG_USB_HCI
-		RTW_ENABLE_FUNC(padapter, DF_RX_BIT);
-		RTW_ENABLE_FUNC(padapter, DF_TX_BIT);
+		RTW_ENABLE_FUNC(adapter_to_dvobj(padapter), DF_RX_BIT);
+		RTW_ENABLE_FUNC(adapter_to_dvobj(padapter), DF_TX_BIT);
 #endif
 		rtw_resume_common(padapter);
 
@@ -8177,8 +8177,8 @@ static int rtw_ap_wowlan_ctrl(struct net_device *dev,
 		rtw_suspend_common(padapter);
 	} else if (_rtw_memcmp(extra, "disable", 7)) {
 #ifdef CONFIG_USB_HCI
-		RTW_ENABLE_FUNC(padapter, DF_RX_BIT);
-		RTW_ENABLE_FUNC(padapter, DF_TX_BIT);
+		RTW_ENABLE_FUNC(adapter_to_dvobj(padapter), DF_RX_BIT);
+		RTW_ENABLE_FUNC(adapter_to_dvobj(padapter), DF_TX_BIT);
 #endif
 		rtw_resume_common(padapter);
 	} else {

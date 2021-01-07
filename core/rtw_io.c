@@ -381,7 +381,7 @@ void _rtw_read_port_cancel(_adapter *adapter)
 
 	_read_port_cancel = pintfhdl->io_ops._read_port_cancel;
 
-	RTW_DISABLE_FUNC(adapter, DF_RX_BIT);
+	RTW_DISABLE_FUNC(adapter_to_dvobj(adapter), DF_RX_BIT);
 
 	if (_read_port_cancel)
 		_read_port_cancel(pintfhdl);
@@ -433,11 +433,12 @@ void _rtw_write_port_cancel(_adapter *adapter)
 
 	_write_port_cancel = pintfhdl->io_ops._write_port_cancel;
 
-	RTW_DISABLE_FUNC(adapter, DF_TX_BIT);
+	RTW_DISABLE_FUNC(adapter_to_dvobj(adapter), DF_TX_BIT);
 
 	if (_write_port_cancel)
 		_write_port_cancel(pintfhdl);
 }
+
 int rtw_init_io_priv(_adapter *padapter, void (*set_intf_ops)(_adapter *padapter, struct _io_ops *pops))
 {
 	struct io_priv	*piopriv = &padapter->iopriv;

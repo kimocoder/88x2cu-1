@@ -6,6 +6,11 @@ EXTRA_CFLAGS += -O1
 #EXTRA_CFLAGS += -Werror
 #EXTRA_CFLAGS += -pedantic
 #EXTRA_CFLAGS += -Wshadow -Wpointer-arith -Wcast-qual -Wstrict-prototypes -Wmissing-prototypes
+EXTRA_CLFAGS += -Wfunction-cast
+EXTRA_CLFAGS += -fuse-ld=lld -flto -fvisibility=default
+EXTRA_CLFAGS += -fsanitize=cfi -fsanitize=cfi-cast-strict -fsanitize=cfi-icall -fsanitize-cfi-icall-generalize-pointers
+EXTRA_CLFAGS += -fsanitize-coverage-indirect-calls
+EXTRA_CFLAGS += -fno-sanitize-cfi-canonical-jump-tables
 
 EXTRA_CFLAGS += -Wno-unused-variable
 #EXTRA_CFLAGS += -Wno-unused-value
@@ -23,6 +28,7 @@ endif
 EXTRA_CFLAGS += -I$(src)/include
 
 EXTRA_LDFLAGS += --strip-debug
+#EXTRA_LDFLAGS += --lto-whole-program-visibility
 
 CONFIG_AUTOCFG_CP = n
 
