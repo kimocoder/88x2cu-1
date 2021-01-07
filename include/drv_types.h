@@ -1345,7 +1345,6 @@ struct dvobj_priv {
 	u8 iface_nums; /* total number of ifaces used runtime */
 	struct mi_state iface_state;
 
-	struct recv_priv recvpriv;
 
 #ifdef CONFIG_AP_MODE
 	#ifdef CONFIG_SUPPORT_MULTI_BCN
@@ -1413,6 +1412,8 @@ struct dvobj_priv {
 	_lock xmit_block_lock;
 
 	struct pwrctrl_priv pwrctl_priv;
+	struct cmd_priv cmdpriv;
+	struct recv_priv recvpriv;
 
 	struct rtw_traffic_statistics	traffic_stat;
 

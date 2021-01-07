@@ -16,7 +16,6 @@
 #define __CMD_OSDEP_H_
 
 
-extern sint _rtw_init_cmd_priv(struct	cmd_priv *pcmdpriv);
 extern sint _rtw_init_evt_priv(struct evt_priv *pevtpriv);
 extern void _rtw_free_evt_priv(struct	evt_priv *pevtpriv);
 extern void _rtw_free_cmd_priv(struct	cmd_priv *pcmdpriv);

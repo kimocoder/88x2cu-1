@@ -64,6 +64,7 @@ struct cmd_priv {
 	/* u8 cmdthd_running; */
 
 	_adapter *padapter;
+	struct dvobj_priv *dvobj;
 	_mutex sctx_mutex;
 };
 
@@ -174,7 +175,7 @@ extern void rtw_free_evt_obj(struct evt_obj *pcmd);
 void rtw_stop_cmd_thread(_adapter *adapter);
 thread_return rtw_cmd_thread(thread_context context);
 
-extern u32 rtw_init_cmd_priv(struct cmd_priv *pcmdpriv);
+u32 rtw_init_cmd_priv(struct cmd_priv *pcmdpriv);
 extern void rtw_free_cmd_priv(struct cmd_priv *pcmdpriv);
 
 extern u32 rtw_init_evt_priv(struct evt_priv *pevtpriv);
