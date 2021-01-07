@@ -2992,19 +2992,25 @@ unsigned int OnAssocReq(_adapter *padapter, union recv_frame *precv_frame)
 		|| _rtw_memcmp(elems.ssid, cur->Ssid.Ssid, cur->Ssid.SsidLength) == _FALSE
 	) {
 		status = _STATS_FAILURE_;
+		RTW_ERR("%s: ssid mismatch : elems.ssid_len=%d, cur.ssid len=%d\n",
+			 __func__, elems.ssid_len, cur->Ssid.SsidLength);
 		goto OnAssocReqFail;
 	}
 
 	/* (Extended) Supported rates */
 	status = rtw_ap_parse_sta_supported_rates(padapter, pstat
 		, pframe + WLAN_HDR_A3_LEN + ie_offset, pkt_len - WLAN_HDR_A3_LEN - ie_offset);
-	if (status != _STATS_SUCCESSFUL_)
+	if (status != _STATS_SUCCESSFUL_) {
+		RTW_ERR("%s: rtw_ap_parse_sta_supported_rate failed\n", __func__);
 		goto OnAssocReqFail;
+	}
 
 	/* check RSN/WPA/WPS */
 	status = rtw_ap_parse_sta_security_ie(padapter, pstat, &elems);
-	if (status != _STATS_SUCCESSFUL_)
+	if (status != _STATS_SUCCESSFUL_) {
+		RTW_ERR("%s: rtw_ap_parse_sta_security_ie failed\n", __func__);
 		goto OnAssocReqFail;
+	}
 
 	/* check if there is WMM IE & support WWM-PS */
 	rtw_ap_parse_sta_wmm_ie(padapter, pstat
@@ -3073,6 +3079,8 @@ unsigned int OnAssocReq(_adapter *padapter, union recv_frame *precv_frame)
 	/* identify if this is Broadcom sta */
 	/* identify if this is ralink sta */
 	/* Customer proprietary IE */
+
+	RTW_INFO("%s : before 80211K process, status=%d\n", __func__, status);
 
 #ifdef CONFIG_RTW_80211K
 	rtw_ap_parse_sta_rm_en_cap(padapter, pstat, &elems);
@@ -8914,7 +8922,7 @@ void issue_asocrsp(_adapter *padapter, unsigned short status, struct sta_info *p
 	if (rtw_rfctl_is_tx_blocked_by_ch_waiting(adapter_to_rfctl(padapter)))
 		return;
 
-	RTW_INFO("%s\n", __FUNCTION__);
+	RTW_INFO("%s - status:%d\n", __FUNCTION__, status);
 
 	pmgntframe = alloc_mgtxmitframe(pxmitpriv);
 	if (pmgntframe == NULL)
