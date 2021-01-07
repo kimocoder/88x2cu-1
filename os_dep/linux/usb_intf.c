@@ -36,8 +36,8 @@ int ui_pid[3] = {0, 0, 0};
 
 
 extern int pm_netdev_open(struct net_device *pnetdev, u8 bnormal);
-static int rtw_suspend(struct usb_interface *intf, pm_message_t message);
-static int rtw_resume(struct usb_interface *intf);
+static int rtw_dev_suspend(struct usb_interface *intf, pm_message_t message);
+static int rtw_dev_resume(struct usb_interface *intf);
 
 
 static int rtw_dev_probe(struct usb_interface *pusb_intf, const struct usb_device_id *pdid);
@@ -327,10 +327,10 @@ struct rtw_usb_drv usb_drv = {
 	.usbdrv.probe = rtw_dev_probe,
 	.usbdrv.disconnect = rtw_dev_remove,
 	.usbdrv.id_table = rtw_usb_id_tbl,
-	.usbdrv.suspend =  rtw_suspend,
-	.usbdrv.resume = rtw_resume,
+	.usbdrv.suspend =  rtw_dev_suspend,
+	.usbdrv.resume = rtw_dev_resume,
 #if (LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 22))
-	.usbdrv.reset_resume   = rtw_resume,
+	.usbdrv.reset_resume   = rtw_dev_resume,
 #endif
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 19))
@@ -1029,12 +1029,12 @@ error_exit:
 }
 #endif
 
-static int rtw_suspend(struct usb_interface *pusb_intf, pm_message_t message)
+static int rtw_dev_suspend(struct usb_interface *pusb_intf, pm_message_t message)
 {
 	struct dvobj_priv *dvobj;
 	struct pwrctrl_priv *pwrpriv;
 	struct debug_priv *pdbgpriv;
-	PADAPTER padapter;
+	_adapter *padapter;
 	int ret = 0;
 
 
@@ -1055,7 +1055,7 @@ exit:
 	return ret;
 }
 
-int rtw_resume_process(_adapter *padapter)
+static int rtw_resume_process(_adapter *padapter)
 {
 	int ret;
 	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
@@ -1083,12 +1083,12 @@ int rtw_resume_process(_adapter *padapter)
 	return ret;
 }
 
-static int rtw_resume(struct usb_interface *pusb_intf)
+static int rtw_dev_resume(struct usb_interface *pusb_intf)
 {
 	struct dvobj_priv *dvobj;
 	struct pwrctrl_priv *pwrpriv;
 	struct debug_priv *pdbgpriv;
-	PADAPTER padapter;
+	_adapter *padapter;
 	struct mlme_ext_priv *pmlmeext;
 	int ret = 0;
 
