@@ -566,8 +566,6 @@ static inline bool _os_atomic_inc_unless(void *d, _os_atomic *v, int u)
 }
 */
 
-// NEO : TODO
-#if 0
 static inline u8 _os_tasklet_init(void *drv_priv, _os_tasklet *task,
 	void (*call_back_func)(void* context), void *context)
 {
@@ -583,6 +581,7 @@ static inline u8 _os_tasklet_deinit(void *drv_priv, _os_tasklet *task)
 	return 0;
 }
 
+
 static inline u8 _os_tasklet_schedule(void *drv_priv, _os_tasklet *task)
 {
 	#if 1
@@ -592,6 +591,8 @@ static inline u8 _os_tasklet_schedule(void *drv_priv, _os_tasklet *task)
 	#endif
 	return 0;
 }
+
+#if 0
 
 static __inline u8 _os_thread_init(	void *drv_priv, _os_thread *thread,
 					int (*call_back_func)(void * context),

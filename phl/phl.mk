@@ -18,11 +18,11 @@ phl_path_d1 := $(src)/$(HAL)
 endif
 
 _PHL_FILES := $(phl_path)phl_init.o \
+		$(phl_path)phl_tx.o \
 		$(phl_path)phl_sec.o
 
 #_PHL_FILES := $(phl_path)phl_init.o \
 			$(phl_path)phl_debug.o \
-			$(phl_path)phl_tx.o \
 			$(phl_path)phl_rx.o \
 			$(phl_path)phl_rx_agg.o \
 			$(phl_path)phl_fsm.o \

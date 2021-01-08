@@ -7199,8 +7199,6 @@ s32 core_tx_prepare_phl(_adapter *padapter, struct xmit_frame *pxframe)
 
 s32 core_tx_call_phl(_adapter *padapter, struct xmit_frame *pxframe, void *txsc_pkt)
 {
-// NEO : TODO : mark off first
-#if 0
 	struct rtw_xmit_req *txreq = NULL;
 	void *phl = padapter->dvobj->phl;
 	u32 idx = 0;
@@ -7245,7 +7243,6 @@ s32 core_tx_call_phl(_adapter *padapter, struct xmit_frame *pxframe, void *txsc_
 #endif
 		rtw_count_tx_stats(padapter, pxframe, pxframe->attrib.pktlen);
 
-#endif // if 0 NEO
 	return SUCCESS;
 }
 
@@ -7277,8 +7274,6 @@ aa
 	if (core_tx_prepare_phl(padapter, pxframe) == FAIL)
 		goto abort_tx_per_packet;
 
-	pr_info("%s : NEO : core_tx_prepare_phl success. stop here first\n", __func__);
-	goto abort_tx_per_packet;
 
 #ifdef CONFIG_AP_MODE
 	_rtw_spinlock_bh(&pxmitpriv->lock);
@@ -7289,6 +7284,9 @@ aa
 	}
 	_rtw_spinunlock_bh(&pxmitpriv->lock);
 #endif
+
+	pr_info("%s : NEO : stop first before core_tx_call_phl \n", __func__);
+	goto abort_tx_per_packet;
 
 #if !defined(CONFIG_CORE_TXSC) || defined(CONFIG_RTW_DATA_BMC_TO_UC)
 	if (core_tx_call_phl(padapter, pxframe, NULL) == SUCCESS)
@@ -7376,9 +7374,6 @@ aa
 	if (res == FAIL)
 		return FAIL;
 
-	//NEO
-	pr_info("%s: core_tx_per_pkt : stop here first\n", __func__);
-	goto abort_core_tx;
 
 #ifdef CONFIG_CORE_TXSC
 	txsc_add_sc_cache_entry(padapter, pxframe, &txsc_pkt);
@@ -7387,6 +7382,10 @@ core_txsc:
 
 	if (txsc_apply_sc_cached_entry(padapter, &txsc_pkt) == _FAIL)
 		goto abort_core_tx;
+
+	//NEO
+	pr_info("%s: NEO stop before core_tx_call_phl \n", __func__);
+	goto abort_core_tx;
 
 	if (core_tx_call_phl(padapter, pxframe, &txsc_pkt) == FAIL)
 		goto abort_core_tx;
