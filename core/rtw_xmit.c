@@ -67,6 +67,99 @@ void rtw_free_xmit_block(_adapter *padapter)
 	_rtw_spinlock_free(&dvobj->xmit_block_lock);
 }
 
+#ifdef RTW_PHL_TX
+u8 alloc_txring(_adapter *padapter)
+{
+	struct xmit_txreq_buf *ptxreq_buf = NULL;
+	u32 idx, alloc_sz = 0, alloc_sz_txreq = 0;
+	u8 res = _SUCCESS;
+
+	u32 offset_head = (sizeof(struct rtw_xmit_req) * RTW_MAX_FRAG_NUM);
+	u32 offset_tail = offset_head + (SZ_HEAD_BUF * RTW_MAX_FRAG_NUM);
+	u32 offset_list = offset_tail + (SZ_TAIL_BUF * RTW_MAX_FRAG_NUM);
+
+	PHLTX_ENTER;
+
+	alloc_sz = (SZ_TX_RING * RTW_MAX_FRAG_NUM);
+	alloc_sz_txreq = MAX_TX_RING_NUM * (sizeof(struct xmit_txreq_buf));
+
+	RTW_INFO("eric-tx [%s] alloc_sz = %d, alloc_sz_txreq = %d\n", __FUNCTION__, alloc_sz, alloc_sz_txreq);
+
+	padapter->pxmit_txreq_buf = rtw_vmalloc(alloc_sz_txreq);
+	ptxreq_buf = (struct xmit_txreq_buf *)padapter->pxmit_txreq_buf;
+
+	_rtw_init_queue(&padapter->free_txreq_queue);
+
+	for (idx = 0; idx < MAX_TX_RING_NUM; idx++) {
+
+		padapter->tx_pool_ring[idx] = rtw_zmalloc(alloc_sz);
+		if (!padapter->tx_pool_ring[idx]) {
+			RTW_ERR("[core] alloc txring fail, plz check.\n");
+			res = _FAIL;
+			break;
+		}
+		_rtw_init_listhead(&ptxreq_buf->list);
+		ptxreq_buf->txreq = padapter->tx_pool_ring[idx];
+		ptxreq_buf->head = padapter->tx_pool_ring[idx] + offset_head;
+		ptxreq_buf->tail = padapter->tx_pool_ring[idx] + offset_tail;
+		ptxreq_buf->pkt_list = padapter->tx_pool_ring[idx] + offset_list;
+
+		#ifdef USE_PREV_WLHDR_BUF /* CONFIG_CORE_TXSC */
+		ptxreq_buf->macid = 0xff;
+		ptxreq_buf->txsc_id = 0xff;
+		#endif
+
+		rtw_list_insert_tail(&(ptxreq_buf->list), &(padapter->free_txreq_queue.queue));
+
+		ptxreq_buf++;
+	}
+
+	padapter->free_txreq_cnt = MAX_TX_RING_NUM;
+
+	return res;
+}
+
+void free_txring(_adapter *padapter)
+{
+	u32 idx, alloc_sz = 0, alloc_sz_txreq = 0;
+#ifdef CONFIG_CORE_TXSC
+	struct rtw_xmit_req *txreq = NULL;
+	struct xmit_txreq_buf *txreq_buf = NULL;
+	u8 j;
+#endif
+
+	PHLTX_ENTER;
+
+	alloc_sz = (SZ_TX_RING * RTW_MAX_FRAG_NUM);
+	alloc_sz_txreq = MAX_TX_RING_NUM * (sizeof(struct xmit_txreq_buf));
+
+	RTW_INFO("eric-tx [%s] alloc_sz = %d,  alloc_sz_txreq = %d\n", __func__, alloc_sz, alloc_sz_txreq);
+
+	for (idx = 0; idx < MAX_TX_RING_NUM; idx++) {
+		if (padapter->tx_pool_ring[idx]) {
+#ifdef CONFIG_CORE_TXSC
+			txreq = (struct rtw_xmit_req *)padapter->tx_pool_ring[idx];
+			if (txreq->treq_type == RTW_PHL_TREQ_TYPE_CORE_TXSC) {
+				txreq_buf = (struct xmit_txreq_buf *)txreq->os_priv;
+				if (txreq_buf) {
+					/* CONFGI_TXSC_AMSDU */
+					for (j = 0; j < txreq_buf->pkt_cnt; j++) {
+						if (txreq_buf->pkt[j])
+							rtw_os_pkt_complete(padapter, (void *)txreq_buf->pkt[j]);
+					}
+				}
+			}
+#endif
+			rtw_mfree(padapter->tx_pool_ring[idx], alloc_sz);
+		}
+	}
+
+	_rtw_spinlock_free(&padapter->free_txreq_queue.lock);
+	rtw_vmfree(padapter->pxmit_txreq_buf, alloc_sz_txreq);
+}
+
+#endif
+
 s32	_rtw_init_xmit_priv(struct xmit_priv *pxmitpriv, _adapter *padapter)
 {
 	int i;
@@ -352,6 +445,15 @@ s32	_rtw_init_xmit_priv(struct xmit_priv *pxmitpriv, _adapter *padapter)
 	rtw_init_xmit_block(padapter);
 	rtw_hal_init_xmit_priv(padapter);
 
+#ifdef RTW_PHL_TX //alloc xmit resource
+	printk("eric-tx CALL alloc_txring !!!!\n");
+	if (alloc_txring(padapter) == _FAIL) {
+		RTW_ERR("[core] alloc_txring fail !!!\n");
+		res = _FAIL;
+		goto exit;
+	}
+#endif
+
 exit:
 
 
@@ -446,6 +548,10 @@ void _rtw_free_xmit_priv(struct xmit_priv *pxmitpriv)
 	}
 
 	rtw_free_hwxmits(padapter);
+
+#ifdef RTW_PHL_TX
+	free_txring(padapter);
+#endif
 
 #ifdef CONFIG_XMIT_ACK
 	_rtw_mutex_free(&pxmitpriv->ack_tx_mutex);
@@ -6698,9 +6804,6 @@ u8 core_wlan_fill_txreq_pre(_adapter *padapter, struct xmit_frame *pxframe)
 {
 	u32 frag_perfr, wl_frags = 0;
 
-	pr_info("%s : NEO : stop here first\n", __func__);
-	return _FAIL;
-
 	if (pxframe->xftype == RTW_TX_OS) {
 		get_wl_frag_paras(padapter, pxframe, &frag_perfr, &wl_frags);
 		if (fill_txreq_pkt_perfrag_txos(padapter, pxframe, frag_perfr, wl_frags) == _FAIL)
@@ -7077,9 +7180,6 @@ s32 core_tx_prepare_phl(_adapter *padapter, struct xmit_frame *pxframe)
 {
 	if (core_wlan_fill_txreq_pre(padapter, pxframe) == _FAIL)
 		return FAIL;
-
-	pr_info("%s : NEO  core_wlan_fill_txreq_pre stop here first\n", __func__);
-	return FAIL;
 
 	if (pxframe->xftype == RTW_TX_OS) {
 		core_wlan_fill_head(padapter, pxframe);
