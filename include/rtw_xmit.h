@@ -417,11 +417,11 @@ struct pkt_attrib {
 	u8	ta[ETH_ALEN];
 	u8	ra[ETH_ALEN];
 
+	u16	pkt_hdrlen;	/* the original 802.3 pkt header len */
+
 	u8	dhcp_pkt;
 	u8	icmp_pkt;
 	u8	hipriority_pkt; /* high priority packet */
-
-	u16	pkt_hdrlen;	/* the original 802.3 pkt header len */
 
 // WLAN HDR
 	u16	hdrlen;		/* the WLAN Header Len */
@@ -801,6 +801,12 @@ struct xmit_frame {
 	int	frame_tag;
 
 	_adapter *padapter;
+
+	/* Only for MGNT frame */
+	u8 *prealloc_buf_addr;
+	#ifdef CONFIG_USB_HCI
+	dma_addr_t dma_transfer_addr;
+	#endif
 
 	u8	*buf_addr;
 
@@ -1185,6 +1191,24 @@ void stop_sta_xmit(_adapter *padapter, struct sta_info *psta);
 void wakeup_sta_to_xmit(_adapter *padapter, struct sta_info *psta);
 void xmit_delivery_enabled_frames(_adapter *padapter, struct sta_info *psta);
 #endif
+
+#ifdef RTW_PHL_TX
+s32 core_tx_prepare_phl(_adapter *padapter, struct xmit_frame *pxframe);
+s32 core_tx_call_phl(_adapter *padapter, struct xmit_frame *pxframe, void *txsc_pkt);
+s32 core_tx_per_packet(_adapter *padapter, struct xmit_frame *pxframe,
+		       struct sk_buff **pskb, struct sta_info *psta);
+s32 rtw_core_tx(_adapter *padapter, struct sk_buff **ppkt, struct sta_info *psta, u16 os_qid);
+u32 rtw_core_tx_recycle(void *drv_priv, struct rtw_xmit_req *txreq);
+s32 core_tx_alloc_xmitframe(_adapter *padapter, struct xmit_frame **pxmitframe, u16 os_qid);
+#ifdef CONFIG_CORE_TXSC
+void core_recycle_txreq_phyaddr(_adapter *padapter, struct rtw_xmit_req *txreq);
+s32 core_tx_free_xmitframe(_adapter *padapter, struct xmit_frame *pxframe);
+u8 *get_txreq_buffer(_adapter *padapter, u8 **txreq, u8 **pkt_list, u8 **head, u8 **tail);
+u8 tos_to_up(u8 tos);
+#endif
+#endif
+
+void core_tx_amsdu_tasklet(_adapter *padapter);
 
 u8 rtw_get_tx_bw_mode(_adapter *adapter, struct sta_info *sta);
 

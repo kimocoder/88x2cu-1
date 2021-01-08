@@ -7198,6 +7198,150 @@ abort_tx_per_packet:
 	return FAIL;
 }
 
+s32 rtw_core_tx(_adapter *padapter, struct sk_buff **pskb, struct sta_info *psta, u16 os_qid)
+{
+	struct xmit_frame *pxframe = NULL;
+#if defined(CONFIG_AP_MODE) || defined(CONFIG_CORE_TXSC)
+	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
+#endif
+	s32 res = 0;
+#ifdef CONFIG_CORE_TXSC
+aa
+	struct txsc_pkt_entry txsc_pkt;
+#endif
+
+#ifdef CONFIG_CORE_TXSC
+	if (txsc_get_sc_cached_entry(padapter, *pskb, &txsc_pkt) == _SUCCESS)
+		goto core_txsc;
+#endif
+
+	if (core_tx_alloc_xmitframe(padapter, &pxframe, os_qid) == FAIL)
+		goto abort_core_tx;
+
+	if (core_tx_update_pkt(padapter, pxframe, pskb) == FAIL)
+		goto abort_core_tx;
+
+#if defined(CONFIG_AP_MODE)
+	if (MLME_STATE(padapter) & WIFI_AP_STATE) {
+		_list b2u_list;
+
+		res = rtw_ap_addr_resolve(padapter, os_qid, pxframe, *pskb, &b2u_list);
+		if (res == _FAIL)
+			goto abort_core_tx;
+
+		#if CONFIG_RTW_DATA_BMC_TO_UC
+		if (!rtw_is_list_empty(&b2u_list)) {
+			_list *list = get_next(&b2u_list);
+			struct xmit_frame *b2uframe;
+
+			while ((rtw_end_of_queue_search(&b2u_list, list)) == _FALSE) {
+				b2uframe = LIST_CONTAINOR(list, struct xmit_frame, list);
+				list = get_next(list);
+				rtw_list_delete(&b2uframe->list);
+				b2uframe->pkt = rtw_skb_copy(*pskb);
+				if (!b2uframe->pkt) {
+					if (res == RTW_BMC_NO_NEED)
+						res = _SUCCESS;
+
+					core_tx_free_xmitframe(padapter, b2uframe);
+					continue;
+				}
+
+				core_tx_per_packet(padapter, b2uframe, &b2uframe->pkt, NULL);
+			}
+		}
+		#endif
+
+		if (res == RTW_BMC_NO_NEED) {
+			core_tx_free_xmitframe(padapter, pxframe);
+			return SUCCESS;
+		}
+	}
+#endif /* defined(CONFIG_AP_MODE) */
+
+	res = core_tx_per_packet(padapter, pxframe, pskb, psta);
+	if (res == FAIL)
+		return FAIL;
+
+#ifdef CONFIG_CORE_TXSC
+	txsc_add_sc_cache_entry(padapter, pxframe, &txsc_pkt);
+
+core_txsc:
+
+	if (txsc_apply_sc_cached_entry(padapter, &txsc_pkt) == _FAIL)
+		goto abort_core_tx;
+
+	if (core_tx_call_phl(padapter, pxframe, &txsc_pkt) == FAIL)
+		goto abort_core_tx;
+#endif
+
+	return SUCCESS;
+
+abort_core_tx:
+	if (pxframe == NULL) {
+#ifdef CONFIG_CORE_TXSC
+		if (txsc_pkt.ptxreq)
+			txsc_free_txreq(padapter, txsc_pkt.ptxreq);
+		else
+#endif
+			rtw_os_pkt_complete(padapter, *pskb);
+	} else {
+		if (pxframe->pkt == NULL)
+			rtw_os_pkt_complete(padapter, *pskb);
+
+		core_tx_free_xmitframe(padapter, pxframe);
+	}
+
+	return FAIL;
+}
+
+enum rtw_phl_status
+rtw_core_tx_recycle(void *drv_priv, struct rtw_xmit_req *txreq)
+{
+	_adapter *padapter = NULL;
+	struct xmit_frame *pxframe = NULL;
+#ifdef CONFIG_CORE_TXSC
+	struct xmit_txreq_buf *ptxreq_buf = NULL;
+#endif
+
+	if (txreq->os_priv == NULL) {
+		RTW_ERR("NULL txreq!\n");
+		return RTW_PHL_STATUS_FAILURE;
+	}
+
+#ifdef CONFIG_CORE_TXSC
+	if (txreq->treq_type == RTW_PHL_TREQ_TYPE_CORE_TXSC) {
+		ptxreq_buf = (struct xmit_txreq_buf *)txreq->os_priv;
+		padapter = ptxreq_buf->adapter;
+		#ifdef RTW_PHL_DBG_CMD
+		core_add_record(padapter, REC_TX_PHL_RCC, txreq);
+		#endif
+		txsc_free_txreq(padapter, txreq);
+		return RTW_PHL_STATUS_SUCCESS;
+	}
+#endif /* CONFIG_CORE_TXSC */
+
+	pxframe = (struct xmit_frame *)txreq->os_priv;
+	if (pxframe == NULL) {
+		RTW_ERR("%s: NULL xmitframe !!\n", __func__);
+		rtw_warn_on(1);
+		return RTW_PHL_STATUS_FAILURE;
+	}
+
+	padapter = pxframe->padapter;
+
+	#ifdef RTW_PHL_DBG_CMD
+	core_add_record(padapter, REC_TX_PHL_RCC, txreq);
+	#endif
+
+	#ifdef CONFIG_PCI_HCI
+	core_recycle_txreq_phyaddr(padapter, txreq);
+	#endif
+	core_tx_free_xmitframe(padapter, pxframe);
+
+	return RTW_PHL_STATUS_SUCCESS;
+}
+
 #endif // RTW_PHL_TX
 
 #ifdef CONFIG_TDLS

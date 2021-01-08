@@ -518,6 +518,8 @@ fail:
 }
 #endif
 
+
+#if 0 // NEO : previous rtk_wifi_driver
 int rtw_xmit_entry(struct sk_buff *pkt, _nic_hdl pnetdev)
 {
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(pnetdev);
@@ -544,3 +546,130 @@ int rtw_xmit_entry(struct sk_buff *pkt, _nic_hdl pnetdev)
 
 	return ret;
 }
+#endif
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 32))
+netdev_tx_t rtw_xmit_entry(struct sk_buff *pkt, _nic_hdl pnetdev)
+#else
+int rtw_xmit_entry(struct sk_buff *pkt, _nic_hdl pnetdev)
+#endif
+{
+	_adapter *padapter = (_adapter *)rtw_netdev_priv(pnetdev);
+	struct	mlme_priv	*pmlmepriv = &(padapter->mlmepriv);
+	int ret = 0;
+
+	if (pkt) {
+		if (check_fwstate(pmlmepriv, WIFI_MONITOR_STATE) == _TRUE) {
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24))
+			rtw_monitor_xmit_entry((struct sk_buff *)pkt, pnetdev);
+#endif
+		}
+		else {
+#ifdef CONFIG_RTW_NETIF_SG
+			/* After turning on SG, net stack may (0.0025%) TX
+			 * strange skb that is skb_has_frag_list() but linear
+			 * (i.e. skb_is_nonlinear() is false). This is out of
+			 * our expectation, so I free fragment list to be
+			 * compatible with our design.
+			 */
+			if (skb_has_frag_list(pkt)) {
+				if (!skb_is_nonlinear(pkt)) {
+					kfree_skb_list(skb_shinfo(pkt)->frag_list);
+					skb_shinfo(pkt)->frag_list = NULL;
+					RTW_DBG("%s:%d free frag list\n", __func__, __LINE__);
+				} else {
+					RTW_DBG("%s:%d nonlinear frag list\n", __func__, __LINE__);
+				}
+			}
+#endif
+			rtw_mstat_update(MSTAT_TYPE_SKB, MSTAT_ALLOC_SUCCESS, pkt->truesize);
+			ret = rtw_os_tx(pkt, pnetdev);
+		}
+
+	}
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 32))
+	return (ret == 0) ? NETDEV_TX_OK : NETDEV_TX_BUSY;
+#else
+	return ret;
+#endif
+}
+
+
+#ifdef RTW_PHL_TX
+int rtw_os_is_adapter_ready(_adapter *padapter, struct sk_buff *pkt)
+{
+
+	if (padapter->registrypriv.mp_mode) {
+		RTW_INFO("MP_TX_DROP_OS_FRAME\n");
+		return _FALSE;
+	}
+
+	DBG_COUNTER(padapter->tx_logs.os_tx);
+
+	if (rtw_if_up(padapter) == _FALSE) {
+		PHLTX_LOG;
+		DBG_COUNTER(padapter->tx_logs.os_tx_err_up);
+	#ifdef DBG_TX_DROP_FRAME
+		RTW_INFO("DBG_TX_DROP_FRAME %s if_up fail\n", __FUNCTION__);
+	#endif
+		return _FALSE;
+	}
+
+	if (IS_CH_WAITING(adapter_to_rfctl(padapter))){
+		PHLTX_LOG;
+		return _FALSE;
+	}
+
+	if (rtw_linked_check(padapter) == _FALSE){
+		PHLTX_LOG;
+		return _FALSE;
+	}
+
+	return _TRUE;
+}
+
+int rtw_os_tx(struct sk_buff *pkt, _nic_hdl pnetdev)
+{
+	_adapter *padapter = (_adapter *)rtw_netdev_priv(pnetdev);
+	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
+	u16 os_qid = 0;
+	s32 res = 0;
+
+#ifdef RTW_PHL_DBG_CMD
+	core_add_record(padapter, REC_TX_DATA, pkt);
+#endif
+
+	PHLTX_LOG;
+
+	if (pkt->len == 0)
+		return 0;
+
+	if (rtw_os_is_adapter_ready(padapter, pkt) == _FALSE)
+		goto drop_packet;
+
+	PHLTX_LOG;
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 35))
+	os_qid = skb_get_queue_mapping(pkt);
+#endif
+
+	PHLTX_LOG;
+	if (rtw_core_tx(padapter, &pkt, NULL, os_qid) == FAIL)
+		goto inc_drop_cnt;
+
+	PHLTX_LOG;
+
+	goto exit;
+
+drop_packet:
+	rtw_os_pkt_complete(padapter, pkt);
+
+inc_drop_cnt:
+	pxmitpriv->tx_drop++;
+
+exit:
+	return 0;
+}
+#endif
+

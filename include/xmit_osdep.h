@@ -68,8 +68,15 @@ struct xmit_frame;
 struct xmit_buf;
 
 extern int _rtw_xmit_entry(struct sk_buff *pkt, _nic_hdl pnetdev);
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 32))
+extern netdev_tx_t rtw_xmit_entry(struct sk_buff *pkt, _nic_hdl pnetdev);
+#else
 extern int rtw_xmit_entry(struct sk_buff *pkt, _nic_hdl pnetdev);
+#endif
 
+#ifdef RTW_PHL_TX
+extern int rtw_os_tx(struct sk_buff *pkt, _nic_hdl pnetdev);
+#endif
 #endif /* PLATFORM_LINUX */
 
 void rtw_os_xmit_schedule(_adapter *padapter);
