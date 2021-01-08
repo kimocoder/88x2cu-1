@@ -519,7 +519,7 @@ fail:
 #endif
 
 
-#if 1 // NEO : previous rtk_wifi_driver
+#if 0 // NEO : previous rtk_wifi_driver
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 32))
 netdev_tx_t rtw_xmit_entry(struct sk_buff *pkt, _nic_hdl pnetdev)
@@ -571,6 +571,7 @@ int rtw_xmit_entry(struct sk_buff *pkt, _nic_hdl pnetdev)
 		}
 		else {
 #ifdef CONFIG_RTW_NETIF_SG
+aa
 			/* After turning on SG, net stack may (0.0025%) TX
 			 * strange skb that is skb_has_frag_list() but linear
 			 * (i.e. skb_is_nonlinear() is false). This is out of
@@ -643,6 +644,7 @@ int rtw_os_tx(struct sk_buff *pkt, _nic_hdl pnetdev)
 	s32 res = 0;
 
 #ifdef RTW_PHL_DBG_CMD
+aa
 	core_add_record(padapter, REC_TX_DATA, pkt);
 #endif
 
@@ -654,17 +656,13 @@ int rtw_os_tx(struct sk_buff *pkt, _nic_hdl pnetdev)
 	if (rtw_os_is_adapter_ready(padapter, pkt) == _FALSE)
 		goto drop_packet;
 
-	PHLTX_LOG;
-
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 35))
 	os_qid = skb_get_queue_mapping(pkt);
 #endif
+	printk(" %s: os_qid = %u\n", __func__, os_qid);
 
-	PHLTX_LOG;
 	if (rtw_core_tx(padapter, &pkt, NULL, os_qid) == FAIL)
 		goto inc_drop_cnt;
-
-	PHLTX_LOG;
 
 	goto exit;
 

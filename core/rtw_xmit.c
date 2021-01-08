@@ -6698,6 +6698,9 @@ u8 core_wlan_fill_txreq_pre(_adapter *padapter, struct xmit_frame *pxframe)
 {
 	u32 frag_perfr, wl_frags = 0;
 
+	pr_info("%s : NEO : stop here first\n", __func__);
+	return _FAIL;
+
 	if (pxframe->xftype == RTW_TX_OS) {
 		get_wl_frag_paras(padapter, pxframe, &frag_perfr, &wl_frags);
 		if (fill_txreq_pkt_perfrag_txos(padapter, pxframe, frag_perfr, wl_frags) == _FAIL)
@@ -7075,6 +7078,9 @@ s32 core_tx_prepare_phl(_adapter *padapter, struct xmit_frame *pxframe)
 	if (core_wlan_fill_txreq_pre(padapter, pxframe) == _FAIL)
 		return FAIL;
 
+	pr_info("%s : NEO  core_wlan_fill_txreq_pre stop here first\n", __func__);
+	return FAIL;
+
 	if (pxframe->xftype == RTW_TX_OS) {
 		core_wlan_fill_head(padapter, pxframe);
 		if (core_wlan_fill_tkip_mic(padapter, pxframe) == _FAIL) {
@@ -7154,6 +7160,7 @@ s32 core_tx_per_packet(_adapter *padapter, struct xmit_frame *pxframe,
 	if (core_tx_update_xmitframe(padapter, pxframe, pskb, psta, RTW_TX_OS) == FAIL)
 		goto abort_tx_per_packet;
 
+
 #ifdef CONFIG_80211N_HT
 	if ((pxframe->attrib.ether_type != 0x0806)
 	    && (pxframe->attrib.ether_type != 0x888e)
@@ -7169,6 +7176,9 @@ aa
 
 	if (core_tx_prepare_phl(padapter, pxframe) == FAIL)
 		goto abort_tx_per_packet;
+
+	pr_info("%s : NEO : core_tx_prepare_phl success. stop here first\n", __func__);
+	goto abort_tx_per_packet;
 
 #ifdef CONFIG_AP_MODE
 	_rtw_spinlock_bh(&pxmitpriv->lock);
@@ -7211,6 +7221,7 @@ aa
 #endif
 
 #ifdef CONFIG_CORE_TXSC
+aa
 	if (txsc_get_sc_cached_entry(padapter, *pskb, &txsc_pkt) == _SUCCESS)
 		goto core_txsc;
 #endif
@@ -7218,8 +7229,10 @@ aa
 	if (core_tx_alloc_xmitframe(padapter, &pxframe, os_qid) == FAIL)
 		goto abort_core_tx;
 
+
 	if (core_tx_update_pkt(padapter, pxframe, pskb) == FAIL)
 		goto abort_core_tx;
+
 
 #if defined(CONFIG_AP_MODE)
 	if (MLME_STATE(padapter) & WIFI_AP_STATE) {
@@ -7262,6 +7275,10 @@ aa
 	res = core_tx_per_packet(padapter, pxframe, pskb, psta);
 	if (res == FAIL)
 		return FAIL;
+
+	//NEO
+	pr_info("%s: core_tx_per_pkt : stop here first\n", __func__);
+	goto abort_core_tx;
 
 #ifdef CONFIG_CORE_TXSC
 	txsc_add_sc_cache_entry(padapter, pxframe, &txsc_pkt);
