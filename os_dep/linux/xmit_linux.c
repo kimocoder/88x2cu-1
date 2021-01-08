@@ -519,19 +519,19 @@ fail:
 #endif
 
 
-#if 0 // NEO : previous rtk_wifi_driver
+#if 1 // NEO : previous rtk_wifi_driver
+
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 32))
+netdev_tx_t rtw_xmit_entry(struct sk_buff *pkt, _nic_hdl pnetdev)
+#else
 int rtw_xmit_entry(struct sk_buff *pkt, _nic_hdl pnetdev)
+#endif
 {
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(pnetdev);
 	struct	mlme_priv	*pmlmepriv = &(padapter->mlmepriv);
 	int ret = 0;
 
 	if (pkt) {
-#ifdef CONFIG_CUSTOMER_ALIBABA_GENERAL
-		if (check_alibaba_meshpkt(pkt)) {
-			return rtw_alibaba_mesh_xmit_entry(pkt, pnetdev);
-		}
-#endif
 		if (check_fwstate(pmlmepriv, WIFI_MONITOR_STATE) == _TRUE) {
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24))
 			rtw_monitor_xmit_entry((struct sk_buff *)pkt, pnetdev);
@@ -544,9 +544,14 @@ int rtw_xmit_entry(struct sk_buff *pkt, _nic_hdl pnetdev)
 
 	}
 
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 32))
+	return (ret == 0) ? NETDEV_TX_OK : NETDEV_TX_BUSY;
+#else
 	return ret;
-}
 #endif
+}
+
+#else // NEO
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 32))
 netdev_tx_t rtw_xmit_entry(struct sk_buff *pkt, _nic_hdl pnetdev)
@@ -595,6 +600,7 @@ int rtw_xmit_entry(struct sk_buff *pkt, _nic_hdl pnetdev)
 #endif
 }
 
+#endif
 
 #ifdef RTW_PHL_TX
 int rtw_os_is_adapter_ready(_adapter *padapter, struct sk_buff *pkt)
