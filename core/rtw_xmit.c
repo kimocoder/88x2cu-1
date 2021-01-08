@@ -7208,6 +7208,9 @@ s32 core_tx_call_phl(_adapter *padapter, struct xmit_frame *pxframe, void *txsc_
 	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
 #endif
 
+	pr_info("%s : NEO : pxframe=%p, txsc_pkt=%p\n",
+		__func__, pxframe, txsc_pkt);
+
 #ifdef CONFIG_CORE_TXSC
 	struct txsc_pkt_entry *ptxsc_pkt = (struct txsc_pkt_entry *)txsc_pkt;
 	if (ptxsc_pkt)
@@ -7219,6 +7222,10 @@ s32 core_tx_call_phl(_adapter *padapter, struct xmit_frame *pxframe, void *txsc_
 	txreq = pxframe->phl_txreq;
 	txreq_cnt = pxframe->txreq_cnt;
 #endif
+
+	pr_info("%s : NEO : txreq = %p, txreq_cnt = %d, stop here first\n",
+		__func__, txreq, txreq_cnt);
+	return FAIL;
 
 	for (idx = 0; idx < txreq_cnt; idx++) {
 
@@ -7285,14 +7292,10 @@ aa
 	_rtw_spinunlock_bh(&pxmitpriv->lock);
 #endif
 
-	pr_info("%s : NEO : stop first before core_tx_call_phl \n", __func__);
-	goto abort_tx_per_packet;
-
 #if !defined(CONFIG_CORE_TXSC) || defined(CONFIG_RTW_DATA_BMC_TO_UC)
 	if (core_tx_call_phl(padapter, pxframe, NULL) == SUCCESS)
 #endif
 		return SUCCESS;
-
 
 abort_tx_per_packet:
 	if (pxframe == NULL) {
