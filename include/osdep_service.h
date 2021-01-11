@@ -491,37 +491,6 @@ void _rtw_init_completion(_completion *comp);
 void _rtw_wait_for_comp_timeout(_completion *comp);
 void _rtw_wait_for_comp(_completion *comp);
 
-static inline bool rtw_thread_stop(_thread_hdl_ th)
-{
-#ifdef PLATFORM_LINUX
-	return kthread_stop(th);
-#endif
-}
-static inline void rtw_thread_wait_stop(void)
-{
-#ifdef PLATFORM_LINUX
-	#if 0
-	while (!kthread_should_stop())
-		rtw_msleep_os(10);
-	#else
-	set_current_state(TASK_INTERRUPTIBLE);
-	while (!kthread_should_stop()) {
-		schedule();
-		set_current_state(TASK_INTERRUPTIBLE);
-	}
-	__set_current_state(TASK_RUNNING);
-	#endif
-#endif
-}
-
-__inline static void flush_signals_thread(void)
-{
-#ifdef PLATFORM_LINUX
-	if (signal_pending(current))
-		flush_signals(current);
-#endif
-}
-
 __inline static _OS_STATUS res_to_status(sint res)
 {
 

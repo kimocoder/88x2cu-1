@@ -592,8 +592,6 @@ static inline u8 _os_tasklet_schedule(void *drv_priv, _os_tasklet *task)
 	return 0;
 }
 
-#if 0
-
 static __inline u8 _os_thread_init(	void *drv_priv, _os_thread *thread,
 					int (*call_back_func)(void * context),
 					void *context,
@@ -608,6 +606,7 @@ static __inline u8 _os_thread_init(	void *drv_priv, _os_thread *thread,
 
 	return RTW_PHL_STATUS_FAILURE;
 }
+
 static __inline u8 _os_thread_deinit(void *drv_priv, _os_thread *thread)
 {
 	if (CHK_THREAD_STATUS(thread, THREAD_STATUS_STARTED)) {
@@ -617,7 +616,7 @@ static __inline u8 _os_thread_deinit(void *drv_priv, _os_thread *thread)
 
 	return RTW_PHL_STATUS_SUCCESS;
 }
-#endif
+
 static __inline enum rtw_phl_status _os_thread_schedule(void *drv_priv, _os_thread *thread)
 {
 	return RTW_PHL_STATUS_SUCCESS;
@@ -729,28 +728,25 @@ static __inline void os_out_token_free(void *drv_priv)
 {
 }
 
-//NEO TODO
-#if 0
 static inline int os_usb_tx(void *d, u8 *tx_buf_ptr,
 			u8 bulk_id, u32 len, u8 *pkt_data_buf)
 {
-	return rtw_usb_write_port((struct dvobj_priv *)d, tx_buf_ptr,
-			bulk_id, len, pkt_data_buf);
+	RTW_ERR("NEO %s - rtw_usb_write_port : TODO\n");
+	return _FAIL;
+	//return rtw_usb_write_port((struct dvobj_priv *)d, tx_buf_ptr,
+	//		bulk_id, len, pkt_data_buf);
 }
-#endif
 
 static __inline void os_enable_usb_out_pipes(void *drv_priv)
 {
 }
 
-//NEO TODO
-#if 0
 static __inline void os_disable_usb_out_pipes(void *drv_priv)
 {
+	RTW_ERR("NEO %s - rtw_usb_write_port_cancel : TODO\n");
 	/* Free bulkout urb */
-	rtw_usb_write_port_cancel(drv_priv);
+	//rtw_usb_write_port_cancel(drv_priv);
 }
-#endif
 
 static __inline u8 os_in_token_alloc(void *drv_priv)
 {
@@ -765,27 +761,23 @@ static __inline void os_in_token_free(void *drv_priv)
 }
 
 
-//NEO TODO
-#if 0
 static __inline u8 os_send_usb_in_token(void *drv_priv, void *rxobj, u8 *inbuf, u32 inbuf_len, u8 pipe_idx, u8 minLen)
 {
-	return rtw_usb_read_port(drv_priv, rxobj, inbuf, inbuf_len, pipe_idx, minLen);
+	RTW_ERR("NEO %s - rtw_usb_read_port : TODO\n");
+	return _FAIL;
+	//return rtw_usb_read_port(drv_priv, rxobj, inbuf, inbuf_len, pipe_idx, minLen);
 }
-#endif
 
 static __inline void os_enable_usb_in_pipes(void *drv_priv)
 {
 }
 
-//NEO TODO
-#if 0
 static __inline void os_disable_usb_in_pipes(void *drv_priv)
 {
+	RTW_ERR("NEO %s - rtw_usb_read_port_cancel : TODO\n");
 	// Cancel Pending IN IRPs.
-	rtw_usb_read_port_cancel(drv_priv);
+	//rtw_usb_read_port_cancel(drv_priv);
 }
-#endif
-
 
 #endif /*CONFIG_USB_HCI*/
 

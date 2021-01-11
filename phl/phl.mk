@@ -18,14 +18,17 @@ phl_path_d1 := $(src)/$(HAL)
 endif
 
 _PHL_FILES := $(phl_path)phl_init.o \
+		$(phl_path)phl_fsm.o \
+		$(phl_path)phl_rx.o \
 		$(phl_path)phl_tx.o \
+		$(phl_path)phl_sta.o \
+		$(phl_path)phl_sw_cap.o \
+		$(phl_path)phl_util.o \
 		$(phl_path)phl_sec.o
 
 #_PHL_FILES := $(phl_path)phl_init.o \
 			$(phl_path)phl_debug.o \
-			$(phl_path)phl_rx.o \
 			$(phl_path)phl_rx_agg.o \
-			$(phl_path)phl_fsm.o \
 			$(phl_path)phl_cmd_fsm.o \
 			$(phl_path)phl_cmd_job.o \
 			$(phl_path)phl_ser_fsm.o \
@@ -35,13 +38,10 @@ _PHL_FILES := $(phl_path)phl_init.o \
 			$(phl_path)phl_sound_fsm.o \
 			$(phl_path)phl_api_drv.o \
 			$(phl_path)phl_role.o \
-			$(phl_path)phl_sta.o \
 			$(phl_path)phl_mr.o \
 			$(phl_path)phl_sec.o \
 			$(phl_path)phl_msg_hub.o \
 			$(phl_path)phl_chan.o \
-			$(phl_path)phl_sw_cap.o \
-			$(phl_path)phl_util.o \
 			$(phl_path)phl_pkt_ofld.o \
 			$(phl_path)phl_connect.o \
 			$(phl_path)phl_lps.o \
@@ -68,7 +68,7 @@ ifeq ($(CONFIG_PCI_HCI), y)
 _PHL_FILES += $(phl_path)hci/phl_trx_pcie.o
 endif
 ifeq ($(CONFIG_USB_HCI), y)
-#_PHL_FILES += $(phl_path)hci/phl_trx_usb.o
+_PHL_FILES += $(phl_path)hci/phl_trx_usb.o
 endif
 ifeq ($(CONFIG_SDIO_HCI), y)
 _PHL_FILES += $(phl_path)hci/phl_trx_sdio.o

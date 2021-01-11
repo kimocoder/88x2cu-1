@@ -303,6 +303,55 @@ struct thread_hdl {
 typedef void timer_hdl_return;
 typedef void *timer_hdl_context;
 
+static inline void rtw_thread_enter(char *name)
+{
+	allow_signal(SIGTERM);
+}
+
+static inline void rtw_thread_exit(_completion *comp)
+{
+	complete_and_exit(comp, 0);
+}
+
+static inline _thread_hdl_ rtw_thread_start(int (*threadfn)(void *data),
+			void *data, const char namefmt[])
+{
+	_thread_hdl_ _rtw_thread = NULL;
+
+	_rtw_thread = kthread_run(threadfn, data, namefmt);
+	if (IS_ERR(_rtw_thread)) {
+		WARN_ON(!_rtw_thread);
+		_rtw_thread = NULL;
+	}
+	return _rtw_thread;
+}
+static inline bool rtw_thread_stop(_thread_hdl_ th)
+{
+
+	return kthread_stop(th);
+}
+static inline void rtw_thread_wait_stop(void)
+{
+	#if 0
+	while (!kthread_should_stop())
+		rtw_msleep_os(10);
+	#else
+	set_current_state(TASK_INTERRUPTIBLE);
+	while (!kthread_should_stop()) {
+		schedule();
+		set_current_state(TASK_INTERRUPTIBLE);
+	}
+	__set_current_state(TASK_RUNNING);
+	#endif
+}
+
+static inline void flush_signals_thread(void)
+{
+	if (signal_pending(current))
+		flush_signals(current);
+}
+
+
 #if (LINUX_VERSION_CODE > KERNEL_VERSION(2, 5, 41))
 	typedef struct work_struct _workitem;
 #else

@@ -15,7 +15,7 @@
 #define _PHL_INIT_C_
 #include "phl_headers.h"
 
-#if 0 // NEO : TODO : mark off first
+
 
 void _phl_com_init_rssi_stat(struct rtw_phl_com_t *phl_com)
 {
@@ -283,6 +283,7 @@ error_phl_com_mem:
 	return phl_status;
 }
 
+
 static enum rtw_phl_status phl_hci_init(struct phl_info_t *phl_info,
 									struct rtw_ic_info *ic_info)
 {
@@ -473,6 +474,7 @@ static enum rtw_phl_status phl_set_hci_ops(struct phl_info_t *phl_info)
 	return _phl_hci_ops_check(phl_info);
 }
 
+
 static enum rtw_phl_status phl_cmd_init(struct phl_info_t *phl_info)
 {
 	enum rtw_phl_status status = RTW_PHL_STATUS_SUCCESS;
@@ -602,6 +604,8 @@ static void phl_scan_deinit(struct phl_info_t *phl_info)
 	phl_scan_destory_fsm(phl_info->scan_fsm);
 	phl_info->scan_fsm = NULL;
 }
+
+#if 0 // NEO TODO 
 
 static enum rtw_phl_status phl_sound_init(struct phl_info_t *phl_info)
 {
@@ -922,6 +926,8 @@ static enum rtw_phl_status phl_module_stop(struct phl_info_t *phl_info)
 	return phl_status;
 }
 
+#endif // if 0 NEO
+
 static enum rtw_phl_status phl_var_init(struct phl_info_t *phl_info)
 {
 	return RTW_PHL_STATUS_SUCCESS;
@@ -967,8 +973,6 @@ static void phl_regulation_deinit(void *drv_priv, void *phl)
 	_os_spinlock_free(drv_priv, &rg->lock);
 }
 
-#endif // if 0 NEO
-
 enum rtw_phl_status rtw_phl_init(void *drv_priv, void **phl,
 					struct rtw_ic_info *ic_info)
 {
@@ -987,7 +991,6 @@ enum rtw_phl_status rtw_phl_init(void *drv_priv, void **phl,
 	_os_mem_set(drv_priv, phl_info, 0, sizeof(struct phl_info_t));
 	*phl = phl_info;
 
-#if 0 // NEO TODO mark off first
 	phl_regulation_init(drv_priv, phl_info);
 
 	phl_status = phl_com_init(drv_priv, phl_info, ic_info);
@@ -1009,6 +1012,7 @@ enum rtw_phl_status rtw_phl_init(void *drv_priv, void **phl,
 		goto error_set_hci_ops;
 	}
 
+#if 0 // NEO TODO
 	phl_status = phl_fsm_init(phl_info);
 	if (phl_status != RTW_PHL_STATUS_SUCCESS) {
 		PHL_ERR("phl_fsm_init failed\n");
@@ -1091,13 +1095,10 @@ enum rtw_phl_status rtw_phl_init(void *drv_priv, void **phl,
 		goto error_stainfo_ctrl_init;
 	}
 	FUNCOUT();
-
 #endif // if 0 NEO
-
 	return phl_status;
 
-#if 0 // NEO TODO mark off first
-
+#if 0 // NEO TODO
 error_stainfo_ctrl_init:
 	phl_macid_ctrl_deinit(phl_info);
 error_macid_ctrl_init:
@@ -1112,12 +1113,17 @@ error_phl_var_init:
 error_hal_var_init:
 error_hal_read_chip_info:
 	rtw_hal_deinit(phl_info->phl_com, phl_info->hal);
+
+
 error_hal_init:
 	phl_fsm_module_deinit(phl_info);
 error_fsm_module_init:
 	phl_fsm_deinit(phl_info);
 error_fsm_init:
 	/* Do nothing */
+
+#endif // if 0
+
 error_set_hci_ops:
 	phl_hci_deinit(phl_info, phl_info->hci);
 error_hci_init:
@@ -1129,8 +1135,6 @@ error_phl_com_mem:
 		*phl = phl_info = NULL;
 	}
 
-#endif
-
 error_phl_mem:
 	return phl_status;
 }
@@ -1141,7 +1145,7 @@ void rtw_phl_deinit(void *phl)
 	void *drv_priv = phl_to_drvpriv(phl_info);
 
 	if (phl_info) {
-#if 0 // NEO TODO mark off first
+#if 0 // NEO TODO
 		phl_stainfo_ctrl_deinie(phl_info);
 		phl_macid_ctrl_deinit(phl_info);
 		phl_led_ctrl_deinit(phl_info);
@@ -1152,10 +1156,10 @@ void rtw_phl_deinit(void *phl)
 		phl_var_deinit(phl_info);
 		phl_fsm_module_deinit(phl_info);
 		phl_fsm_deinit(phl_info);
+#endif // if 0
 		phl_hci_deinit(phl_info, phl_info->hci);
 		phl_com_deinit(phl_info, phl_info->phl_com);
 		phl_regulation_deinit(drv_priv, phl_info);
-#endif
 		_os_mem_free(drv_priv, phl_info,
 					sizeof(struct phl_info_t));
 	}
