@@ -403,11 +403,15 @@ u8 rtw_core_deregister_phl_msg(struct dvobj_priv *dvobj)
 	return _SUCCESS;
 }
 
+#endif // if 0 NEO
+
 void rtw_hw_deinit(struct dvobj_priv *dvobj)
 {
 	if (dvobj->phl) {
+#if 0 // NEO : TODO : mark off first
 		rtw_phl_trx_free(dvobj->phl);
 		rtw_core_deregister_phl_msg(dvobj);
+#endif
 		rtw_phl_deinit(dvobj->phl);
 	}
 
@@ -477,7 +481,6 @@ void rtw_hw_intf_cfg(struct dvobj_priv *dvobj, struct hal_com_t *hal_com)
 }
 #endif
 
-#endif // if 0 NEO
 
 static void _hw_ic_info_cfg(struct dvobj_priv *dvobj, struct rtw_ic_info *ic_info)
 {

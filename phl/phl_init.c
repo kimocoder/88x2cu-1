@@ -967,6 +967,8 @@ static void phl_regulation_deinit(void *drv_priv, void *phl)
 	_os_spinlock_free(drv_priv, &rg->lock);
 }
 
+#endif // if 0 NEO
+
 enum rtw_phl_status rtw_phl_init(void *drv_priv, void **phl,
 					struct rtw_ic_info *ic_info)
 {
@@ -985,6 +987,7 @@ enum rtw_phl_status rtw_phl_init(void *drv_priv, void **phl,
 	_os_mem_set(drv_priv, phl_info, 0, sizeof(struct phl_info_t));
 	*phl = phl_info;
 
+#if 0 // NEO TODO mark off first
 	phl_regulation_init(drv_priv, phl_info);
 
 	phl_status = phl_com_init(drv_priv, phl_info, ic_info);
@@ -1089,7 +1092,11 @@ enum rtw_phl_status rtw_phl_init(void *drv_priv, void **phl,
 	}
 	FUNCOUT();
 
+#endif // if 0 NEO
+
 	return phl_status;
+
+#if 0 // NEO TODO mark off first
 
 error_stainfo_ctrl_init:
 	phl_macid_ctrl_deinit(phl_info);
@@ -1121,6 +1128,9 @@ error_phl_com_mem:
 		_os_mem_free(drv_priv, phl_info, sizeof(struct phl_info_t));
 		*phl = phl_info = NULL;
 	}
+
+#endif
+
 error_phl_mem:
 	return phl_status;
 }
@@ -1131,6 +1141,7 @@ void rtw_phl_deinit(void *phl)
 	void *drv_priv = phl_to_drvpriv(phl_info);
 
 	if (phl_info) {
+#if 0 // NEO TODO mark off first
 		phl_stainfo_ctrl_deinie(phl_info);
 		phl_macid_ctrl_deinit(phl_info);
 		phl_led_ctrl_deinit(phl_info);
@@ -1144,10 +1155,13 @@ void rtw_phl_deinit(void *phl)
 		phl_hci_deinit(phl_info, phl_info->hci);
 		phl_com_deinit(phl_info, phl_info->phl_com);
 		phl_regulation_deinit(drv_priv, phl_info);
+#endif
 		_os_mem_free(drv_priv, phl_info,
 					sizeof(struct phl_info_t));
 	}
 }
+
+#if 0 // NEO : TODO : mark off first
 
 enum rtw_phl_status
 rtw_phl_trx_alloc(void *phl)
@@ -1997,7 +2011,7 @@ rtw_phl_get_usb_support_ability(void *phl, u32 *ability)
 	return RTW_PHL_STATUS_SUCCESS;
 }
 
-#endif // if 0
+#endif // if 0 NEO
 
 enum rtw_phl_status rtw_phl_get_mac_addr_efuse(void* phl, u8 *addr)
 {
