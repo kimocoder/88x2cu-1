@@ -530,7 +530,7 @@ uint rtw_hal_iface_init(_adapter *adapter)
 	rtw_hal_start_thread(adapter);
 	return status;
 }
-uint rtw_hal_init(_adapter *padapter)
+uint rtk_hal_init(_adapter *padapter)
 {
 	uint status = _SUCCESS;
 	PHAL_DATA_TYPE pHalData = GET_HAL_DATA(padapter);
@@ -584,7 +584,7 @@ uint rtw_hal_init(_adapter *padapter)
 	return status;
 }
 #else
-uint	 rtw_hal_init(_adapter *padapter)
+uint	 rtk_hal_init(_adapter *padapter)
 {
 	uint	status = _SUCCESS;
 	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);

@@ -713,7 +713,7 @@ void rtw_hal_sw_led_deinit(_adapter *padapter);
 u32 rtw_hal_power_on(_adapter *padapter);
 void rtw_hal_power_off(_adapter *padapter);
 
-uint rtw_hal_init(_adapter *padapter);
+uint rtk_hal_init(_adapter *padapter);
 #ifdef CONFIG_NEW_NETDEV_HDL
 uint rtw_hal_iface_init(_adapter *adapter);
 #endif

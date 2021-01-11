@@ -3874,7 +3874,7 @@ int _netdev_open(struct net_device *pnetdev)
 		rtw_clr_drv_stopped(padapter);
 		RTW_ENABLE_FUNC(padapter, DF_RX_BIT);
 		RTW_ENABLE_FUNC(padapter, DF_TX_BIT);
-		status = rtw_hal_init(padapter);
+		status = rtk_hal_init(padapter);
 		if (status == _FAIL)
 			goto netdev_open_error;
 		rtw_led_control(padapter, LED_CTL_NO_LINK);
@@ -3991,7 +3991,7 @@ int _netdev_open(struct net_device *pnetdev)
 		rtw_clr_surprise_removed(padapter);
 		rtw_clr_drv_stopped(padapter);
 
-		status = rtw_hal_init(padapter);
+		status = rtk_hal_init(padapter);
 		if (status == _FAIL) {
 			goto netdev_open_error;
 		}
@@ -4151,14 +4151,14 @@ int  ips_netdrv_open(_adapter *padapter)
 	/* padapter->bup = _TRUE; */
 #ifdef CONFIG_NEW_NETDEV_HDL
 	if (!rtw_is_hw_init_completed(padapter)) {
-		status = rtw_hal_init(padapter);
+		status = rtk_hal_init(padapter);
 		if (status == _FAIL) {
 			goto netdev_open_error;
 		}
 		rtw_mi_hal_iface_init(padapter);
 	}
 #else
-	status = rtw_hal_init(padapter);
+	status = rtk_hal_init(padapter);
 	if (status == _FAIL) {
 		goto netdev_open_error;
 	}
@@ -4260,7 +4260,7 @@ int _pm_netdev_open(_adapter *padapter)
 	if (!rtw_is_hw_init_completed(padapter)) { // ips 
 		rtw_clr_surprise_removed(padapter);
 		rtw_clr_drv_stopped(padapter);
-		status = rtw_hal_init(padapter);
+		status = rtk_hal_init(padapter);
 		if (status == _FAIL)
 			goto netdev_open_error;
 		rtw_led_control(padapter, LED_CTL_NO_LINK);
@@ -5367,7 +5367,7 @@ int rtw_resume_process_wow(_adapter *padapter)
 	if(registry_par->suspend_type == FW_IPS_DISABLE_BBRF && !check_fwstate(pmlmepriv, WIFI_ASOC_STATE)) {
 		if (!rtw_is_surprise_removed(padapter)) {
 			rtw_hal_deinit(padapter);
-			rtw_hal_init(padapter);
+			rtk_hal_init(padapter);
 		}
 		RTW_INFO("FW_IPS_DISABLE_BBRF hal deinit, hal init \n");
 	}

@@ -4512,7 +4512,7 @@ static s32 rtw_mp_cmd_hdl(_adapter *padapter, u8 mp_cmd_id)
 			rtw_reset_drv_sw(padapter);
 #ifdef CONFIG_NEW_NETDEV_HDL
 			if (!rtw_is_hw_init_completed(padapter)) {
-				status = rtw_hal_init(padapter);
+				status = rtk_hal_init(padapter);
 				if (status == _FAIL) {
 					ret = H2C_REJECTED;
 					goto exit;
@@ -4520,7 +4520,7 @@ static s32 rtw_mp_cmd_hdl(_adapter *padapter, u8 mp_cmd_id)
 				rtw_hal_iface_init(padapter);
 			}
 #else
-			status = rtw_hal_init(padapter);
+			status = rtk_hal_init(padapter);
 			if (status == _FAIL) {
 				ret = H2C_REJECTED;
 				goto exit;
@@ -4577,7 +4577,7 @@ static s32 rtw_mp_cmd_hdl(_adapter *padapter, u8 mp_cmd_id)
 			rtw_reset_drv_sw(padapter);
 #ifdef CONFIG_NEW_NETDEV_HDL
 			if (!rtw_is_hw_init_completed(padapter)) {
-				status = rtw_hal_init(padapter);
+				status = rtk_hal_init(padapter);
 				if (status == _FAIL) {
 					ret = H2C_REJECTED;
 					goto exit;
@@ -4585,7 +4585,7 @@ static s32 rtw_mp_cmd_hdl(_adapter *padapter, u8 mp_cmd_id)
 				rtw_hal_iface_init(padapter);
 			}
 #else
-			status = rtw_hal_init(padapter);
+			status = rtk_hal_init(padapter);
 			if (status == _FAIL) {
 				ret = H2C_REJECTED;
 				goto exit;
