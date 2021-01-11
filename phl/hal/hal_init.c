@@ -912,6 +912,8 @@ enum rtw_hal_status rtw_hal_get_pwr_state(void *hal, u8 *pwr_state)
 	return rtw_hal_mac_get_pwr_state(hal_info, pwr_state);
 }
 
+#endif
+
 enum rtw_hal_status rtw_hal_init(void *drv_priv,
 	struct rtw_phl_com_t *phl_com, void **hal, enum rtl_ic_id ic_id)
 {
@@ -921,7 +923,9 @@ enum rtw_hal_status rtw_hal_init(void *drv_priv,
 	void (*set_intf_ops)(struct rtw_hal_com_t *hal, struct hal_io_ops *ops) = NULL;
 	enum rtw_chip_id chip_id = CHIP_WIFI6_MAX;
 
-	if (ic_id == RTL8852A)
+	if (ic_id == RTL8822C)
+		chip_id = CHIP_WIFI5_8822C;
+	else if (ic_id == RTL8852A)
 		chip_id = CHIP_WIFI6_8852A;
 	else if(ic_id == RTL8834A)
 		chip_id = CHIP_WIFI6_8834A;
@@ -945,6 +949,7 @@ enum rtw_hal_status rtw_hal_init(void *drv_priv,
 		goto error_hal_com_mem;
 	}
 
+#if 0 // NEO
 	hal_info->hal_com = hal_com;
 	hal_com->drv_priv = drv_priv;
 	hal_com->hal_priv = hal_info;
@@ -982,6 +987,7 @@ enum rtw_hal_status rtw_hal_init(void *drv_priv,
 		PHL_ERR("hal_set_ops failed\n");
 		goto error_hal_ops;
 	}
+
 
 	hal_status = hal_info->hal_ops.hal_init(phl_com, hal_info);
 	if (hal_status != RTW_HAL_STATUS_SUCCESS) {
@@ -1027,8 +1033,10 @@ enum rtw_hal_status rtw_hal_init(void *drv_priv,
 	}
 #endif
 
-	return RTW_HAL_STATUS_SUCCESS;
+#endif // if 0 NEO
 
+	return RTW_HAL_STATUS_SUCCESS;
+#if 0 // NEO
 #ifdef RTW_PHL_BCN
 error_bcn_init:
 	rtw_hal_btc_deinit(phl_com, hal_info);
@@ -1059,6 +1067,7 @@ error_io_priv:
 		hal_com = NULL;
 	}
 
+#endif // if 0 NEO
 error_hal_com_mem:
 	if (hal_info) {
 		_os_mem_free(drv_priv, hal_info, sizeof(struct hal_info_t));
@@ -1068,8 +1077,6 @@ error_hal_com_mem:
 error_hal_mem:
 	return hal_status;
 }
-
-#endif // NEO if 0
 
 struct rtw_hal_com_t *rtw_hal_get_halcom(void *hal)
 {
@@ -1088,6 +1095,7 @@ void rtw_hal_deinit(struct rtw_phl_com_t *phl_com, void *hal)
 	if(hal_info == NULL)
 		return;
 
+#if 0 // NEO TODO
 	/* stop mechanism / disassociate hal ops */
 #ifdef RTW_PHL_BCN
 	hal_bcn_deinit(hal_info);
@@ -1105,6 +1113,7 @@ void rtw_hal_deinit(struct rtw_phl_com_t *phl_com, void *hal)
 	_os_atomic_read(hal_to_drvpriv(hal_info), &(hal_info->hal_com->hal_mem)));
 	#endif
 
+#endif // NEO if 0
 	if (hal_info->hal_com) {
 		if(hal_info->hal_com->bf_obj)
 			hal_bf_deinit(hal_info);
@@ -1116,12 +1125,14 @@ void rtw_hal_deinit(struct rtw_phl_com_t *phl_com, void *hal)
 			hal_info->hal_com, sizeof(struct rtw_hal_com_t));
 		hal_info->hal_com = NULL;
 	}
+
 	if (hal_info) {
 		_os_mem_free(drv_priv,
 			hal_info, sizeof(struct hal_info_t));
 		hal_info = NULL;
 	}
 }
+
 
 bool rtw_hal_is_inited(struct rtw_phl_com_t *phl_com, void *hal)
 {
