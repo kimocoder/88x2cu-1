@@ -605,7 +605,6 @@ static void phl_scan_deinit(struct phl_info_t *phl_info)
 	phl_info->scan_fsm = NULL;
 }
 
-#if 0 // NEO TODO 
 
 static enum rtw_phl_status phl_sound_init(struct phl_info_t *phl_info)
 {
@@ -637,6 +636,7 @@ static void phl_sound_deinit(struct phl_info_t *phl_info)
 	phl_snd_destory_fsm(phl_info->snd_fsm);
 	phl_info->snd_fsm = NULL;
 }
+
 
 static enum rtw_phl_status phl_fsm_init(struct phl_info_t *phl_info)
 {
@@ -926,8 +926,6 @@ static enum rtw_phl_status phl_module_stop(struct phl_info_t *phl_info)
 	return phl_status;
 }
 
-#endif // if 0 NEO
-
 static enum rtw_phl_status phl_var_init(struct phl_info_t *phl_info)
 {
 	return RTW_PHL_STATUS_SUCCESS;
@@ -1012,7 +1010,6 @@ enum rtw_phl_status rtw_phl_init(void *drv_priv, void **phl,
 		goto error_set_hci_ops;
 	}
 
-#if 0 // NEO TODO
 	phl_status = phl_fsm_init(phl_info);
 	if (phl_status != RTW_PHL_STATUS_SUCCESS) {
 		PHL_ERR("phl_fsm_init failed\n");
@@ -1026,6 +1023,7 @@ enum rtw_phl_status rtw_phl_init(void *drv_priv, void **phl,
 		goto error_fsm_module_init;
 	}
 
+#if 0 // NEO TODO
 	hal_status = rtw_hal_init(drv_priv, phl_info->phl_com,
 					&(phl_info->hal), ic_info->ic_id);
 	if ((hal_status != RTW_HAL_STATUS_SUCCESS) || (phl_info->hal == NULL)) {
@@ -1114,6 +1112,7 @@ error_hal_var_init:
 error_hal_read_chip_info:
 	rtw_hal_deinit(phl_info->phl_com, phl_info->hal);
 
+#endif // if 0
 
 error_hal_init:
 	phl_fsm_module_deinit(phl_info);
@@ -1121,9 +1120,6 @@ error_fsm_module_init:
 	phl_fsm_deinit(phl_info);
 error_fsm_init:
 	/* Do nothing */
-
-#endif // if 0
-
 error_set_hci_ops:
 	phl_hci_deinit(phl_info, phl_info->hci);
 error_hci_init:
@@ -1154,9 +1150,9 @@ void rtw_phl_deinit(void *phl)
 		phl_mr_ctrl_deinit(phl_info);
 		rtw_hal_deinit(phl_info->phl_com, phl_info->hal);
 		phl_var_deinit(phl_info);
+#endif // if 0
 		phl_fsm_module_deinit(phl_info);
 		phl_fsm_deinit(phl_info);
-#endif // if 0
 		phl_hci_deinit(phl_info, phl_info->hci);
 		phl_com_deinit(phl_info, phl_info->phl_com);
 		phl_regulation_deinit(drv_priv, phl_info);
@@ -1730,9 +1726,13 @@ void rtw_phl_restore_interrupt(void *phl)
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	rtw_hal_restore_interrupt(phl_info->phl_com, phl_info->hal);
 }
+#endif // NEO if 0
 
 enum rtw_phl_status rtw_phl_interrupt_handler(void *phl)
 {
+	RTW_ERR("%s TODO NEO\n", __func__);
+	return RTW_PHL_STATUS_FAILURE;
+#if 0
 	enum rtw_phl_status phl_status = RTW_PHL_STATUS_SUCCESS;
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	struct phl_hci_trx_ops *hci_trx_ops = phl_info->hci_trx_ops;
@@ -1792,18 +1792,25 @@ end:
 	ops->interrupt_restore(phl_to_drvpriv(phl_info), false);
 #endif
 	return phl_status;
+#endif // if 0 NEO
 }
 
 void rtw_phl_enable_interrupt(void *phl)
 {
+	RTW_ERR("%s TODO NEO\n", __func__);
+#if 0
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	rtw_hal_enable_interrupt(phl_info->phl_com, phl_info->hal);
+#endif
 }
 
 void rtw_phl_disable_interrupt(void *phl)
 {
+	RTW_ERR("%s TODO NEO\n", __func__);
+#if 0
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	rtw_hal_disable_interrupt(phl_info->phl_com, phl_info->hal);
+#endif
 }
 
 bool rtw_phl_recognize_interrupt(void *phl)
@@ -1820,6 +1827,7 @@ void rtw_phl_clear_interrupt(void *phl)
 	rtw_hal_clear_interrupt(phl_info->hal);
 }
 
+#if 0 // NEO TODO
 
 u8 rtw_phl_SER_inprogress(void *phl)
 {
@@ -1939,8 +1947,12 @@ void rtw_phl_mac_dbg_status_dump(void *phl, u32 *val, u8 *en)
 	rtw_hal_dbg_status_dump(phl_info->hal, val, en);
 }
 
+#endif // NEO if 0
+
 void rtw_phl_watchdog_callback(void *phl)
 {
+	RTW_ERR("%s NEO TODO\n", __func__);
+#if 0  // NEO TODO
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	struct rtw_phl_com_t* phl_com = phl_info->phl_com;
 	enum rtw_phl_status pstatus;
@@ -1958,7 +1970,10 @@ void rtw_phl_watchdog_callback(void *phl)
 		PHL_TRACE(COMP_PHL_PS, _PHL_DEBUG_,
 			"[PM] Bypass hal watchdog by power (%d) !!\n", pstatus);
 	}
+#endif // if 0 NEO
 }
+
+
 enum rtw_phl_status rtw_phl_force_usb_switch(void *phl, u32 speed)
 {
 #ifdef CONFIG_USB_HCI
@@ -1972,6 +1987,7 @@ enum rtw_phl_status rtw_phl_force_usb_switch(void *phl, u32 speed)
 #endif
 	return RTW_PHL_STATUS_SUCCESS;
 }
+
 enum rtw_phl_status rtw_phl_get_cur_usb_speed(void *phl, u32 *speed)
 {
 #ifdef CONFIG_USB_HCI
@@ -2001,6 +2017,9 @@ enum rtw_phl_status rtw_phl_get_cur_usb_speed(void *phl, u32 *speed)
 #endif
 	return RTW_PHL_STATUS_SUCCESS;
 }
+
+#if 0 // NEO
+
 enum rtw_phl_status
 rtw_phl_get_usb_support_ability(void *phl, u32 *ability)
 {

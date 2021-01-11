@@ -264,7 +264,6 @@ void hal_usb_set_io_ops(struct rtw_hal_com_t *hal, struct hal_io_ops *pops)
 }
 
 
-#if 0 // NEO
 /* To avoid RX affect TX throughput */
 #ifdef CONFIG_PHL_USB_RX_AGGREGATION
 void rtw_hal_usb_adjust_txagg(void *h)
@@ -285,6 +284,9 @@ void rtw_hal_usb_adjust_txagg(void *h)
 
 enum rtw_hal_status rtw_hal_force_usb_switch(void *h, enum usb_type type)
 {
+	RTW_ERR("%s NEO TODO\n", __func__);
+	return RTW_HAL_STATUS_FAILURE;
+#if 0
 	struct hal_info_t *hal = (struct hal_info_t *)h;
 	u32 mode = hal_mac_get_cur_usb_mode(hal);
 	bool bswitch = false;
@@ -296,16 +298,25 @@ enum rtw_hal_status rtw_hal_force_usb_switch(void *h, enum usb_type type)
 		return hal_mac_force_usb_switch(hal);
 	else
 		return RTW_HAL_STATUS_SUCCESS;
+#endif
 }
 
 u32 rtwl_hal_get_cur_usb_mode(void *h)
 {
+	RTW_ERR("%s NEO TODO\n", __func__);
+	return 0;
+#if 0 // NEO TODO
 	struct hal_info_t *hal = (struct hal_info_t *)h;
 	/*refer to enum usb_type*/
 	return hal_mac_get_cur_usb_mode(hal);
+#endif
 }
+
 u32 rtwl_hal_get_usb_support_ability(void *h)
 {
+	RTW_ERR("%s NEO TODO\n", __func__);
+	return 0;
+#if 0
 	struct hal_info_t *hal = (struct hal_info_t *)h;
 	/*
 	* refers to _usb.h
@@ -314,8 +325,8 @@ u32 rtwl_hal_get_usb_support_ability(void *h)
 	* #define FORCEUSB2MODE        0x0
 	*/
 	return hal_mac_get_usb_support_ability(hal);
+#endif
 }
 
-#endif // if 0
 
 #endif /*CONFIG_USB_HCI*/

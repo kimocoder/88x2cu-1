@@ -18,30 +18,31 @@ phl_path_d1 := $(src)/$(HAL)
 endif
 
 _PHL_FILES := $(phl_path)phl_init.o \
+		$(phl_path)phl_api_drv.o \
+		$(phl_path)phl_btc_fsm.o \
+		$(phl_path)phl_chan.o \
+		$(phl_path)phl_cmd_dispatcher.o\
+		$(phl_path)phl_cmd_fsm.o \
+		$(phl_path)phl_cmd_job.o \
+		$(phl_path)phl_debug.o \
 		$(phl_path)phl_fsm.o \
+		$(phl_path)phl_mr.o \
+		$(phl_path)phl_msg_hub.o \
+		$(phl_path)phl_role.o \
 		$(phl_path)phl_rx.o \
-		$(phl_path)phl_tx.o \
+		$(phl_path)phl_scan_fsm.o \
+		$(phl_path)phl_sec.o \
+		$(phl_path)phl_ser_fsm.o \
+		$(phl_path)phl_sound.o \
+		$(phl_path)phl_sound_fsm.o \
 		$(phl_path)phl_sta.o \
 		$(phl_path)phl_sw_cap.o \
-		$(phl_path)phl_util.o \
-		$(phl_path)phl_sec.o
+		$(phl_path)phl_tx.o \
+		$(phl_path)phl_util.o
 
 #_PHL_FILES := $(phl_path)phl_init.o \
-			$(phl_path)phl_debug.o \
 			$(phl_path)phl_rx_agg.o \
-			$(phl_path)phl_cmd_fsm.o \
-			$(phl_path)phl_cmd_job.o \
-			$(phl_path)phl_ser_fsm.o \
-			$(phl_path)phl_btc_fsm.o \
-			$(phl_path)phl_scan_fsm.o \
-			$(phl_path)phl_sound.o \
-			$(phl_path)phl_sound_fsm.o \
-			$(phl_path)phl_api_drv.o \
-			$(phl_path)phl_role.o \
-			$(phl_path)phl_mr.o \
 			$(phl_path)phl_sec.o \
-			$(phl_path)phl_msg_hub.o \
-			$(phl_path)phl_chan.o \
 			$(phl_path)phl_pkt_ofld.o \
 			$(phl_path)phl_connect.o \
 			$(phl_path)phl_lps.o \
@@ -52,7 +53,6 @@ _PHL_FILES := $(phl_path)phl_init.o \
 			$(phl_path)phl_chan_info.o \
 			$(phl_path)phl_wow.o\
 			$(phl_path)phl_cmd_dispatch_engine.o\
-			$(phl_path)phl_cmd_dispatcher.o\
 			$(phl_path)phl_cmd_general.o \
 			$(phl_path)phl_dm.o \
 			$(phl_path)phl_chnlplan.o \

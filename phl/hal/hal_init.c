@@ -323,17 +323,26 @@ void rtw_hal_disable_interrupt(struct rtw_phl_com_t *phl_com, void *h)
 		hal_ops->disable_interrupt(hal);
 }
 
+#endif // if 0 NEO
+
 void rtw_hal_config_interrupt(void *h, enum rtw_phl_config_int int_mode)
 {
+	RTW_ERR("%s TODO NEO\n", __func__);
+#if 0 // NEO TODO
 	struct hal_info_t *hal = (struct hal_info_t *)h;
 	struct hal_ops_t *hal_ops = hal_get_ops(hal);
 
 	if (hal_ops->config_interrupt)
 		hal_ops->config_interrupt(hal, int_mode);
+#endif // if 0 NEO
 }
+
 
 bool rtw_hal_recognize_interrupt(void *h)
 {
+	RTW_ERR("%s TODO NEO\n", __func__);
+	return false;
+#if 0 // NEO TODO
 	struct hal_info_t *hal = (struct hal_info_t *)h;
 	struct hal_ops_t *hal_ops = hal_get_ops(hal);
 
@@ -341,10 +350,14 @@ bool rtw_hal_recognize_interrupt(void *h)
 		return hal_ops->recognize_interrupt(hal);
 	else
 		return false;
+#endif // if 0 NEO
 }
 
 bool rtw_hal_recognize_halt_c2h_interrupt(void *h)
 {
+	RTW_ERR("%s TODO NEO\n", __func__);
+	return false;
+#if 0 // NEO TODO
 	struct hal_info_t *hal = (struct hal_info_t *)h;
 	struct hal_ops_t *hal_ops = hal_get_ops(hal);
 
@@ -352,16 +365,23 @@ bool rtw_hal_recognize_halt_c2h_interrupt(void *h)
 		return hal_ops->recognize_halt_c2h_interrupt(hal);
 	else
 		return false;
+#endif // if 0 NEO
 }
+
 
 void rtw_hal_clear_interrupt(void *h)
 {
+	RTW_ERR("%s TODO NEO\n", __func__);
+#if 0 // NEO TODO
 	struct hal_info_t *hal = (struct hal_info_t *)h;
 	struct hal_ops_t *hal_ops = hal_get_ops(hal);
 
 	if (hal_ops->clear_interrupt)
 		hal_ops->clear_interrupt(hal);
+#endif // if 0 NEO
 }
+
+#if 0 // NEO TODO
 
 u32 rtw_hal_interrupt_handler(void *h)
 {

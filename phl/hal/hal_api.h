@@ -48,7 +48,7 @@ rtw_hal_get_sec_cam(void *h, u16 num, u8 *buf, u16 size);
 
 void rtw_hal_g6_enable_interrupt(struct rtw_phl_com_t *phl_com, void *h);
 void rtw_hal_g6_disable_interrupt(struct rtw_phl_com_t *phl_com, void *h);
-void rtw_hal_g6_config_interrupt(void *h, enum rtw_phl_config_int int_mode);
+void rtw_hal_config_interrupt(void *h, enum rtw_phl_config_int int_mode);
 bool rtw_hal_recognize_interrupt(void *h);
 bool rtw_hal_recognize_halt_c2h_interrupt(void *h);
 void rtw_hal_clear_interrupt(void *h);

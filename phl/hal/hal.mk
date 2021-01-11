@@ -10,28 +10,28 @@ phl_path_d1 := $(src)/$(HAL)
 endif
 
 _HAL_FILES :=	$(phl_path)$(HAL)/hal_api_mac.o \
+			$(phl_path)$(HAL)/hal_api_bb.o \
+			$(phl_path)$(HAL)/hal_api_btc.o \
+			$(phl_path)$(HAL)/hal_api_rf.o \
 			$(phl_path)$(HAL)/hal_api_efuse.o \
+			$(phl_path)$(HAL)/hal_beamform.o \
+			$(phl_path)$(HAL)/hal_cam.o \
+			$(phl_path)$(HAL)/hal_chan.o \
+			$(phl_path)$(HAL)/hal_com_i.o \
 			$(phl_path)$(HAL)/hal_init.o \
 			$(phl_path)$(HAL)/hal_io.o \
-			$(phl_path)$(HAL)/hal_cam.o
+			$(phl_path)$(HAL)/hal_rx.o \
+			$(phl_path)$(HAL)/hal_ser.o \
+			$(phl_path)$(HAL)/hal_sound.o \
+			$(phl_path)$(HAL)/hal_sta.o
 
 #_HAL_FILES :=	$(phl_path)$(HAL)/hal_api_mac.o \
-			$(phl_path)$(HAL)/hal_api_bb.o \
-			$(phl_path)$(HAL)/hal_api_rf.o \
-			$(phl_path)$(HAL)/hal_api_btc.o \
-			$(phl_path)$(HAL)/hal_com_i.o \
-			$(phl_path)$(HAL)/hal_rx.o \
 			$(phl_path)$(HAL)/hal_tx.o \
-			$(phl_path)$(HAL)/hal_sta.o \
 			$(phl_path)$(HAL)/hal_cam.o \
 			$(phl_path)$(HAL)/hal_csi_buffer.o \
-			$(phl_path)$(HAL)/hal_beamform.o \
-			$(phl_path)$(HAL)/hal_sound.o \
-			$(phl_path)$(HAL)/hal_chan.o \
 			$(phl_path)$(HAL)/hal_str_proc.o \
 			$(phl_path)$(HAL)/hal_fw.o \
 			$(phl_path)$(HAL)/hal_cap.o \
-			$(phl_path)$(HAL)/hal_ser.o \
 			$(phl_path)$(HAL)/hal_ps.o \
 			$(phl_path)$(HAL)/hal_c2h.o \
 			$(phl_path)$(HAL)/hal_dbcc.o \
@@ -76,7 +76,8 @@ ifeq ($(USE_TRUE_PHY), y)
 endif
 
 ########### HALBTC #######################################
-#include $(phl_path_d1)/btc/btc.mk
+include $(phl_path_d1)/btc/btc.mk
+
 ########### HAL_RTL8852A #################################
 ifeq ($(CONFIG_RTL8852A), y)
 include $(phl_path_d1)/$(IC_NAME)/rtl8852a.mk
@@ -86,7 +87,7 @@ ifeq ($(CONFIG_RTL8852B), y)
 include $(phl_path_d1)/$(IC_NAME)/rtl8852b.mk
 endif
 
-OBJS += $(_HAL_FILES)
+OBJS += $(_HAL_FILES) $(_BTC_FILES)
 #OBJS += $(_HAL_FILES) $(_HAL_MAC_FILES) $(_BTC_FILES) $(_HAL_IC_FILES)
 #OBJS += $(_HAL_BB_FILES) $(_HAL_RF_FILES) $(_HAL_EFUSE_FILES)
 

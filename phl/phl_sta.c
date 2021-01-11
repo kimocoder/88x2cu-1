@@ -1280,6 +1280,8 @@ rtw_phl_change_stainfo(void *phl,
 	return phl_change_stainfo(phl_info, sta, mode);
 }
 
+#endif // if 0 NEO
+
 /**
  * This function is used to get phl sta info
  * by macid
@@ -1289,6 +1291,9 @@ rtw_phl_change_stainfo(void *phl,
 struct rtw_phl_stainfo_t *
 rtw_phl_get_stainfo_by_macid(void *phl, u16 macid)
 {
+	RTW_ERR("%s NEO TODO \n", __func__);
+	return NULL;
+#if 0 // NEO 
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	struct macid_ctl_t *macid_ctl = phl_to_mac_ctrl(phl_info);
 	struct rtw_phl_stainfo_t *phl_sta = NULL;
@@ -1305,9 +1310,11 @@ rtw_phl_get_stainfo_by_macid(void *phl, u16 macid)
 		PHL_ERR("%s sta info (macid:%d) is NULL\n", __func__, macid);
 		_os_warn_on(1);
 	}
-
 	return phl_sta;
+#endif
 }
+
+#if 0 // NEO TODO
 
 /**
  * This function is called to create phl_station_info
@@ -1339,12 +1346,16 @@ _exit:
 	return sta;
 }
 
+#endif // if 0 NEO
+
 struct rtw_phl_stainfo_t *
 rtw_phl_get_stainfo_self(void *phl, struct rtw_wifi_role_t *wrole)
 {
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	struct rtw_phl_stainfo_t *sta = NULL;
 
+	RTW_ERR("%s NEO TODO \n", __func__);
+#if 0 // NEO
 	#if 0
 	if ((wrole->type == PHL_RTYPE_STATION) &&
 		(wrole->mstate == MLME_LINKED))
@@ -1358,8 +1369,11 @@ rtw_phl_get_stainfo_self(void *phl, struct rtw_wifi_role_t *wrole)
 	if (sta == NULL)
 		PHL_ERR("%s sta == NULL\n", __func__);
 	#endif
+#endif // if 0
 	return sta;
 }
+
+#if 0 // NEO TODO
 
 u8
 rtw_phl_get_sta_rssi(struct rtw_phl_stainfo_t *sta)
