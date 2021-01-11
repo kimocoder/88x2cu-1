@@ -1340,6 +1340,12 @@ static int rtw_dev_probe(struct usb_interface *pusb_intf, const struct usb_devic
 	if (devobj_trx_resource_init(dvobj) == _FAIL)
 		goto free_dvobj;
 
+	/*init hw - register and get chip-info */
+	if (rtw_hw_init(dvobj) == _FAIL) {
+		RTW_ERR("rtw_hw_init Failed!\n");
+		goto free_trx_reso;
+	}
+
 	padapter = rtw_usb_primary_adapter_init(dvobj, pusb_intf);
 	if (padapter == NULL) {
 		RTW_ERR("rtw_usb_primary_adapter_init Failed!\n");

@@ -477,6 +477,8 @@ void rtw_hw_intf_cfg(struct dvobj_priv *dvobj, struct hal_com_t *hal_com)
 }
 #endif
 
+#endif // if 0 NEO
+
 static void _hw_ic_info_cfg(struct dvobj_priv *dvobj, struct rtw_ic_info *ic_info)
 {
 	_rtw_memset(ic_info, 0,sizeof(struct rtw_ic_info));
@@ -515,6 +517,9 @@ static void _hw_ic_info_cfg(struct dvobj_priv *dvobj, struct rtw_ic_info *ic_inf
 	}
 	#endif
 }
+
+#if 0 // NEO : TODO : mark off first
+
 static void core_hdl_phl_evt(struct dvobj_priv *dvobj, u16 evt_id)
 {
 	_adapter *iface;
@@ -622,6 +627,8 @@ void rtw_core_register_mr_config(struct dvobj_priv *dvobj)
 	rtw_phl_mr_ops_init(dvobj->phl, &rtw_mr_ops);
 }
 
+#endif // if 0 NEO
+
 u8 rtw_hw_init(struct dvobj_priv *dvobj)
 {
 	u8 rst = _FAIL;
@@ -634,6 +641,7 @@ u8 rtw_hw_init(struct dvobj_priv *dvobj)
 #endif
 
 	_hw_ic_info_cfg(dvobj, &ic_info);
+#if 0 // NEO : TODO : mark off first
 	phl_status = rtw_phl_init(dvobj, &(dvobj->phl), &ic_info);
 
 	if ((phl_status != RTW_PHL_STATUS_SUCCESS) || (dvobj->phl == NULL)) {
@@ -677,7 +685,7 @@ u8 rtw_hw_init(struct dvobj_priv *dvobj)
 	rtw_phl_job_reg_wdog(dvobj->phl,
 			rtw_dynamic_check_handlder,
                         dvobj, NULL, 0, "rtw_dm", PWR_BASIC_IO);
-
+#endif
 	rst = _SUCCESS;
 	return rst;
 
@@ -685,6 +693,8 @@ _free_hal :
 	rtw_hw_deinit(dvobj);
 	return rst;
 }
+
+#if 0 // NEO
 
 u8 rtw_hw_start(struct dvobj_priv *dvobj)
 {
