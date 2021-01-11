@@ -654,11 +654,6 @@ void rtw_hal_turbo_edca(_adapter *adapter)
 		return;
 	}
 
-	if (ic_type == RTL8188E) {
-		if ((iot_peer == HT_IOT_PEER_RALINK) || (iot_peer == HT_IOT_PEER_ATHEROS))
-			is_bias_on_rx = _TRUE;
-	}
-
 	/* Check if the status needs to be changed. */
 	if ((bbtchange) || (!precvpriv->is_any_non_be_pkts)) {
 		cur_tx_bytes = dvobj->traffic_stat.cur_tx_bytes;
@@ -711,17 +706,10 @@ void rtw_hal_turbo_edca(_adapter *adapter)
 				EDCA_BE_DL = edca_setting_DL[iot_peer];
 			}
 
-			if ((ic_type == RTL8812) || (ic_type == RTL8821) || (ic_type == RTL8192E) || (ic_type == RTL8192F)) { /* add 8812AU/8812AE */
-				EDCA_BE_UL = 0x5ea42b;
-				EDCA_BE_DL = 0x5ea42b;
-
-				RTW_DBG("8812A: EDCA_BE_UL=0x%x EDCA_BE_DL =0x%x\n", EDCA_BE_UL, EDCA_BE_DL);
-			}
-
 			if (interface_type == RTW_PCIE &&
 				((ic_type == RTL8822B)
 				|| (ic_type == RTL8822C)
-				|| (ic_type == RTL8814A) || (ic_type == RTL8814B))) {
+				)) {
 				EDCA_BE_UL = 0x6ea42b;
 				EDCA_BE_DL = 0x6ea42b;
 			}

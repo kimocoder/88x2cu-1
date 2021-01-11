@@ -605,7 +605,6 @@ static void phl_scan_deinit(struct phl_info_t *phl_info)
 	phl_info->scan_fsm = NULL;
 }
 
-
 static enum rtw_phl_status phl_sound_init(struct phl_info_t *phl_info)
 {
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_SUCCESS;
@@ -636,7 +635,6 @@ static void phl_sound_deinit(struct phl_info_t *phl_info)
 	phl_snd_destory_fsm(phl_info->snd_fsm);
 	phl_info->snd_fsm = NULL;
 }
-
 
 static enum rtw_phl_status phl_fsm_init(struct phl_info_t *phl_info)
 {

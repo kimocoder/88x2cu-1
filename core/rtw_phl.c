@@ -409,8 +409,8 @@ void rtw_hw_deinit(struct dvobj_priv *dvobj)
 {
 	if (dvobj->phl) {
 #if 0 // NEO : TODO : mark off first
-		rtw_phl_trx_free(dvobj->phl);
 		rtw_core_deregister_phl_msg(dvobj);
+		rtw_phl_trx_free(dvobj->phl);
 #endif
 		rtw_phl_deinit(dvobj->phl);
 	}
@@ -644,7 +644,6 @@ u8 rtw_hw_init(struct dvobj_priv *dvobj)
 #endif
 
 	_hw_ic_info_cfg(dvobj, &ic_info);
-#if 0 // NEO : TODO : mark off first
 	phl_status = rtw_phl_init(dvobj, &(dvobj->phl), &ic_info);
 
 	if ((phl_status != RTW_PHL_STATUS_SUCCESS) || (dvobj->phl == NULL)) {
@@ -655,6 +654,7 @@ u8 rtw_hw_init(struct dvobj_priv *dvobj)
 
 	dvobj->phl_com = rtw_phl_get_com(dvobj->phl);
 
+#if 0 // NEO : TODO : mark off first
 	/*init sw cap from registary*/
 	rtw_core_update_default_setting(dvobj);
 

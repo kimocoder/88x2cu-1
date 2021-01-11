@@ -13210,10 +13210,8 @@ u64 rtw_hal_get_tsftr_by_port(_adapter *adapter, u8 port)
 		break;
 	}
 #endif
-#if defined(CONFIG_RTL8814A) || defined(CONFIG_RTL8822B) || defined(CONFIG_RTL8821C) || defined(CONFIG_RTL8822C)
-	case RTL8814A:
+#if defined(CONFIG_RTL8822B) || defined(CONFIG_RTL8822C)
 	case RTL8822B:
-	case RTL8821C:
 	case RTL8822C:		
 	{
 		u8 val8;

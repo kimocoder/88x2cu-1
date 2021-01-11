@@ -23,6 +23,7 @@ enum RTL871X_HCI_TYPE {
 	RTW_GSPI	= BIT3,
 };
 
+#if 0
 enum _CHIP_TYPE {
 
 	NULL_CHIP_TYPE,
@@ -45,6 +46,7 @@ enum _CHIP_TYPE {
 	RTL8723F,
 	MAX_CHIP_TYPE
 };
+#endif
 
 #ifdef RTW_HALMAC
 enum fw_mem {
@@ -55,7 +57,7 @@ enum fw_mem {
 #endif
 
 extern const u32 _chip_type_to_odm_ic_type[];
-#define chip_type_to_odm_ic_type(chip_type) (((chip_type) >= MAX_CHIP_TYPE) ? _chip_type_to_odm_ic_type[MAX_CHIP_TYPE] : _chip_type_to_odm_ic_type[(chip_type)])
+#define chip_type_to_odm_ic_type(chip_type) (((chip_type) >= MAX_IC_ID) ? _chip_type_to_odm_ic_type[MAX_IC_ID] : _chip_type_to_odm_ic_type[(chip_type)])
 
 typedef enum _HAL_HW_TIMER_TYPE {
 	HAL_TIMER_NONE = 0,
