@@ -79,6 +79,7 @@ u32 _hal_read32(struct rtw_hal_com_t *hal, u32 addr)
 	u32(*_read32)(struct rtw_hal_com_t *hal, u32 addr);
 
 	#ifdef DBG_PHL_MAC_REG_RW
+aa
 	if (rtw_hal_mac_reg_chk(hal, addr) == false) {
 		r_val = 0xEAEAEAEA;
 		return r_val;

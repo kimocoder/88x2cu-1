@@ -1639,6 +1639,7 @@ enum rtw_phl_status rtw_phl_restart(void *phl)
 	return phl_status;
 }
 
+#endif // if 0 NEO
 
 /******************* IO  APIs *******************/
 u8 rtw_phl_read8(void *phl, u32 addr)
@@ -1677,6 +1678,9 @@ void rtw_phl_write32(void *phl, u32 addr, u32 val)
 
 	rtw_hal_write32(phl_info->hal, addr, val);
 }
+
+#if 0 // NEO TODO 
+
 u32 rtw_phl_read_macreg(void *phl, u32 offset, u32 bit_mask)
 {
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
@@ -1718,15 +1722,18 @@ void rtw_phl_write_rfreg(void *phl,
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 
 	rtw_hal_write_rfreg(phl_info->hal, path, offset, bit_mask, data);
-
 }
+
+#endif // if 0 NEO
 
 void rtw_phl_restore_interrupt(void *phl)
 {
+	RTW_ERR("%s TODO NEO\n", __func__);
+#if 0
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	rtw_hal_restore_interrupt(phl_info->phl_com, phl_info->hal);
+#endif
 }
-#endif // NEO if 0
 
 enum rtw_phl_status rtw_phl_interrupt_handler(void *phl)
 {

@@ -52,7 +52,9 @@
 #define PHL_MR_PROC_CMD
 #define DBG_CHCTX_RMAP
 #endif /*CONFIG_MR_SUPPORT*/
-#define DBG_PHL_MAC_REG_RW
+
+// NEO mark off first
+//#define DBG_PHL_MAC_REG_RW
 
 #define CONFIG_RTW_ACS
 #define CONFIG_RX_PSTS_PER_PKT
@@ -63,7 +65,8 @@
 #endif
 
 /************ Feature flags ************/
-#define DBG_PHL_MAC_REG_RW
+// NEO mark off first
+//#define DBG_PHL_MAC_REG_RW
 
 
 #ifdef CONFIG_PHL_TEST_SUITE

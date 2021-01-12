@@ -176,7 +176,10 @@ static void read_chip_version(PADAPTER adapter)
 
 	hal = GET_HAL_DATA(adapter);
 
-	value32 = rtw_read32(adapter, REG_SYS_CFG1_8822C);
+	//value32 = rtw_read32(adapter, REG_SYS_CFG1_8822C);
+	value32 = rtw_phl_read32(adapter_to_dvobj(adapter)->phl, REG_SYS_CFG1_8822C);
+	RTW_INFO("%s NEO val32=0x%x\n", __func__, value32);
+
 	hal->version_id.ICType = CHIP_8822C;
 	hal->version_id.ChipType = ((value32 & BIT_RTL_ID_8822C) ? TEST_CHIP : NORMAL_CHIP);
 	hal->version_id.CUTVersion = BIT_GET_CHIP_VER_8822C(value32);

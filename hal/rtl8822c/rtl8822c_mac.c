@@ -25,7 +25,6 @@ inline u8 rtl8822c_rcr_config(PADAPTER p, u32 rcr)
 	u32 v32;
 	int err;
 
-
 	v32 = GET_HAL_DATA(p)->ReceiveConfig;
 	v32 ^= rcr;
 	v32 &= BIT_APP_PHYSTS_8822C;
@@ -48,9 +47,7 @@ inline u8 rtl8822c_rcr_config(PADAPTER p, u32 rcr)
 		}
 	}
 
-	err = rtw_write32(p, REG_RCR_8822C, rcr);
-	if (_FAIL == err)
-		return _FALSE;
+	rtw_write32(p, REG_RCR_8822C, rcr);
 
 	GET_HAL_DATA(p)->ReceiveConfig = rcr;
 	return _TRUE;
@@ -83,16 +80,11 @@ inline u8 rtl8822c_rx_fcs_appended(PADAPTER p)
 inline u8 rtl8822c_rx_tsf_addr_filter_config(PADAPTER p, u8 config)
 {
 	u8 v8;
-	int err;
 
 	v8 = GET_HAL_DATA(p)->rx_tsf_addr_filter_config;
 
-	if (v8 != config) {
-
-		err = rtw_write8(p, REG_NAN_RX_TSF_FILTER_8822C, config);
-		if (_FAIL == err)
-			return _FALSE;
-	}
+	if (v8 != config)
+		rtw_write8(p, REG_NAN_RX_TSF_FILTER_8822C, config);
 
 	GET_HAL_DATA(p)->rx_tsf_addr_filter_config = config;
 	return _TRUE;

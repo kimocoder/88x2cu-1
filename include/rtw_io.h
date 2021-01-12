@@ -352,6 +352,7 @@ u32 _rtw_write_port_and_wait(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem, int
 extern void _rtw_write_port_cancel(_adapter *adapter);
 
 #ifdef DBG_IO
+aa
 u32 match_read_sniff(_adapter *adapter, u32 addr, u16 len, u32 val);
 u32 match_write_sniff(_adapter *adapter, u32 addr, u16 len, u32 val);
 bool match_rf_read_sniff_ranges(_adapter *adapter, u8 path, u32 addr, u32 mask);
@@ -415,16 +416,29 @@ int dbg_rtw_sd_iwrite32(_adapter *adapter, u32 addr, u32 val, const char *caller
 #endif /* CONFIG_SDIO_HCI */
 
 #else /* DBG_IO */
+#if 0 // NEO replace
+
 #define rtw_read8(adapter, addr) _rtw_read8((adapter), (addr))
 #define rtw_read16(adapter, addr) _rtw_read16((adapter), (addr))
 #define rtw_read32(adapter, addr) _rtw_read32((adapter), (addr))
+#define  rtw_write8(adapter, addr, val) _rtw_write8((adapter), (addr), (val))
+#define  rtw_write16(adapter, addr, val) _rtw_write16((adapter), (addr), (val))
+#define  rtw_write32(adapter, addr, val) _rtw_write32((adapter), (addr), (val))
+
+#else // NEO G6
+
+#define rtw_read8(adapter, addr) rtw_phl_read8(adapter_to_dvobj((_adapter *)(adapter))->phl, (addr))
+#define rtw_read16(adapter, addr) rtw_phl_read16(adapter_to_dvobj((_adapter *)(adapter))->phl, (addr))
+#define rtw_read32(adapter, addr) rtw_phl_read32(adapter_to_dvobj((_adapter *)(adapter))->phl, (addr))
+#define rtw_write8(adapter, addr, val) rtw_phl_write8(adapter_to_dvobj((_adapter *)(adapter))->phl, (addr), (val))
+#define rtw_write16(adapter, addr, val) rtw_phl_write16(adapter_to_dvobj((_adapter *)(adapter))->phl, (addr), (val))
+#define rtw_write32(adapter, addr, val) rtw_phl_write32(adapter_to_dvobj((_adapter *)(adapter))->phl, (addr), (val))
+
+#endif // NEO
 #define rtw_read_mem(adapter, addr, cnt, mem) _rtw_read_mem((adapter), (addr), (cnt), (mem))
 #define rtw_read_port(adapter, addr, cnt, mem) _rtw_read_port((adapter), (addr), (cnt), (mem))
 #define rtw_read_port_cancel(adapter) _rtw_read_port_cancel((adapter))
 
-#define  rtw_write8(adapter, addr, val) _rtw_write8((adapter), (addr), (val))
-#define  rtw_write16(adapter, addr, val) _rtw_write16((adapter), (addr), (val))
-#define  rtw_write32(adapter, addr, val) _rtw_write32((adapter), (addr), (val))
 #define  rtw_writeN(adapter, addr, length, data) _rtw_writeN((adapter), (addr), (length), (data))
 
 #define rtw_write8_async(adapter, addr, val) _rtw_write8_async((adapter), (addr), (val))

@@ -3533,15 +3533,12 @@ void rtw_hal_periodic_tsf_update_end_timer_hdl(void *ctx)
 
 static inline u8 hw_var_rcr_config(_adapter *adapter, u32 rcr)
 {
-	int err;
-
 #ifdef CONFIG_CUSTOMER_ALIBABA_GENERAL
 	rcr = RCR_AAP | RCR_APM | RCR_AM | RCR_AB | RCR_APWRMGT | RCR_ADF | RCR_AMF | RCR_APP_PHYST_RXFF | RCR_APP_MIC | RCR_APP_ICV;
 #endif
-	err = rtw_write32(adapter, REG_RCR, rcr);
-	if (err == _SUCCESS)
-		GET_HAL_DATA(adapter)->ReceiveConfig = rcr;
-	return err;
+	rtw_write32(adapter, REG_RCR, rcr);
+	GET_HAL_DATA(adapter)->ReceiveConfig = rcr;
+	return _SUCCESS;
 }
 
 static inline u8 hw_var_rcr_get(_adapter *adapter, u32 *rcr)

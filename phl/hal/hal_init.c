@@ -24,7 +24,6 @@
 #endif
 
 
-#if 0 //NEO TODO mark off first
 
 /******************* IO  APIs *******************/
 u8 rtw_hal_read8(void *h, u32 addr)
@@ -69,6 +68,8 @@ void rtw_hal_write32(void *h, u32 addr, u32 val)
 
 	hal_write32(hal_com, addr, val);
 }
+
+#if 0 //NEO TODO mark off first
 
 u32 rtw_hal_read_macreg(void *h, u32 offset, u32 bit_mask)
 {
