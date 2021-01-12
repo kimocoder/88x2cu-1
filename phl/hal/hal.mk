@@ -86,8 +86,12 @@ endif
 ifeq ($(CONFIG_RTL8852B), y)
 include $(phl_path_d1)/$(IC_NAME)/rtl8852b.mk
 endif
+########### HAL_RTL8822C #################################
+ifeq ($(CONFIG_RTL8822C), y)
+include $(phl_path_d1)/$(IC_NAME)/rtl8822c.mk
+endif
 
-OBJS += $(_HAL_FILES) $(_BTC_FILES)
+OBJS += $(_HAL_FILES) $(_BTC_FILES) $(_HAL_IC_FILES)
 #OBJS += $(_HAL_FILES) $(_HAL_MAC_FILES) $(_BTC_FILES) $(_HAL_IC_FILES)
 #OBJS += $(_HAL_BB_FILES) $(_HAL_RF_FILES) $(_HAL_EFUSE_FILES)
 

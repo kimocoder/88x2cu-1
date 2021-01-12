@@ -974,13 +974,13 @@ enum rtw_hal_status rtw_hal_init(void *drv_priv,
 		set_intf_ops = hal_sdio_set_io_ops;
 	#endif
 
-#if 0 // NEO
 	hal_status = hal_init_io_priv(hal_info->hal_com, set_intf_ops);
 	if (hal_status != RTW_HAL_STATUS_SUCCESS) {
 		PHL_ERR("hal_init_io_priv failed\n");
 		goto error_io_priv;
 	}
 
+#if 0 // NEO
 	/*set hal_ops and hal_hook_trx_ops*/
 	hal_status = hal_set_ops(phl_com, hal_info);
 	if (hal_status != RTW_HAL_STATUS_SUCCESS) {
@@ -1057,11 +1057,12 @@ error_efuse_init:
 error_mac_init:
 	hal_info->hal_ops.hal_deinit(phl_com, hal_info);
 
+#endif // if 0 NEO
+
 error_hal_init:
 error_hal_ops:
 	hal_deinit_io_priv(hal_com);
 
-#endif // if 0 NEO
 
 error_io_priv:
 	if (hal_com) {
@@ -1106,6 +1107,7 @@ void rtw_hal_deinit(struct rtw_phl_com_t *phl_com, void *hal)
 	rtw_hal_efuse_deinit(phl_com, hal_info);
 	rtw_hal_mac_deinit(phl_com, hal_info);
 	hal_info->hal_ops.hal_deinit(phl_com, hal_info);
+#endif // NEO if 0
 	hal_deinit_io_priv(hal_info->hal_com);
 
 	#ifdef DBG_HAL_MEM_MOINTOR
@@ -1113,7 +1115,6 @@ void rtw_hal_deinit(struct rtw_phl_com_t *phl_com, void *hal)
 	_os_atomic_read(hal_to_drvpriv(hal_info), &(hal_info->hal_com->hal_mem)));
 	#endif
 
-#endif // NEO if 0
 	if (hal_info->hal_com) {
 #if 0 // NEO TODO
 		if(hal_info->hal_com->bf_obj)

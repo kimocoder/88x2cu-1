@@ -233,6 +233,46 @@ ifeq ($(CONFIG_PCI_HCI), y)
 HCI_NAME = pci
 endif
 
+ifeq ($(CONFIG_HWSIM), y)
+	HAL = hal_sim
+else
+	HAL = phl
+endif
+
+ifeq ($(CONFIG_PLATFORM_RTL8198D), y)
+DRV_PATH = $(src)
+else
+DRV_PATH = $(TopDIR)
+endif
+
+########### HAL_RTL8852A #################################
+ifeq ($(CONFIG_RTL8852A), y)
+IC_NAME := rtl8852a
+ifeq ($(CONFIG_USB_HCI), y)
+MODULE_NAME = 8852au
+endif
+ifeq ($(CONFIG_PCI_HCI), y)
+MODULE_NAME = 8852ae
+endif
+ifeq ($(CONFIG_SDIO_HCI), y)
+MODULE_NAME = 8852as
+endif
+endif
+
+########### HAL_RTL8822C #################################
+ifeq ($(CONFIG_RTL8822C), y)
+IC_NAME := rtl8822c
+ifeq ($(CONFIG_USB_HCI), y)
+MODULE_NAME = 8822cu
+endif
+ifeq ($(CONFIG_PCI_HCI), y)
+MODULE_NAME = 8822ce
+endif
+ifeq ($(CONFIG_SDIO_HCI), y)
+MODULE_NAME = 8822cs
+endif
+endif
+
 
 _OS_INTFS_FILES :=	os_dep/osdep_service.o \
 			os_dep/linux/os_intfs.o \
