@@ -893,7 +893,7 @@ MODULE_PARM_DESC(rtw_peer_alive_based_preq,
 	"On demand PREQ will reference peer alive status. 0: Off, 1: On");
 #endif
 
-int _netdev_open(struct net_device *pnetdev);
+static int _netdev_open(struct net_device *pnetdev);
 int netdev_open(struct net_device *pnetdev);
 static int netdev_close(struct net_device *pnetdev);
 #ifdef CONFIG_PLATFORM_INTEL_BYT
@@ -3861,19 +3861,20 @@ void netdev_br_init(struct net_device *netdev)
 #endif /* CONFIG_BR_EXT */
 
 #ifdef CONFIG_NEW_NETDEV_HDL
-int _netdev_open(struct net_device *pnetdev)
+static int _netdev_open(struct net_device *pnetdev)
 {
 	uint status;
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(pnetdev);
+	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
 	struct pwrctrl_priv *pwrctrlpriv = adapter_to_pwrctl(padapter);
 
 	RTW_INFO(FUNC_NDEV_FMT" start\n", FUNC_NDEV_ARG(pnetdev));
 
 	if (!rtw_is_hw_init_completed(padapter)) { // ips 
-		rtw_clr_surprise_removed(padapter);
-		rtw_clr_drv_stopped(padapter);
-		RTW_ENABLE_FUNC(padapter, DF_RX_BIT);
-		RTW_ENABLE_FUNC(padapter, DF_TX_BIT);
+		dev_clr_surprise_removed(dvobj);
+		dev_clr_drv_stopped(dvobj);
+		RTW_ENABLE_FUNC(dvobj, DF_RX_BIT);
+		RTW_ENABLE_FUNC(dvobj, DF_TX_BIT);
 		status = rtk_hal_init(padapter);
 		if (status == _FAIL)
 			goto netdev_open_error;
@@ -3960,7 +3961,7 @@ netdev_open_error:
 }
 
 #else
-int _netdev_open(struct net_device *pnetdev)
+static int _netdev_open(struct net_device *pnetdev)
 {
 	uint status;
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(pnetdev);
