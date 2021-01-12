@@ -14,7 +14,9 @@
  *****************************************************************************/
 #define _PHL_INIT_C_
 #include "phl_headers.h"
-
+//NEO
+#include "../hal/halmac/halmac_type.h"
+#include "../hal/hal_halmac.h"
 
 
 void _phl_com_init_rssi_stat(struct rtw_phl_com_t *phl_com)
@@ -1971,9 +1973,47 @@ void rtw_phl_watchdog_callback(void *phl)
 #endif // if 0 NEO
 }
 
+static inline enum halmac_usb_mode _usb_mode_drv2halmac(enum rtw_usb_speed usb_mode)
+{
+	enum halmac_usb_mode halmac_usb_mode = HALMAC_USB_MODE_U2;
+
+	switch (usb_mode) {
+	case RTW_USB_SPEED_HIGH:
+		halmac_usb_mode = HALMAC_USB_MODE_U2;
+		break;
+	case RTW_USB_SPEED_SUPER:
+		halmac_usb_mode = HALMAC_USB_MODE_U3;
+		break;
+	default:
+		halmac_usb_mode = HALMAC_USB_MODE_U2;
+		break;
+	}
+
+	return halmac_usb_mode;
+}
 
 enum rtw_phl_status rtw_phl_force_usb_switch(void *phl, u32 speed)
 {
+	PADAPTER adapter;
+	struct dvobj_priv *d;
+	struct halmac_adapter *mac;
+	struct halmac_api *api;
+	enum halmac_ret_status status;
+	enum halmac_usb_mode halmac_usb_mode;
+
+ 	d = container_of(phl, struct dvobj_priv, phl);
+	adapter = dvobj_get_primary_adapter(d);
+	mac = dvobj_to_halmac(d);
+	api = HALMAC_GET_API(mac);
+	halmac_usb_mode = _usb_mode_drv2halmac(speed);
+	status = api->halmac_set_hw_value(mac, HALMAC_HW_USB_MODE, (void *)&halmac_usb_mode);
+	RTW_INFO("%s NEO speed: %d : mode : %d, status %d\n", __func__, speed, halmac_usb_mode, status);
+	if (HALMAC_RET_SUCCESS != status)
+		return RTW_PHL_STATUS_FAILURE;
+
+	return RTW_PHL_STATUS_SUCCESS;
+
+#if 0 // G6
 #ifdef CONFIG_USB_HCI
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 
@@ -1984,6 +2024,7 @@ enum rtw_phl_status rtw_phl_force_usb_switch(void *phl, u32 speed)
 	PHL_INFO("rtw_phl_force_usb_switch (%d) !!\n",speed);
 #endif
 	return RTW_PHL_STATUS_SUCCESS;
+#endif
 }
 
 enum rtw_phl_status rtw_phl_get_cur_usb_speed(void *phl, u32 *speed)

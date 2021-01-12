@@ -5721,44 +5721,6 @@ int rtw_halmac_usb_get_txagg_desc_num(struct dvobj_priv *d, u8 *num)
 	return 0;
 }
 
-static inline enum halmac_usb_mode _usb_mode_drv2halmac(enum rtw_usb_speed usb_mode)
-{
-	enum halmac_usb_mode halmac_usb_mode = HALMAC_USB_MODE_U2;
-
-	switch (usb_mode) {
-	case RTW_USB_SPEED_HIGH:
-		halmac_usb_mode = HALMAC_USB_MODE_U2;
-		break;
-	case RTW_USB_SPEED_SUPER:
-		halmac_usb_mode = HALMAC_USB_MODE_U3;
-		break;
-	default:
-		halmac_usb_mode = HALMAC_USB_MODE_U2;
-		break;
-	}
-
-	return halmac_usb_mode;
-}
-
-u8 rtw_halmac_switch_usb_mode(struct dvobj_priv *d, enum rtw_usb_speed usb_mode)
-{
-	PADAPTER adapter;
-	struct halmac_adapter *mac;
-	struct halmac_api *api;
-	enum halmac_ret_status status;
-	enum halmac_usb_mode halmac_usb_mode;
-
-	adapter = dvobj_get_primary_adapter(d);
-	mac = dvobj_to_halmac(d);
-	api = HALMAC_GET_API(mac);
-	halmac_usb_mode = _usb_mode_drv2halmac(usb_mode);
-	status = api->halmac_set_hw_value(mac, HALMAC_HW_USB_MODE, (void *)&halmac_usb_mode);
-
-	if (HALMAC_RET_SUCCESS != status)
-		return _FAIL;
-
-	return _SUCCESS;
-}
 #endif /* CONFIG_USB_HCI */
 
 #ifdef CONFIG_BEAMFORMING

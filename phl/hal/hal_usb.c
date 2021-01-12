@@ -286,7 +286,7 @@ enum rtw_hal_status rtw_hal_force_usb_switch(void *h, enum usb_type type)
 {
 	RTW_ERR("%s NEO TODO\n", __func__);
 	return RTW_HAL_STATUS_FAILURE;
-#if 0
+#if 0 // NEO TODO
 	struct hal_info_t *hal = (struct hal_info_t *)h;
 	u32 mode = hal_mac_get_cur_usb_mode(hal);
 	bool bswitch = false;

@@ -56,7 +56,7 @@ static void rtw_dev_shutdown(struct device *dev)
 		if (dvobj) {
 			adapter = dvobj_get_primary_adapter(dvobj);
 			if (adapter) {
-				if (!rtw_is_surprise_removed(adapter)) {
+				if (!dev_is_surprise_removed(dvobj)) {
 					#ifdef CONFIG_WOWLAN
 					struct pwrctrl_priv *pwrctl = adapter_to_pwrctl(adapter);
 
@@ -76,7 +76,7 @@ static void rtw_dev_shutdown(struct device *dev)
 						rtw_btcoex_HaltNotify(adapter);
 						#endif
 						rtk_hal_deinit(adapter);
-						rtw_set_surprise_removed(adapter);
+						dev_set_surprise_removed(dvobj);
 					}
 				}
 			}
@@ -319,7 +319,6 @@ static struct specific_device_id specific_device_id_tbl[] = {
 struct rtw_usb_drv {
 	struct usb_driver usbdrv;
 	int drv_registered;
-	u8 hw_type;
 };
 
 struct rtw_usb_drv usb_drv = {
@@ -739,12 +738,15 @@ static void usb_dvobj_deinit(struct usb_interface *usb_intf)
 
 }
 
-static int usb_reprobe_switch_usb_mode(PADAPTER Adapter)
+static int usb_reprobe_switch_usb_mode(_adapter *adapter)
 {
-	struct registry_priv *registry_par = &Adapter->registrypriv;
-	HAL_DATA_TYPE *pHalData = GET_HAL_DATA(Adapter);
+	struct registry_priv *registry_par = &adapter->registrypriv;
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
+	PUSB_DATA pusb_data = dvobj_to_usb(dvobj);
+	HAL_DATA_TYPE *pHalData = GET_HAL_DATA(adapter);
 	u8 ret = _FALSE;
 
+	RTW_INFO("%s NEO : changed \n", __func__);
 	/* efuse not allow driver to switch usb mode */
 	if (pHalData->EEPROMUsbSwitch == _FALSE)
 		goto exit;
@@ -752,8 +754,10 @@ static int usb_reprobe_switch_usb_mode(PADAPTER Adapter)
 	/* registry not allow driver to switch usb mode */
 	if (registry_par->switch_usb_mode == 0)
 		goto exit;
-
-	rtw_hal_set_hwreg(Adapter, HW_VAR_USB_MODE, &ret);
+	else if (registry_par->switch_usb_mode == 1 && pusb_data->usb_speed < RTW_USB_SPEED_SUPER)
+		ret = rtw_phl_force_usb_switch(dvobj->phl, RTW_USB_SPEED_SUPER);
+	else if (registry_par->switch_usb_mode == 2 && pusb_data->usb_speed >= RTW_USB_SPEED_SUPER)
+		ret = rtw_phl_force_usb_switch(dvobj->phl, RTW_USB_SPEED_HIGH);
 
 exit:
 	return ret;

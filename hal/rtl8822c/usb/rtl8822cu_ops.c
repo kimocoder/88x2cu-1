@@ -106,23 +106,6 @@ static u8 sethwreg(PADAPTER padapter, u8 variable, u8 *val)
 	case HW_VAR_AMPDU_MAX_TIME:
 		rtw_write8(padapter, REG_AMPDU_MAX_TIME_V1_8822C, 0x70);
 		break;
-	case HW_VAR_USB_MODE:
-		/* U2 to U3 */
-		if (registry_par->switch_usb_mode == 1) {
-			if (IS_HIGH_SPEED_USB(padapter)) {
-				status = rtw_halmac_switch_usb_mode(adapter_to_dvobj(padapter), RTW_USB_SPEED_SUPER);
-				if (status)
-					*val = _TRUE;
-			}
-		} else if (registry_par->switch_usb_mode == 2) {
-			/* U3 to U2 */
-			if (IS_SUPER_SPEED_USB(padapter)) {
-				status = rtw_halmac_switch_usb_mode(adapter_to_dvobj(padapter), RTW_USB_SPEED_HIGH);
-				if (status)
-					*val = _TRUE;
-			}
-		}
-		break;
 	case HW_VAR_SET_DRV_ERLY_INT:
 		switch (*val) {
 		#ifdef CONFIG_TDLS
