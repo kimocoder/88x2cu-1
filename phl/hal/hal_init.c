@@ -421,10 +421,14 @@ void rtw_hal_restore_rx_interrupt(void *h)
 		PHL_DBG("hal_ops->restore_rx_interrupt is NULL\n");
 }
 
+#endif // if 0 NEO
+
 static enum rtw_hal_status hal_ops_check(struct hal_info_t *hal)
 {
 	enum rtw_hal_status status = RTW_HAL_STATUS_SUCCESS;
 	struct hal_ops_t *ops = hal_get_ops(hal);
+
+#if 0 // NEO TODO
 	struct hal_trx_ops *trx_ops = hal_get_trx_ops(hal);
 
 	/***hal_ops initialize section ***/
@@ -684,8 +688,10 @@ static enum rtw_hal_status hal_ops_check(struct hal_info_t *hal)
 #ifdef CONFIG_SDIO_HCI
 
 #endif
+#endif // if 0 NEO
 	return status;
 }
+
 static enum rtw_hal_status hal_set_ops(struct rtw_phl_com_t *phl_com,
 						struct hal_info_t *hal_info)
 {
@@ -706,6 +712,8 @@ static enum rtw_hal_status hal_set_ops(struct rtw_phl_com_t *phl_com,
 
 	return hal_ops_check(hal_info);
 }
+
+#if 0 // NEO TODO
 
 #ifdef RTW_PHL_BCN
 enum rtw_hal_status hal_bcn_init(struct hal_info_t *hal_info)
@@ -980,7 +988,6 @@ enum rtw_hal_status rtw_hal_init(void *drv_priv,
 		goto error_io_priv;
 	}
 
-#if 0 // NEO
 	/*set hal_ops and hal_hook_trx_ops*/
 	hal_status = hal_set_ops(phl_com, hal_info);
 	if (hal_status != RTW_HAL_STATUS_SUCCESS) {
@@ -995,6 +1002,7 @@ enum rtw_hal_status rtw_hal_init(void *drv_priv,
 		goto error_hal_init;
 	}
 
+#if 0 // NEO
 	hal_status = rtw_hal_mac_init(phl_com, hal_info);
 	if ((hal_status != RTW_HAL_STATUS_SUCCESS) || (hal_info->mac == NULL)) {
 		PHL_ERR("rtw_hal_mac_init failed\n");
@@ -1054,15 +1062,14 @@ error_bb_init:
 error_efuse_init:
 	rtw_hal_mac_deinit(phl_com, hal_info);
 
+#endif // if 0 NEO
+
 error_mac_init:
 	hal_info->hal_ops.hal_deinit(phl_com, hal_info);
-
-#endif // if 0 NEO
 
 error_hal_init:
 error_hal_ops:
 	hal_deinit_io_priv(hal_com);
-
 
 error_io_priv:
 	if (hal_com) {
@@ -1106,8 +1113,8 @@ void rtw_hal_deinit(struct rtw_phl_com_t *phl_com, void *hal)
 	rtw_hal_bb_deinit(phl_com, hal_info);
 	rtw_hal_efuse_deinit(phl_com, hal_info);
 	rtw_hal_mac_deinit(phl_com, hal_info);
-	hal_info->hal_ops.hal_deinit(phl_com, hal_info);
 #endif // NEO if 0
+	hal_info->hal_ops.hal_deinit(phl_com, hal_info);
 	hal_deinit_io_priv(hal_info->hal_com);
 
 	#ifdef DBG_HAL_MEM_MOINTOR
