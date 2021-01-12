@@ -67,7 +67,7 @@ static void rtw_dev_shutdown(struct device *dev)
 					#endif /* CONFIG_GPIO_WAKEUP */
 
 					if (pwrctl->wowlan_mode == _TRUE)
-						RTW_PRINT("%s wowlan_mode ==_TRUE do not run rtw_hal_deinit()\n", __FUNCTION__);
+						RTW_PRINT("%s wowlan_mode ==_TRUE do not run rtk_hal_deinit()\n", __FUNCTION__);
 					else
 					#endif
 					{
@@ -75,7 +75,7 @@ static void rtw_dev_shutdown(struct device *dev)
 						RTW_INFO("%s call halt notify\n", __FUNCTION__);
 						rtw_btcoex_HaltNotify(adapter);
 						#endif
-						rtw_hal_deinit(adapter);
+						rtk_hal_deinit(adapter);
 						rtw_set_surprise_removed(adapter);
 					}
 				}

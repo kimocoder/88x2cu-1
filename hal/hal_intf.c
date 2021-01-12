@@ -656,7 +656,7 @@ uint	 rtk_hal_init(_adapter *padapter)
 }
 #endif
 
-uint rtw_hal_deinit(_adapter *padapter)
+uint rtk_hal_deinit(_adapter *padapter)
 {
 	uint	status = _SUCCESS;
 

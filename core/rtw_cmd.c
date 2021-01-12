@@ -4497,7 +4497,7 @@ static s32 rtw_mp_cmd_hdl(_adapter *padapter, u8 mp_cmd_id)
 	if (mp_cmd_id == MP_START) {
 		if (padapter->registrypriv.mp_mode == 0) {
 			rtw_intf_stop(padapter);
-			rtw_hal_deinit(padapter);
+			rtk_hal_deinit(padapter);
 			padapter->registrypriv.mp_mode = 1;
 #ifdef CONFIG_BT_COEXIST
 		padapter->mppriv.CureFuseBTCoex = pHalData->EEPROMBluetoothCoexist;
@@ -4569,7 +4569,7 @@ static s32 rtw_mp_cmd_hdl(_adapter *padapter, u8 mp_cmd_id)
 		if (padapter->registrypriv.mp_mode == 1) {
 			MPT_DeInitAdapter(padapter);
 			rtw_intf_stop(padapter);
-			rtw_hal_deinit(padapter);
+			rtk_hal_deinit(padapter);
 			padapter->registrypriv.mp_mode = 0;
 #ifdef CONFIG_BT_COEXIST
 			pHalData->EEPROMBluetoothCoexist = padapter->mppriv.CureFuseBTCoex;

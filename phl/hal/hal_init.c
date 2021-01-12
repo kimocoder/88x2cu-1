@@ -949,7 +949,6 @@ enum rtw_hal_status rtw_hal_init(void *drv_priv,
 		goto error_hal_com_mem;
 	}
 
-#if 0 // NEO
 	hal_info->hal_com = hal_com;
 	hal_com->drv_priv = drv_priv;
 	hal_com->hal_priv = hal_info;
@@ -975,6 +974,7 @@ enum rtw_hal_status rtw_hal_init(void *drv_priv,
 		set_intf_ops = hal_sdio_set_io_ops;
 	#endif
 
+#if 0 // NEO
 	hal_status = hal_init_io_priv(hal_info->hal_com, set_intf_ops);
 	if (hal_status != RTW_HAL_STATUS_SUCCESS) {
 		PHL_ERR("hal_init_io_priv failed\n");
@@ -1061,13 +1061,14 @@ error_hal_init:
 error_hal_ops:
 	hal_deinit_io_priv(hal_com);
 
+#endif // if 0 NEO
+
 error_io_priv:
 	if (hal_com) {
 		_os_mem_free(drv_priv, hal_com, sizeof(struct rtw_hal_com_t));
 		hal_com = NULL;
 	}
 
-#endif // if 0 NEO
 error_hal_com_mem:
 	if (hal_info) {
 		_os_mem_free(drv_priv, hal_info, sizeof(struct hal_info_t));

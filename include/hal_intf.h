@@ -724,7 +724,7 @@ void dump_hal_trx_mode(void *sel, _adapter *adapter);
 u8 rtw_hal_rfpath_init(_adapter *adapter);
 u8 rtw_hal_trxnss_init(_adapter *adapter);
 
-uint rtw_hal_deinit(_adapter *padapter);
+uint rtk_hal_deinit(_adapter *padapter);
 void rtw_hal_stop(_adapter *padapter);
 u8 rtw_hal_set_hwreg(PADAPTER padapter, u8 variable, u8 *val);
 void rtw_hal_get_hwreg(PADAPTER padapter, u8 variable, u8 *val);

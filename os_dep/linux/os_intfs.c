@@ -4246,7 +4246,7 @@ void rtw_ips_dev_unload(_adapter *padapter)
 	}
 
 	if (!rtw_is_surprise_removed(padapter))
-		rtw_hal_deinit(padapter);
+		rtk_hal_deinit(padapter);
 
 }
 #ifdef CONFIG_NEW_NETDEV_HDL
@@ -4821,12 +4821,12 @@ void rtw_dev_unload(PADAPTER padapter)
 #ifdef CONFIG_WOWLAN
 			if (pwrctl->bSupportRemoteWakeup == _TRUE &&
 			    pwrctl->wowlan_mode == _TRUE)
-				RTW_PRINT("%s bSupportRemoteWakeup==_TRUE  do not run rtw_hal_deinit()\n", __FUNCTION__);
+				RTW_PRINT("%s bSupportRemoteWakeup==_TRUE  do not run rtk_hal_deinit()\n", __FUNCTION__);
 			else
 #endif
 			{
 				/* amy modify 20120221 for power seq is different between driver open and ips */
-				rtw_hal_deinit(padapter);
+				rtk_hal_deinit(padapter);
 			}
 			rtw_set_surprise_removed(padapter);
 		}
@@ -5367,7 +5367,7 @@ int rtw_resume_process_wow(_adapter *padapter)
 
 	if(registry_par->suspend_type == FW_IPS_DISABLE_BBRF && !check_fwstate(pmlmepriv, WIFI_ASOC_STATE)) {
 		if (!rtw_is_surprise_removed(padapter)) {
-			rtw_hal_deinit(padapter);
+			rtk_hal_deinit(padapter);
 			rtk_hal_init(padapter);
 		}
 		RTW_INFO("FW_IPS_DISABLE_BBRF hal deinit, hal init \n");
