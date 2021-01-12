@@ -28,6 +28,10 @@ void hal_usb_set_io_ops(struct rtw_hal_com_t *hal, struct hal_io_ops *ops);
 #include "rtl8852b/rtl8852b.h"
 #endif
 
+#ifdef CONFIG_RTL8822C
+#include "rtl8822c/rtl8822c.h"
+#endif
+
 static inline void hal_set_ops_usb(struct rtw_phl_com_t *phl_com,
 						struct hal_info_t *hal)
 {
@@ -45,6 +49,13 @@ static inline void hal_set_ops_usb(struct rtw_phl_com_t *phl_com,
 	}
 	#endif
 
+	#ifdef CONFIG_RTL8822C
+	if (hal_get_chip_id(hal->hal_com) == CHIP_WIFI5_8822C) {
+		RTW_INFO("%s NEO before do hal_set_ops_8822cu()\n", __func__);
+		hal_set_ops_8822cu(phl_com, hal);
+		//hal_hook_trx_ops_8852au(hal);
+	}
+	#endif
 }
 #endif /*CONFIG_USB_HCI*/
 #endif /* _HAL_USB_H_ */

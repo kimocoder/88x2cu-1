@@ -1079,8 +1079,8 @@ static int rtw_resume_process(_adapter *padapter)
 	 * But they will not be clear in intf_start during wow resume flow.
 	 * It should move to os_intf in the feature.
 	 */
-	RTW_ENABLE_FUNC(adapter_to_dvobj(padapter), DF_RX_BIT);
-	RTW_ENABLE_FUNC(adapter_to_dvobj(padapter), DF_TX_BIT);
+	RTW_ENABLE_FUNC(pdvobj, DF_RX_BIT);
+	RTW_ENABLE_FUNC(pdvobj, DF_TX_BIT);
 
 	ret =  rtw_resume_common(padapter);
 
@@ -1133,10 +1133,6 @@ static int rtw_dev_resume(struct usb_interface *pusb_intf)
 }
 
 
-#ifdef CONFIG_PLATFORM_RTD2880B
-extern void rtd2885_wlan_netlink_sendMsg(char *action_string, char *name);
-#endif
-
 /*
  * drv_init() - a device potentially for us
  *
@@ -1148,6 +1144,7 @@ _adapter *rtw_usb_primary_adapter_init(struct dvobj_priv *dvobj,
 {
 	_adapter *padapter = NULL;
 	int status = _FAIL;
+	u8 hw_mac_addr[ETH_ALEN] = {0};
 
 	padapter = (_adapter *)rtw_zvmalloc(sizeof(*padapter));
 	if (padapter == NULL)

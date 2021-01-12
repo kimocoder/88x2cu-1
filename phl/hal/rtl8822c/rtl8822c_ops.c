@@ -56,7 +56,7 @@ void hal_set_ops_8822c(struct rtw_phl_com_t *phl_com,
 {
 	struct hal_ops_t *ops = hal_get_ops(hal);
 
-	RTW_INFO("%s \n", __func__);
+	RTW_INFO("%s : phl_com=%p, hal=%p\n", __func__, phl_com, hal);
 
 #if 0 // NEO TODO
 	/*** initialize section ***/

@@ -1023,7 +1023,6 @@ enum rtw_phl_status rtw_phl_init(void *drv_priv, void **phl,
 		goto error_fsm_module_init;
 	}
 
-#if 0 // NEO TODO
 	hal_status = rtw_hal_init(drv_priv, phl_info->phl_com,
 					&(phl_info->hal), ic_info->ic_id);
 	if ((hal_status != RTW_HAL_STATUS_SUCCESS) || (phl_info->hal == NULL)) {
@@ -1033,6 +1032,7 @@ enum rtw_phl_status rtw_phl_init(void *drv_priv, void **phl,
 		goto error_hal_init;
 	}
 
+#if 0 // NEO TODO
 	/*send bus info to hal*/
 	rtw_hal_hci_cfg(phl_info->phl_com, phl_info->hal, ic_info);
 
@@ -1107,13 +1107,13 @@ error_module_init:
 	phl_mr_ctrl_deinit(phl_info);
 error_wifi_role_ctrl_init:
 	phl_var_deinit(phl_info);
+
+#endif // if 0
+
 error_phl_var_init:
 error_hal_var_init:
 error_hal_read_chip_info:
 	rtw_hal_deinit(phl_info->phl_com, phl_info->hal);
-
-#endif // if 0
-
 error_hal_init:
 	phl_fsm_module_deinit(phl_info);
 error_fsm_module_init:
@@ -1148,9 +1148,9 @@ void rtw_phl_deinit(void *phl)
 		/*deinit mr_ctrl, wifi_role[]*/
 		phl_module_deinit(phl_info);
 		phl_mr_ctrl_deinit(phl_info);
-		rtw_hal_deinit(phl_info->phl_com, phl_info->hal);
 		phl_var_deinit(phl_info);
 #endif // if 0
+		rtw_hal_deinit(phl_info->phl_com, phl_info->hal);
 		phl_fsm_module_deinit(phl_info);
 		phl_fsm_deinit(phl_info);
 		phl_hci_deinit(phl_info, phl_info->hci);

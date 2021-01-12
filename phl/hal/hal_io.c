@@ -269,7 +269,7 @@ u32 hal_init_io_priv(struct rtw_hal_com_t *hal,
 	_os_mutex_init(hal->drv_priv, &iopriv->sd_indirect_access_mutex);
 	#endif
 	set_intf_ops(hal, &iopriv->io_ops);
-
+	RTW_INFO("%s NEO set_intf_ops\n", __func__);
 	return RTW_HAL_STATUS_SUCCESS;
 }
 u32 hal_deinit_io_priv(struct rtw_hal_com_t *hal)

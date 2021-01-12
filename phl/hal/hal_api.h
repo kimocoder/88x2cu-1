@@ -59,10 +59,10 @@ void rtw_hal_restore_rx_interrupt(void *h);
 
 enum rtw_hal_status rtw_hal_get_pwr_state(void *h, u8 *pwr_state);
 
-enum rtw_hal_status rtw_hal_g6_init(void *drv_priv,
+enum rtw_hal_status rtw_hal_init(void *drv_priv,
 	struct rtw_phl_com_t *phl_com, void **hal, enum rtl_ic_id chip_id);
 struct rtw_hal_com_t *rtw_hal_get_halcom(void *hal);
-void rtw_hal_g6_deinit(struct rtw_phl_com_t *phl_com, void *hal);
+void rtw_hal_deinit(struct rtw_phl_com_t *phl_com, void *hal);
 
 bool rtw_hal_is_inited(struct rtw_phl_com_t *phl_com, void *hal);
 
