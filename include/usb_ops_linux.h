@@ -68,7 +68,7 @@ int usb_async_write32(struct intf_hdl *pintfhdl, u32 addr, u32 val);
 unsigned int bulkid2pipe(struct dvobj_priv *pdvobj, u32 addr, u8 bulk_out);
 
 void usb_read_mem(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *rmem);
-void usb_write_mem(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *wmem);
+//void usb_write_mem(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *wmem);
 
 void usb_read_port_cancel(struct intf_hdl *pintfhdl);
 
@@ -86,12 +86,14 @@ int _usbctrl_vendorreq_async_write(struct usb_device *udev, u8 request,
 		u16 value, u16 index, void *pdata, u16 len, u8 requesttype);
 #endif /* CONFIG_USB_SUPPORT_ASYNC_VDN_REQ */
 
+#if 0 // NEO if 0
 u8 usb_read8(struct intf_hdl *pintfhdl, u32 addr);
 u16 usb_read16(struct intf_hdl *pintfhdl, u32 addr);
 u32 usb_read32(struct intf_hdl *pintfhdl, u32 addr);
 int usb_write8(struct intf_hdl *pintfhdl, u32 addr, u8 val);
 int usb_write16(struct intf_hdl *pintfhdl, u32 addr, u16 val);
 int usb_write32(struct intf_hdl *pintfhdl, u32 addr, u32 val);
+#endif 
 int usb_writeN(struct intf_hdl *pintfhdl, u32 addr, u32 length, u8 *pdata);
 u32 rtw_usb_read_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *rmem);
 void usb_recv_tasklet(void *priv);

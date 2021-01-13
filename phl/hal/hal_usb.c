@@ -17,7 +17,7 @@
 #include "hal_usb.h"
 
 #ifdef CONFIG_USB_HCI
-u8 g6_usb_read8(struct rtw_hal_com_t *hal, u32 addr)
+u8 usb_read8(struct rtw_hal_com_t *hal, u32 addr)
 {
 	u8 request;
 	u8 requesttype;
@@ -45,7 +45,7 @@ u8 g6_usb_read8(struct rtw_hal_com_t *hal, u32 addr)
 }
 
 
-u16 g6_usb_read16(struct rtw_hal_com_t *hal, u32 addr)
+u16 usb_read16(struct rtw_hal_com_t *hal, u32 addr)
 {
 	u8 request;
 	u8 requesttype;
@@ -72,7 +72,7 @@ u16 g6_usb_read16(struct rtw_hal_com_t *hal, u32 addr)
 
 }
 
-u32 g6_usb_read32(struct rtw_hal_com_t *hal, u32 addr)
+u32 usb_read32(struct rtw_hal_com_t *hal, u32 addr)
 {
 	u8 request;
 	u8 requesttype;
@@ -98,7 +98,7 @@ u32 g6_usb_read32(struct rtw_hal_com_t *hal, u32 addr)
 	return le32_to_cpu(data);
 }
 
-int g6_usb_write8(struct rtw_hal_com_t *hal, u32 addr, u8 val)
+int usb_write8(struct rtw_hal_com_t *hal, u32 addr, u8 val)
 {
 	u8 request;
 	u8 requesttype;
@@ -127,7 +127,7 @@ int g6_usb_write8(struct rtw_hal_com_t *hal, u32 addr, u8 val)
 	return ret;
 }
 
-int g6_usb_write16(struct rtw_hal_com_t *hal, u32 addr, u16 val)
+int usb_write16(struct rtw_hal_com_t *hal, u32 addr, u16 val)
 {
 	u8 request;
 	u8 requesttype;
@@ -157,7 +157,7 @@ int g6_usb_write16(struct rtw_hal_com_t *hal, u32 addr, u16 val)
 
 }
 
-int g6_usb_write32(struct rtw_hal_com_t *hal, u32 addr, u32 val)
+int usb_write32(struct rtw_hal_com_t *hal, u32 addr, u32 val)
 {
 	u8 request;
 	u8 requesttype;
@@ -187,7 +187,7 @@ int g6_usb_write32(struct rtw_hal_com_t *hal, u32 addr, u32 val)
 
 }
 
-int g6_usb_write_mem(struct rtw_hal_com_t *hal, u32 addr, u32 length, u8 *pdata)
+int usb_write_mem(struct rtw_hal_com_t *hal, u32 addr, u32 length, u8 *pdata)
 {
 	u8 request;
 	u8 requesttype;
@@ -239,15 +239,15 @@ static void hal_usb_set_io_ops_gen(struct rtw_hal_com_t *hal, struct hal_io_ops 
 	/*_rtw_memset((u8 *)pops, 0, sizeof(struct hal_io_ops));*/
 	_os_mem_set(hal->drv_priv, (u8 *)pops, 0, sizeof(struct hal_io_ops));
 
-	pops->_read8 = &g6_usb_read8;
-	pops->_read16 = &g6_usb_read16;
-	pops->_read32 = &g6_usb_read32;
+	pops->_read8 = &usb_read8;
+	pops->_read16 = &usb_read16;
+	pops->_read32 = &usb_read32;
 	pops->_read_mem = NULL;
 
-	pops->_write8 = &g6_usb_write8;
-	pops->_write16 = &g6_usb_write16;
-	pops->_write32 = &g6_usb_write32;
-	pops->_write_mem = &g6_usb_write_mem;
+	pops->_write8 = &usb_write8;
+	pops->_write16 = &usb_write16;
+	pops->_write32 = &usb_write32;
+	pops->_write_mem = &usb_write_mem;
 
 #ifdef CONFIG_8852A
 	pops->_write_post_cfg = &usb_write_post_cfg;

@@ -343,6 +343,7 @@ void _rtw_read_mem(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
 
 }
 
+#if 0 // NEO
 void _rtw_write_mem(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
 {
 	void (*_write_mem)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);
@@ -357,6 +358,7 @@ void _rtw_write_mem(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
 
 
 }
+#endif
 
 void _rtw_read_port(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
 {
