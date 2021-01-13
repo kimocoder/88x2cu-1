@@ -13333,13 +13333,13 @@ void rtw_lps_state_chk(_adapter *adapter, u8 ps_mode)
 	u8 ps_ready = _FALSE;
 	s8 leave_wait_count = LPS_ACTIVE_TIMEOUT;
 
-	if (ps_mode == PS_MODE_ACTIVE) {
+	if (ps_mode == PM_PS_MODE_ACTIVE) {
 #ifdef CONFIG_LPS_ACK
 		if (rtw_sctx_wait(&pwrpriv->lps_ack_sctx, __func__)) {
 			if (pwrpriv->lps_ack_status > 0) {
 				psta = rtw_get_stainfo(pstapriv, pmlmeinfo->network.MacAddress);
 				if (psta != NULL) {
-					if(issue_nulldata(adapter, psta->cmn.mac_addr, PS_MODE_ACTIVE, 3, 1) == _FAIL)
+					if(issue_nulldata(adapter, psta->cmn.mac_addr, PM_PS_MODE_ACTIVE, 3, 1) == _FAIL)
 						RTW_INFO(FUNC_ADPT_FMT" LPS state sync not yet finished.\n", FUNC_ADPT_ARG(adapter));
 				}
 			}
@@ -14313,7 +14313,7 @@ void linked_info_dump(_adapter *padapter, u8 benable)
 	if (benable) {
 #ifdef CONFIG_LPS
 		pwrctrlpriv->org_power_mgnt = pwrctrlpriv->power_mgnt;/* keep org value */
-		rtw_pm_set_lps(padapter, PS_MODE_ACTIVE);
+		rtw_pm_set_lps(padapter, PM_PS_MODE_ACTIVE);
 #endif
 
 #ifdef CONFIG_IPS

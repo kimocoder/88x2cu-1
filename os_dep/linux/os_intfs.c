@@ -49,7 +49,7 @@ int rtw_scan_mode = 1;/* active, passive */
 	/* LPS configuration */
 /* RTW_LPS_MODE=0:disable, 1:LPS , 2:LPS with clock gating, 3: power gating */
 #if (RTW_LPS_MODE > 0)
-	int rtw_power_mgnt = PS_MODE_MAX;
+	int rtw_power_mgnt = PM_PS_MODE_MAX;
 
 	#ifdef CONFIG_USB_HCI
 		int rtw_lps_level = LPS_NORMAL; /*USB default LPS level*/
@@ -57,7 +57,7 @@ int rtw_scan_mode = 1;/* active, passive */
 		int rtw_lps_level = (RTW_LPS_MODE - 1);
 	#endif/*CONFIG_USB_HCI*/
 #else
-	int rtw_power_mgnt = PS_MODE_ACTIVE;
+	int rtw_power_mgnt = PM_PS_MODE_ACTIVE;
 	int rtw_lps_level = LPS_NORMAL;
 #endif
 
@@ -67,21 +67,21 @@ int rtw_scan_mode = 1;/* active, passive */
 #ifdef CONFIG_WOWLAN
 /* RTW_WOW_LPS_MODE=0:disable, 1:LPS , 2:LPS with clock gating, 3: power gating */
 #if (RTW_WOW_LPS_MODE > 0)
-	int rtw_wow_power_mgnt = PS_MODE_MAX;
+	int rtw_wow_power_mgnt = PM_PS_MODE_MAX;
 	int rtw_wow_lps_level = (RTW_WOW_LPS_MODE - 1);
 #else
-	int rtw_wow_power_mgnt = PS_MODE_ACTIVE;
+	int rtw_wow_power_mgnt = PM_PS_MODE_ACTIVE;
 	int rtw_wow_lps_level = LPS_NORMAL;
 #endif	
 #endif /* CONFIG_WOWLAN */
 
 #else /* !CONFIG_POWER_SAVING */
 	int rtw_ips_mode = IPS_NONE;
-	int rtw_power_mgnt = PS_MODE_ACTIVE;
+	int rtw_power_mgnt = PM_PS_MODE_ACTIVE;
 	int rtw_lps_level = LPS_NORMAL;
 	int rtw_lps_chk_by_tp = 0;
 #ifdef CONFIG_WOWLAN
-	int rtw_wow_power_mgnt = PS_MODE_ACTIVE;
+	int rtw_wow_power_mgnt = PM_PS_MODE_ACTIVE;
 	int rtw_wow_lps_level = LPS_NORMAL;
 #endif /* CONFIG_WOWLAN */
 #endif /* CONFIG_POWER_SAVING */
@@ -1199,7 +1199,7 @@ uint rtw_load_registry(_adapter *padapter)
 		registry_par->tdmadig_en = (u8)rtw_tdmadig_en;
 		registry_par->tdmadig_mode = (u8)rtw_tdmadig_mode;
 		registry_par->tdmadig_dynamic = (u8) rtw_dynamic_tdmadig;
-		registry_par->power_mgnt = PS_MODE_ACTIVE;
+		registry_par->power_mgnt = PM_PS_MODE_ACTIVE;
 		registry_par->ips_mode = IPS_NONE;
 	#else
 		registry_par->power_mgnt = (u8)rtw_power_mgnt;
@@ -4967,7 +4967,7 @@ int rtw_suspend_wow(_adapter *padapter)
 	rtw_clr_drv_stopped(padapter);	/*for 32k command*/
 
 	/* #ifdef CONFIG_LPS */
-	/* rtw_set_ps_mode(padapter, PS_MODE_ACTIVE, 0, 0, "WOWLAN"); */
+	/* rtw_set_ps_mode(padapter, PM_PS_MODE_ACTIVE, 0, 0, "WOWLAN"); */
 	/* #endif */
 
 	#ifdef CONFIG_SDIO_HCI
@@ -5040,7 +5040,7 @@ int rtw_suspend_wow(_adapter *padapter)
 	}
 #ifdef CONFIG_LPS
 	else {
-		if(pwrpriv->wowlan_power_mgmt != PS_MODE_ACTIVE) {
+		if(pwrpriv->wowlan_power_mgmt != PM_PS_MODE_ACTIVE) {
 			rtw_set_ps_mode(padapter, pwrpriv->wowlan_power_mgmt, 0, 0, "WOWLAN");
 		}
 	}
@@ -5132,7 +5132,7 @@ int rtw_suspend_ap_wow(_adapter *padapter)
 #endif
 
 #ifdef CONFIG_LPS
-	if(pwrpriv->wowlan_power_mgmt != PS_MODE_ACTIVE) {
+	if(pwrpriv->wowlan_power_mgmt != PM_PS_MODE_ACTIVE) {
 		rtw_set_ps_mode(padapter, pwrpriv->wowlan_power_mgmt, 0, 0, "AP-WOWLAN");
 	}
 #endif
@@ -5316,8 +5316,8 @@ int rtw_resume_process_wow(_adapter *padapter)
 #endif
 	} else {
 #ifdef CONFIG_LPS
-		if(pwrpriv->wowlan_power_mgmt != PS_MODE_ACTIVE) {
-			rtw_set_ps_mode(padapter, PS_MODE_ACTIVE, 0, 0, "WOWLAN");
+		if(pwrpriv->wowlan_power_mgmt != PM_PS_MODE_ACTIVE) {
+			rtw_set_ps_mode(padapter, PM_PS_MODE_ACTIVE, 0, 0, "WOWLAN");
 			rtw_wow_lps_level_decide(padapter, _FALSE);
 		}
 #endif /* CONFIG_LPS */
@@ -5466,8 +5466,8 @@ int rtw_resume_process_ap_wow(_adapter *padapter)
 
 
 #ifdef CONFIG_LPS
-	if(pwrpriv->wowlan_power_mgmt != PS_MODE_ACTIVE) {
-		rtw_set_ps_mode(padapter, PS_MODE_ACTIVE, 0, 0, "AP-WOWLAN");
+	if(pwrpriv->wowlan_power_mgmt != PM_PS_MODE_ACTIVE) {
+		rtw_set_ps_mode(padapter, PM_PS_MODE_ACTIVE, 0, 0, "AP-WOWLAN");
 		rtw_wow_lps_level_decide(padapter, _FALSE);
 	}
 #endif /* CONFIG_LPS */

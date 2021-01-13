@@ -6056,13 +6056,13 @@ int proc_get_ps_info(struct seq_file *m, void *v)
 	RTW_PRINT_SEL(m, "------------------------------\n");
 	RTW_PRINT_SEL(m, "*LPS:\n");
 
-	if (lps_mode == PS_MODE_ACTIVE)
+	if (lps_mode == PM_PS_MODE_ACTIVE)
 		str = "NO LPS";
-	else if (lps_mode == PS_MODE_MIN)
+	else if (lps_mode == PM_PS_MODE_MIN)
 		str = "MIN";
-	else if (lps_mode == PS_MODE_MAX)
+	else if (lps_mode == PM_PS_MODE_MAX)
 		str = "MAX";
-	else if (lps_mode == PS_MODE_DTIM)
+	else if (lps_mode == PM_PS_MODE_DTIM)
 		str = "DTIM";
 	else
 		sprintf(str, "%d", lps_mode);
@@ -6090,13 +6090,13 @@ int proc_get_ps_info(struct seq_file *m, void *v)
 	RTW_PRINT_SEL(m, "------------------------------\n");
 	RTW_PRINT_SEL(m, "*WOW LPS:\n");
 
-	if (wow_lps_mode == PS_MODE_ACTIVE)
+	if (wow_lps_mode == PM_PS_MODE_ACTIVE)
 		str = "NO LPS";
-	else if (wow_lps_mode == PS_MODE_MIN)
+	else if (wow_lps_mode == PM_PS_MODE_MIN)
 		str = "MIN";
-	else if (wow_lps_mode == PS_MODE_MAX)
+	else if (wow_lps_mode == PM_PS_MODE_MAX)
 		str = "MAX";
-	else if (wow_lps_mode == PS_MODE_DTIM)
+	else if (wow_lps_mode == PM_PS_MODE_DTIM)
 		str = "DTIM";
 	else
 		sprintf(str, "%d", wow_lps_mode);

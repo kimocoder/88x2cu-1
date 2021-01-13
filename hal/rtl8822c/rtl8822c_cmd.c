@@ -123,13 +123,13 @@ void _rtl8822c_set_FwPwrMode_cmd(PADAPTER adapter, u8 psmode, u8 rfon_ctrl)
 	if (pwrpriv->pwr_mode != psmode) {
 		if (pwrpriv->dtim > 0)
 			RTW_INFO(FUNC_ADPT_FMT ": dtim=%d, HW port id=%d\n", FUNC_ADPT_ARG(adapter),
-				pwrpriv->dtim, psmode == PS_MODE_ACTIVE ? pwrpriv->current_lps_hw_port_id : hw_port);
+				pwrpriv->dtim, psmode == PM_PS_MODE_ACTIVE ? pwrpriv->current_lps_hw_port_id : hw_port);
 		else
 			RTW_INFO(FUNC_ADPT_FMT ": HW port id=%d\n", FUNC_ADPT_ARG(adapter),
-				psmode == PS_MODE_ACTIVE ? pwrpriv->current_lps_hw_port_id : hw_port);
+				psmode == PM_PS_MODE_ACTIVE ? pwrpriv->current_lps_hw_port_id : hw_port);
 	}
 
-	if (psmode == PS_MODE_MIN || psmode == PS_MODE_MAX) {
+	if (psmode == PM_PS_MODE_MIN || psmode == PM_PS_MODE_MAX) {
 #ifdef CONFIG_WMMPS_STA	
 		if (rtw_is_wmmps_mode(adapter)) {
 			mode = 2;
@@ -154,11 +154,11 @@ void _rtl8822c_set_FwPwrMode_cmd(PADAPTER adapter, u8 psmode, u8 rfon_ctrl)
 			}
 		}
 
-		if (psmode == PS_MODE_MIN)
+		if (psmode == PM_PS_MODE_MIN)
 			rlbm = 0;
 		else
 			rlbm = 1;
-	} else if (psmode == PS_MODE_DTIM) {
+	} else if (psmode == PM_PS_MODE_DTIM) {
 		mode = 1;
 		/* For WOWLAN LPS, DTIM = (awake_intvl - 1) */
 		if (pwrpriv->dtim > 0 && pwrpriv->dtim < 16)
@@ -170,7 +170,7 @@ void _rtl8822c_set_FwPwrMode_cmd(PADAPTER adapter, u8 psmode, u8 rfon_ctrl)
 
 		rlbm = 2;
 		smart_ps = pwrpriv->smart_ps;
-	} else if (psmode == PS_MODE_ACTIVE) {
+	} else if (psmode == PM_PS_MODE_ACTIVE) {
 		mode = 0;
 	} else {
 		rlbm = 2;
@@ -222,7 +222,7 @@ void _rtl8822c_set_FwPwrMode_cmd(PADAPTER adapter, u8 psmode, u8 rfon_ctrl)
 	}
 
 #ifdef CONFIG_LPS_1T1R
-	if (psmode > PS_MODE_ACTIVE) {
+	if (psmode > PM_PS_MODE_ACTIVE) {
 		HAL_DATA_TYPE *hal_data = GET_HAL_DATA(adapter);
 
 		if (hal_data->lps_1t1r != pwrpriv->lps_1t1r
@@ -254,7 +254,7 @@ void _rtl8822c_set_FwPwrMode_cmd(PADAPTER adapter, u8 psmode, u8 rfon_ctrl)
 	SET_PWR_MODE_SET_AWAKE_INTERVAL(h2c, awake_intvl);
 	SET_PWR_MODE_SET_B_ALL_QUEUE_UAPSD(h2c, allQueueUAPSD);
 	SET_PWR_MODE_SET_PWR_STATE(h2c, PowerState);
-	if (psmode == PS_MODE_ACTIVE) {
+	if (psmode == PM_PS_MODE_ACTIVE) {
 		/* Leave LPS, set the same HW port ID */
 		SET_PWR_MODE_SET_PORT_ID(h2c, pwrpriv->current_lps_hw_port_id);
 	} else {
@@ -322,7 +322,7 @@ void rtl8822c_set_fw_pwrmode_inips_cmd_wowlan(PADAPTER padapter, u8 ps_mode)
 	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
 
 	RTW_INFO("%s, ps_mode: %d\n", __func__, ps_mode);
-	if (ps_mode == PS_MODE_ACTIVE) {
+	if (ps_mode == PM_PS_MODE_ACTIVE) {
 		SET_H2CCMD_INACTIVE_PS_EN(param, 0);
 	}
 	else {

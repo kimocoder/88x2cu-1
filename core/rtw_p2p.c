@@ -4138,7 +4138,7 @@ void p2p_ps_wk_hdl(_adapter *padapter, u8 p2p_ps_state)
 		if (pwdinfo->opp_ps == 1) {
 			if (pwrpriv->smart_ps == 0) {
 				pwrpriv->smart_ps = 2;
-				if (pwrpriv->pwr_mode != PS_MODE_ACTIVE)
+				if (pwrpriv->pwr_mode != PM_PS_MODE_ACTIVE)
 					rtw_exec_lps(padapter, pwrpriv->pwr_mode);
 			}
 		}
@@ -4179,7 +4179,7 @@ void p2p_ps_wk_hdl(_adapter *padapter, u8 p2p_ps_state)
 				if (pwrpriv->smart_ps != 0) {
 					pwrpriv->smart_ps = 0;
 					RTW_INFO("%s(): Enter CTW, change SmartPS\n", __FUNCTION__);
-					if (pwrpriv->pwr_mode != PS_MODE_ACTIVE)
+					if (pwrpriv->pwr_mode != PM_PS_MODE_ACTIVE)
 						rtw_exec_lps(padapter, pwrpriv->pwr_mode);
 				}
 			}

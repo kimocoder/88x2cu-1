@@ -5108,7 +5108,7 @@ static void rtw_tpt_mode(struct _ADAPTER *adapter)
 		dvobj->scan_deny = _TRUE;
 
 #ifdef CONFIG_LPS
-		rtw_pm_set_lps(adapter, PS_MODE_ACTIVE);
+		rtw_pm_set_lps(adapter, PM_PS_MODE_ACTIVE);
 #endif
 
 	}

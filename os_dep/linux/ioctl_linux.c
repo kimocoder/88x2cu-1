@@ -8479,7 +8479,7 @@ static int rtw_mp_efuse_get(struct net_device *dev,
 	struct iw_point *wrqu;
 
 	u8 ips_mode = IPS_NUM; /* init invalid value */
-	u8 lps_mode = PS_MODE_NUM; /* init invalid value */
+	u8 lps_mode = PM_PS_MODE_NUM; /* init invalid value */
 	struct pwrctrl_priv *pwrctrlpriv ;
 	u8 *data = NULL;
 	u8 *rawdata = NULL;
@@ -8519,7 +8519,7 @@ static int rtw_mp_efuse_get(struct net_device *dev,
 
 #ifdef CONFIG_LPS
 	lps_mode = pwrctrlpriv->power_mgnt;/* keep org value */
-	rtw_pm_set_lps(padapter, PS_MODE_ACTIVE);
+	rtw_pm_set_lps(padapter, PM_PS_MODE_ACTIVE);
 #endif
 
 #ifdef CONFIG_IPS
@@ -9179,7 +9179,7 @@ static int rtw_mp_efuse_set(struct net_device *dev,
 	struct mp_priv *pmp_priv;
 
 	u8 ips_mode = IPS_NUM; /* init invalid value */
-	u8 lps_mode = PS_MODE_NUM; /* init invalid value */
+	u8 lps_mode = PM_PS_MODE_NUM; /* init invalid value */
 	u32 i = 0, j = 0, jj, kk;
 	u8 *setdata = NULL;
 	u8 *ShadowMapBT = NULL;
@@ -9234,7 +9234,7 @@ static int rtw_mp_efuse_set(struct net_device *dev,
 
 #ifdef CONFIG_LPS
 	lps_mode = pwrctrlpriv->power_mgnt;/* keep org value */
-	rtw_pm_set_lps(padapter, PS_MODE_ACTIVE);
+	rtw_pm_set_lps(padapter, PM_PS_MODE_ACTIVE);
 #endif
 
 #ifdef CONFIG_IPS
@@ -10798,7 +10798,7 @@ static int rtw_tdls_ch_switch(struct net_device *dev,
 	} else
 		RTW_INFO("TDLS peer not found\n");
 
-	rtw_pm_set_lps(padapter, PS_MODE_ACTIVE);
+	rtw_pm_set_lps(padapter, PM_PS_MODE_ACTIVE);
 
 	rtw_hal_get_hwreg(padapter, HW_VAR_CH_SW_NEED_TO_TAKE_CARE_IQK_INFO, &take_care_iqk);
 	if (take_care_iqk == _TRUE) {
@@ -10874,7 +10874,7 @@ static int rtw_tdls_ch_switch_off(struct net_device *dev,
 	_cancel_timer_ex(&ptdls_sta->stay_on_base_chnl_timer);
 	_cancel_timer_ex(&ptdls_sta->ch_sw_monitor_timer);
 
-	rtw_pm_set_lps(padapter, PS_MODE_MAX);
+	rtw_pm_set_lps(padapter, PM_PS_MODE_MAX);
 #endif /* CONFIG_TDLS_CH_SW */
 #endif /* CONFIG_TDLS */
 

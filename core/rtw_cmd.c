@@ -3267,7 +3267,7 @@ void rtw_lps_change_dtim_hdl(_adapter *padapter, u8 dtim)
 		pwrpriv->dtim = dtim;
 	}
 
-	if ((pwrpriv->bFwCurrentInPSMode == _TRUE) && (pwrpriv->pwr_mode > PS_MODE_ACTIVE)) {
+	if ((pwrpriv->bFwCurrentInPSMode == _TRUE) && (pwrpriv->pwr_mode > PM_PS_MODE_ACTIVE)) {
 		u8 ps_mode = pwrpriv->pwr_mode;
 
 		/* RTW_INFO("change DTIM from %d to %d, ps_mode=%d\n", pwrpriv->dtim, dtim, ps_mode); */

@@ -456,7 +456,7 @@ void rtw_btcoex_LPS_Enter(PADAPTER padapter)
 
 	pwrpriv->bpower_saving = _TRUE;
 	lpsVal = rtw_btcoex_LpsVal(padapter);
-	rtw_set_ps_mode(padapter, PS_MODE_MIN, 0, lpsVal, "BTCOEX");
+	rtw_set_ps_mode(padapter, PM_PS_MODE_MIN, 0, lpsVal, "BTCOEX");
 }
 
 u8 rtw_btcoex_LPS_Leave(PADAPTER padapter)
@@ -466,8 +466,8 @@ u8 rtw_btcoex_LPS_Leave(PADAPTER padapter)
 
 	pwrpriv = adapter_to_pwrctl(padapter);
 
-	if (pwrpriv->pwr_mode != PS_MODE_ACTIVE) {
-		rtw_set_ps_mode(padapter, PS_MODE_ACTIVE, 0, 0, "BTCOEX");
+	if (pwrpriv->pwr_mode != PM_PS_MODE_ACTIVE) {
+		rtw_set_ps_mode(padapter, PM_PS_MODE_ACTIVE, 0, 0, "BTCOEX");
 		pwrpriv->bpower_saving = _FALSE;
 	}
 

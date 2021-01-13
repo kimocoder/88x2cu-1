@@ -1787,7 +1787,7 @@ int rtw_mp_dpk(struct net_device *dev,
 	char *pch;
 
 	u8 ips_mode = IPS_NUM; /* init invalid value */
-	u8 lps_mode = PS_MODE_NUM; /* init invalid value */
+	u8 lps_mode = PM_PS_MODE_NUM; /* init invalid value */
 
 	if (copy_from_user(extra, wrqu->data.pointer, wrqu->data.length))
 		return -EFAULT;
@@ -1807,7 +1807,7 @@ int rtw_mp_dpk(struct net_device *dev,
 	} else	{
 #ifdef CONFIG_LPS
 			lps_mode = pwrctrlpriv->power_mgnt;/* keep org value */
-			rtw_pm_set_lps(padapter, PS_MODE_ACTIVE);
+			rtw_pm_set_lps(padapter, PM_PS_MODE_ACTIVE);
 #endif
 #ifdef CONFIG_IPS
 			ips_mode = pwrctrlpriv->ips_mode;/* keep org value */

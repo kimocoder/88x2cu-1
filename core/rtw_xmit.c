@@ -1363,7 +1363,7 @@ static void update_attrib_trigger_frame_info(_adapter *padapter, struct pkt_attr
 	u8 trigger_frame_en = 0;
 
 	if (check_fwstate(pmlmepriv, WIFI_STATION_STATE) == _TRUE) {
-		if ((pwrpriv->pwr_mode == PS_MODE_MIN) || (pwrpriv->pwr_mode == PS_MODE_MAX)) {
+		if ((pwrpriv->pwr_mode == PM_PS_MODE_MIN) || (pwrpriv->pwr_mode == PM_PS_MODE_MAX)) {
 			if((pqospriv->uapsd_ap_supported) && ((pqospriv->uapsd_tid & BIT(pattrib->priority)) == _TRUE)) {
 				trigger_frame_en = 1;
 				RTW_INFO("[WMMPS]"FUNC_ADPT_FMT": This is a Trigger Frame\n", FUNC_ADPT_ARG(padapter));

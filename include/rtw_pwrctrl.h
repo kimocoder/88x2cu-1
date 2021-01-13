@@ -16,6 +16,12 @@
 #define __RTW_PWRCTRL_H_
 
 
+#define PS_ACTIVE	0
+#define PS_LPS		1
+
+
+
+
 #define FW_PWR0	0
 #define FW_PWR1	1
 #define FW_PWR2	2
@@ -87,6 +93,7 @@ typedef struct rtl_priv_pattern {
 
 #endif /* CONFIG_WOWLAN */
 
+#if 0 // NEO
 enum Power_Mgnt {
 	PS_MODE_ACTIVE	= 0	,
 	PS_MODE_MIN			,
@@ -100,6 +107,22 @@ enum Power_Mgnt {
 	PM_Radio_Off			,
 	PM_Card_Disable		,
 	PS_MODE_NUM,
+};
+#endif
+
+enum power_mgnt {
+	PM_PS_MODE_ACTIVE	= 0	,
+	PM_PS_MODE_MIN			,
+	PM_PS_MODE_MAX			,
+	PM_PS_MODE_DTIM			,	/* PS_MODE_SELF_DEFINED */
+	PM_PS_MODE_VOIP			,
+	PM_PS_MODE_UAPSD_WMM	,
+	PM_PS_MODE_UAPSD			,
+	PM_PS_MODE_IBSS			,
+	PM_PS_MODE_WWLAN		,
+	PM_RADIO_OFF			,
+	PM_CARD_DISABLE		,
+	PM_PS_MODE_NUM,
 };
 
 enum lps_level {

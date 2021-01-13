@@ -530,7 +530,7 @@ void rtl8822c_phy_haldm_watchdog(PADAPTER adapter)
 	}
 
 #ifdef CONFIG_LPS
-	if (pwrpriv->bLeisurePs && bFwCurrentInPSMode && pwrpriv->pwr_mode != PS_MODE_ACTIVE) {
+	if (pwrpriv->bLeisurePs && bFwCurrentInPSMode && pwrpriv->pwr_mode != PM_PS_MODE_ACTIVE) {
 		in_lps = _TRUE;
 
 		for (i = 0; i < dvobj->iface_nums; i++) {

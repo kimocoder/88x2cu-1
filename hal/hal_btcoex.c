@@ -3818,7 +3818,7 @@ void EXhalbtcoutsrc_lps_notify(PBTC_COEXIST pBtCoexist, u8 type)
 	if (pBtCoexist->manual_control)
 		return;
 
-	if (PS_MODE_ACTIVE == type) {
+	if (PM_PS_MODE_ACTIVE == type) {
 		lpsType = BTC_LPS_DISABLE;
 		GLBtcWiFiInLPS = _FALSE;
 	} else {

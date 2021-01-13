@@ -375,7 +375,7 @@ void traffic_check_for_leave_lps_by_tp(PADAPTER padapter, u8 tx, struct sta_info
 		if (tx_tp_kbyte >= tx_tp_th ||
 			padapter->mlmepriv.LinkDetectInfo.NumTxOkInPeriod >= pwrpriv->lps_tx_pkts){
 			if (pwrpriv->bLeisurePs
-				&& (pwrpriv->pwr_mode != PS_MODE_ACTIVE)
+				&& (pwrpriv->pwr_mode != PM_PS_MODE_ACTIVE)
 				#ifdef CONFIG_BT_COEXIST
 				&& (rtw_btcoex_IsBtControlLps(padapter) == _FALSE)
 				#endif
@@ -392,7 +392,7 @@ void traffic_check_for_leave_lps_by_tp(PADAPTER padapter, u8 tx, struct sta_info
 		if (rx_tp_kbyte>= rx_tp_th ||
 			padapter->mlmepriv.LinkDetectInfo.NumRxUnicastOkInPeriod >= pwrpriv->lps_rx_pkts) {
 			if (pwrpriv->bLeisurePs
-				&& (pwrpriv->pwr_mode != PS_MODE_ACTIVE)
+				&& (pwrpriv->pwr_mode != PM_PS_MODE_ACTIVE)
 				#ifdef CONFIG_BT_COEXIST
 				&& (rtw_btcoex_IsBtControlLps(padapter) == _FALSE)
 				#endif
@@ -435,7 +435,7 @@ void	traffic_check_for_leave_lps(PADAPTER padapter, u8 tx, u32 tx_packets)
 		if (rtw_get_passing_time_ms(start_time) > 2000) { /* 2 sec == watch dog timer */
 			if (xmit_cnt > 8) {
 				if ((adapter_to_pwrctl(padapter)->bLeisurePs)
-				    && (adapter_to_pwrctl(padapter)->pwr_mode != PS_MODE_ACTIVE)
+				    && (adapter_to_pwrctl(padapter)->pwr_mode != PM_PS_MODE_ACTIVE)
 #ifdef CONFIG_BT_COEXIST
 				    && (rtw_btcoex_IsBtControlLps(padapter) == _FALSE)
 #endif
@@ -452,7 +452,7 @@ void	traffic_check_for_leave_lps(PADAPTER padapter, u8 tx, u32 tx_packets)
 	} else { /* from rx path */
 		if (pmlmepriv->LinkDetectInfo.NumRxUnicastOkInPeriod > 4/*2*/) {
 			if ((adapter_to_pwrctl(padapter)->bLeisurePs)
-			    && (adapter_to_pwrctl(padapter)->pwr_mode != PS_MODE_ACTIVE)
+			    && (adapter_to_pwrctl(padapter)->pwr_mode != PM_PS_MODE_ACTIVE)
 #ifdef CONFIG_BT_COEXIST
 			    && (rtw_btcoex_IsBtControlLps(padapter) == _FALSE)
 #endif
@@ -812,7 +812,7 @@ void rtw_exec_lps(_adapter *padapter, u8 ps_mode)
 {
 	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
 
-	if (ps_mode == PS_MODE_ACTIVE) {
+	if (ps_mode == PM_PS_MODE_ACTIVE) {
 #ifdef CONFIG_LPS_ACK
 		_enter_critical_mutex(&pwrpriv->lps_ack_mutex, NULL);
 		rtw_sctx_init(&pwrpriv->lps_ack_sctx, 100);
@@ -838,7 +838,7 @@ void rtw_lps_rfon_ctrl(_adapter *padapter, u8 rfon_ctrl)
 	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
 	u8 rpwm = 0;
 
-	if (pwrpriv->bFwCurrentInPSMode && pwrpriv->pwr_mode != PS_MODE_ACTIVE) {
+	if (pwrpriv->bFwCurrentInPSMode && pwrpriv->pwr_mode != PM_PS_MODE_ACTIVE) {
 		if (rfon_ctrl == rf_on) {
 #ifdef CONFIG_LPS_LCLK
 			if (pwrpriv->lps_level >= LPS_LCLK) {
@@ -957,12 +957,12 @@ void rtw_set_ps_mode(PADAPTER padapter, u8 ps_mode, u8 smart_ps, u8 bcn_ant_mode
 
 
 
-	if (ps_mode > PM_Card_Disable) {
+	if (ps_mode > PM_CARD_DISABLE) {
 		return;
 	}
 
 	if (pwrpriv->pwr_mode == ps_mode) {
-		if (PS_MODE_ACTIVE == ps_mode)
+		if (PM_PS_MODE_ACTIVE == ps_mode)
 			return;
 
 #ifndef CONFIG_BT_COEXIST
@@ -976,14 +976,14 @@ void rtw_set_ps_mode(PADAPTER padapter, u8 ps_mode, u8 smart_ps, u8 bcn_ant_mode
 	}
 
 #ifdef CONFIG_FW_MULTI_PORT_SUPPORT
-	if (PS_MODE_ACTIVE != ps_mode) {
+	if (PM_PS_MODE_ACTIVE != ps_mode) {
 		rtw_set_ps_rsvd_page(padapter);
 		rtw_set_default_port_id(padapter);
 	}
 #endif
 
 #ifdef CONFIG_LPS_PG
-	if ((PS_MODE_ACTIVE != ps_mode) && (pwrpriv->lps_level == LPS_PG)) {
+	if ((PM_PS_MODE_ACTIVE != ps_mode) && (pwrpriv->lps_level == LPS_PG)) {
 		if (pwrpriv->wowlan_mode != _TRUE) {
 				/*rtw_hal_set_lps_pg_info(padapter);*/
 				lps_pg_hdl_id = LPS_PG_INFO_CFG;
@@ -996,8 +996,8 @@ void rtw_set_ps_mode(PADAPTER padapter, u8 ps_mode, u8 smart_ps, u8 bcn_ant_mode
 	_enter_pwrlock(&pwrpriv->lock);
 #endif
 
-	/* if(pwrpriv->pwr_mode == PS_MODE_ACTIVE) */
-	if (ps_mode == PS_MODE_ACTIVE) {
+	/* if(pwrpriv->pwr_mode == PM_PS_MODE_ACTIVE) */
+	if (ps_mode == PM_PS_MODE_ACTIVE) {
 		if (1
 #ifdef CONFIG_BT_COEXIST
 		    && (((rtw_btcoex_IsBtControlLps(padapter) == _FALSE)
@@ -1260,7 +1260,7 @@ void LPS_Enter(PADAPTER padapter, const char *msg)
 	if (pwrpriv->bLeisurePs) {
 		/* Idle for a while if we connect to AP a while ago. */
 		if (pwrpriv->LpsIdleCount >= 2) { /* 4 Sec */
-			if (pwrpriv->pwr_mode == PS_MODE_ACTIVE) {
+			if (pwrpriv->pwr_mode == PM_PS_MODE_ACTIVE) {
 
 #ifdef CONFIG_WMMPS_STA
 				if (rtw_is_wmmps_mode(padapter))
@@ -1313,7 +1313,7 @@ void LPS_Leave(PADAPTER padapter, const char *msg)
 #endif
 
 	if (pwrpriv->bLeisurePs) {
-		if (pwrpriv->pwr_mode != PS_MODE_ACTIVE) {
+		if (pwrpriv->pwr_mode != PM_PS_MODE_ACTIVE) {
 #ifdef CONFIG_PCI_DYNAMIC_ASPM
 			if (msg != LPS_CTRL_PHYDM)
 				rtw_pci_dynamic_aspm_set_mode(padapter, ASPM_MODE_PERF);
@@ -1324,7 +1324,7 @@ void LPS_Leave(PADAPTER padapter, const char *msg)
 #endif /* CONFIG_WMMPS_STA */
 			
 			sprintf(buf, "WIFI-%s", msg);
-			rtw_set_ps_mode(padapter, PS_MODE_ACTIVE, 0, 0, buf);
+			rtw_set_ps_mode(padapter, PM_PS_MODE_ACTIVE, 0, 0, buf);
 
 #ifdef CONFIG_RTW_CFGVENDOR_LLSTATS	
 			pwrpriv->pwr_saving_time += rtw_get_passing_time_ms(pwrpriv->pwr_saving_start_time);
@@ -1388,7 +1388,7 @@ void LeaveAllPowerSaveModeDirect(PADAPTER Adapter)
 
 	if (rtw_mi_check_status(Adapter, MI_LINKED)) { /*connect*/
 
-		if (pwrpriv->pwr_mode == PS_MODE_ACTIVE) {
+		if (pwrpriv->pwr_mode == PM_PS_MODE_ACTIVE) {
 			RTW_INFO("%s: Driver Already Leave LPS\n", __FUNCTION__);
 			return;
 		}
@@ -1525,7 +1525,7 @@ void LPS_Leave_check(
 #ifdef CONFIG_USB_HCI
 		    || rtw_is_drv_stopped(padapter)
 #endif
-		    || (pwrpriv->pwr_mode == PS_MODE_ACTIVE)
+		    || (pwrpriv->pwr_mode == PM_PS_MODE_ACTIVE)
 		   )
 			bReady = _TRUE;
 
@@ -1852,7 +1852,7 @@ void rtw_unregister_task_alive(PADAPTER padapter, u32 task)
 
 	unregister_task_alive(pwrctrl, task);
 
-	if ((pwrctrl->pwr_mode != PS_MODE_ACTIVE)
+	if ((pwrctrl->pwr_mode != PM_PS_MODE_ACTIVE)
 	    && (pwrctrl->bFwCurrentInPSMode == _TRUE)) {
 
 		if (pwrctrl->cpwm > pslv) {
@@ -2064,7 +2064,7 @@ void rtw_unregister_tx_alive(PADAPTER padapter)
 
 	unregister_task_alive(pwrctrl, XMIT_ALIVE);
 
-	if ((pwrctrl->pwr_mode != PS_MODE_ACTIVE)
+	if ((pwrctrl->pwr_mode != PM_PS_MODE_ACTIVE)
 	    && (pwrctrl->bFwCurrentInPSMode == _TRUE)) {
 
 		if (pwrctrl->cpwm > pslv) {
@@ -2123,7 +2123,7 @@ void rtw_unregister_cmd_alive(PADAPTER padapter)
 
 	unregister_task_alive(pwrctrl, CMD_ALIVE);
 
-	if ((pwrctrl->pwr_mode != PS_MODE_ACTIVE)
+	if ((pwrctrl->pwr_mode != PM_PS_MODE_ACTIVE)
 	    && (pwrctrl->bFwCurrentInPSMode == _TRUE)) {
 
 		if (pwrctrl->cpwm > pslv) {
@@ -2229,12 +2229,12 @@ void rtw_init_pwrctrl_priv(PADAPTER padapter)
 	pwrctrlpriv->bkeepfwalive = _FALSE;
 	pwrctrlpriv->LpsIdleCount = 0;
 
-	/* pwrctrlpriv->FWCtrlPSMode =padapter->registrypriv.power_mgnt; */ /* PS_MODE_MIN; */
+	/* pwrctrlpriv->FWCtrlPSMode =padapter->registrypriv.power_mgnt; */ /* PM_PS_MODE_MIN; */
 	if (padapter->registrypriv.mp_mode == 1)
-		pwrctrlpriv->power_mgnt = PS_MODE_ACTIVE ;
+		pwrctrlpriv->power_mgnt = PM_PS_MODE_ACTIVE ;
 	else
-		pwrctrlpriv->power_mgnt = padapter->registrypriv.power_mgnt; /* PS_MODE_MIN; */
-	pwrctrlpriv->bLeisurePs = (PS_MODE_ACTIVE != pwrctrlpriv->power_mgnt) ? _TRUE : _FALSE;
+		pwrctrlpriv->power_mgnt = padapter->registrypriv.power_mgnt; /* PM_PS_MODE_MIN; */
+	pwrctrlpriv->bLeisurePs = (PM_PS_MODE_ACTIVE != pwrctrlpriv->power_mgnt) ? _TRUE : _FALSE;
 
 	pwrctrlpriv->bFwCurrentInPSMode = _FALSE;
 	pwrctrlpriv->lps_deny_time = rtw_get_current_time();
@@ -2242,7 +2242,7 @@ void rtw_init_pwrctrl_priv(PADAPTER padapter)
 	pwrctrlpriv->rpwm = 0;
 	pwrctrlpriv->cpwm = PS_STATE_S4;
 
-	pwrctrlpriv->pwr_mode = PS_MODE_ACTIVE;
+	pwrctrlpriv->pwr_mode = PM_PS_MODE_ACTIVE;
 	pwrctrlpriv->smart_ps = padapter->registrypriv.smart_ps;
 	pwrctrlpriv->bcn_ant_mode = 0;
 	pwrctrlpriv->dtim = 0;
@@ -2739,14 +2739,14 @@ int rtw_pm_set_lps(_adapter *padapter, u8 mode)
 	int	ret = 0;
 	struct pwrctrl_priv *pwrctrlpriv = adapter_to_pwrctl(padapter);
 
-	if (mode < PS_MODE_NUM) {
+	if (mode < PM_PS_MODE_NUM) {
 		if (pwrctrlpriv->power_mgnt != mode) {
-			if (PS_MODE_ACTIVE == mode)
+			if (PM_PS_MODE_ACTIVE == mode)
 				LeaveAllPowerSaveMode(padapter);
 			else
 				pwrctrlpriv->LpsIdleCount = 2;
 			pwrctrlpriv->power_mgnt = mode;
-			pwrctrlpriv->bLeisurePs = (PS_MODE_ACTIVE != pwrctrlpriv->power_mgnt) ? _TRUE : _FALSE;
+			pwrctrlpriv->bLeisurePs = (PM_PS_MODE_ACTIVE != pwrctrlpriv->power_mgnt) ? _TRUE : _FALSE;
 		}
 	} else
 		ret = -EINVAL;
@@ -2800,7 +2800,7 @@ int rtw_pm_set_wow_lps(_adapter *padapter, u8 mode)
 	int	ret = 0;
 	struct pwrctrl_priv *pwrctrlpriv = adapter_to_pwrctl(padapter);
 
-	if (mode < PS_MODE_NUM) {
+	if (mode < PM_PS_MODE_NUM) {
 		if (pwrctrlpriv->wowlan_power_mgmt != mode) 
 			pwrctrlpriv->wowlan_power_mgmt = mode;
 	} else

@@ -1452,7 +1452,7 @@ static void rtw_dev_remove(struct usb_interface *pusb_intf)
 
 	if (GET_HAL_DATA(padapter)->bFWReady == _TRUE) {
 		rtw_pm_set_ips(padapter, IPS_NONE);
-		rtw_pm_set_lps(padapter, PS_MODE_ACTIVE);
+		rtw_pm_set_lps(padapter, PM_PS_MODE_ACTIVE);
 
 		LeaveAllPowerSaveMode(padapter);
 	}
