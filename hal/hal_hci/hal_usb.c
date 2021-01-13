@@ -321,6 +321,8 @@ int usb_async_write32(struct intf_hdl *pintfhdl, u32 addr, u32 val)
 }
 #endif /* CONFIG_USB_SUPPORT_ASYNC_VDN_REQ */
 
+#if 0
+
 u8 usb_read8(struct intf_hdl *pintfhdl, u32 addr)
 {
 	u8 request;
@@ -510,6 +512,8 @@ int usb_write32(struct intf_hdl *pintfhdl, u32 addr, u32 val)
 
 }
 
+#endif
+
 int usb_writeN(struct intf_hdl *pintfhdl, u32 addr, u32 length, u8 *pdata)
 {
 	u8 request;
@@ -539,15 +543,15 @@ void usb_set_intf_ops(_adapter *padapter, struct _io_ops *pops)
 {
 	_rtw_memset((u8 *)pops, 0, sizeof(struct _io_ops));
 
-	pops->_read8 = &usb_read8;
-	pops->_read16 = &usb_read16;
-	pops->_read32 = &usb_read32;
+//	pops->_read8 = &usb_read8;
+//	pops->_read16 = &usb_read16;
+//	pops->_read32 = &usb_read32;
 	pops->_read_mem = &usb_read_mem;
 	pops->_read_port = &rtw_usb_read_port;
 
-	pops->_write8 = &usb_write8;
-	pops->_write16 = &usb_write16;
-	pops->_write32 = &usb_write32;
+//	pops->_write8 = &usb_write8;
+//	pops->_write16 = &usb_write16;
+//	pops->_write32 = &usb_write32;
 	pops->_writeN = &usb_writeN;
 
 #ifdef CONFIG_USB_SUPPORT_ASYNC_VDN_REQ

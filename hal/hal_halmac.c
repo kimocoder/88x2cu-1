@@ -305,82 +305,55 @@ static u8 _halmac_sdio_read_cia(void *p, u32 offset)
 static u8 _halmac_reg_read_8(void *p, u32 offset)
 {
 	struct dvobj_priv *d;
-	PADAPTER adapter;
-
 
 	d = (struct dvobj_priv *)p;
-	adapter = dvobj_get_primary_adapter(d);
 
-	return _rtw_read8(adapter, offset);
+	return rtw_phl_read8(d->phl, offset);
 }
 
 static u16 _halmac_reg_read_16(void *p, u32 offset)
 {
 	struct dvobj_priv *d;
-	PADAPTER adapter;
-
 
 	d = (struct dvobj_priv *)p;
-	adapter = dvobj_get_primary_adapter(d);
 
-	return _rtw_read16(adapter, offset);
+	return rtw_phl_read16(d->phl, offset);
 }
 
 static u32 _halmac_reg_read_32(void *p, u32 offset)
 {
 	struct dvobj_priv *d;
-	PADAPTER adapter;
-
 
 	d = (struct dvobj_priv *)p;
-	adapter = dvobj_get_primary_adapter(d);
 
-	return _rtw_read32(adapter, offset);
+	return rtw_phl_read32(d->phl, offset);
 }
 
 static void _halmac_reg_write_8(void *p, u32 offset, u8 val)
 {
 	struct dvobj_priv *d;
-	PADAPTER adapter;
-	int err;
-
 
 	d = (struct dvobj_priv *)p;
-	adapter = dvobj_get_primary_adapter(d);
 
-	err = _rtw_write8(adapter, offset, val);
-	if (err == _FAIL)
-		RTW_ERR("%s: I/O FAIL!\n", __FUNCTION__);
+	rtw_phl_write8(d->phl, offset, val);
 }
 
 static void _halmac_reg_write_16(void *p, u32 offset, u16 val)
 {
 	struct dvobj_priv *d;
-	PADAPTER adapter;
-	int err;
-
 
 	d = (struct dvobj_priv *)p;
-	adapter = dvobj_get_primary_adapter(d);
 
-	err = _rtw_write16(adapter, offset, val);
-	if (err == _FAIL)
-		RTW_ERR("%s: I/O FAIL!\n", __FUNCTION__);
+	rtw_phl_write16(d->phl, offset, val);
 }
 
 static void _halmac_reg_write_32(void *p, u32 offset, u32 val)
 {
 	struct dvobj_priv *d;
-	PADAPTER adapter;
-	int err;
-
 
 	d = (struct dvobj_priv *)p;
-	adapter = dvobj_get_primary_adapter(d);
 
-	err = _rtw_write32(adapter, offset, val);
-	if (err == _FAIL)
-		RTW_ERR("%s: I/O FAIL!\n", __FUNCTION__);
+	rtw_phl_write32(d->phl, offset, val);
 }
 #endif /* !CONFIG_SDIO_HCI */
 

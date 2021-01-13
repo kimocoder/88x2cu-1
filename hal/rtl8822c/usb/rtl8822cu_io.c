@@ -21,15 +21,19 @@ void rtl8822cu_set_intf_ops(struct _io_ops *pops)
 
 	_rtw_memset((u8 *)pops, 0, sizeof(struct _io_ops));
 
+#if 0
 	pops->_read8 = &usb_read8;
 	pops->_read16 = &usb_read16;
 	pops->_read32 = &usb_read32;
+#endif
 	pops->_read_mem = &usb_read_mem;
 	pops->_read_port = &rtw_usb_read_port;
 
+#if 0
 	pops->_write8 = &usb_write8;
 	pops->_write16 = &usb_write16;
 	pops->_write32 = &usb_write32;
+#endif
 	pops->_writeN = &usb_writeN;
 
 #ifdef CONFIG_USB_SUPPORT_ASYNC_VDN_REQ

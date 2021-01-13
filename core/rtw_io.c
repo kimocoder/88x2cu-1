@@ -59,6 +59,8 @@ jackson@realtek.com.tw
 	#define rtw_cpu_to_le32(val)		cpu_to_le32(val)
 #endif
 
+//NEO
+#if 0
 
 u8 _rtw_read8(_adapter *adapter, u32 addr)
 {
@@ -155,6 +157,8 @@ int _rtw_writeN(_adapter *adapter, u32 addr , u32 length , u8 *pdata)
 
 	return RTW_STATUS_CODE(ret);
 }
+
+#endif // if 0
 
 #ifdef CONFIG_SDIO_HCI
 u8 _rtw_sd_f0_read8(_adapter *adapter, u32 addr)
@@ -793,6 +797,8 @@ void dbg_rtw_reg_write_monitor(_adapter *adapter, u32 addr, u32 len, u32 val, co
 	}
 }
 
+#if 0 // NEO
+
 u8 dbg_rtw_read8(_adapter *adapter, u32 addr, const char *caller, const int line)
 {
 	u8 val = _rtw_read8(adapter, addr);
@@ -856,6 +862,9 @@ int dbg_rtw_write32(_adapter *adapter, u32 addr, u32 val, const char *caller, co
 
 	return _rtw_write32(adapter, addr, val);
 }
+
+#endif
+
 int dbg_rtw_writeN(_adapter *adapter, u32 addr , u32 length , u8 *data, const char *caller, const int line)
 {
 	if (match_write_sniff(adapter, addr, length, 0)) {
