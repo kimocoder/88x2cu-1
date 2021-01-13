@@ -103,31 +103,16 @@ struct _io_ops {
 
 	void (*_read_mem)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);
 	void (*_write_mem)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);
-#endif
 	void (*_sync_irp_protocol_rw)(struct io_queue *pio_q);
 
 	u32(*_read_interrupt)(struct intf_hdl *pintfhdl, u32 addr);
+#endif
 
 	u32(*_read_port)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);
 	u32(*_write_port)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);
 
-	u32(*_write_scsi)(struct intf_hdl *pintfhdl, u32 cnt, u8 *pmem);
-
 	void (*_read_port_cancel)(struct intf_hdl *pintfhdl);
 	void (*_write_port_cancel)(struct intf_hdl *pintfhdl);
-
-#ifdef CONFIG_SDIO_HCI
-	u8(*_sd_f0_read8)(struct intf_hdl *pintfhdl, u32 addr);
-#ifdef CONFIG_SDIO_INDIRECT_ACCESS
-	u8(*_sd_iread8)(struct intf_hdl *pintfhdl, u32 addr);
-	u16(*_sd_iread16)(struct intf_hdl *pintfhdl, u32 addr);
-	u32(*_sd_iread32)(struct intf_hdl *pintfhdl, u32 addr);
-	int (*_sd_iwrite8)(struct intf_hdl *pintfhdl, u32 addr, u8 val);
-	int (*_sd_iwrite16)(struct intf_hdl *pintfhdl, u32 addr, u16 val);
-	int (*_sd_iwrite32)(struct intf_hdl *pintfhdl, u32 addr, u32 val);
-#endif /* CONFIG_SDIO_INDIRECT_ACCESS */
-#endif
-
 };
 
 struct io_req {
