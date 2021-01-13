@@ -3711,7 +3711,7 @@ void rtw_dfs_ch_switch_hdl(struct dvobj_priv *dvobj)
 		RTW_INFO("%s ch sel by AP/MESH ifaces\n", __func__);
 	} else {
 		/* no available or valid CSA channel and no AP/MESH ifaces */
-		if (!IsSupported24G(dvobj_to_regsty(dvobj)->wireless_mode)
+		if (!is_supported_24g(dvobj_to_regsty(dvobj)->wireless_mode)
 			#ifdef CONFIG_DFS_MASTER
 			|| rfctl->radar_detected
 			#endif

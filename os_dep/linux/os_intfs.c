@@ -1180,10 +1180,10 @@ uint rtw_load_registry(_adapter *padapter)
 #endif
 	registry_par->wireless_mode = (u8)rtw_wireless_mode;
 
-	if (IsSupported24G(registry_par->wireless_mode) && (!is_supported_5g(registry_par->wireless_mode))
+	if (is_supported_24g(registry_par->wireless_mode) && (!is_supported_5g(registry_par->wireless_mode))
 	    && (registry_par->channel > 14))
 		registry_par->channel = 1;
-	else if (is_supported_5g(registry_par->wireless_mode) && (!IsSupported24G(registry_par->wireless_mode))
+	else if (is_supported_5g(registry_par->wireless_mode) && (!is_supported_24g(registry_par->wireless_mode))
 		 && (registry_par->channel <= 14))
 		registry_par->channel = 36;
 

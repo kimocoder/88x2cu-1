@@ -1088,7 +1088,7 @@ int op_class_pref_init(_adapter *adapter)
 		goto exit;
 	}
 
-	if (IsSupported24G(regsty->wireless_mode) && hal_chk_band_cap(adapter, BAND_CAP_2G))
+	if (is_supported_24g(regsty->wireless_mode) && hal_chk_band_cap(adapter, BAND_CAP_2G))
 		band_bmp |= BAND_CAP_2G;
 	if (is_supported_5g(regsty->wireless_mode) && hal_chk_band_cap(adapter, BAND_CAP_5G))
 		band_bmp |= BAND_CAP_5G;

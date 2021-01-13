@@ -413,7 +413,7 @@ static u8 init_channel_set_from_rtk_priv(_adapter *padapter, RT_CHANNEL_INFO *ch
 
 	_rtw_memset(channel_set, 0, sizeof(RT_CHANNEL_INFO) * MAX_CHANNEL_NUM);
 
-	if (IsSupported24G(regsty->wireless_mode) && hal_chk_band_cap(padapter, BAND_CAP_2G))
+	if (is_supported_24g(regsty->wireless_mode) && hal_chk_band_cap(padapter, BAND_CAP_2G))
 		b2_4GBand = _TRUE;
 
 	if (is_supported_5g(regsty->wireless_mode) && hal_chk_band_cap(padapter, BAND_CAP_5G))

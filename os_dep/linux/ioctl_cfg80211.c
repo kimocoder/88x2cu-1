@@ -9877,7 +9877,7 @@ static int rtw_cfg80211_init_wiphy_band(_adapter *padapter, struct wiphy *wiphy)
 	rf_type = GET_HAL_RFPATH(padapter);
 	RTW_INFO("%s:rf_type=%d\n", __func__, rf_type);
 
-	if (IsSupported24G(padapter->registrypriv.wireless_mode)) {
+	if (is_supported_24g(padapter->registrypriv.wireless_mode)) {
 		band = wiphy->bands[NL80211_BAND_2GHZ] = rtw_spt_band_alloc(BAND_ON_24G);
 		if (!band)
 			goto exit;
@@ -9922,7 +9922,7 @@ void rtw_cfg80211_update_wiphy_max_txpower(_adapter *adapter, struct wiphy *wiph
 	s16 max_txpwr;
 	int i;
 
-	if (IsSupported24G(adapter->registrypriv.wireless_mode)) {
+	if (is_supported_24g(adapter->registrypriv.wireless_mode)) {
 		band = wiphy->bands[NL80211_BAND_2GHZ];
 		if (band) {
 			max_txpwr = phy_get_txpwr_by_rate_total_max_mbm(adapter, BAND_ON_24G, 1, 1);
