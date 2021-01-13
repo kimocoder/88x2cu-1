@@ -284,6 +284,8 @@ int _rtw_sd_iwrite32(_adapter *adapter, u32 addr, u32 val)
 
 #endif /* CONFIG_SDIO_HCI */
 
+#if 0 // NEO
+
 int _rtw_write8_async(_adapter *adapter, u32 addr, u8 val)
 {
 	/* struct	io_queue  	*pio_queue = (struct io_queue *)adapter->pio_queue; */
@@ -343,7 +345,6 @@ void _rtw_read_mem(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
 
 }
 
-#if 0 // NEO
 void _rtw_write_mem(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
 {
 	void (*_write_mem)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);
@@ -865,7 +866,6 @@ int dbg_rtw_write32(_adapter *adapter, u32 addr, u32 val, const char *caller, co
 	return _rtw_write32(adapter, addr, val);
 }
 
-#endif
 
 int dbg_rtw_writeN(_adapter *adapter, u32 addr , u32 length , u8 *data, const char *caller, const int line)
 {
@@ -876,6 +876,8 @@ int dbg_rtw_writeN(_adapter *adapter, u32 addr , u32 length , u8 *data, const ch
 
 	return _rtw_writeN(adapter, addr, length, data);
 }
+
+#endif
 
 #ifdef CONFIG_SDIO_HCI
 u8 dbg_rtw_sd_f0_read8(_adapter *adapter, u32 addr, const char *caller, const int line)
