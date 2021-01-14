@@ -782,15 +782,16 @@ void usb_read_port_complete(struct urb *purb, struct pt_regs *regs)
 {
 	struct recv_buf	*precvbuf = (struct recv_buf *)purb->context;
 	_adapter			*padapter = (_adapter *)precvbuf->adapter;
+	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
 	struct recv_priv	*precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 
 	ATOMIC_DEC(&(precvpriv->rx_pending_cnt));
 
-	if (RTW_CANNOT_RX(padapter)) {
+	if (RTW_CANNOT_RX(dvobj)) {
 		RTW_INFO("%s() RX Warning! bDriverStopped(%s) OR bSurpriseRemoved(%s)\n"
 			 , __func__
-			 , rtw_is_drv_stopped(padapter) ? "True" : "False"
-			, rtw_is_surprise_removed(padapter) ? "True" : "False");
+			 , dev_is_drv_stopped(dvobj) ? "True" : "False"
+			, dev_is_surprise_removed(dvobj) ? "True" : "False");
 		return;
 	}
 
@@ -861,7 +862,7 @@ u32 rtw_usb_read_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *rmem)
 	struct usb_device	*pusbd = pdvobj->pusbdev;
 
 
-	if (RTW_CANNOT_RX(adapter) || (precvbuf == NULL)) {
+	if (RTW_CANNOT_RX(pdvobj) || (precvbuf == NULL)) {
 		return _FAIL;
 	}
 
@@ -936,15 +937,16 @@ void usb_read_port_complete(struct urb *purb, struct pt_regs *regs)
 {
 	struct recv_buf	*precvbuf = (struct recv_buf *)purb->context;
 	_adapter			*padapter = (_adapter *)precvbuf->adapter;
+	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
 	struct recv_priv	*precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 
 	ATOMIC_DEC(&(precvpriv->rx_pending_cnt));
 
-	if (RTW_CANNOT_RX(padapter)) {
+	if (RTW_CANNOT_RX(dvobj)) {
 		RTW_INFO("%s() RX Warning! bDriverStopped(%s) OR bSurpriseRemoved(%s)\n"
 			, __func__
-			, rtw_is_drv_stopped(padapter) ? "True" : "False"
-			, rtw_is_surprise_removed(padapter) ? "True" : "False");
+			, dev_is_drv_stopped(dvobj) ? "True" : "False"
+			, dev_is_surprise_removed(dvobj) ? "True" : "False");
 		goto exit;
 	}
 
@@ -1023,7 +1025,7 @@ u32 rtw_usb_read_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *rmem)
 	struct usb_device 	*pusbd = pusb_data->pusbdev;
 
 
-	if (RTW_CANNOT_RX(adapter) || (precvbuf == NULL)) {
+	if (RTW_CANNOT_RX(pdvobj) || (precvbuf == NULL)) {
 		goto exit;
 	}
 
@@ -1095,7 +1097,7 @@ void usb_read_interrupt_complete(struct urb *purb, struct pt_regs *regs)
 	int	err;
 	_adapter	*padapter = (_adapter *)purb->context;
 
-	if (RTW_CANNOT_RX(padapter)) {
+	if (RTW_CANNOT_RX(adapter_to_dvobj(padapter))) {
 		RTW_INFO("%s() RX Warning! bDriverStopped(%s) OR bSurpriseRemoved(%s)\n"
 			, __func__
 			, rtw_is_drv_stopped(padapter) ? "True" : "False"
@@ -1146,7 +1148,7 @@ u32 usb_read_interrupt(struct intf_hdl *pintfhdl, u32 addr)
 	struct usb_device	*pusbd = pdvobj->pusbdev;
 
 
-	if (RTW_CANNOT_RX(adapter)) {
+	if (RTW_CANNOT_RX(pdvobj)) {
 		return _FAIL;
 	}
 

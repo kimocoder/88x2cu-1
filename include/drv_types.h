@@ -2162,9 +2162,9 @@ __inline static void RTW_ENABLE_FUNC(struct dvobj_priv *dvobj, int func_bit)
 	(dev_is_surprise_removed(dvobj) || \
 	 RTW_IS_FUNC_DISABLED((dvobj), DF_IO_BIT))
 
-#define RTW_CANNOT_RX(padapter) \
-	(RTW_CANNOT_RUN(adapter_to_dvobj(padapter)) || \
-	 RTW_IS_FUNC_DISABLED((adapter_to_dvobj(padapter)), DF_RX_BIT))
+#define RTW_CANNOT_RX(dvobj) \
+	(RTW_CANNOT_RUN(dvobj) || \
+	 RTW_IS_FUNC_DISABLED((dvobj), DF_RX_BIT))
 
 #define RTW_CANNOT_TX(padapter) \
 	(RTW_CANNOT_RUN(adapter_to_dvobj(padapter)) || \
