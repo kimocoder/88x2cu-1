@@ -5224,11 +5224,11 @@ int rtw_suspend_common(_adapter *padapter)
 	}
 #endif
 
-	if ((!padapter->bup) || RTW_CANNOT_RUN(padapter)) {
+	if ((!padapter->bup) || RTW_CANNOT_RUN(dvobj)) {
 		RTW_INFO("%s bup=%d bDriverStopped=%s bSurpriseRemoved = %s\n", __func__
 			 , padapter->bup
-			 , rtw_is_drv_stopped(padapter) ? "True" : "False"
-			, rtw_is_surprise_removed(padapter) ? "True" : "False");
+			 , dev_is_drv_stopped(dvobj) ? "True" : "False"
+			, dev_is_surprise_removed(dvobj) ? "True" : "False");
 		pdbgpriv->dbg_suspend_error_cnt++;
 		goto exit;
 	}
@@ -5305,11 +5305,11 @@ int rtw_resume_process_wow(_adapter *padapter)
 		goto exit;
 	}
 
-	if (RTW_CANNOT_RUN(padapter)) {
+	if (RTW_CANNOT_RUN(psdpriv)) {
 		RTW_INFO("%s pdapter %p bDriverStopped %s bSurpriseRemoved %s\n"
 			 , __func__, padapter
-			 , rtw_is_drv_stopped(padapter) ? "True" : "False"
-			, rtw_is_surprise_removed(padapter) ? "True" : "False");
+			 , dev_is_drv_stopped(psdpriv) ? "True" : "False"
+			, dev_is_surprise_removed(psdpriv) ? "True" : "False");
 		goto exit;
 	}
 

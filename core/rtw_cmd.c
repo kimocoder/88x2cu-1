@@ -516,7 +516,8 @@ thread_return rtw_cmd_thread(thread_context context)
 	u8(*cmd_hdl)(_adapter *padapter, u8 *pbuf);
 	void (*pcmd_callback)(_adapter *dev, struct cmd_obj *pcmd);
 	PADAPTER padapter = (PADAPTER)context;
-	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
+	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
+	struct cmd_priv *pcmdpriv = &dvobj->cmdpriv;
 	struct drvextra_cmd_parm *extra_parm = NULL;
 	_irqL irqL;
 
@@ -534,11 +535,11 @@ thread_return rtw_cmd_thread(thread_context context)
 			break;
 		}
 
-		if (RTW_CANNOT_RUN(padapter)) {
+		if (RTW_CANNOT_RUN(dvobj)) {
 			RTW_DBG(FUNC_ADPT_FMT "- bDriverStopped(%s) bSurpriseRemoved(%s)\n",
 				FUNC_ADPT_ARG(padapter),
-				rtw_is_drv_stopped(padapter) ? "True" : "False",
-				rtw_is_surprise_removed(padapter) ? "True" : "False");
+				dev_is_drv_stopped(dvobj) ? "True" : "False",
+				dev_is_surprise_removed(dvobj) ? "True" : "False");
 			break;
 		}
 
@@ -551,11 +552,11 @@ thread_return rtw_cmd_thread(thread_context context)
 		_exit_critical(&pcmdpriv->cmd_queue.lock, &irqL);
 
 _next:
-		if (RTW_CANNOT_RUN(padapter)) {
+		if (RTW_CANNOT_RUN(dvobj)) {
 			RTW_PRINT("%s: DriverStopped(%s) SurpriseRemoved(%s) break at line %d\n",
 				  __func__
-				, rtw_is_drv_stopped(padapter) ? "True" : "False"
-				, rtw_is_surprise_removed(padapter) ? "True" : "False"
+				, dev_is_drv_stopped(dvobj) ? "True" : "False"
+				, dev_is_surprise_removed(dvobj) ? "True" : "False"
 				  , __LINE__);
 			break;
 		}

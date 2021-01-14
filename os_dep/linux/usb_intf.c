@@ -935,7 +935,7 @@ int rtw_hw_suspend(_adapter *padapter)
 	if (NULL == padapter)
 		goto error_exit;
 
-	if ((_FALSE == padapter->bup) || RTW_CANNOT_RUN(padapter)) {
+	if ((_FALSE == padapter->bup) || RTW_CANNOT_RUN(adapter_to_dvobj(padapter))) {
 		RTW_INFO("padapter->bup=%d bDriverStopped=%s bSurpriseRemoved = %s\n"
 			 , padapter->bup
 			 , rtw_is_drv_stopped(padapter) ? "True" : "False"

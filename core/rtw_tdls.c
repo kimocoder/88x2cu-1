@@ -380,7 +380,7 @@ int issue_nulldata_to_TDLS_peer_STA(_adapter *padapter, unsigned char *da, unsig
 
 		i++;
 
-		if (RTW_CANNOT_RUN(padapter))
+		if (RTW_CANNOT_RUN(adapter_to_dvobj(padapter)))
 			break;
 
 		if (i < try_cnt && wait_ms > 0 && ret == _FAIL)

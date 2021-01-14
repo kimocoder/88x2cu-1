@@ -1737,7 +1737,7 @@ void BlinkHandler(PLED_USB pLed)
 
 	/* RTW_INFO("%s (%s:%d)\n",__FUNCTION__, current->comm, current->pid); */
 
-	if (RTW_CANNOT_RUN(padapter) || (!rtw_is_hw_init_completed(padapter))) {
+	if (RTW_CANNOT_RUN(adapter_to_dvobj(padapter)) || (!rtw_is_hw_init_completed(padapter))) {
 		/*RTW_INFO("%s bDriverStopped:%s, bSurpriseRemoved:%s\n"
 		, __func__
 		, rtw_is_drv_stopped(padapter)?"True":"False"
@@ -1834,7 +1834,7 @@ void BlinkTimerCallback(void *data)
 
 	/* RTW_INFO("%s\n", __FUNCTION__); */
 
-	if (RTW_CANNOT_RUN(padapter) || (!rtw_is_hw_init_completed(padapter))) {
+	if (RTW_CANNOT_RUN(adapter_to_dvobj(padapter)) || (!rtw_is_hw_init_completed(padapter))) {
 		/*RTW_INFO("%s bDriverStopped:%s, bSurpriseRemoved:%s\n"
 			, __func__
 			, rtw_is_drv_stopped(padapter)?"True":"False"
@@ -4131,7 +4131,7 @@ LedControlUSB(
 		return;
 #endif
 
-	if (RTW_CANNOT_RUN(padapter) || (!rtw_is_hw_init_completed(padapter))) {
+	if (RTW_CANNOT_RUN(adapter_to_dvobj(padapter)) || (!rtw_is_hw_init_completed(padapter))) {
 		/*RTW_INFO("%s bDriverStopped:%s, bSurpriseRemoved:%s\n"
 		, __func__
 		, rtw_is_drv_stopped(padapter)?"True":"False"

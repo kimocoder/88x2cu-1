@@ -33,11 +33,11 @@ int rtw_fw_ps_state(PADAPTER padapter)
 
 	_enter_pwrlock(&pwrpriv->check_32k_lock);
 
-	if (RTW_CANNOT_RUN(padapter)) {
+	if (RTW_CANNOT_RUN(psdpriv)) {
 		RTW_INFO("%s: bSurpriseRemoved=%s , hw_init_completed=%d, bDriverStopped=%s\n", __func__
-			 , rtw_is_surprise_removed(padapter) ? "True" : "False"
+			 , dev_is_surprise_removed(psdpriv) ? "True" : "False"
 			 , rtw_get_hw_init_completed(padapter)
-			 , rtw_is_drv_stopped(padapter) ? "True" : "False");
+			 , dev_is_drv_stopped(psdpriv) ? "True" : "False");
 		goto exit_fw_ps_state;
 	}
 	#if defined(CONFIG_RTL8822B) || defined(CONFIG_RTL8821C) || defined(CONFIG_RTL8822C)
@@ -481,8 +481,9 @@ u8 rtw_cpwm_polling(_adapter *adapter, u8 rpwm, u8 cpwm_orig)
 	u8 cpwm_now = 0;
 	systime start_time;
 	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(adapter);
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
 	#ifdef DBG_CHECK_FW_PS_STATE
-	struct debug_priv *pdbgpriv = &(adapter_to_dvobj(adapter)->drv_dbg);
+	struct debug_priv *pdbgpriv = &(dvobj->drv_dbg);
 	#endif
 
 	pwrpriv->rpwm_retry = 0;
@@ -499,7 +500,7 @@ u8 rtw_cpwm_polling(_adapter *adapter, u8 rpwm, u8 cpwm_orig)
 				rst = _SUCCESS;
 				break;
 			}
-		} while (rtw_get_passing_time_ms(start_time) < LPS_CPWM_TIMEOUT_MS && !RTW_CANNOT_RUN(adapter));
+		} while (rtw_get_passing_time_ms(start_time) < LPS_CPWM_TIMEOUT_MS && !RTW_CANNOT_RUN(dvobj));
 
 		if (rst == _SUCCESS)
 			break;
@@ -511,7 +512,7 @@ u8 rtw_cpwm_polling(_adapter *adapter, u8 rpwm, u8 cpwm_orig)
 			rtw_hal_set_hwreg(adapter, HW_VAR_SET_RPWM, (u8 *)(&rpwm));
 			pwrpriv->tog += 0x80;
 		}
-	} while (pwrpriv->rpwm_retry++ < LPS_RPWM_RETRY_CNT && !RTW_CANNOT_RUN(adapter));
+	} while (pwrpriv->rpwm_retry++ < LPS_RPWM_RETRY_CNT && !RTW_CANNOT_RUN(dvobj));
 
 	if (rst == _SUCCESS) {
 		#ifdef DBG_CHECK_FW_PS_STATE
@@ -1559,7 +1560,7 @@ void cpwm_int_hdl(
 	if (!padapter)
 		goto exit;
 
-	if (RTW_CANNOT_RUN(padapter))
+	if (RTW_CANNOT_RUN(adapter_to_dvobj(padapter)))
 		goto exit;
 
 	pwrpriv = adapter_to_pwrctl(padapter);
@@ -1669,7 +1670,7 @@ static void rpwmtimeout_workitem_callback(struct work_struct *work)
 	if (!padapter)
 		return;
 
-	if (RTW_CANNOT_RUN(padapter))
+	if (RTW_CANNOT_RUN(dvobj))
 		return;
 
 	_enter_pwrlock(&pwrpriv->lock);
@@ -1739,7 +1740,7 @@ static void pwr_rpwm_timeout_handler(void *FunctionContext)
 	if (!padapter)
 		return;
 
-	if (RTW_CANNOT_RUN(padapter))
+	if (RTW_CANNOT_RUN(adapter_to_dvobj(padapter)))
 		return;
 
 	RTW_INFO("+%s: rpwm=0x%02X cpwm=0x%02X\n", __func__, pwrpriv->rpwm, pwrpriv->cpwm);

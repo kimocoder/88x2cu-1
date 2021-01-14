@@ -2788,7 +2788,7 @@ u32 rtw_cfg80211_wait_scan_req_empty(_adapter *adapter, u32 timeout_ms)
 
 	while (rtw_get_passing_time_ms(start) <= timeout_ms) {
 
-		if (RTW_CANNOT_RUN(adapter))
+		if (RTW_CANNOT_RUN(adapter_to_dvobj(adapter)))
 			break;
 
 		if (!wdev_priv->scan_request) {

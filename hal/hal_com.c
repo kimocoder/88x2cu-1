@@ -2798,7 +2798,7 @@ static void read_mbssid_cam(_adapter *padapter, u8 cam_addr, u8 *mac)
 	u32 cam_data1 = 0;
 	u16 cam_data2 = 0;
 
-	if (RTW_CANNOT_RUN(padapter))
+	if (RTW_CANNOT_RUN(adapter_to_dvobj(padapter)))
 		return;
 
 	rtw_write32(padapter, REG_MBIDCAMCFG_2, BIT_MBIDCAM_POLL | ((cam_addr & MBIDCAM_ADDR_MASK) << MBIDCAM_ADDR_SHIFT));
@@ -2809,7 +2809,7 @@ static void read_mbssid_cam(_adapter *padapter, u8 cam_addr, u8 *mac)
 			break;
 		}
 		poll++;
-	} while ((poll % 10) != 0 && !RTW_CANNOT_RUN(padapter));
+	} while ((poll % 10) != 0 && !RTW_CANNOT_RUN(adapter_to_dvobj(padapter)));
 
 	if (cam_ready) {
 		cam_data1 = rtw_read32(padapter, REG_MBIDCAMCFG_1);

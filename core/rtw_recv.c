@@ -3146,7 +3146,7 @@ static int recv_process_mpdu(_adapter *padapter, union recv_frame *prframe)
 		}
 		#endif
 
-		if (!RTW_CANNOT_RUN(padapter)) {
+		if (!RTW_CANNOT_RUN(adapter_to_dvobj(padapter))) {
 			ret = rtw_recv_indicatepkt_check(prframe
 				, get_recvframe_data(prframe), get_recvframe_len(prframe));
 			if (ret != _SUCCESS) {
@@ -3535,7 +3535,7 @@ void rtw_reordering_ctrl_timeout_handler(void *pcontext)
 		return;
 
 	padapter = preorder_ctrl->padapter;
-	if (RTW_CANNOT_RUN(padapter))
+	if (RTW_CANNOT_RUN(adapter_to_dvobj(padapter)))
 		return;
 
 	ppending_recvframe_queue = &preorder_ctrl->pending_recvframe_queue;
@@ -3816,7 +3816,7 @@ int mp_recv_frame(_adapter *padapter, union recv_frame *rframe)
 					ret = _FAIL;
 					goto exit;
 				}
-				if (!RTW_CANNOT_RUN(padapter)) {
+				if (!RTW_CANNOT_RUN(adapter_to_dvobj(padapter))) {
 					/* indicate this recv_frame */
 					ret = rtw_recv_indicatepkt(padapter, rframe);
 					if (ret != _SUCCESS) {
@@ -3885,7 +3885,7 @@ int recv_frame_monitor(_adapter *padapter, union recv_frame *rframe)
 	rframe->u.hdr.rx_tail = skb_tail_pointer(pskb);
 	rframe->u.hdr.rx_end = skb_end_pointer(pskb);
 
-	if (!RTW_CANNOT_RUN(padapter)) {
+	if (!RTW_CANNOT_RUN(adapter_to_dvobj(padapter))) {
 		/* indicate this recv_frame */
 		ret = rtw_recv_monitor(padapter, rframe);
 	} else 
@@ -4656,7 +4656,8 @@ exit:
 thread_return rtw_recv_thread(thread_context context)
 {
 	_adapter *adapter = (_adapter *)context;
-	struct recv_priv *recvpriv = &adapter_to_dvobj(adapter)->recvpriv;
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
+	struct recv_priv *recvpriv = &dvobj->recvpriv;
 	s32 err = _SUCCESS;
 #ifdef RTW_RECV_THREAD_HIGH_PRIORITY
 #ifdef PLATFORM_LINUX
@@ -4676,11 +4677,11 @@ thread_return rtw_recv_thread(thread_context context)
 			goto exit;
 		}
 
-		if (RTW_CANNOT_RUN(adapter)) {
+		if (RTW_CANNOT_RUN(dvobj)) {
 			RTW_DBG(FUNC_ADPT_FMT "- bDriverStopped(%s) bSurpriseRemoved(%s)\n",
 				FUNC_ADPT_ARG(adapter),
-				rtw_is_drv_stopped(adapter) ? "True" : "False",
-				rtw_is_surprise_removed(adapter) ? "True" : "False");
+				dev_is_drv_stopped(dvobj) ? "True" : "False",
+				dev_is_surprise_removed(dvobj) ? "True" : "False");
 			goto exit;
 		}
 

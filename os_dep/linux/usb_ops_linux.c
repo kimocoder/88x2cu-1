@@ -761,13 +761,14 @@ void usb_recv_tasklet(void *priv)
 {
 	struct recv_buf *precvbuf = NULL;
 	_adapter	*padapter = (_adapter *)priv;
+	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
 	struct recv_priv	*precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 
 	while (NULL != (precvbuf = rtw_dequeue_recvbuf(&precvpriv->recv_buf_pending_queue))) {
-		if (RTW_CANNOT_RUN(padapter)) {
+		if (RTW_CANNOT_RUN(dvobj)) {
 			RTW_INFO("recv_tasklet => bDriverStopped(%s) OR bSurpriseRemoved(%s)\n"
-				, rtw_is_drv_stopped(padapter)? "True" : "False"
-				, rtw_is_surprise_removed(padapter)? "True" : "False");
+				, dev_is_drv_stopped(dvobj)? "True" : "False"
+				, dev_is_surprise_removed(dvobj)? "True" : "False");
 			break;
 		}
 
@@ -899,15 +900,16 @@ void usb_recv_tasklet(void *priv)
 {
 	struct sk_buff		*pskb;
 	_adapter		*padapter = (_adapter *)priv;
-	struct recv_priv	*precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
+	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
+	struct recv_priv	*precvpriv = &dvobj->recvpriv;
 	struct recv_buf	*precvbuf = NULL;
 
 	while (NULL != (pskb = skb_dequeue(&precvpriv->rx_skb_queue))) {
 
-		if (RTW_CANNOT_RUN(padapter)) {
+		if (RTW_CANNOT_RUN(dvobj)) {
 			RTW_INFO("recv_tasklet => bDriverStopped(%s) OR bSurpriseRemoved(%s)\n"
-				, rtw_is_drv_stopped(padapter) ? "True" : "False"
-				, rtw_is_surprise_removed(padapter) ? "True" : "False");
+				, dev_is_drv_stopped(dvobj) ? "True" : "False"
+				, dev_is_surprise_removed(dvobj) ? "True" : "False");
 			#ifdef CONFIG_PREALLOC_RX_SKB_BUFFER
 			if (rtw_free_skb_premem(pskb) != 0)
 			#endif /* CONFIG_PREALLOC_RX_SKB_BUFFER */

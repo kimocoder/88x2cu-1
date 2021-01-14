@@ -47,7 +47,7 @@ static void swledon(PADAPTER padapter, PLED_USB led)
 {
 	PHAL_DATA_TYPE hal = GET_HAL_DATA(padapter);
 
-	if (RTW_CANNOT_RUN(padapter))
+	if (RTW_CANNOT_RUN(adapter_to_dvobj(padapter)))
 		return;
 
 	switch (led->LedPin) {
@@ -73,7 +73,7 @@ static void swledoff(PADAPTER padapter, PLED_USB led)
 {
 	PHAL_DATA_TYPE hal = GET_HAL_DATA(padapter);
 
-	if (RTW_CANNOT_RUN(padapter))
+	if (RTW_CANNOT_RUN(adapter_to_dvobj(padapter)))
 		return;
 
 	switch (led->LedPin) {

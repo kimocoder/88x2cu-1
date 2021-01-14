@@ -1280,7 +1280,7 @@ static thread_return mp_xmit_packet_thread(thread_context context)
 #endif
 		if (pxmitframe == NULL) {
 			if (pmptx->stop ||
-			    RTW_CANNOT_RUN(padapter))
+			    RTW_CANNOT_RUN(adapter_to_dvobj(padapter)))
 				goto exit;
 			else {
 				rtw_usleep_os(10);
@@ -1298,7 +1298,7 @@ static thread_return mp_xmit_packet_thread(thread_context context)
 		pmp_priv->tx_pktcount++;
 
 		if (pmptx->stop ||
-		    RTW_CANNOT_RUN(padapter))
+		    RTW_CANNOT_RUN(adapter_to_dvobj(padapter)))
 			goto exit;
 		if ((pmptx->count != 0) &&
 		    (pmptx->count == pmptx->sended))

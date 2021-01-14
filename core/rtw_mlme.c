@@ -510,7 +510,7 @@ sint rtw_if_up(_adapter *padapter)
 
 	sint res;
 
-	if (RTW_CANNOT_RUN(padapter) ||
+	if (RTW_CANNOT_RUN(adapter_to_dvobj(padapter)) ||
 	    (check_fwstate(&padapter->mlmepriv, WIFI_ASOC_STATE) == _FALSE)) {
 		res = _FALSE;
 	} else
@@ -2605,6 +2605,7 @@ static u32 _rtw_wait_scan_done(_adapter *adapter, u8 abort, u32 timeout_ms)
 {
 	systime start;
 	u32 pass_ms;
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
 	struct mlme_priv *pmlmepriv = &(adapter->mlmepriv);
 	struct mlme_ext_priv *pmlmeext = &(adapter->mlmeextpriv);
 
@@ -2615,7 +2616,7 @@ static u32 _rtw_wait_scan_done(_adapter *adapter, u8 abort, u32 timeout_ms)
 	while (check_fwstate(pmlmepriv, WIFI_UNDER_SURVEY)
 	       && rtw_get_passing_time_ms(start) <= timeout_ms) {
 
-		if (RTW_CANNOT_RUN(adapter))
+		if (RTW_CANNOT_RUN(dvobj))
 			break;
 
 		RTW_INFO(FUNC_NDEV_FMT"fw_state=WIFI_UNDER_SURVEY!\n", FUNC_NDEV_ARG(adapter->pnetdev));
@@ -2624,7 +2625,7 @@ static u32 _rtw_wait_scan_done(_adapter *adapter, u8 abort, u32 timeout_ms)
 
 	if (_TRUE == abort) {
 		if (check_fwstate(pmlmepriv, WIFI_UNDER_SURVEY)) {
-			if (!RTW_CANNOT_RUN(adapter))
+			if (!RTW_CANNOT_RUN(dvobj))
 				RTW_INFO(FUNC_NDEV_FMT"waiting for scan_abort time out!\n", FUNC_NDEV_ARG(adapter->pnetdev));
 #ifdef CONFIG_PLATFORM_MSTAR
 			/*_clr_fwstate_(pmlmepriv, WIFI_UNDER_SURVEY);*/
@@ -2675,6 +2676,7 @@ static u32 _rtw_wait_join_done(_adapter *adapter, u8 abort, u32 timeout_ms)
 	u32 pass_ms;
 	struct mlme_priv *pmlmepriv = &(adapter->mlmepriv);
 	struct mlme_ext_priv *pmlmeext = &(adapter->mlmeextpriv);
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
 
 	start = rtw_get_current_time();
 
@@ -2689,7 +2691,7 @@ static u32 _rtw_wait_join_done(_adapter *adapter, u8 abort, u32 timeout_ms)
 			#endif
 			)
 	) {
-		if (RTW_CANNOT_RUN(adapter))
+		if (RTW_CANNOT_RUN(dvobj))
 			break;
 
 		RTW_INFO(FUNC_ADPT_FMT" linking...\n", FUNC_ADPT_ARG(adapter));
@@ -2702,7 +2704,7 @@ static u32 _rtw_wait_join_done(_adapter *adapter, u8 abort, u32 timeout_ms)
 			|| rtw_cfg80211_is_connect_requested(adapter)
 			#endif
 		) {
-			if (!RTW_CANNOT_RUN(adapter))
+			if (!RTW_CANNOT_RUN(dvobj))
 				RTW_INFO(FUNC_ADPT_FMT" waiting for join_abort time out!\n", FUNC_ADPT_ARG(adapter));
 		}
 	}
@@ -3567,12 +3569,13 @@ void rtw_wmm_event_callback(PADAPTER padapter, u8 *pbuf)
 void rtw_join_timeout_handler(void *ctx)
 {
 	_adapter *adapter = (_adapter *)ctx;
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
 	struct	mlme_priv *pmlmepriv = &adapter->mlmepriv;
 
 
 	RTW_INFO("%s, fw_state=%x\n", __FUNCTION__, get_fwstate(pmlmepriv));
 
-	if (RTW_CANNOT_RUN(adapter))
+	if (RTW_CANNOT_RUN(dvobj))
 		return;
 
 	_rtw_spinlock_bh(&pmlmepriv->lock);
@@ -4024,7 +4027,7 @@ void rtw_dynamic_check_timer_handlder(void *ctx)
 	if (!rtw_is_hw_init_completed(adapter))
 		goto exit;
 
-	if (RTW_CANNOT_RUN(adapter))
+	if (RTW_CANNOT_RUN(pdvobj))
 		goto exit;
 
 	collect_traffic_statistics(adapter);
@@ -5771,15 +5774,17 @@ sint rtw_linked_check(_adapter *padapter)
 /*#define DBG_ADAPTER_STATE_CHK*/
 u8 rtw_is_adapter_up(_adapter *padapter)
 {
+	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
+
 	if (padapter == NULL)
 		return _FALSE;
 
-	if (RTW_CANNOT_RUN(padapter)) {
+	if (RTW_CANNOT_RUN(dvobj)) {
 		#ifdef DBG_ADAPTER_STATE_CHK
 		RTW_INFO(FUNC_ADPT_FMT " FALSE -bDriverStopped(%s) bSurpriseRemoved(%s)\n"
 			, FUNC_ADPT_ARG(padapter)
-			, rtw_is_drv_stopped(padapter) ? "True" : "False"
-			, rtw_is_surprise_removed(padapter) ? "True" : "False");
+			, dev_is_drv_stopped(dvobj) ? "True" : "False"
+			, dev_is_surprise_removed(dvobj) ? "True" : "False");
 		#endif
 		return _FALSE;
 	}

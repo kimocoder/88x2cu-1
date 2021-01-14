@@ -975,7 +975,7 @@ void rtl8822c_switch_chnl_and_set_bw(PADAPTER adapter)
 			 hal->current_channel_bw);
 	}
 
-	if (RTW_CANNOT_RUN(adapter)) {
+	if (RTW_CANNOT_RUN(adapter_to_dvobj(adapter))) {
 		hal->bSwChnlAndSetBWInProgress = _FALSE;
 		return;
 	}
@@ -1130,7 +1130,7 @@ void rtl8822c_handle_sw_chnl_and_set_bw(
 	}
 
 	/* switch channel & bandwidth */
-	if (!RTW_CANNOT_RUN(Adapter))
+	if (!RTW_CANNOT_RUN(adapter_to_dvobj(Adapter)))
 		rtl8822c_switch_chnl_and_set_bw(Adapter);
 	else {
 		if (hal->bSwChnl) {

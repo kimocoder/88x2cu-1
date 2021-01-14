@@ -3827,7 +3827,7 @@ static int rtw_wps_start(struct net_device *dev,
 	u32   u32wps_start = 0;
 	unsigned int uintRet = 0;
 
-	if (RTW_CANNOT_RUN(padapter) || (NULL == pdata)) {
+	if (RTW_CANNOT_RUN(adapter_to_dvobj(padapter)) || (NULL == pdata)) {
 		ret = -EINVAL;
 		goto exit;
 	}
@@ -10448,7 +10448,7 @@ static int rtw_priv_set(struct net_device *dev,
 		return -ENETDOWN;
 	}
 
-	if (RTW_CANNOT_RUN(padapter)) {
+	if (RTW_CANNOT_RUN(adapter_to_dvobj(padapter))) {
 		RTW_INFO("%s fail =>(bSurpriseRemoved == _TRUE) || ( bDriverStopped == _TRUE)\n", __func__);
 		return -ENETDOWN;
 	}
@@ -10529,7 +10529,7 @@ static int rtw_priv_get(struct net_device *dev,
 		return -ENETDOWN;
 	}
 
-	if (RTW_CANNOT_RUN(padapter)) {
+	if (RTW_CANNOT_RUN(adapter_to_dvobj(padapter))) {
 		RTW_INFO("%s fail =>(padapter->bSurpriseRemoved == _TRUE) || ( padapter->bDriverStopped == _TRUE)\n", __func__);
 		return -ENETDOWN;
 	}

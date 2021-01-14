@@ -318,21 +318,23 @@ s32 rtl8822cu_xmit_buf_handler(PADAPTER padapter)
 	struct xmit_priv *pxmitpriv;
 	struct xmit_buf *pxmitbuf;
 	struct xmit_frame *pxmitframe;
+	struct dvobj_priv *dvobj;
 	s32 ret;
 
 
 	phal = GET_HAL_DATA(padapter);
 	pxmitpriv = &padapter->xmitpriv;
+	dvobj = adapter_to_dvobj(padapter);
 
 	ret = _rtw_down_sema(&pxmitpriv->xmit_sema);
 	if (_FAIL == ret)
 		return _FAIL;
 
-	if (RTW_CANNOT_RUN(padapter)) {
+	if (RTW_CANNOT_RUN(dvobj)) {
 		RTW_DBG(FUNC_ADPT_FMT "- bDriverStopped(%s) bSurpriseRemoved(%s)\n",
 			FUNC_ADPT_ARG(padapter),
-			rtw_is_drv_stopped(padapter) ? "True" : "False",
-			rtw_is_surprise_removed(padapter) ? "True" : "False");
+			dev_is_drv_stopped(dvobj) ? "True" : "False",
+			dev_is_surprise_removed(dvobj) ? "True" : "False");
 		return _FAIL;
 	}
 

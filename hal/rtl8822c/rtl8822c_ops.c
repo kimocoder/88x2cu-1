@@ -1985,11 +1985,11 @@ void hw_var_set_dl_rsvd_page(PADAPTER adapter, u8 mstatus)
 				/* check rsvd page download OK. */
 				rtw_hal_get_hwreg(adapter, HW_VAR_BCN_VALID, (u8 *)&bcn_valid);
 				poll++;
-			} while (!bcn_valid && (poll % 10) != 0 && !RTW_CANNOT_RUN(adapter));
+			} while (!bcn_valid && (poll % 10) != 0 && !RTW_CANNOT_RUN(adapter_to_dvobj(adapter)));
 
-		} while (!bcn_valid && DLBcnCount <= 100 && !RTW_CANNOT_RUN(adapter));
+		} while (!bcn_valid && DLBcnCount <= 100 && !RTW_CANNOT_RUN(adapter_to_dvobj(adapter)));
 
-		if (RTW_CANNOT_RUN(adapter))
+		if (RTW_CANNOT_RUN(adapter_to_dvobj(adapter)))
 			;
 		else if (!bcn_valid)
 			RTW_INFO(FUNC_ADPT_FMT ": DL RSVD page failed! DLBcnCount:%u, poll:%u\n",
@@ -2498,7 +2498,7 @@ u8 rtl8822c_sethwreg(PADAPTER adapter, u8 variable, u8 *val)
 
 		if (_TRUE == empty)
 			RTW_INFO("[HW_VAR_CHECK_TXBUF] Empty in %d ms\n", passtime);
-		else if (RTW_CANNOT_RUN(adapter))
+		else if (RTW_CANNOT_RUN(adapter_to_dvobj(adapter)))
 			RTW_WARN("[HW_VAR_CHECK_TXBUF] bDriverStopped or bSurpriseRemoved\n");
 		else {
 			RTW_ERR("[HW_VAR_CHECK_TXBUF] NOT empty in %d ms\n", passtime);

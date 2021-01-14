@@ -6601,7 +6601,7 @@ int issue_probereq_p2p_ex(_adapter *adapter, u8 *da, int try_cnt, int wait_ms)
 
 		i++;
 
-		if (RTW_CANNOT_RUN(adapter))
+		if (RTW_CANNOT_RUN(adapter_to_dvobj(adapter)))
 			break;
 
 		if (i < try_cnt && wait_ms > 0 && ret == _FAIL)
@@ -7824,7 +7824,7 @@ void update_mgntframe_attrib_addr(_adapter *padapter, struct xmit_frame *pmgntfr
 
 void dump_mgntframe(_adapter *padapter, struct xmit_frame *pmgntframe)
 {
-	if (RTW_CANNOT_RUN(padapter)) {
+	if (RTW_CANNOT_RUN(adapter_to_dvobj(padapter))) {
 		rtw_free_xmitbuf(&padapter->xmitpriv, pmgntframe->pxmitbuf);
 		rtw_free_xmitframe(&padapter->xmitpriv, pmgntframe);
 		return;
@@ -7841,7 +7841,7 @@ s32 dump_mgntframe_and_wait(_adapter *padapter, struct xmit_frame *pmgntframe, i
 	struct xmit_buf *pxmitbuf = pmgntframe->pxmitbuf;
 	struct submit_ctx sctx;
 
-	if (RTW_CANNOT_RUN(padapter)) {
+	if (RTW_CANNOT_RUN(adapter_to_dvobj(padapter))) {
 		rtw_free_xmitbuf(&padapter->xmitpriv, pmgntframe->pxmitbuf);
 		rtw_free_xmitframe(&padapter->xmitpriv, pmgntframe);
 		return ret;
@@ -7873,7 +7873,7 @@ s32 dump_mgntframe_and_wait_ack_timeout(_adapter *padapter, struct xmit_frame *p
 	s32 ret = _FAIL;
 	struct xmit_priv	*pxmitpriv = &(GET_PRIMARY_ADAPTER(padapter))->xmitpriv;
 
-	if (RTW_CANNOT_RUN(padapter)) {
+	if (RTW_CANNOT_RUN(adapter_to_dvobj(padapter))) {
 		rtw_free_xmitbuf(&padapter->xmitpriv, pmgntframe->pxmitbuf);
 		rtw_free_xmitframe(&padapter->xmitpriv, pmgntframe);
 		return -1;
@@ -8713,7 +8713,7 @@ int issue_probereq_ex(_adapter *padapter, const NDIS_802_11_SSID *pssid, const u
 
 		i++;
 
-		if (RTW_CANNOT_RUN(padapter))
+		if (RTW_CANNOT_RUN(adapter_to_dvobj(padapter)))
 			break;
 
 		if (i < try_cnt && wait_ms > 0 && ret == _FAIL)
@@ -9788,7 +9788,7 @@ int issue_nulldata(_adapter *padapter, unsigned char *da, unsigned int power_mod
 
 		i++;
 
-		if (RTW_CANNOT_RUN(padapter))
+		if (RTW_CANNOT_RUN(adapter_to_dvobj(padapter)))
 			break;
 
 		if (i < try_cnt && wait_ms > 0 && ret == _FAIL)
@@ -9942,7 +9942,7 @@ int issue_qos_nulldata(_adapter *padapter, unsigned char *da, u16 tid, u8 ps, in
 
 		i++;
 
-		if (RTW_CANNOT_RUN(padapter))
+		if (RTW_CANNOT_RUN(adapter_to_dvobj(padapter)))
 			break;
 
 		if (i < try_cnt && wait_ms > 0 && ret == _FAIL)
@@ -10077,7 +10077,7 @@ int issue_deauth_ex(_adapter *padapter, u8 *da, unsigned short reason, int try_c
 
 		i++;
 
-		if (RTW_CANNOT_RUN(padapter))
+		if (RTW_CANNOT_RUN(adapter_to_dvobj(padapter)))
 			break;
 
 		if (i < try_cnt && wait_ms > 0 && ret == _FAIL)
@@ -10499,7 +10499,7 @@ inline u8 issue_addba_rsp_wait_ack(_adapter *adapter, unsigned char *ra, u8 tid,
 
 		i++;
 
-		if (RTW_CANNOT_RUN(adapter))
+		if (RTW_CANNOT_RUN(adapter_to_dvobj(adapter)))
 			break;
 
 		if (i < try_cnt && wait_ms > 0 && ret == _FAIL)
@@ -10577,7 +10577,7 @@ int issue_del_ba_ex(_adapter *adapter, unsigned char *ra, u8 tid, u16 reason, u8
 
 		i++;
 
-		if (RTW_CANNOT_RUN(adapter))
+		if (RTW_CANNOT_RUN(adapter_to_dvobj(adapter)))
 			break;
 
 		if (i < try_cnt && wait_ms > 0 && ret == _FAIL)
@@ -10848,7 +10848,7 @@ int issue_action_SM_PS_wait_ack(_adapter *padapter, unsigned char *raddr, u8 New
 
 		i++;
 
-		if (RTW_CANNOT_RUN(padapter))
+		if (RTW_CANNOT_RUN(adapter_to_dvobj(padapter)))
 			break;
 
 		if (i < try_cnt && wait_ms > 0 && ret == _FAIL)
@@ -11074,17 +11074,17 @@ unsigned int send_beacon(_adapter *padapter)
 				#endif
 				rtw_hal_get_hwreg(padapter, HW_VAR_BCN_VALID, (u8 *)(&bxmitok));
 				poll++;
-			} while ((poll % 10) != 0 && _FALSE == bxmitok && !RTW_CANNOT_RUN(padapter));
+			} while ((poll % 10) != 0 && _FALSE == bxmitok && !RTW_CANNOT_RUN(adapter_to_dvobj(padapter)));
 			#if defined(CONFIG_PCI_BCN_POLLING) 
 			rtw_hal_unmap_beacon_icf(padapter);
 			#endif
-		} while (bxmitok == _FALSE && (issue < 100) && !RTW_CANNOT_RUN(padapter));
+		} while (bxmitok == _FALSE && (issue < 100) && !RTW_CANNOT_RUN(adapter_to_dvobj(padapter)));
 		#ifdef CONFIG_FW_HANDLE_TXBCN
 		vap_id = 0xFF;
 		rtw_hal_set_hwreg(padapter, HW_VAR_BCN_HEAD_SEL, &vap_id);
 		#endif
 	}
-	if (RTW_CANNOT_RUN(padapter))
+	if (RTW_CANNOT_RUN(adapter_to_dvobj(padapter)))
 		return _FAIL;
 
 

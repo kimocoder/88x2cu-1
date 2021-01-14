@@ -2151,9 +2151,9 @@ __inline static void RTW_ENABLE_FUNC(struct dvobj_priv *dvobj, int func_bit)
 	ATOMIC_SET(&dvobj->disable_func, df);
 }
 
-#define RTW_CANNOT_RUN(padapter) \
-	(rtw_is_surprise_removed(padapter) || \
-	 rtw_is_drv_stopped(padapter))
+#define RTW_CANNOT_RUN(dvobj) \
+	(dev_is_surprise_removed(dvobj) || \
+	 dev_is_drv_stopped(dvobj))
 
 #define RTW_IS_FUNC_DISABLED(dvobj, func_bit) \
 	(ATOMIC_READ(&(dvobj->disable_func)) & (func_bit))
@@ -2163,11 +2163,11 @@ __inline static void RTW_ENABLE_FUNC(struct dvobj_priv *dvobj, int func_bit)
 	 RTW_IS_FUNC_DISABLED((dvobj), DF_IO_BIT))
 
 #define RTW_CANNOT_RX(padapter) \
-	(RTW_CANNOT_RUN(padapter) || \
+	(RTW_CANNOT_RUN(adapter_to_dvobj(padapter)) || \
 	 RTW_IS_FUNC_DISABLED((adapter_to_dvobj(padapter)), DF_RX_BIT))
 
 #define RTW_CANNOT_TX(padapter) \
-	(RTW_CANNOT_RUN(padapter) || \
+	(RTW_CANNOT_RUN(adapter_to_dvobj(padapter)) || \
 	 RTW_IS_FUNC_DISABLED((adapter_to_dvobj(padapter)), DF_TX_BIT))
 
 #ifdef CONFIG_PNO_SUPPORT
