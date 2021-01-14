@@ -139,7 +139,7 @@ exit_rtw_os_recv_resource_alloc:
 void rtw_os_free_recvframe(union recv_frame *precvframe)
 {
 	if (precvframe->u.hdr.pkt) {
-		rtw_os_pkt_free(precvframe->u.hdr.pkt);
+		rtw_skb_free(precvframe->u.hdr.pkt);
 		precvframe->u.hdr.pkt = NULL;
 	}
 }
@@ -186,50 +186,6 @@ void rtw_os_recv_resource_free(struct recv_priv *precvpriv)
 		precvframe++;
 	}
 }
-
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-#if !defined(CONFIG_RTL8822B) && !defined(CONFIG_RTL8822C)
-#ifdef CONFIG_SDIO_RX_COPY
-static int sdio_init_recvbuf_with_skb(struct recv_priv *recvpriv, struct recv_buf *rbuf, u32 size)
-{
-#ifdef CONFIG_PREALLOC_RX_SKB_BUFFER
-	if (RBUF_IS_PREALLOC(rbuf)) {
-		rbuf->pskb = rtw_alloc_skb_premem(size);
-		if (!rbuf->pskb) {
-			RTW_WARN("%s: Fail to get pre-alloc skb! size=%d\n", __func__, size);
-			return _FAIL;
-		}
-		skb_set_tail_pointer(rbuf->pskb, 0); /* TODO: do this in RTKM */
-	} else
-#else
-	{
-		SIZE_PTR tmpaddr = 0;
-		SIZE_PTR alignment = 0;
-
-		rbuf->pskb = rtw_skb_alloc(size + RECVBUFF_ALIGN_SZ);
-		if (!rbuf->pskb)
-			return _FAIL;
-
-		tmpaddr = (SIZE_PTR)rbuf->pskb->data;
-		alignment = tmpaddr & (RECVBUFF_ALIGN_SZ - 1);
-		skb_reserve(rbuf->pskb, (RECVBUFF_ALIGN_SZ - alignment));
-	}
-#endif
-
-	rbuf->pskb->dev = recvpriv->adapter->pnetdev;
-
-	/* init recvbuf */
-	rbuf->phead = rbuf->pskb->head;
-	rbuf->pdata = rbuf->pskb->data;
-	rbuf->ptail = skb_tail_pointer(rbuf->pskb);
-	rbuf->pend = skb_end_pointer(rbuf->pskb);
-	rbuf->len = 0;
-
-	return _SUCCESS;
-}
-#endif /* CONFIG_SDIO_RX_COPY */
-#endif /* !defined(CONFIG_RTL8822B) && !defined(CONFIG_RTL8822C) */
-#endif /* defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI) */
 
 /* alloc os related resource in struct recv_buf */
 int rtw_os_recvbuf_resource_alloc(_adapter *padapter, struct recv_buf *precvbuf, u32 size)
@@ -312,8 +268,9 @@ int rtw_os_recvbuf_resource_free(_adapter *padapter, struct recv_buf *precvbuf)
 
 }
 
-struct sk_buff *rtw_os_alloc_msdu_pkt(union recv_frame *prframe, const u8 *da, const u8 *sa
-	, u8 *msdu ,u16 msdu_len, enum rtw_rx_llc_hdl llc_hdl)
+struct sk_buff *rtw_os_alloc_msdu_pkt(union recv_frame *prframe,
+	const u8 *da, const u8 *sa, u8 *msdu ,u16 msdu_len,
+	enum rtw_rx_llc_hdl llc_hdl)
 {
 	u8	*data_ptr;
 	struct sk_buff *sub_skb;
@@ -446,7 +403,8 @@ void dynamic_napi_th_chk (_adapter *adapter)
 #endif /* CONFIG_RTW_NAPI_DYNAMIC */
 #endif /* CONFIG_RTW_NAPI */
 
-void rtw_os_recv_indicate_pkt(_adapter *padapter, struct sk_buff *pkt, union recv_frame *rframe)
+void rtw_os_recv_indicate_pkt(_adapter *padapter, struct sk_buff *pkt,
+			union recv_frame *rframe)
 {
 	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
 	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
@@ -684,28 +642,5 @@ _recv_indicatepkt_drop:
 	rtw_free_recvframe(precv_frame);
 	DBG_COUNTER(padapter->rx_logs.os_indicate_err);
 	return _FAIL;
-}
-
-void rtw_os_read_port(_adapter *padapter, struct recv_buf *precvbuf)
-{
-#ifdef CONFIG_USB_HCI
-	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
-
-	precvbuf->ref_cnt--;
-
-	/* free skb in recv_buf */
-	rtw_skb_free(precvbuf->pskb);
-
-	precvbuf->pskb = NULL;
-
-	if (precvbuf->irp_pending == _FALSE)
-		rtw_read_port(padapter, precvpriv->ff_hwaddr, 0, (unsigned char *)precvbuf);
-
-
-#endif
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-	precvbuf->pskb = NULL;
-#endif
-
 }
 
