@@ -22,6 +22,8 @@ MODULE_DESCRIPTION("Realtek Wireless Lan Driver");
 MODULE_AUTHOR("Realtek Semiconductor Corp.");
 MODULE_VERSION(DRIVERVERSION);
 
+#if 0 // NEO 
+
 /* module param defaults */
 int rtw_chip_version = 0x00;
 int rtw_rfintfs = HWPI;
@@ -894,8 +896,14 @@ MODULE_PARM_DESC(rtw_peer_alive_based_preq,
 #endif
 
 static int _netdev_open(struct net_device *pnetdev);
+
+#endif // if 0 NEO
+
 int netdev_open(struct net_device *pnetdev);
 static int netdev_close(struct net_device *pnetdev);
+
+#if 0 // NEO
+
 #ifdef CONFIG_PLATFORM_INTEL_BYT
 extern int rtw_sdio_set_power(int on);
 #endif /* CONFIG_PLATFORM_INTEL_BYT */
@@ -1564,6 +1572,8 @@ uint rtw_load_registry(_adapter *padapter)
 
 	return status;
 }
+
+#endif // if 0 NEO
 
 /**
  * rtw_net_set_mac_address
