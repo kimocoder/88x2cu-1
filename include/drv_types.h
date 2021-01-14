@@ -1769,6 +1769,7 @@ struct _ADAPTER {
 	int	bDongle;/* build-in module or external dongle */
 
 	#if defined(CONFIG_AP_MODE) && defined(CONFIG_SUPPORT_MULTI_BCN)
+aa
 	_list	list;
 	u8 vap_id;
 	#endif

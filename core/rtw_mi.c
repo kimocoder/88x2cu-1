@@ -1434,7 +1434,7 @@ void rtw_mi_buddy_clone_bcmc_packet(_adapter *padapter, union recv_frame *precvf
 			ret = _rtw_mi_buddy_clone_bcmc_packet(iface, precvframe, pphy_status, pcloneframe);
 			if (_SUCCESS != ret) {
 				if (ret == -1)
-					rtw_free_recvframe(pcloneframe, pfree_recv_queue);
+					rtw_free_recvframe(pcloneframe);
 				/*RTW_INFO(ADPT_FMT"-clone BC/MC frame failed\n", ADPT_ARG(iface));*/
 			}
 		}

@@ -765,7 +765,7 @@ u32	rtw_free_stainfo(_adapter *padapter , struct sta_info *psta)
 
 			rtw_list_delete(&(prframe->u.hdr.list));
 
-			rtw_free_recvframe(prframe, pfree_recv_queue);
+			rtw_free_recvframe(prframe);
 		}
 
 		_rtw_spinunlock_bh(&ppending_recvframe_queue->lock);

@@ -44,7 +44,6 @@ static u8 recvbuf2recvframe_proccess_normal_rx
 {
 	u8 ret = _SUCCESS;
 	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
-	_queue *pfree_recv_queue = &precvpriv->free_recv_queue;
 
 #ifdef CONFIG_RX_PACKET_APPEND_FCS
 	if (check_fwstate(&padapter->mlmepriv, WIFI_MONITOR_STATE) == _FALSE) {
@@ -56,7 +55,7 @@ static u8 recvbuf2recvframe_proccess_normal_rx
 	if (rtw_os_alloc_recvframe(padapter, precvframe,
 		(pbuf + pattrib->shift_sz + pattrib->drvinfo_sz + RXDESC_SIZE), pskb) == _FAIL) {
 
-		rtw_free_recvframe(precvframe, pfree_recv_queue);
+		rtw_free_recvframe(precvframe);
 		ret = _FAIL;
 		goto exit;
 	}
@@ -116,7 +115,7 @@ int recvbuf2recvframe(PADAPTER padapter, void *ptr)
 		if ((padapter->registrypriv.mp_mode == 0) && ((pattrib->crc_err) || (pattrib->icv_err))) {
 			RTW_INFO("%s: RX Warning! crc_err=%d icv_err=%d, skip!\n", __func__, pattrib->crc_err, pattrib->icv_err);
 
-			rtw_free_recvframe(precvframe, pfree_recv_queue);
+			rtw_free_recvframe(precvframe);
 			goto _exit_recvbuf2recvframe;
 		}
 
@@ -129,14 +128,14 @@ int recvbuf2recvframe(PADAPTER padapter, void *ptr)
 				RTW_INFO("%s()-%d: RX Warning!,RXDESC_SIZE(%d), drvinfo_sz(%d), shift_sz(%d),pkt_len(%d)\n"
 					, __func__, __LINE__, RXDESC_SIZE, pattrib->drvinfo_sz, pattrib->shift_sz, pattrib->pkt_len);
 
-			rtw_free_recvframe(precvframe, pfree_recv_queue);
+			rtw_free_recvframe(precvframe);
 			goto _exit_recvbuf2recvframe;
 		}
 
 		switch (pattrib->pkt_rpt_type) {
 		case C2H_PACKET:
 			/* C2H_PACKET doesn't use recvframe, so free it */
-			rtw_free_recvframe(precvframe, pfree_recv_queue);
+			rtw_free_recvframe(precvframe);
 			if (recvbuf2recvframe_proccess_c2h(padapter, pbuf, transfer_len) == _FAIL)
 				goto _exit_recvbuf2recvframe;
 			break;
@@ -144,7 +143,7 @@ int recvbuf2recvframe(PADAPTER padapter, void *ptr)
 		case TX_REPORT2:
 		case HIS_REPORT:
 			RTW_INFO("%s: [WARNNING] RX type(%d) not be handled!\n", __func__, pattrib->pkt_rpt_type);
-			rtw_free_recvframe(precvframe, pfree_recv_queue);
+			rtw_free_recvframe(precvframe);
 			break;
 		case NORMAL_RX:
 		default:

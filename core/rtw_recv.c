@@ -262,15 +262,27 @@ void rtw_init_recvframe(union recv_frame *precvframe, struct recv_priv *precvpri
 	precvframe->u.hdr.len = 0;
 }
 
-int rtw_free_recvframe(union recv_frame *precvframe, _queue *pfree_recv_queue)
+int rtw_free_recvframe(union recv_frame *precvframe)
 {
-	_adapter *padapter = precvframe->u.hdr.adapter;
-	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
+	struct dvobj_priv *dvobj;
+	_adapter *padapter;
+	struct recv_priv *precvpriv;
+	_queue *pfree_recv_queue;
 
+	if (!precvframe) {
+		RTW_ERR("%s precvframe is NULL\n", __func__);
+		rtw_warn_on(1);
+		return _FAIL;
+	}
+
+	dvobj = precvframe->u.hdr.dvobj;
+	padapter = precvframe->u.hdr.adapter;
+	precvpriv = &dvobj->recvpriv;
+	pfree_recv_queue = &(precvpriv->free_recv_queue);
 
 #ifdef CONFIG_CONCURRENT_MODE
-	padapter = GET_PRIMARY_ADAPTER(padapter);
-	precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
+	padapter = dvobj_get_primary_adapter(dvobj);
+	precvpriv = &dvobj->recvpriv;
 	pfree_recv_queue = &precvpriv->free_recv_queue;
 	precvframe->u.hdr.adapter = padapter;
 #endif
@@ -292,11 +304,7 @@ int rtw_free_recvframe(union recv_frame *precvframe, _queue *pfree_recv_queue)
 	precvframe->u.hdr.attrib.phy_info.physts_rpt_valid = _FALSE;
 
 	rtw_list_insert_tail(&(precvframe->u.hdr.list), get_list_head(pfree_recv_queue));
-
-	if (padapter != NULL) {
-		if (pfree_recv_queue == &precvpriv->free_recv_queue)
-			precvpriv->free_recvframe_cnt++;
-	}
+	precvpriv->free_recvframe_cnt++;
 
 	_rtw_spinunlock_bh(&pfree_recv_queue->lock);
 
@@ -343,15 +351,6 @@ sint rtw_enqueue_recvframe(union recv_frame *precvframe, _queue *queue)
 	return ret;
 }
 
-/*
-sint	rtw_enqueue_recvframe(union recv_frame *precvframe, _queue *queue)
-{
-	return rtw_free_recvframe(precvframe, queue);
-}
-*/
-
-
-
 
 /*
 caller : defrag ; recvframe_chk_defrag in recv_thread  (passive)
@@ -378,7 +377,7 @@ void rtw_free_recvframe_queue(_queue *pframequeue,  _queue *pfree_recv_queue)
 
 		/* rtw_list_delete(&precvframe->u.hdr.list); */ /* will do this in rtw_free_recvframe() */
 
-		rtw_free_recvframe(precvframe, pfree_recv_queue);
+		rtw_free_recvframe(precvframe);
 	}
 
 	_rtw_spinunlock(&pframequeue->lock);
@@ -392,7 +391,7 @@ u32 rtw_free_uc_swdec_pending_queue(_adapter *adapter)
 	u32 cnt = 0;
 	union recv_frame *pending_frame;
 	while ((pending_frame = rtw_alloc_recvframe(&adapter->recvpriv.uc_swdec_pending_queue))) {
-		rtw_free_recvframe(pending_frame, &adapter->recvpriv.free_recv_queue);
+		rtw_free_recvframe(pending_frame);
 		cnt++;
 	}
 
@@ -687,17 +686,6 @@ union recv_frame *decryptor(_adapter *padapter, union recv_frame *precv_frame)
 		   && prxattrib->encrypt > 0
 		&& (psecuritypriv->busetkipkey == 1 || prxattrib->encrypt != _TKIP_)
 		  ) {
-#if 0
-		if ((prxstat->icv == 1) && (prxattrib->encrypt != _AES_)) {
-			psecuritypriv->hw_decrypted = _FALSE;
-
-
-			rtw_free_recvframe(precv_frame, &padapter->recvpriv.free_recv_queue);
-
-			return_packet = NULL;
-
-		} else
-#endif
 		{
 			DBG_COUNTER(padapter->rx_logs.core_rx_post_decrypt_hw);
 
@@ -732,7 +720,7 @@ union recv_frame *decryptor(_adapter *padapter, union recv_frame *precv_frame)
 	#endif
 
 	if (res == _FAIL) {
-		rtw_free_recvframe(return_packet, &adapter_to_dvobj(padapter)->recvpriv.free_recv_queue);
+		rtw_free_recvframe(return_packet);
 		return_packet = NULL;
 	} else
 		prxattrib->bdecrypted = _TRUE;
@@ -788,7 +776,7 @@ union recv_frame *portctrl(_adapter *adapter, union recv_frame *precv_frame)
 				prtnframe = precv_frame;
 			else {
 				/* free this frame */
-				rtw_free_recvframe(precv_frame, &adapter_to_dvobj(adapter)->recvpriv.free_recv_queue);
+				rtw_free_recvframe(precv_frame);
 				prtnframe = NULL;
 			}
 		} else {
@@ -2577,7 +2565,7 @@ union recv_frame *recvframe_defrag(_adapter *adapter, _queue *defrag_q)
 	if (curfragnum != pfhdr->attrib.frag_num) {
 		/* the first fragment number must be 0 */
 		/* free the whole queue */
-		rtw_free_recvframe(prframe, pfree_recv_queue);
+		rtw_free_recvframe(prframe);
 		rtw_free_recvframe_queue(defrag_q, pfree_recv_queue);
 
 		return NULL;
@@ -2607,7 +2595,7 @@ union recv_frame *recvframe_defrag(_adapter *adapter, _queue *defrag_q)
 		if (curfragnum != pnfhdr->attrib.frag_num) {
 			/* the fragment number must be increasing  (after decache) */
 			/* release the defrag_q & prframe */
-			rtw_free_recvframe(prframe, pfree_recv_queue);
+			rtw_free_recvframe(prframe);
 			rtw_free_recvframe_queue(defrag_q, pfree_recv_queue);
 			return NULL;
 		}
@@ -2708,7 +2696,7 @@ union recv_frame *recvframe_chk_defrag(PADAPTER padapter, union recv_frame *prec
 
 		} else {
 			/* can't find this ta's defrag_queue, so free this recv_frame */
-			rtw_free_recvframe(precv_frame, pfree_recv_queue);
+			rtw_free_recvframe(precv_frame);
 			prtnframe = NULL;
 		}
 
@@ -2729,7 +2717,7 @@ union recv_frame *recvframe_chk_defrag(PADAPTER padapter, union recv_frame *prec
 
 		} else {
 			/* can't find this ta's defrag_queue, so free this recv_frame */
-			rtw_free_recvframe(precv_frame, pfree_recv_queue);
+			rtw_free_recvframe(precv_frame);
 			prtnframe = NULL;
 		}
 
@@ -2739,7 +2727,7 @@ union recv_frame *recvframe_chk_defrag(PADAPTER padapter, union recv_frame *prec
 	if ((prtnframe != NULL) && (prtnframe->u.hdr.attrib.privacy)) {
 		/* after defrag we must check tkip mic code */
 		if (recvframe_chkmic(padapter,  prtnframe) == _FAIL) {
-			rtw_free_recvframe(prtnframe, pfree_recv_queue);
+			rtw_free_recvframe(prtnframe);
 			prtnframe = NULL;
 		}
 	}
@@ -3067,7 +3055,7 @@ move_to_next:
 	}
 
 	prframe->u.hdr.len = 0;
-	rtw_free_recvframe(prframe, pfree_recv_queue);/* free this recv_frame */
+	rtw_free_recvframe(prframe);/* free this recv_frame */
 
 	return ret;
 }
@@ -3085,7 +3073,7 @@ static int recv_process_mpdu(_adapter *padapter, union recv_frame *prframe)
 			RTW_INFO("DBG_RX_DROP_FRAME "FUNC_ADPT_FMT" amsdu_to_msdu fail\n"
 				, FUNC_ADPT_ARG(padapter));
 			#endif
-			rtw_free_recvframe(prframe, pfree_recv_queue);
+			rtw_free_recvframe(prframe);
 			goto exit;
 		}
 	} else {
@@ -3119,7 +3107,7 @@ static int recv_process_mpdu(_adapter *padapter, union recv_frame *prframe)
 
 		#if defined(CONFIG_AP_MODE) || defined(CONFIG_RTW_MESH)
 		if (!act) {
-			rtw_free_recvframe(prframe, pfree_recv_queue);
+			rtw_free_recvframe(prframe);
 			ret = _FAIL;
 			goto exit;
 		}
@@ -3143,7 +3131,7 @@ static int recv_process_mpdu(_adapter *padapter, union recv_frame *prframe)
 				recv_free_fwd_resource(padapter, fwd_frame, &b2u_list);
 			}
 			#endif
-			rtw_free_recvframe(prframe, pfree_recv_queue);
+			rtw_free_recvframe(prframe);
 			goto exit;
 		}
 
@@ -3152,7 +3140,7 @@ static int recv_process_mpdu(_adapter *padapter, union recv_frame *prframe)
 			recv_fwd_pkt_hdl(padapter, prframe->u.hdr.pkt, act, fwd_frame, &b2u_list);
 			if (!(act & RTW_RX_MSDU_ACT_INDICATE)) {
 				prframe->u.hdr.pkt = NULL;
-				rtw_free_recvframe(prframe, pfree_recv_queue);
+				rtw_free_recvframe(prframe);
 				goto exit;
 			}
 		}
@@ -3162,7 +3150,7 @@ static int recv_process_mpdu(_adapter *padapter, union recv_frame *prframe)
 			ret = rtw_recv_indicatepkt_check(prframe
 				, get_recvframe_data(prframe), get_recvframe_len(prframe));
 			if (ret != _SUCCESS) {
-				rtw_free_recvframe(prframe, pfree_recv_queue);
+				rtw_free_recvframe(prframe);
 				goto exit;
 			}
 
@@ -3183,7 +3171,7 @@ static int recv_process_mpdu(_adapter *padapter, union recv_frame *prframe)
 				, rtw_is_surprise_removed(padapter));
 			#endif
 			ret = _SUCCESS; /* don't count as packet drop */
-			rtw_free_recvframe(prframe, pfree_recv_queue);
+			rtw_free_recvframe(prframe);
 		}
 	}
 
@@ -3761,7 +3749,7 @@ int mp_recv_frame(_adapter *padapter, union recv_frame *rframe)
 
 		if (pmppriv->rx_bindicatePkt == _FALSE) {
 			ret = _FAIL;
-			rtw_free_recvframe(rframe, pfree_recv_queue);/* free this recv_frame */
+			rtw_free_recvframe(rframe);/* free this recv_frame */
 			goto exit;
 		} else {
 			type =	GetFrameType(ptr);
@@ -3854,7 +3842,7 @@ int mp_recv_frame(_adapter *padapter, union recv_frame *rframe)
 		}
 	}
 exit:
-	rtw_free_recvframe(rframe, pfree_recv_queue);/* free this recv_frame */
+	rtw_free_recvframe(rframe);/* free this recv_frame */
 	ret = _FAIL;
 	return ret;
 
@@ -3907,7 +3895,7 @@ exit:
 #endif /* CONFIG_WIFI_MONITOR */
 
 	if (rframe) /* free this recv_frame */
-		rtw_free_recvframe(rframe, pfree_recv_queue);
+		rtw_free_recvframe(rframe);
 
 	return ret;
 }
@@ -3940,7 +3928,7 @@ int recv_func_prehandle(_adapter *padapter, union recv_frame *rframe)
 		/* check the frame crtl field and decache */
 		ret = validate_recv_frame(padapter, rframe);
 		if (ret != _SUCCESS) {
-			rtw_free_recvframe(rframe, pfree_recv_queue);/* free this recv_frame */
+			rtw_free_recvframe(rframe);/* free this recv_frame */
 			goto exit;
 		}
 	}
@@ -4037,7 +4025,7 @@ int recv_func_posthandle(_adapter *padapter, union recv_frame *prframe)
 	/* including perform A-MPDU Rx Ordering Buffer Control */
 	ret = recv_indicatepkt_reorder(padapter, prframe);
 	if (ret == _FAIL) {
-		rtw_free_recvframe(orig_prframe, pfree_recv_queue);
+		rtw_free_recvframe(orig_prframe);
 		goto _recv_data_drop;
 	} else if (ret == RTW_RX_HANDLED) /* queued OR indicated in order */
 		goto _exit_recv_func;
@@ -4612,7 +4600,7 @@ s32 pre_recv_entry(union recv_frame *precvframe, u8 *pphy_status)
 				RTW_INFO("%s [WARN] Cannot find appropriate adapter - mac_addr : "MAC_FMT"\n"
 					, __func__, MAC_ARG(ra));
 
-			rtw_free_recvframe(precvframe, &precvframe->u.hdr.dvobj->recvpriv.free_recv_queue);
+			rtw_free_recvframe(precvframe);
 			goto exit;
 		}
 		#ifdef CONFIG_CONCURRENT_MODE
@@ -4642,7 +4630,7 @@ s32 pre_recv_entry(union recv_frame *precvframe, u8 *pphy_status)
 		if (GetFrameType(pbuf) == WIFI_DATA_TYPE
 			&& !adapter_allow_bmc_data_rx(precvframe->u.hdr.adapter)
 		) {
-			rtw_free_recvframe(precvframe, &precvframe->u.hdr.dvobj->recvpriv.free_recv_queue);
+			rtw_free_recvframe(precvframe);
 			goto exit;
 		}
 	}
@@ -5363,8 +5351,6 @@ s32 core_rx_process_msdu(_adapter *adapter, union recv_frame *prframe)
 		return CORE_RX_DROP;
 	}
 
-	// NEO
-	#if 0 // mark off first for rtw_free_recvframe change
 	#if defined(CONFIG_AP_MODE)
 	if (act & RTW_RX_MSDU_ACT_FORWARD) {
 		recv_fwd_pkt_hdl(adapter, prframe->u.hdr.pkt, act, fwd_frame, &b2u_list);
@@ -5374,7 +5360,6 @@ s32 core_rx_process_msdu(_adapter *adapter, union recv_frame *prframe)
 			return CORE_RX_DONE;
 		}
 	}
-	#endif
 	#endif
 
 	if(rtw_recv_indicatepkt_check(prframe, 

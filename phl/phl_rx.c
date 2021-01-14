@@ -926,7 +926,7 @@ void _phl_rx_statistics_reset(struct phl_info_t *phl_info)
 			_os_spinunlock(drv, &sta_queue->lock, _irq, &sp_flags);
 		}
 	}
-#endif
+#endif // if 0 NEO
 }
 
 void

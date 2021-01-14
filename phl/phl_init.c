@@ -1191,7 +1191,6 @@ rtw_phl_trx_free(void *phl)
 	phl_trx_test_deinit(phl);
 }
 
-
 bool rtw_phl_is_init_completed(void *phl)
 {
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;

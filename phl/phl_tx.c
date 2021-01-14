@@ -1144,9 +1144,7 @@ _phl_alloc_h2c_pool(struct phl_info_t *phl_info)
 	return pstatus;
 }
 
-// TODO : NEO : mark off first
-
-#if 0
+#if 0 // TODO : NEO : mark off first
 
 void phl_datapath_deinit(struct phl_info_t *phl_info)
 {
@@ -1233,6 +1231,7 @@ enum rtw_phl_status phl_datapath_init(struct phl_info_t *phl_info)
 
 	return pstatus;
 }
+
 
 enum rtw_phl_status phl_datapath_start(struct phl_info_t *phl_info)
 {
