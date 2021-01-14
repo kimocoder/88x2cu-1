@@ -763,9 +763,7 @@ static __inline void os_in_token_free(void *drv_priv)
 
 static __inline u8 os_send_usb_in_token(void *drv_priv, void *rxobj, u8 *inbuf, u32 inbuf_len, u8 pipe_idx, u8 minLen)
 {
-	RTW_ERR("NEO %s - rtw_usb_read_port : TODO\n");
-	return _FAIL;
-	//return rtw_usb_read_port(drv_priv, rxobj, inbuf, inbuf_len, pipe_idx, minLen);
+	return g6_rtw_usb_read_port(drv_priv, rxobj, inbuf, inbuf_len, pipe_idx, minLen);
 }
 
 static __inline void os_enable_usb_in_pipes(void *drv_priv)
