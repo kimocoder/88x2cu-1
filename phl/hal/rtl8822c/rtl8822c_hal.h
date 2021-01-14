@@ -18,12 +18,14 @@
 
 /* rtl8822c_ops.c */
 void hal_set_ops_8822c(struct rtw_phl_com_t *phl_com, struct hal_info_t *hal);
+
+#include "hal_trx_8822c.h"
+
 #if 0 // NEO TODO
 
 
 /*usage under rtl8852a folder*/
 #include "rtl8852a_spec.h"
-#include "hal_trx_8852a.h"
 
 #ifdef CONFIG_PCI_HCI
 #include "pci/rtl8852ae_hal.h"
