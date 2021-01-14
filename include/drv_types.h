@@ -2166,9 +2166,9 @@ __inline static void RTW_ENABLE_FUNC(struct dvobj_priv *dvobj, int func_bit)
 	(RTW_CANNOT_RUN(dvobj) || \
 	 RTW_IS_FUNC_DISABLED((dvobj), DF_RX_BIT))
 
-#define RTW_CANNOT_TX(padapter) \
-	(RTW_CANNOT_RUN(adapter_to_dvobj(padapter)) || \
-	 RTW_IS_FUNC_DISABLED((adapter_to_dvobj(padapter)), DF_TX_BIT))
+#define RTW_CANNOT_TX(dvobj) \
+	(RTW_CANNOT_RUN(dvobj) || \
+	 RTW_IS_FUNC_DISABLED((dvobj), DF_TX_BIT))
 
 #ifdef CONFIG_PNO_SUPPORT
 int rtw_parse_ssid_list_tlv(char **list_str, pno_ssid_t *ssid, int max, int *bytes_left);

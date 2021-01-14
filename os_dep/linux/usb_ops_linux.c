@@ -464,11 +464,11 @@ static void rtw_usb_write_port_complete(struct urb *purb, struct pt_regs *regs)
 	}
 
 
-	if (RTW_CANNOT_TX(padapter)) {
+	if (RTW_CANNOT_TX(pdvobj)) {
 		RTW_INFO("%s(): TX Warning! bDriverStopped(%s) OR bSurpriseRemoved(%s) pxmitbuf->buf_tag(%x)\n"
 			 , __func__
-			 , rtw_is_drv_stopped(padapter) ? "True" : "False"
-			 , rtw_is_surprise_removed(padapter) ? "True" : "False"
+			 , dev_is_drv_stopped(pdvobj) ? "True" : "False"
+			 , dev_is_surprise_removed(pdvobj) ? "True" : "False"
 			 , pxmitbuf->buf_tag);
 
 		goto check_completion;
@@ -562,11 +562,11 @@ u32 rtw_usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 len, u8 *wmem)
 		goto exit;
 	}
 
-	if (RTW_CANNOT_TX(padapter)) {
+	if (RTW_CANNOT_TX(pdvobj)) {
 #ifdef DBG_TX
 		RTW_INFO(" DBG_TX %s:%d bDriverStopped%s, bSurpriseRemoved:%s\n", __func__, __LINE__
-			 , rtw_is_drv_stopped(padapter) ? "True" : "False"
-			, rtw_is_surprise_removed(padapter) ? "True" : "False");
+			 , dev_is_drv_stopped(pdvobj) ? "True" : "False"
+			, dev_is_surprise_removed(pdvobj) ? "True" : "False");
 #endif
 		rtw_sctx_done_err(&pxmitbuf->sctx, RTW_SCTX_DONE_TX_DENY);
 		goto exit;

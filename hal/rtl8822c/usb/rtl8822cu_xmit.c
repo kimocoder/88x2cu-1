@@ -850,10 +850,11 @@ static void rtl8822cu_xmit_tasklet(void *priv)
 {
 	int ret = _FALSE;
 	_adapter *padapter = (_adapter *)priv;
+	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
 	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
 
 	while (1) {
-		if (RTW_CANNOT_TX(padapter)) {
+		if (RTW_CANNOT_TX(dvobj)) {
 			RTW_INFO("xmit_tasklet => bDriverStopped or bSurpriseRemoved or bWritePortCancel\n");
 			break;
 		}
