@@ -276,8 +276,19 @@ exit:
 #endif /* CONFIG_USB_SUPPORT_ASYNC_VDN_REQ */
 
 
+#if (KERNEL_VERSION(2, 5, 0) > LINUX_VERSION_CODE) ||\
+	(KERNEL_VERSION(2, 6, 18) < LINUX_VERSION_CODE)
+/*#define _usbctrl_vendorreq_async_callback(urb, regs)\*/
+	/*_usbctrl_vendorreq_async_callback(urb)*/
+/*#define usb_bulkout_zero_complete(purb, regs)\*/
+	/*usb_bulkout_zero_complete(purb)*/
 #define rtw_usb_write_port_complete(purb, regs)\
 	rtw_usb_write_port_complete(purb)
+#define g6_rtw_usb_read_port_complete(purb, regs)\
+	g6_rtw_usb_read_port_complete(purb)
+#define rtw_usb_read_interrupt_complete(purb, regs)\
+	rtw_usb_read_interrupt_complete(purb)
+#endif
 
 unsigned int bulkid2pipe(struct dvobj_priv *pdvobj, u32 addr, u8 bulk_out)
 {
@@ -1171,3 +1182,241 @@ u32 usb_read_interrupt(struct intf_hdl *pintfhdl, u32 addr)
 	return ret;
 }
 #endif /* CONFIG_USB_INTERRUPT_IN_PIPE */
+
+
+static void g6_rtw_usb_read_port_complete(struct urb *urb, struct pt_regs *regs)
+{
+	struct lite_data_buf *literecvbuf =
+		(struct lite_data_buf *)urb->context;
+	struct data_urb *recvurb =  literecvbuf->dataurb;
+	struct dvobj_priv *dvobj = literecvbuf->dvobj;
+	struct trx_data_buf_q *rx_data_buf_q = NULL;
+	struct trx_urb_buf_q *rx_urb_q = NULL;
+	u32 actual_length = urb->actual_length;
+	u32 transfer_buffer_length = urb->transfer_buffer_length;
+	u8 bulk_id = recvurb->bulk_id;
+	u8 minlen = recvurb->minlen;
+	unsigned long sp_flags;
+	u8 status = _SUCCESS;
+
+
+	if (bulk_id == REALTEK_USB_BULK_IN_EP_IDX) {
+		rx_data_buf_q = &dvobj->literecvbuf_q;
+		rx_urb_q = &dvobj->recv_urb_q;
+		ATOMIC_DEC(&(dvobj->rx_pending_cnt));
+	} else {
+		#ifdef CONFIG_USB_INTERRUPT_IN_PIPE
+		rx_data_buf_q = &dvobj->intin_buf_q;
+		rx_urb_q = &dvobj->intin_urb_q;
+		#endif
+	}
+
+	if (RTW_CANNOT_RX(dvobj)) {
+		RTW_INFO("%s() RX Warning! bDriverStopped(%s) OR bSurpriseRemoved(%s)\n"
+			, __func__
+			, dev_is_drv_stopped(dvobj) ? "True" : "False"
+			, dev_is_surprise_removed(dvobj) ? "True" : "False");
+
+		status = _FAIL;
+		goto exit;
+	}
+
+	if (urb->status == 0) {
+		if ((actual_length > transfer_buffer_length) || (actual_length < minlen)) {
+			RTW_INFO("%s()-%d: actual_length:%u, transfer_buffer_length:%u, minlen:%u\n"
+				, __FUNCTION__, __LINE__, actual_length, transfer_buffer_length, minlen);
+
+			status = _FAIL;
+			goto exit;
+		} else {
+			rtw_reset_continual_io_error(dvobj);
+			status = _SUCCESS;
+			goto exit;
+		}
+	} if (urb->status == -ENOENT) {
+		/*use usb_kill_urb urb status code = -ENOENT*/
+		status = _FAIL;
+		goto exit;
+	} else {
+
+		RTW_INFO("###=> %s => urb.status(%d)\n", __func__, urb->status);
+		status = _FAIL;
+
+		if (rtw_inc_and_chk_continual_io_error(dvobj) == _TRUE)
+			dev_set_surprise_removed(dvobj);
+
+		switch (urb->status) {
+		case -EINVAL:
+		case -EPIPE:
+		case -ENODEV:
+		case -ESHUTDOWN:
+			dev_set_drv_stopped(dvobj);
+			break;
+		case -EPROTO:
+		case -EILSEQ:
+		case -ETIME:
+		case -ECOMM:
+		case -EOVERFLOW:
+			break;
+		case -EINPROGRESS:
+			RTW_INFO("ERROR: URB IS IN PROGRESS!/n");
+			break;
+		default:
+			break;
+		}
+		goto exit;
+	}
+
+exit:
+
+	if (status == _SUCCESS)
+		status = RTW_PHL_STATUS_SUCCESS;
+	else
+		status = RTW_PHL_STATUS_FAILURE;
+
+	rtw_phl_post_in_complete(dvobj->phl, literecvbuf->phl_buf_ptr, actual_length, status);
+	rtw_free_litedatabuf(rx_data_buf_q, literecvbuf);
+	rtw_free_dataurb(rx_urb_q, recvurb);
+}
+
+u32 g6_rtw_usb_read_port(void *d, void *rxobj,
+	u8 *inbuf, u32 inbuf_len, u8 bulk_id, u8 minlen)
+{
+	int err;
+	unsigned int pipe;
+	u32 ret = _FAIL;
+	struct dvobj_priv *dvobj = (struct dvobj_priv *)d;
+	struct usb_device *usbd = dvobj_to_usb(dvobj)->pusbdev;
+	struct lite_data_buf *literecvbuf = NULL;
+	struct data_urb *recvurb = NULL;
+	struct trx_data_buf_q *rx_data_buf_q = NULL;
+	struct trx_urb_buf_q *rx_urb_q = NULL;
+	struct usb_data *usb_data = dvobj_to_usb(dvobj);
+
+	if (RTW_CANNOT_RX(dvobj) || (inbuf == NULL)) {
+		goto exit;
+	}
+
+	if (bulk_id == REALTEK_USB_BULK_IN_EP_IDX) {
+		rx_data_buf_q = &dvobj->literecvbuf_q;
+		rx_urb_q = &dvobj->recv_urb_q;
+	} else if (bulk_id == REALTEK_USB_IN_INT_EP_IDX) {
+		#ifdef CONFIG_USB_INTERRUPT_IN_PIPE
+		rx_data_buf_q = &dvobj->intin_buf_q;
+		rx_urb_q = &dvobj->intin_urb_q;
+		#else
+		goto exit;
+		#endif
+	} else {
+		RTW_INFO("%s,%d Unkown bulk id:%d\n",
+			__func__, __LINE__, bulk_id);
+		ret = _FAIL;
+		goto exit;
+	}
+
+	literecvbuf = rtw_alloc_litedatabuf(rx_data_buf_q);
+	if (literecvbuf == NULL) {
+		RTW_INFO("%s,%d Can't alloc lite recv buf\n",
+			__func__, __LINE__);
+		goto exit;
+	}
+	recvurb = rtw_alloc_dataurb(rx_urb_q);
+	if (recvurb == NULL) {
+		RTW_INFO("%s,%d Can't alloc lite recv urb\n",
+			__func__, __LINE__);
+		goto exit;
+	}
+
+	recvurb->bulk_id = bulk_id;
+	recvurb->minlen = minlen;
+	literecvbuf->dvobj = dvobj;
+	literecvbuf->pbuf = inbuf;
+	literecvbuf->dataurb = recvurb;
+	literecvbuf->phl_buf_ptr = rxobj;
+
+	pipe = bulkid2pipe(dvobj, bulk_id, _FALSE);
+
+	if (bulk_id == REALTEK_USB_BULK_IN_EP_IDX) {
+		usb_fill_bulk_urb(recvurb->urb, usbd, pipe,
+			literecvbuf->pbuf,
+			inbuf_len,
+			g6_rtw_usb_read_port_complete,
+			literecvbuf);
+	} else {
+		#ifdef CONFIG_USB_INTERRUPT_IN_PIPE
+		if (usb_data->inpipe_type[bulk_id] == REALTEK_USB_BULK_IN_EP_IDX)
+			usb_fill_bulk_urb(recvurb->urb, usbd, pipe,
+				literecvbuf->pbuf,
+				inbuf_len,
+				g6_rtw_usb_read_port_complete,
+				literecvbuf);
+		else
+			usb_fill_int_urb(recvurb->urb, usbd, pipe,
+				literecvbuf->pbuf,
+				inbuf_len,
+				g6_rtw_usb_read_port_complete,
+				literecvbuf,
+				1);
+		#endif
+	}
+
+	err = usb_submit_urb(recvurb->urb, GFP_ATOMIC);
+	if ((err) && (err != (-EPERM))) {
+		RTW_INFO("cannot submit rx in-token(err = 0x%08x),urb_status = %d\n", err, recvurb->urb->status);
+		ret = _FAIL;
+		goto exit;
+	}
+
+	/* record usb bulk in */
+	if (bulk_id == REALTEK_USB_BULK_IN_EP_IDX)
+		ATOMIC_INC(&(dvobj->rx_pending_cnt));
+
+	ret = _SUCCESS;
+exit:
+	if (ret != _SUCCESS) {
+		rtw_free_litedatabuf(rx_data_buf_q, literecvbuf);
+		rtw_free_dataurb(rx_urb_q, recvurb);
+	}
+
+	if (ret == _SUCCESS)
+		ret = RTW_PHL_STATUS_SUCCESS;
+	else
+		ret = RTW_PHL_STATUS_FAILURE;
+
+	return ret;
+}
+
+void g6_rtw_usb_read_port_cancel(void *d)
+{
+	int i;
+	struct dvobj_priv *dvobj = (struct dvobj_priv *)d;
+	struct data_urb *recvurb = (struct data_urb *)dvobj->recv_urb_q.urb_buf;
+	/*Elwin_todo need use correct literecvbuf_nr recvurb_nr */
+	u32 recvurb_nr = RTW_RECVURB_NR;
+#ifdef CONFIG_USB_INTERRUPT_IN_PIPE
+	u32 initinurb_nr = RTW_INTINURB_NR;
+#endif
+
+	if (dvobj == NULL) {
+		RTW_ERR("%s dvobj is NULL\n", __func__);
+		rtw_warn_on(1);
+		return;
+	}
+	RTW_INFO("%s\n", __func__);
+
+	
+	for (i = 0; i < recvurb_nr; i++) {
+		usb_kill_urb(recvurb->urb);
+		recvurb++;
+	}
+
+
+#ifdef CONFIG_USB_INTERRUPT_IN_PIPE
+	recvurb = (struct data_urb *)dvobj->intin_urb_q.urb_buf;
+	for (i = 0; i < initinurb_nr; i++) {
+		usb_kill_urb(recvurb->urb);
+		recvurb++;
+	}
+#endif
+}
+
