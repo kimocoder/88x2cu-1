@@ -18,62 +18,19 @@
 
 #if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
 	#ifdef CONFIG_TX_AGGREGATION
-		#ifdef CONFIG_RTL8822C
-			#ifdef CONFIG_SDIO_TX_FORMAT_DUMMY_AUTO
-				#define MAX_XMITBUF_SZ	(51200)
-			#else
-				#define MAX_XMITBUF_SZ	(32764)
-			#endif
-		#else
-			#define MAX_XMITBUF_SZ	(20480)	/* 20k */
-		#endif
 		/* #define SDIO_TX_AGG_MAX	5 */
 	#else
-		#define MAX_XMITBUF_SZ (1664)
 		#define SDIO_TX_AGG_MAX	1
 	#endif
 
 	#if defined CONFIG_SDIO_HCI
-		#define NR_XMITBUFF	(16)
 		#define SDIO_TX_DIV_NUM (2)
 	#endif
-	#if defined(CONFIG_GSPI_HCI)
-		#define NR_XMITBUFF	(128)
-	#endif
 
-#elif defined (CONFIG_USB_HCI)
-
-	#ifdef CONFIG_USB_TX_AGGREGATION
-		#if defined(CONFIG_PLATFORM_ARM_SUNxI) || defined(CONFIG_PLATFORM_ARM_SUN6I) || defined(CONFIG_PLATFORM_ARM_SUN7I) || defined(CONFIG_PLATFORM_ARM_SUN8I) || defined(CONFIG_PLATFORM_ARM_SUN50IW1P1)
-			#define MAX_XMITBUF_SZ (12288)  /* 12k 1536*8 */
-		#elif defined (CONFIG_PLATFORM_MSTAR)
-			#define MAX_XMITBUF_SZ	7680	/* 7.5k */
-		#else
-			#define MAX_XMITBUF_SZ	(20480)	/* 20k */
-		#endif
-	#else
-		#define MAX_XMITBUF_SZ	(2048)
-	#endif
-
-	#ifdef CONFIG_SINGLE_XMIT_BUF
-		#define NR_XMITBUFF	(1)
-	#else
-		#define NR_XMITBUFF	(4)
-	#endif /* CONFIG_SINGLE_XMIT_BUF */
-#elif defined (CONFIG_PCI_HCI)
-#ifdef CONFIG_TX_AMSDU
-	#define MAX_XMITBUF_SZ	(3500)
-#else
-	#define MAX_XMITBUF_SZ	(1664)
-#endif
-#ifdef CONFIG_PCI_TX_POLLING
-	#define NR_XMITBUFF	(256)
-#else
-	#define NR_XMITBUFF	(128)
-#endif
 #endif
 
 
+#if 0 /*CONFIG_CORE_XMITBUF*/
 #ifdef CONFIG_PCI_HCI
 	#define XMITBUF_ALIGN_SZ 4
 #else
@@ -85,23 +42,14 @@
 #endif
 
 
-/* xmit extension buff defination */
-#define MAX_XMIT_EXTBUF_SZ	(1536)
-
-#ifdef CONFIG_SINGLE_XMIT_BUF
-	#define NR_XMIT_EXTBUFF	(1)
-#else
-	#define NR_XMIT_EXTBUFF	(32)
+#define MAX_CMDBUF_SZ	(5120)	/* (4096) */
 #endif
 
-#ifdef CONFIG_RTL8812A
-	#define MAX_CMDBUF_SZ	(512 * 18)
-#elif defined(CONFIG_RTL8723D) && defined(CONFIG_LPS_POFF)
-	#define MAX_CMDBUF_SZ	(128*70) /*(8960)*/
-#elif defined(CONFIG_RTL8822C) && defined(CONFIG_WAR_OFFLOAD)
-	#define MAX_CMDBUF_SZ	(128*128) /*(16k) */
-#else
-	#define MAX_CMDBUF_SZ	(5120)	/* (4096) */
+#if 1 // NEO : rtk_wifi_driver : will take if off
+#define XMITBUF_ALIGN_SZ 512
+#define MAX_XMIT_EXTBUF_SZ (1536)
+#define NR_XMIT_EXTBUFF (32)
+#define MAX_CMDBUF_SZ (128*128)
 #endif
 
 #define MAX_BEACON_LEN	512

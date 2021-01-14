@@ -303,6 +303,14 @@
 
 #define	RTL8188E_EARLY_MODE_PKT_NUM_10	0
 
+#define MAX_XMITBUF_SZ	2048
+#define NR_XMITBUFF	4
+#define MAX_MGNT_XMITBUF_SZ	1536
+#define NR_MGNT_XMITBUFF	32
+#define MAX_RECVBUF_SZ 24576
+#define NR_RECVBUFF 8
+#define NR_RECV_URB 8
+
 /*
  * Debug Related Config
  */
