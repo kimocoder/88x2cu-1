@@ -24,7 +24,8 @@ ifeq ($(CONFIG_SDIO_HCI), y)
 endif
 
 
-_HAL_IC_FILES +=	$(HAL)/$(IC_NAME)/$(IC_NAME)_ops.o
+_HAL_IC_FILES +=	$(HAL)/$(IC_NAME)/$(IC_NAME)_ops.o \
+			$(HAL)/$(IC_NAME)/$(IC_NAME)_halinit.o
 
 #_HAL_IC_FILES +=	$(HAL)/$(IC_NAME)/$(IC_NAME)_halinit.o \
 			$(HAL)/$(IC_NAME)/$(IC_NAME)_mac.o \

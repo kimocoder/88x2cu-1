@@ -15,8 +15,6 @@
 
 #include "hal_headers.h"
 
-#if 0 // NEO TODO
-
 /**
  * rtw_hal_bf_dbg_dump_entry
  * @entry: hal_bf_entry for dump content
@@ -524,6 +522,8 @@ void hal_bf_deinit(struct hal_info_t *hal_info)
 		hal_com->bf_obj = NULL;
 	}
 }
+
+
 /**
  * hal_bf_release_target_bf_entry
  * 	Release the bf entry resource
@@ -795,7 +795,6 @@ hal_bf_hw_mac_deinit_bfee(struct hal_info_t *hal_info, u8 band)
 	return status;
 }
 
-#endif // if 0 NEO
 
 /**
  * rtw_hal_bf_get_entry_snd_sts
@@ -829,7 +828,6 @@ rtw_hal_bf_get_entry_snd_sts(void *entry)
 	return hstatus;
 }
 
-#if 0 // NEO TODO
 
 /**
  * hal_bf_hw_mac_init_bfee
@@ -1012,7 +1010,6 @@ enum rtw_hal_status hal_bf_hw_mac_init_bfer(
 	return status;
 }
 
-#endif // if 0 NEO
 
 /**
  * rtw_hal_bf_chk_bf_type
@@ -1064,7 +1061,6 @@ u8 rtw_hal_bf_get_sumu_idx(void *hal, void *entry)
 	return ret;
 }
 
-#if 0 // NEO TODO
 
 void
 rtw_hal_bf_preset_mu_ba_info(
@@ -1103,7 +1099,6 @@ rtw_hal_bf_preset_mu_ba_info(
 	}
 }
 
-#endif // if 0 NEO
 
 void
 rtw_hal_bf_set_txmu_para(void *hal, u8 gid , u8 en,
@@ -1155,7 +1150,7 @@ rtw_hal_bf_set_fix_mode(void *hal, bool mu, bool he)
 #endif // if 0
 }
 
-#if 0 // NEO TODO
+#if 0 // NEO
 
 enum rtw_hal_status
 hal_bf_set_mu_sta_fw(void *hal, struct rtw_phl_stainfo_t *sta)
@@ -1191,4 +1186,6 @@ hal_bf_set_mu_sta_fw(void *hal, struct rtw_phl_stainfo_t *sta)
 	return status;
 }
 
-#endif // if 0 NEO
+#endif // if 0
+
+

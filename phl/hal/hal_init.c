@@ -1183,7 +1183,6 @@ u32 rtw_hal_g6_read_chip_info(struct rtw_phl_com_t *phl_com, void *hal)
 	return hal_status;
 }
 
-#if 0 // NEO TODO
 void rtw_hal_set_default_var(void *hal)
 {
 	struct hal_info_t *hal_info = (struct hal_info_t *)hal;
@@ -1254,6 +1253,8 @@ enum rf_path _get_path_from_ant_num(u8 antnum)
 	}
 	return ret;
 }
+
+#if 0 // NEO TODO
 
 static void _hal_send_hal_init_hub_msg(struct rtw_phl_com_t *phl_com, u8 init_ok)
 {

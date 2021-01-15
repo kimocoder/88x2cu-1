@@ -37,8 +37,6 @@ static const struct csi_rpt_na csi_na[CSI_NA_MATRIX_SIZE] =
 	{8, 5, 50}, {8, 6, 54}, {8, 7, 56}, {8, 8, 56}
 };
 
-#if 0 // NEO TODO
-
 u32 _cal_he_csi_size(u8 mu, enum channel_width bw, u8 nr, u8 nc, u8 ng, u8 cb)
 {
 	u8 na = 0;
@@ -190,6 +188,8 @@ hal_snd_obj_deinit(void *hal)
 	return hstatus;
 }
 
+#if 0 // NEO
+
 /**
  * rtw_hal_snd_release_proc_sta_res
  * 	free the resource for a STA used in sounding process
@@ -221,6 +221,7 @@ rtw_hal_snd_release_proc_sta_res(void *hal, struct rtw_phl_stainfo_t *sta)
 
 	return hal_status;
 }
+
 
 
 /**
@@ -288,6 +289,8 @@ rtw_hal_snd_query_proc_sta_res(
 	return hal_status;
 }
 
+#endif // if 0 NEO
+
 /**
  * rtw_hal_snd_proc_pre_cfg_sta
  * 	hw preconfiguration for a sounding sta
@@ -314,7 +317,6 @@ rtw_hal_snd_proc_pre_cfg_sta(
 	return hal_status;
 }
 
-#endif // NEO if 0
 
 /**
  * rtw_hal_snd_proc_post_cfg
@@ -345,7 +347,6 @@ rtw_hal_snd_proc_post_cfg(void *hal, bool he, bool mu, bool en_fixed_mode)
 #endif
 }
 
-#if 0 // NEO TODO
 
 /**
  * rtw_hal_snd_proc_post_cfg_gid
@@ -368,6 +369,8 @@ rtw_hal_snd_proc_post_cfg_gid(void *hal, u8 gid, void *ba_info)
 	/*1. MU BAR Table : Table ID = GID, GID = STA-x + sSTA-y*/
 	return hal_status;
 }
+
+#if 0 //NEO
 
 /**
  * rtw_hal_snd_proc_post_cfg_sta
@@ -402,6 +405,7 @@ rtw_hal_snd_proc_post_cfg_sta(
 
 #endif // if 0 NEO
 
+
 /**
  * rtw_hal_snd_mac_ctrl
  * 	control sounding process : pause or start.
@@ -424,7 +428,7 @@ rtw_hal_snd_mac_ctrl(void *hal, u8 band, u8 ctrl)
 #endif
 }
 
-#if 0 // NEO TODO
+#if 0 //NEO
 
 /**
  * rtw_hal_snd_chk_bf_res
@@ -462,6 +466,7 @@ rtw_hal_snd_chk_bf_res(void *hal, struct rtw_phl_stainfo_t *sta,
 }
 
 #endif // if 0 NEO
+
 
 /**
  * rtw_hal_snd_polling_snd_sts
