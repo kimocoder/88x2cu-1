@@ -1250,14 +1250,18 @@ enum rtw_phl_status rtw_phl_free_bcn_entry(void *phl, struct rtw_wifi_role_t *wr
 
 #endif
 
+#endif // if 0 NEO
+
 void rtw_phl_cap_pre_config(void *phl)
 {
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	/* FW Pre-config */
-	rtw_hal_fw_cap_pre_config(phl_info->phl_com,phl_info->hal);
+	//rtw_hal_fw_cap_pre_config(phl_info->phl_com,phl_info->hal);
 	/* Bus Pre-config */
 	rtw_hal_bus_cap_pre_config(phl_info->phl_com,phl_info->hal);
 }
+
+#if 0 // NEO mark off first
 
 enum rtw_phl_status rtw_phl_preload(void *phl)
 {

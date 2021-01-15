@@ -16,6 +16,7 @@ _HAL_FILES :=	$(phl_path)$(HAL)/hal_api_mac.o \
 			$(phl_path)$(HAL)/hal_api_efuse.o \
 			$(phl_path)$(HAL)/hal_beamform.o \
 			$(phl_path)$(HAL)/hal_cam.o \
+			$(phl_path)$(HAL)/hal_cap.o \
 			$(phl_path)$(HAL)/hal_chan.o \
 			$(phl_path)$(HAL)/hal_com_i.o \
 			$(phl_path)$(HAL)/hal_init.o \
@@ -27,11 +28,9 @@ _HAL_FILES :=	$(phl_path)$(HAL)/hal_api_mac.o \
 
 #_HAL_FILES :=	$(phl_path)$(HAL)/hal_api_mac.o \
 			$(phl_path)$(HAL)/hal_tx.o \
-			$(phl_path)$(HAL)/hal_cam.o \
 			$(phl_path)$(HAL)/hal_csi_buffer.o \
 			$(phl_path)$(HAL)/hal_str_proc.o \
 			$(phl_path)$(HAL)/hal_fw.o \
-			$(phl_path)$(HAL)/hal_cap.o \
 			$(phl_path)$(HAL)/hal_ps.o \
 			$(phl_path)$(HAL)/hal_c2h.o \
 			$(phl_path)$(HAL)/hal_dbcc.o \

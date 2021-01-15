@@ -657,10 +657,10 @@ u8 rtw_hw_init(struct dvobj_priv *dvobj)
 	/*init sw cap from registary*/
 	rtw_core_update_default_setting(dvobj);
 
-#if 0 // NEO : TODO : mark off first
 	/* sw & hw cap*/
 	rtw_phl_cap_pre_config(dvobj->phl);
 
+#if 0 // NEO : TODO : mark off first
 	#ifdef CONFIG_RX_PSTS_PER_PKT
 	rtw_phl_init_ppdu_sts_para(dvobj->phl_com,
 		_TRUE, _FALSE,
