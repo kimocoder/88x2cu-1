@@ -1161,7 +1161,6 @@ void rtw_phl_deinit(void *phl)
 	}
 }
 
-#if 0 // NEO : TODO : mark off first
 
 enum rtw_phl_status
 rtw_phl_trx_alloc(void *phl)
@@ -1190,6 +1189,8 @@ rtw_phl_trx_free(void *phl)
 	phl_datapath_deinit(phl_info);
 	phl_trx_test_deinit(phl);
 }
+
+#if 0 // NEO : TODO : mark off first
 
 bool rtw_phl_is_init_completed(void *phl)
 {

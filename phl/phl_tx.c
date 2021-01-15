@@ -1144,8 +1144,6 @@ _phl_alloc_h2c_pool(struct phl_info_t *phl_info)
 	return pstatus;
 }
 
-#if 0 // TODO : NEO : mark off first
-
 void phl_datapath_deinit(struct phl_info_t *phl_info)
 {
 	struct rtw_phl_handler *tx_handler = &phl_info->phl_tx_handler;
@@ -1255,8 +1253,6 @@ void phl_datapath_stop(struct phl_info_t *phl_info)
 	hci_trx_ops->trx_stop(phl_info);
 	phl_free_deferred_tx_ring(phl_info);
 }
-
-#endif
 
 void rtw_phl_tx_stop(void *phl)
 {

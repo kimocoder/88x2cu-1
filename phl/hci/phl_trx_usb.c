@@ -151,8 +151,6 @@ exit:
 	return tx_buf;
 }
 
-# if 0 // NEO TODO mark off first
-
 static enum rtw_phl_status
 _phl_alloc_txbuf_pool_usb(struct phl_info_t *phl_info)
 {
@@ -227,7 +225,6 @@ exit:
 	return pstatus;
 
 }
-#endif // if 0 NEO
 
 void _phl_fill_tx_meta_data_usb(struct rtw_t_meta_data *mdata,
 					u16 packet_len)
@@ -245,7 +242,6 @@ void _phl_fill_tx_meta_data_usb(struct rtw_t_meta_data *mdata,
 /*	[SD7_Ref] HalUsbInMpdu	*/
 enum rtw_phl_status _phl_in_token_usb(struct phl_info_t *phl_info, u8 pipe_idx)
 {
-#if 0 // NEO TODO for rtw_hal_query_info
 	void *drv = phl_to_drvpriv(phl_info);
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_FAILURE;
 	struct hci_info_t *hci_info = (struct hci_info_t *)phl_info->hci;
@@ -291,16 +287,12 @@ enum rtw_phl_status _phl_in_token_usb(struct phl_info_t *phl_info, u8 pipe_idx)
 							__FUNCTION__, rx_buf, rx_buf_ring->busy_rxbuf_list.cnt);
 
 	return RTW_PHL_STATUS_SUCCESS;
-#else
-	return RTW_PHL_STATUS_FAILURE;
-#endif
 }
 
 
 
 enum rtw_phl_status _phl_rx_start_usb(struct phl_info_t *phl_info)
 {
-#if 0 // NEO TODO
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_SUCCESS;
 	struct hal_spec_t *hal_spec = phl_get_ic_spec(phl_info->phl_com);
 	struct hci_info_t *hci_info = (struct hci_info_t *)phl_info->hci;
@@ -338,11 +330,6 @@ enum rtw_phl_status _phl_rx_start_usb(struct phl_info_t *phl_info)
 	}
 
 	return pstatus;
-#else
-	RTW_ERR("TODO %s rtw_hal_get_halcom\n", __func__);
-	return RTW_PHL_STATUS_FAILURE;
-
-#endif
 }
 
 
@@ -1153,7 +1140,6 @@ static void _phl_rx_callback_usb(void *context)
 enum rtw_phl_status phl_trx_init_usb(struct phl_info_t *phl_info)
 {
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_FAILURE;
-#if 0 // NEO TODO mark off first for _phl_allc_txbuf_pool_usb
 	struct hal_spec_t *hal_spec = phl_get_ic_spec(phl_info->phl_com);
 	struct rtw_phl_handler *tx_handler = &phl_info->phl_tx_handler;
 	struct rtw_phl_handler *rx_handler = &phl_info->phl_rx_handler;
@@ -1217,7 +1203,6 @@ enum rtw_phl_status phl_trx_init_usb(struct phl_info_t *phl_info)
 		phl_trx_deinit_usb(phl_info);
 
 	FUNCOUT_WSTS(pstatus);
-#endif // if 0 NEO
 	return pstatus;
 }
 

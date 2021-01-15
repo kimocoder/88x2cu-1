@@ -223,6 +223,7 @@ void rtw_hal_query_freerun(struct hal_info_t *hal, u32 *freerun_l,
 
 #endif /*CONFIG_PCI_HCI*/
 
+#endif // if 0
 
 #ifdef CONFIG_USB_HCI
 enum rtw_hal_status
@@ -251,6 +252,8 @@ enum rtw_hal_status
 	return hstatus;
 }
 #endif
+
+#if 0 // NEO : mark off first
 
 enum rtw_hal_status
 rtw_hal_handle_rx_buffer(struct rtw_phl_com_t *phl_com, void* hal,

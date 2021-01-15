@@ -772,9 +772,8 @@ static __inline void os_enable_usb_in_pipes(void *drv_priv)
 
 static __inline void os_disable_usb_in_pipes(void *drv_priv)
 {
-	RTW_ERR("NEO %s - rtw_usb_read_port_cancel : TODO\n");
 	// Cancel Pending IN IRPs.
-	//rtw_usb_read_port_cancel(drv_priv);
+	g6_rtw_usb_read_port_cancel(drv_priv);
 }
 
 #endif /*CONFIG_USB_HCI*/
