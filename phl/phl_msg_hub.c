@@ -18,7 +18,6 @@
 #define MODL_MASK_LEN (PHL_BK_MDL_END / 8)
 #define MAX_MSG_NUM	(16)
 
-#if 0 // NEO TODO
 
 enum msg_hub_status {
 	MSG_HUB_INIT = BIT0,
@@ -254,8 +253,6 @@ enum rtw_phl_status phl_msg_hub_stop(struct phl_info_t* phl)
 	PHL_INFO("%s\n",__FUNCTION__);
 	return RTW_PHL_STATUS_SUCCESS;
 }
-
-#endif // if 0
 
 enum rtw_phl_status phl_msg_hub_send(struct phl_info_t* phl,
 						struct phl_msg_attribute* attr,	struct phl_msg* msg)

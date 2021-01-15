@@ -670,6 +670,8 @@ void rtw_phl_wifi_role_free(void *phl, u8 role_idx)
 	PHL_DUMP_MR_EX(phl_info);
 }
 
+#endif // if 0 NEO
+
 enum rtw_phl_status
 phl_register_mrc_module(struct phl_info_t *phl_info)
 {
@@ -702,6 +704,8 @@ error_register_bk:
 	}
 	return RTW_PHL_STATUS_FAILURE;
 }
+
+#if 0 //NEO
 
 #ifdef RTW_WKARD_RADIO_IPS_FLOW
 enum rtw_phl_status

@@ -227,13 +227,16 @@ phl_register_background_module_entry(struct phl_info_t *phl_info)
 	phl_status = phl_register_mrc_module(phl_info);
 	if(phl_status != RTW_PHL_STATUS_SUCCESS)
 		return phl_status;
+
 	phl_status = phl_register_custom_module(phl_info, HW_BAND_0);
 	if(phl_status != RTW_PHL_STATUS_SUCCESS)
 		return phl_status;
 
+#if 0 //NEO
 	phl_status = phl_register_led_module(phl_info);
 	if(phl_status != RTW_PHL_STATUS_SUCCESS)
 		return phl_status;
+#endif // if 0
 
 	phl_status = phl_register_cmd_general(phl_info);
 	if(phl_status != RTW_PHL_STATUS_SUCCESS)
@@ -1063,7 +1066,6 @@ enum rtw_phl_status rtw_phl_init(void *drv_priv, void **phl,
 		goto error_wifi_role_ctrl_init;
 	}
 
-#if 0 // NEO TODO
 	/* init modules */
 	phl_status = phl_module_init(phl_info);
 	if (phl_status != RTW_PHL_STATUS_SUCCESS) {
@@ -1071,6 +1073,7 @@ enum rtw_phl_status rtw_phl_init(void *drv_priv, void **phl,
 		goto error_module_init;
 	}
 
+#if 0 // NEO TODO
 	/* init led_ctrl */
 	phl_status = phl_led_ctrl_init(phl_info);
 	if (phl_status != RTW_PHL_STATUS_SUCCESS) {
@@ -1101,9 +1104,9 @@ error_stainfo_ctrl_init:
 	phl_macid_ctrl_deinit(phl_info);
 error_macid_ctrl_init:
 	phl_led_ctrl_deinit(phl_info);
+#endif // if 0
 error_led_ctrl_init:
 	phl_module_deinit(phl_info);
-#endif // if 0
 
 error_module_init:
 	phl_mr_ctrl_deinit(phl_info);
@@ -1144,9 +1147,9 @@ void rtw_phl_deinit(void *phl)
 		phl_stainfo_ctrl_deinie(phl_info);
 		phl_macid_ctrl_deinit(phl_info);
 		phl_led_ctrl_deinit(phl_info);
+#endif // if 0
 		/*deinit mr_ctrl, wifi_role[]*/
 		phl_module_deinit(phl_info);
-#endif // if 0
 		phl_mr_ctrl_deinit(phl_info);
 		phl_var_deinit(phl_info);
 		rtw_hal_deinit(phl_info->phl_com, phl_info->hal);

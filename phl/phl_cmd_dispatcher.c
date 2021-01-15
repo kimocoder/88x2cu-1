@@ -16,7 +16,6 @@
 #include "phl_headers.h"
 #ifdef CONFIG_CMD_DISP
 
-#if 0 // NEO TODO
 
 #define MAX_PHL_MSG_NUM (24)
 #define MAX_CMD_REQ_NUM (8)
@@ -1459,15 +1458,11 @@ phl_dispr_set_cur_cmd_info(void *dispr,
 		return RTW_PHL_STATUS_FAILURE;
 }
 
-#endif // if 0 NEO
 
 enum rtw_phl_status
 phl_dispr_query_cur_cmd_info(void *dispr,
 			     struct phl_module_op_info *op_info)
 {
-	RTW_ERR("%s TODO NEO\n", __func__);
-	return RTW_PHL_STATUS_FAILURE;
-#if 0 // NEO TODO
 	void *handle = NULL;
 	struct phl_cmd_token_req_ex *cmd_req = NULL;
 	struct phl_cmd_token_req *req = NULL;
@@ -1483,10 +1478,8 @@ phl_dispr_query_cur_cmd_info(void *dispr,
 		return RTW_PHL_STATUS_SUCCESS;
 	else
 		return RTW_PHL_STATUS_FAILURE;
-#endif
 }
 
-#if 0 // NEO TODO
 
 enum rtw_phl_status
 phl_dispr_get_bk_module_handle(void *dispr,
@@ -1895,6 +1888,5 @@ void send_bk_msg_phy_idle(struct cmd_dispatcher *obj)
 	phl_dispr_send_msg((void*)obj, &msg, &attr, NULL);
 }
 
-#endif // if 0 NEO
 
 #endif
