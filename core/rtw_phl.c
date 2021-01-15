@@ -654,10 +654,10 @@ u8 rtw_hw_init(struct dvobj_priv *dvobj)
 
 	dvobj->phl_com = rtw_phl_get_com(dvobj->phl);
 
-#if 0 // NEO : TODO : mark off first
 	/*init sw cap from registary*/
 	rtw_core_update_default_setting(dvobj);
 
+#if 0 // NEO : TODO : mark off first
 	/* sw & hw cap*/
 	rtw_phl_cap_pre_config(dvobj->phl);
 
@@ -667,12 +667,12 @@ u8 rtw_hw_init(struct dvobj_priv *dvobj)
 		RTW_PHL_PSTS_FLTR_MGNT | RTW_PHL_PSTS_FLTR_DATA /*| RTW_PHL_PSTS_FLTR_CTRL*/
 		);
 	#endif
-#endif
+//#endif
 
 	/*init datapath section*/
 	rtw_phl_trx_alloc(dvobj->phl);
 
-#if 0 // NEO : TODO : mark off first
+//#if 0 // NEO : TODO : mark off first
 	evt_ops = &(dvobj->phl_com->evt_ops);
 	evt_ops->rx_process = rtw_core_rx_process;
 	evt_ops->tx_recycle = rtw_core_tx_recycle;

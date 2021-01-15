@@ -18,7 +18,7 @@
 //typedef struct rtw_phl_com_t HAL_DATA_TYPE; /*, *PHAL_DATA_TYPE;*/
 
 #define GET_HAL_INFO(_dvobj)	(_dvobj->phl)
-//#define GET_HAL_DATA(_dvobj)	(_dvobj->phl_com)
+#define GET_PHL_DATA(_dvobj)	(_dvobj->phl_com)
 //#define GET_HAL_SPEC(_dvobj)	(&(GET_HAL_DATA(_dvobj)->hal_spec))
 
 

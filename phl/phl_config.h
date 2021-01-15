@@ -45,7 +45,7 @@
 #ifdef CONFIG_MCC_SUPPORT
 #define MCC_ROLE_NUM 2
 #endif /*CONFIG_MCC_SUPPORT*/
-#define CONFIG_DBCC_SUPPORT
+//#define CONFIG_DBCC_SUPPORT
 
 #define DBG_PHL_CHAN
 #define DBG_PHL_MR

@@ -34,7 +34,9 @@ int rtw_network_mode = Ndis802_11IBSS;/* Ndis802_11Infrastructure; */ /* infra, 
 /* NDIS_802_11_SSID	ssid; */
 int rtw_channel = 1;/* ad-hoc support requirement */
 int rtw_wireless_mode = WIRELESS_MODE_MAX;
+int rtw_band_type = BAND_CAP_2G | BAND_CAP_5G;
 module_param(rtw_wireless_mode, int, 0644);
+module_param(rtw_band_type, int, 0644);
 int rtw_vrtl_carrier_sense = AUTO_VCS;
 int rtw_vcs_type = RTS_CTS;
 int rtw_rts_thresh = 2347;
@@ -697,9 +699,9 @@ uint rtw_amplifier_type_5g = CONFIG_RTW_AMPLIFIER_TYPE_5G;
 module_param(rtw_amplifier_type_5g, uint, 0644);
 MODULE_PARM_DESC(rtw_amplifier_type_5g, "BIT6:5G ext-PA, BIT7:5G ext-LNA");
 
-uint rtw_RFE_type = CONFIG_RTW_RFE_TYPE;
-module_param(rtw_RFE_type, uint, 0644);
-MODULE_PARM_DESC(rtw_RFE_type, "default init value:64");
+uint rtw_rfe_type = CONFIG_RTW_RFE_TYPE;
+module_param(rtw_rfe_type, uint, 0644);
+MODULE_PARM_DESC(rtw_rfe_type, "default init value:64");
 
 uint rtw_powertracking_type = 64;
 module_param(rtw_powertracking_type, uint, 0644);
@@ -1176,6 +1178,7 @@ uint rtw_load_registry(_adapter *padapter)
 		rtw_wireless_mode &= ~WIRELESS_11B;
 #endif
 	registry_par->wireless_mode = (u8)rtw_wireless_mode;
+	registry_par->band_type = (u8)rtw_band_type;
 
 	if (is_supported_24g(registry_par->wireless_mode) && (!is_supported_5g(registry_par->wireless_mode))
 	    && (registry_par->channel > 14))
@@ -1405,7 +1408,7 @@ uint rtw_load_registry(_adapter *padapter)
 	registry_par->TxBBSwing_2G = (s8)rtw_TxBBSwing_2G;
 	registry_par->TxBBSwing_5G = (s8)rtw_TxBBSwing_5G;
 	registry_par->bEn_RFE = 1;
-	registry_par->RFE_Type = (u8)rtw_RFE_type;
+	registry_par->RFE_Type = (u8)rtw_rfe_type;
 	registry_par->PowerTracking_Type = (u8)rtw_powertracking_type;
 	registry_par->AmplifierType_2G = (u8)rtw_amplifier_type_2g;
 	registry_par->AmplifierType_5G = (u8)rtw_amplifier_type_5g;
@@ -1560,5 +1563,127 @@ uint rtw_load_registry(_adapter *padapter)
 #endif
 
 	return status;
+}
+
+void rtw_core_update_default_setting (struct dvobj_priv *dvobj)
+{
+	struct rtw_phl_com_t *phl_com = GET_PHL_DATA(dvobj);
+
+	#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
+	rtw_load_phy_file_path(dvobj);
+	#endif /* CONFIG_LOAD_PHY_PARA_FROM_FILE */
+
+	phl_com->dev_sw_cap.fw_cap.dlram_en = true;
+	phl_com->dev_sw_cap.fw_cap.dlrom_en = false;
+	#ifdef CONFIG_FILE_FWIMG
+	phl_com->dev_sw_cap.fw_cap.fw_src = RTW_FW_SRC_EXTNAL;
+	#else /* !CONFIG_FILE_FWIMG */
+	phl_com->dev_sw_cap.fw_cap.fw_src = RTW_FW_SRC_INTNAL;
+	#endif /* !CONFIG_FILE_FWIMG */
+
+	phl_com->phy_sw_cap[0].proto_sup = rtw_wireless_mode;
+	phl_com->phy_sw_cap[0].band_sup = rtw_band_type;
+	phl_com->phy_sw_cap[0].bw_sup = BW_CAP_80M | BW_CAP_40M | BW_CAP_20M; //rtw_bw_mode;
+	phl_com->phy_sw_cap[0].txss = rtw_tx_nss;
+	phl_com->phy_sw_cap[0].rxss = rtw_rx_nss;
+
+#if 0 // NEO : 8822c has one phy only
+	phl_com->phy_sw_cap[1].proto_sup = rtw_wireless_mode;
+	phl_com->phy_sw_cap[1].band_sup = rtw_band_type;
+	phl_com->phy_sw_cap[1].bw_sup = rtw_bw_mode;
+	phl_com->phy_sw_cap[1].txss = rtw_tx_nss;
+	phl_com->phy_sw_cap[1].rxss = rtw_rx_nss;
+#endif
+
+	/*phl_com->dev_sw_cap.pkg_type = rtw_pkg_type;*/
+	phl_com->dev_sw_cap.rfe_type = rtw_rfe_type;
+#ifdef DBG_LA_MODE
+	phl_com->dev_sw_cap.la_mode = rtw_la_mode_en;
+#endif
+#ifdef CONFIG_DBCC_SUPPORT
+	phl_com->dev_sw_cap.dbcc_sup = rtw_dbcc_en;
+#endif
+
+	#if 0 //NEO
+	phl_com->dev_sw_cap.hw_hdr_conv = rtw_hw_hdr_conv;
+
+	phl_com->proto_sw_cap[0].max_amsdu_len = rtw_max_amsdu_len;
+	phl_com->proto_sw_cap[1].max_amsdu_len = rtw_max_amsdu_len;
+	#endif
+
+#if defined(CONFIG_PCI_HCI)
+	#if !defined(CONFIG_PCI_ASPM)
+	/* Disable all PCIE Backdoor to avoid PCIE IOT */
+	phl_com->bus_sw_cap.l0s_ctrl = RTW_PCIE_BUS_FUNC_DISABLE;
+	phl_com->bus_sw_cap.l1_ctrl = RTW_PCIE_BUS_FUNC_DISABLE;
+	phl_com->bus_sw_cap.l1ss_ctrl = RTW_PCIE_BUS_FUNC_DISABLE;
+	phl_com->bus_sw_cap.wake_ctrl = RTW_PCIE_BUS_FUNC_DEFAULT;
+	phl_com->bus_sw_cap.crq_ctrl = RTW_PCIE_BUS_FUNC_DISABLE;
+	#endif
+	phl_com->bus_sw_cap.txbd_num = 256;
+	phl_com->bus_sw_cap.rxbd_num = 256;
+	phl_com->bus_sw_cap.rpbd_num = 0;	/* by default */
+#ifdef CONFIG_RXBUF_NUM_1024
+	phl_com->bus_sw_cap.rxbuf_num = 1024;
+#else
+	phl_com->bus_sw_cap.rxbuf_num = 512;
+#endif
+	phl_com->bus_sw_cap.rpbuf_num = 0;	/* by default */
+#endif /*CONFIG_PCI_HCI*/
+
+#ifdef CONFIG_BTC
+	phl_com->dev_sw_cap.btc_mode = BTC_MODE_NORMAL;
+#else
+	phl_com->dev_sw_cap.btc_mode = BTC_MODE_WL;
+#endif
+#ifdef CONFIG_MCC
+	phl_com->dev_sw_cap.mcc_sup = rtw_mcc_en;
+#endif
+#ifdef CONFIG_USB_HCI
+	phl_com->bus_sw_cap.tx_buf_size = MAX_XMITBUF_SZ;
+	phl_com->bus_sw_cap.tx_buf_num = NR_XMITBUFF;
+	phl_com->bus_sw_cap.tx_mgnt_buf_size = MAX_MGNT_XMITBUF_SZ;
+	phl_com->bus_sw_cap.tx_mgnt_buf_num = NR_MGNT_XMITBUFF;
+	phl_com->bus_sw_cap.rx_buf_size = MAX_RECVBUF_SZ;
+	phl_com->bus_sw_cap.rx_buf_num = NR_RECVBUFF;
+	phl_com->bus_sw_cap.in_token_num = NR_RECV_URB;
+#endif
+#ifdef CONFIG_BEAMFORMING
+	phl_com->role_sw_cap.bf_cap = 0;
+	phl_com->role_sw_cap.bf_cap |= (rtw_beamform_cap & BIT0) ? HW_CAP_BFER_VHT_SU : 0;
+	phl_com->role_sw_cap.bf_cap |= (rtw_beamform_cap & BIT1) ? HW_CAP_BFEE_VHT_SU: 0;
+	phl_com->role_sw_cap.bf_cap |= (rtw_beamform_cap & BIT2) ? HW_CAP_BFER_VHT_MU: 0;
+	phl_com->role_sw_cap.bf_cap |= (rtw_beamform_cap & BIT3) ? HW_CAP_BFEE_VHT_MU: 0;
+	phl_com->role_sw_cap.bf_cap |= (rtw_beamform_cap & BIT4) ? HW_CAP_BFER_HT_SU: 0;
+	phl_com->role_sw_cap.bf_cap |= (rtw_beamform_cap & BIT5) ? HW_CAP_BFEE_HT_SU: 0;
+	phl_com->role_sw_cap.bf_cap |= (rtw_beamform_cap & BIT6) ? HW_CAP_BFER_HE_SU: 0;
+	phl_com->role_sw_cap.bf_cap |= (rtw_beamform_cap & BIT7) ? HW_CAP_BFEE_HE_SU: 0;
+	phl_com->role_sw_cap.bf_cap |= (rtw_beamform_cap & BIT8) ? HW_CAP_BFER_HE_MU: 0;
+	phl_com->role_sw_cap.bf_cap |= (rtw_beamform_cap & BIT9) ? HW_CAP_BFEE_HE_MU: 0;
+
+	/*Band0*/
+	phl_com->proto_sw_cap[0].vht_su_bfmr = (rtw_sw_proto_bf_cap_phy0 & BIT0) ? 1 : 0;
+	phl_com->proto_sw_cap[0].vht_su_bfme = (rtw_sw_proto_bf_cap_phy0 & BIT1) ? 1 : 0;
+	phl_com->proto_sw_cap[0].vht_mu_bfmr = (rtw_sw_proto_bf_cap_phy0 & BIT2) ? 1 : 0;
+	phl_com->proto_sw_cap[0].vht_mu_bfme = (rtw_sw_proto_bf_cap_phy0 & BIT3) ? 1 : 0;
+	phl_com->proto_sw_cap[0].ht_su_bfmr = (rtw_sw_proto_bf_cap_phy0 & BIT4) ? 1 : 0;
+	phl_com->proto_sw_cap[0].ht_su_bfme = (rtw_sw_proto_bf_cap_phy0 & BIT5) ? 1 : 0;
+	phl_com->proto_sw_cap[0].he_su_bfmr = (rtw_sw_proto_bf_cap_phy0 & BIT6) ? 1 : 0;
+	phl_com->proto_sw_cap[0].he_su_bfme = (rtw_sw_proto_bf_cap_phy0 & BIT7) ? 1 : 0;
+	phl_com->proto_sw_cap[0].he_mu_bfmr = (rtw_sw_proto_bf_cap_phy0 & BIT8) ? 1 : 0;
+	phl_com->proto_sw_cap[0].he_mu_bfme = (rtw_sw_proto_bf_cap_phy0 & BIT9) ? 1 : 0;
+
+	/*Band1*/
+	phl_com->proto_sw_cap[1].vht_su_bfmr = (rtw_sw_proto_bf_cap_phy1 & BIT0) ? 1 : 0;
+	phl_com->proto_sw_cap[1].vht_su_bfme = (rtw_sw_proto_bf_cap_phy1 & BIT1) ? 1 : 0;
+	phl_com->proto_sw_cap[1].vht_mu_bfmr = (rtw_sw_proto_bf_cap_phy1 & BIT2) ? 1 : 0;
+	phl_com->proto_sw_cap[1].vht_mu_bfme = (rtw_sw_proto_bf_cap_phy1 & BIT3) ? 1 : 0;
+	phl_com->proto_sw_cap[1].ht_su_bfmr = (rtw_sw_proto_bf_cap_phy1 & BIT4) ? 1 : 0;
+	phl_com->proto_sw_cap[1].ht_su_bfme = (rtw_sw_proto_bf_cap_phy1 & BIT5) ? 1 : 0;
+	phl_com->proto_sw_cap[1].he_su_bfmr = (rtw_sw_proto_bf_cap_phy1 & BIT6) ? 1 : 0;
+	phl_com->proto_sw_cap[1].he_su_bfme = (rtw_sw_proto_bf_cap_phy1 & BIT7) ? 1 : 0;
+	phl_com->proto_sw_cap[1].he_mu_bfmr = (rtw_sw_proto_bf_cap_phy1 & BIT8) ? 1 : 0;
+	phl_com->proto_sw_cap[1].he_mu_bfme = (rtw_sw_proto_bf_cap_phy1 & BIT9) ? 1 : 0;
+#endif
 }
 

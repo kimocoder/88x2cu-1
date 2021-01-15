@@ -214,6 +214,7 @@ struct registry_priv {
 	u8	network_mode;	/* infra, ad-hoc, auto */
 	u8	channel;/* ad-hoc support requirement */
 	u8	wireless_mode;/* A, B, G, auto */
+	u8	band_type;
 	u8	scan_mode;/* active, passive */
 	u8	radio_enable;
 	u8	preamble;/* long, short, auto */
