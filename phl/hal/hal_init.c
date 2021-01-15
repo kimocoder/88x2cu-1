@@ -1144,7 +1144,6 @@ void rtw_hal_deinit(struct rtw_phl_com_t *phl_com, void *hal)
 	}
 }
 
-#if 0 // NEO TODO
 
 bool rtw_hal_is_inited(struct rtw_phl_com_t *phl_com, void *hal)
 {
@@ -1168,6 +1167,7 @@ u32 rtw_hal_hci_cfg(struct rtw_phl_com_t *phl_com, void *hal,
 	return hal_status;
 }
 
+#if 0 // NEO TODO
 u32 rtw_hal_read_chip_info(struct rtw_phl_com_t *phl_com, void *hal)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_SUCCESS;

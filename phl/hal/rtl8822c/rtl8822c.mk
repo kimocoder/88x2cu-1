@@ -34,7 +34,9 @@ _HAL_IC_FILES +=	$(HAL)/$(IC_NAME)/$(IC_NAME)_ops.o
 			$(HAL)/$(IC_NAME)/$(IC_NAME)_ps.o \
 			$(HAL)/$(IC_NAME)/hal_trx_8822c.o
 
-_HAL_IC_FILES +=	$(HAL)/$(IC_NAME)/$(HCI_NAME)/$(FILE_NAME)_ops.o
+_HAL_IC_FILES +=	$(HAL)/$(IC_NAME)/$(HCI_NAME)/$(FILE_NAME)_ops.o \
+			$(HAL)/$(IC_NAME)/$(HCI_NAME)/$(FILE_NAME)_halinit.o
+
 #_HAL_IC_FILES +=	$(HAL)/$(IC_NAME)/$(HCI_NAME)/$(FILE_NAME)_halinit.o \
 			$(HAL)/$(IC_NAME)/$(HCI_NAME)/$(FILE_NAME)_halmac.o \
 			$(HAL)/$(IC_NAME)/$(HCI_NAME)/$(FILE_NAME)_io.o \

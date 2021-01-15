@@ -1032,10 +1032,10 @@ enum rtw_phl_status rtw_phl_init(void *drv_priv, void **phl,
 		goto error_hal_init;
 	}
 
-#if 0 // NEO TODO
 	/*send bus info to hal*/
 	rtw_hal_hci_cfg(phl_info->phl_com, phl_info->hal, ic_info);
 
+#if 0 // NEO TODO
 	/*get hw capability from mac/bb/rf/btc/efuse/fw-defeature-rpt*/
 	hal_status = rtw_hal_read_chip_info(phl_info->phl_com, phl_info->hal);
 	if (hal_status != RTW_HAL_STATUS_SUCCESS) {

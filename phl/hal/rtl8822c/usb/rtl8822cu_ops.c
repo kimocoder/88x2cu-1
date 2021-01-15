@@ -51,7 +51,9 @@ void hal_set_ops_8822cu(struct rtw_phl_com_t *phl_com,
 	ops->hal_wow_init = hal_wow_init_8852au;
 	ops->hal_wow_deinit = hal_wow_deinit_8852au;
 #endif /* CONFIG_WOWLAN */
-	ops->hal_hci_configure = hal_hci_cfg_8852au;
+#endif // if 0 NEO
+	ops->hal_hci_configure = hal_hci_cfg_8822cu;
+#if 0 // NEO TODO
 	ops->init_default_value = init_default_value_8852au;
 	ops->recognize_interrupt = hal_recognize_int_8852au;
 	ops->interrupt_handler = hal_int_hdler_8852au;
