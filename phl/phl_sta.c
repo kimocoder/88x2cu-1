@@ -15,7 +15,6 @@
 #define _PHL_STA_C_
 #include "phl_headers.h"
 
-#if 0 // NEO TODO mark off first
 
 /*********** macid ctrl section ***********/
 enum rtw_phl_status
@@ -23,7 +22,7 @@ phl_macid_ctrl_init(struct phl_info_t *phl)
 {
 	struct rtw_phl_com_t *phl_com = phl->phl_com;
 	struct hal_spec_t *hal_spec = phl_get_ic_spec(phl_com);
-	struct macid_ctl_t *macid_ctl = phl_to_mac_ctrl(phl);
+	struct g6_macid_ctl_t *macid_ctl = phl_to_mac_ctrl(phl);
 	enum rtw_phl_status phl_status = RTW_PHL_STATUS_FAILURE;
 	u8 i = 0;
 
@@ -51,7 +50,7 @@ exit:
 enum rtw_phl_status
 phl_macid_ctrl_deinit(struct phl_info_t *phl)
 {
-	struct macid_ctl_t *macid_ctl = phl_to_mac_ctrl(phl);
+	struct g6_macid_ctl_t *macid_ctl = phl_to_mac_ctrl(phl);
 
 	_os_spinlock_free(phl_to_drvpriv(phl), &macid_ctl->lock);
 	macid_ctl->max_num = 0;
@@ -59,7 +58,6 @@ phl_macid_ctrl_deinit(struct phl_info_t *phl)
 	return RTW_PHL_STATUS_SUCCESS;
 }
 
-#endif // if 0 NEO
 
 static u8
 _phl_macid_is_used(u32 *map, const u16 id)
@@ -88,7 +86,7 @@ _phl_macid_map_clr(u32 *map, const u16 id)
 
 #if 0 // NEO TODO mark off first
 
-static void _phl_wrole_bcmc_id_set(struct macid_ctl_t *macid_ctl,
+static void _phl_wrole_bcmc_id_set(struct g6_macid_ctl_t*macid_ctl,
 				struct rtw_wifi_role_t *wrole, const u16 id)
 {
 	macid_ctl->wrole_bmc[wrole->id] = id;
@@ -98,7 +96,7 @@ static enum rtw_phl_status
 _phl_alloc_macid(struct phl_info_t *phl_info,
 			struct rtw_phl_stainfo_t *phl_sta)
 {
-	struct macid_ctl_t *mc = phl_to_mac_ctrl(phl_info);
+	struct g6_macid_ctl_t*mc = phl_to_mac_ctrl(phl_info);
 	struct rtw_wifi_role_t *wrole = phl_sta->wrole;
 	u8 bc_addr[MAC_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 	u16 mid = 0;
@@ -156,7 +154,7 @@ static enum rtw_phl_status
 _phl_release_macid(struct phl_info_t *phl_info,
 			struct rtw_phl_stainfo_t *phl_sta)
 {
-	struct macid_ctl_t *macid_ctl = phl_to_mac_ctrl(phl_info);
+	struct g6_macid_ctl_t*macid_ctl = phl_to_mac_ctrl(phl_info);
 	enum rtw_phl_status phl_status = RTW_PHL_STATUS_FAILURE;
 	struct rtw_wifi_role_t *wrole = phl_sta->wrole;
 	u8 bc_addr[MAC_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
@@ -219,7 +217,7 @@ u16
 rtw_phl_wrole_bcmc_id_get(void *phl, struct rtw_wifi_role_t *wrole)
 {
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct macid_ctl_t *macid_ctl = phl_to_mac_ctrl(phl_info);
+	struct g6_macid_ctl_t*macid_ctl = phl_to_mac_ctrl(phl_info);
 
 	return macid_ctl->wrole_bmc[wrole->id];
 }
@@ -233,7 +231,7 @@ u16
 rtw_phl_get_macid_max_num(void *phl)
 {
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct macid_ctl_t *macid_ctl = phl_to_mac_ctrl(phl_info);
+	struct g6_macid_ctl_t*macid_ctl = phl_to_mac_ctrl(phl_info);
 
 	return macid_ctl->max_num;
 }
@@ -248,7 +246,7 @@ u8
 rtw_phl_macid_is_bmc(void *phl, u16 macid)
 {
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct macid_ctl_t *macid_ctl = phl_to_mac_ctrl(phl_info);
+	struct g6_macid_ctl_t*macid_ctl = phl_to_mac_ctrl(phl_info);
 
 	if (macid >= macid_ctl->max_num) {
 		PHL_ERR("%s macid(%d) is invalid\n", __func__, macid);
@@ -269,7 +267,7 @@ u8
 rtw_phl_macid_is_used(void *phl, u16 macid)
 {
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct macid_ctl_t *macid_ctl = phl_to_mac_ctrl(phl_info);
+	struct g6_macid_ctl_t*macid_ctl = phl_to_mac_ctrl(phl_info);
 
 	if (macid >= macid_ctl->max_num) {
 		PHL_ERR("%s macid(%d) is invalid\n", __func__, macid);
@@ -291,7 +289,7 @@ u8
 rtw_phl_macid_is_wrole_shared(void *phl, u16 macid)
 {
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct macid_ctl_t *macid_ctl = phl_to_mac_ctrl(phl_info);
+	struct g6_macid_ctl_t*macid_ctl = phl_to_mac_ctrl(phl_info);
 	int i = 0;
 	u8 iface_bmp = 0;
 
@@ -323,7 +321,7 @@ rtw_phl_macid_is_wrole_specific(void *phl,
 					u16 macid, struct rtw_wifi_role_t *wrole)
 {
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct macid_ctl_t *macid_ctl = phl_to_mac_ctrl(phl_info);
+	struct g6_macid_ctl_t*macid_ctl = phl_to_mac_ctrl(phl_info);
 	int i = 0;
 	u8 iface_bmp = 0;
 
@@ -668,7 +666,7 @@ static void _phl_dump_stainfo(struct rtw_phl_stainfo_t *phl_sta)
 void phl_dump_stainfo_all(const char *caller, const int line, bool show_caller,
 				struct phl_info_t *phl_info)
 {
-	struct macid_ctl_t *macid_ctl = phl_to_mac_ctrl(phl_info);
+	struct g6_macid_ctl_t*macid_ctl = phl_to_mac_ctrl(phl_info);
 	struct rtw_phl_stainfo_t *phl_sta = NULL;
 	u16 max_macid_num = 0;
 	u16 mid = 0;
@@ -1295,7 +1293,7 @@ rtw_phl_get_stainfo_by_macid(void *phl, u16 macid)
 	return NULL;
 #if 0 // NEO 
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct macid_ctl_t *macid_ctl = phl_to_mac_ctrl(phl_info);
+	struct g6_macid_ctl_t*macid_ctl = phl_to_mac_ctrl(phl_info);
 	struct rtw_phl_stainfo_t *phl_sta = NULL;
 
 	if (macid >= macid_ctl->max_num) {
@@ -1327,7 +1325,7 @@ struct rtw_phl_stainfo_t *
 rtw_phl_get_stainfo_by_addr(void *phl, struct rtw_wifi_role_t *wrole, u8 *addr)
 {
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct macid_ctl_t *macid_ctl = phl_to_mac_ctrl(phl_info);
+	struct g6_macid_ctl_t*macid_ctl = phl_to_mac_ctrl(phl_info);
 	struct rtw_phl_stainfo_t *sta = NULL;
 
 	if (is_broadcast_mac_addr(addr)) {
