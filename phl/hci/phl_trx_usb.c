@@ -355,6 +355,7 @@ static void _phl_rx_deferred_in_token(void *phl)
 
 	PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_, "[5] %s:: ==>\n",
 							__FUNCTION__);
+	RTW_INFO("%s NEO enter\n", __func__);
 
 	/* [1] Check driver/nic state*/
 
@@ -1156,7 +1157,6 @@ enum rtw_phl_status phl_trx_init_usb(struct phl_info_t *phl_info)
 	PHL_INFO("%s, bus_cap->rx_buf_num(%d)\n", __func__, bus_cap->rx_buf_num);
 	PHL_INFO("%s, bus_cap->rx_buf_size(%d)\n", __func__, bus_cap->rx_buf_size);
 	PHL_INFO("%s, bus_cap->in_token_num(%d)\n", __func__, bus_cap->in_token_num);
-#if 0 // NEO
 	do {
 		tx_handler->type = RTW_PHL_HANDLER_PRIO_HIGH; /* tasklet */
 		tx_handler->callback = _phl_tx_callback_usb;
@@ -1199,11 +1199,11 @@ enum rtw_phl_status phl_trx_init_usb(struct phl_info_t *phl_info)
 		os_enable_usb_in_pipes(phl_to_drvpriv(phl_info));
 	} while (false);
 
-	if (RTW_PHL_STATUS_SUCCESS != pstatus)
+	if (RTW_PHL_STATUS_SUCCESS != pstatus) {
+		RTW_ERR("%s do phl_trx_deinit_usb()\n", __func__);
 		phl_trx_deinit_usb(phl_info);
+	}
 
-#endif // if 0 NEO
-	pstatus = RTW_PHL_STATUS_SUCCESS;
 	FUNCOUT_WSTS(pstatus);
 	return pstatus;
 }
