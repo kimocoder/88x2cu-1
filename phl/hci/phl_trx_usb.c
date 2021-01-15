@@ -1156,6 +1156,7 @@ enum rtw_phl_status phl_trx_init_usb(struct phl_info_t *phl_info)
 	PHL_INFO("%s, bus_cap->rx_buf_num(%d)\n", __func__, bus_cap->rx_buf_num);
 	PHL_INFO("%s, bus_cap->rx_buf_size(%d)\n", __func__, bus_cap->rx_buf_size);
 	PHL_INFO("%s, bus_cap->in_token_num(%d)\n", __func__, bus_cap->in_token_num);
+#if 0 // NEO
 	do {
 		tx_handler->type = RTW_PHL_HANDLER_PRIO_HIGH; /* tasklet */
 		tx_handler->callback = _phl_tx_callback_usb;
@@ -1196,12 +1197,13 @@ enum rtw_phl_status phl_trx_init_usb(struct phl_info_t *phl_info)
 
 		os_enable_usb_out_pipes(phl_to_drvpriv(phl_info));
 		os_enable_usb_in_pipes(phl_to_drvpriv(phl_info));
-
 	} while (false);
 
 	if (RTW_PHL_STATUS_SUCCESS != pstatus)
 		phl_trx_deinit_usb(phl_info);
 
+#endif // if 0 NEO
+	pstatus = RTW_PHL_STATUS_SUCCESS;
 	FUNCOUT_WSTS(pstatus);
 	return pstatus;
 }

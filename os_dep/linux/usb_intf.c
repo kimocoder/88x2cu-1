@@ -633,7 +633,7 @@ static struct dvobj_priv *usb_dvobj_init(struct usb_interface *usb_intf,
 				pusb_data->RtInPipe[pusb_data->RtNumInPipes] = RT_usb_endpoint_num(pendp_desc);
 				pusb_data->inpipe_type[pusb_data->RtNumInPipes] = REALTEK_USB_BULK_IN_EP_IDX;
 				pusb_data->RtNumInPipes++;
-				RTW_INFO("USB#%d bulkin size:%d", pusb_data->RtNumOutPipes,
+				RTW_INFO("USB#%d bulkin size:%d", pusb_data->RtNumInPipes,
 					rtw_endpoint_max_bpi(pusbd, phost_endp));
 			} else if (RT_usb_endpoint_is_int_in(pendp_desc)) {
 				RTW_INFO("RT_usb_endpoint_is_int_in = %x, Interval = %x\n", RT_usb_endpoint_num(pendp_desc), pendp_desc->bInterval);
