@@ -16,15 +16,15 @@
 #include "../hal_headers.h"
 #include "../hal_api.h"
 
-#if 0 // NEO
 
-void init_hal_spec_8852a(struct rtw_phl_com_t *phl_com,
+void init_hal_spec_8822c(struct rtw_phl_com_t *phl_com,
 					struct hal_info_t *hal)
 {
 	struct hal_spec_t *hal_spec = phl_get_ic_spec(phl_com);
 	struct rtw_hal_com_t *hal_com = hal->hal_com;
 	struct protocol_cap_t *hw_proto_cap = hal_com->proto_hw_cap;
 
+#if 0 //NEO
 	hal_spec->ic_name = "rtl8852a";
 	hal_spec->macid_num = hal_mac_get_macid_num(hal);
 	/* hal_spec->sec_cam_ent_num follow halmac setting */
@@ -56,11 +56,14 @@ void init_hal_spec_8852a(struct rtw_phl_com_t *phl_com,
 				| WL_FUNC_TDLS
 				;
 
+#endif // if 0
 	hal_spec->max_csi_buf_su_nr = 4;
 	hal_spec->max_csi_buf_mu_nr = 6;
+
 	hal_spec->max_bf_ent_nr = 16;
 	hal_spec->max_su_sta_nr = 16;
 	hal_spec->max_mu_sta_nr = 6;
+#if 0 //NEO
 #ifdef RTW_WKARD_PHY_CAP
 	/* HE */
 	hw_proto_cap[0].he_su_bfme = 1;
@@ -123,10 +126,10 @@ void init_hal_spec_8852a(struct rtw_phl_com_t *phl_com,
 	hal_com->dev_hw_cap.mcc_sup = true;
 #endif /* CONFIG_MCC_SUPPORT */
 
+#endif // if 0
 
 }
 
-#endif // if 0 NEO
 
 void init_default_value_8822c(struct hal_info_t *hal)
 {

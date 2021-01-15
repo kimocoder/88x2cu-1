@@ -58,7 +58,7 @@ void init_hal_spec_8822cu(struct rtw_phl_com_t *phl_com,
 	struct rtw_hal_com_t *hal_com = hal->hal_com;
 	struct bus_hw_cap_t *bus_hw_cap = &hal_com->bus_hw_cap;
 
-	//init_hal_spec_8852a(phl_com, hal);
+	init_hal_spec_8822c(phl_com, hal);
 	phl_com->dev_cap.hw_sup_flags |= HW_SUP_USB_MULTI_FUN;
 	bus_hw_cap->tx_buf_size = 2048;
 	bus_hw_cap->tx_buf_num = 4;
