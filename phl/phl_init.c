@@ -1035,15 +1035,15 @@ enum rtw_phl_status rtw_phl_init(void *drv_priv, void **phl,
 	/*send bus info to hal*/
 	rtw_hal_hci_cfg(phl_info->phl_com, phl_info->hal, ic_info);
 
-#if 0 // NEO TODO
 	/*get hw capability from mac/bb/rf/btc/efuse/fw-defeature-rpt*/
-	hal_status = rtw_hal_read_chip_info(phl_info->phl_com, phl_info->hal);
+	hal_status = rtw_hal_g6_read_chip_info(phl_info->phl_com, phl_info->hal);
 	if (hal_status != RTW_HAL_STATUS_SUCCESS) {
 		phl_status = RTW_PHL_STATUS_HAL_INIT_FAILURE;
 		PHL_ERR("rtw_hal_read_chip_info failed\n");
 		goto error_hal_read_chip_info;
 	}
 
+#if 0 // NEO TODO
 	hal_status = rtw_hal_var_init(phl_info->phl_com, phl_info->hal);
 	if (hal_status != RTW_HAL_STATUS_SUCCESS) {
 		phl_status = RTW_PHL_STATUS_HAL_INIT_FAILURE;

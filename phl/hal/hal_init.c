@@ -429,7 +429,6 @@ static enum rtw_hal_status hal_ops_check(struct hal_info_t *hal)
 	enum rtw_hal_status status = RTW_HAL_STATUS_SUCCESS;
 	struct hal_ops_t *ops = hal_get_ops(hal);
 
-#if 0 // NEO TODO
 	struct hal_trx_ops *trx_ops = hal_get_trx_ops(hal);
 
 	/***hal_ops initialize section ***/
@@ -438,6 +437,7 @@ static enum rtw_hal_status hal_ops_check(struct hal_info_t *hal)
 		status = RTW_HAL_STATUS_FAILURE;
 	}
 
+#if 0 // NEO TODO
 	if (!ops->read_chip_version) {
 		hal_error_msg("read_chip_version");
 		status = RTW_HAL_STATUS_FAILURE;
@@ -1167,21 +1167,23 @@ u32 rtw_hal_hci_cfg(struct rtw_phl_com_t *phl_com, void *hal,
 	return hal_status;
 }
 
-#if 0 // NEO TODO
-u32 rtw_hal_read_chip_info(struct rtw_phl_com_t *phl_com, void *hal)
+u32 rtw_hal_g6_read_chip_info(struct rtw_phl_com_t *phl_com, void *hal)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_SUCCESS;
 	struct hal_info_t *hal_info = (struct hal_info_t *)hal;
 	struct hal_ops_t *hal_ops = hal_get_ops(hal_info);
 
 	/*get cut version*/
-	hal_ops->read_chip_version(phl_com, hal_info);
+	RTW_INFO("%s : NEO TODO read_chip_version \n", __func__);
+	//hal_ops->read_chip_version(phl_com, hal_info);
 
 	/*get mac,bb,rf capability*/
 	hal_ops->init_hal_spec(phl_com, hal_info);
 
 	return hal_status;
 }
+
+#if 0 // NEO TODO
 void rtw_hal_set_default_var(void *hal)
 {
 	struct hal_info_t *hal_info = (struct hal_info_t *)hal;
