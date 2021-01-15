@@ -104,13 +104,10 @@ static inline void _os_sleep_us(void *d, u32 us)
 	rtw_usleep_os(us);
 }
 
-// NEO TODO
-#if 0
 static inline u32 _os_get_cur_time_us(void)
 {
 	return rtw_systime_to_us(rtw_get_current_time());
 }
-#endif
 
 static inline u32 _os_get_cur_time_ms(void)
 {

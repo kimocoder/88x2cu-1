@@ -769,12 +769,8 @@ void rtw_roam_nb_info_init(_adapter *padapter)
 	pnb->features |= RTW_WNM_FEATURE_BTM_REQ_EN;
 #endif
 
-	rtw_init_timer(&pnb->roam_scan_timer, 
-		padapter, rtw_wnm_roam_scan_hdl, 
-		padapter);
-	rtw_init_timer(&pnb->disassoc_chk_timer,
-		padapter, rtw_wnm_disassoc_chk_hdl,
-		padapter);
+	rtw_init_timer(&pnb->roam_scan_timer, rtw_wnm_roam_scan_hdl, padapter);
+	rtw_init_timer(&pnb->disassoc_chk_timer, rtw_wnm_disassoc_chk_hdl, padapter);
 
 	_rtw_memset(pcache, 0, sizeof(struct btm_rpt_cache));
 	pcache->validity_time = wnm_defualt_validity_time;

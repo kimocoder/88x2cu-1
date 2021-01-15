@@ -2620,12 +2620,12 @@ struct dvobj_priv *devobj_init(void)
 	pdvobj->vap_map = 0;
 	#endif /*CONFIG_SUPPORT_MULTI_BCN*/
 	#ifdef CONFIG_SWTIMER_BASED_TXBCN
-	rtw_init_timer(&(pdvobj->txbcn_timer), NULL, tx_beacon_timer_handlder, pdvobj);
+	rtw_init_timer(&(pdvobj->txbcn_timer), tx_beacon_timer_handlder, pdvobj);
 	#endif
 #endif
 
-	rtw_init_timer(&(pdvobj->dynamic_chk_timer), NULL, rtw_dynamic_check_timer_handlder, pdvobj);
-	rtw_init_timer(&(pdvobj->periodic_tsf_update_end_timer), NULL, rtw_hal_periodic_tsf_update_end_timer_hdl, pdvobj);
+	rtw_init_timer(&(pdvobj->dynamic_chk_timer), rtw_dynamic_check_timer_handlder, pdvobj);
+	rtw_init_timer(&(pdvobj->periodic_tsf_update_end_timer), rtw_hal_periodic_tsf_update_end_timer_hdl, pdvobj);
 
 #ifdef CONFIG_MCC_MODE
 	_rtw_mutex_init(&(pdvobj->mcc_objpriv.mcc_mutex));

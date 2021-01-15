@@ -410,8 +410,8 @@ void rtw_hw_deinit(struct dvobj_priv *dvobj)
 	if (dvobj->phl) {
 #if 0 // NEO : TODO : mark off first
 		rtw_core_deregister_phl_msg(dvobj);
-#endif
 		rtw_phl_trx_free(dvobj->phl);
+#endif
 		rtw_phl_deinit(dvobj->phl);
 	}
 
@@ -667,12 +667,12 @@ u8 rtw_hw_init(struct dvobj_priv *dvobj)
 		RTW_PHL_PSTS_FLTR_MGNT | RTW_PHL_PSTS_FLTR_DATA /*| RTW_PHL_PSTS_FLTR_CTRL*/
 		);
 	#endif
-#endif
+//#endif
 
 	/*init datapath section*/
 	rtw_phl_trx_alloc(dvobj->phl);
 
-#if 0 // NEO : TODO : mark off first
+//#if 0 // NEO : TODO : mark off first
 	evt_ops = &(dvobj->phl_com->evt_ops);
 	evt_ops->rx_process = rtw_core_rx_process;
 	evt_ops->tx_recycle = rtw_core_tx_recycle;

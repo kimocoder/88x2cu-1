@@ -4574,11 +4574,11 @@ void rtw_init_wifidirect_timers(_adapter *padapter)
 {
 	struct wifidirect_info *pwdinfo = &padapter->wdinfo;
 
-	rtw_init_timer(&pwdinfo->find_phase_timer, padapter, find_phase_timer_process, padapter);
-	rtw_init_timer(&pwdinfo->restore_p2p_state_timer, padapter, restore_p2p_state_timer_process, padapter);
-	rtw_init_timer(&pwdinfo->pre_tx_scan_timer, padapter, pre_tx_scan_timer_process, padapter);
-	rtw_init_timer(&pwdinfo->reset_ch_sitesurvey, padapter, reset_ch_sitesurvey_timer_process, padapter);
-	rtw_init_timer(&pwdinfo->reset_ch_sitesurvey2, padapter, reset_ch_sitesurvey_timer_process2, padapter);
+	rtw_init_timer(&pwdinfo->find_phase_timer, find_phase_timer_process, padapter);
+	rtw_init_timer(&pwdinfo->restore_p2p_state_timer, restore_p2p_state_timer_process, padapter);
+	rtw_init_timer(&pwdinfo->pre_tx_scan_timer, pre_tx_scan_timer_process, padapter);
+	rtw_init_timer(&pwdinfo->reset_ch_sitesurvey, reset_ch_sitesurvey_timer_process, padapter);
+	rtw_init_timer(&pwdinfo->reset_ch_sitesurvey2, reset_ch_sitesurvey_timer_process2, padapter);
 }
 
 void rtw_init_wifidirect_addrs(_adapter *padapter, u8 *dev_addr, u8 *iface_addr)

@@ -352,22 +352,25 @@ extern void	_rtw_spinunlock(_lock	*plock);
 extern void	_rtw_spinlock_ex(_lock	*plock);
 extern void	_rtw_spinunlock_ex(_lock	*plock);
 
-extern void	_rtw_init_queue(_queue *pqueue);
-extern void _rtw_deinit_queue(_queue *pqueue);
-extern u32	_rtw_queue_empty(_queue	*pqueue);
-extern u32	rtw_end_of_queue_search(_list *queue, _list *pelement);
 
-extern systime _rtw_get_current_time(void);
-extern u32	_rtw_systime_to_ms(systime stime);
-extern systime _rtw_ms_to_systime(u32 ms);
-extern systime _rtw_us_to_systime(u32 us);
-extern s32	_rtw_get_passing_time_ms(systime start);
-extern s32 _rtw_get_remaining_time_ms(systime end);
-extern s32	_rtw_get_time_interval_ms(systime start, systime end);
-extern bool _rtw_time_after(systime a, systime b);
+void _rtw_init_queue(_queue *pqueue);
+void _rtw_deinit_queue(_queue *pqueue);
+u32 _rtw_queue_empty(_queue	*pqueue);
+u32 rtw_end_of_queue_search(_list *queue, _list *pelement);
+
+systime _rtw_get_current_time(void);
+u32 _rtw_systime_to_us(systime stime);
+u32 _rtw_systime_to_ms(systime stime);
+systime _rtw_ms_to_systime(u32 ms);
+systime _rtw_us_to_systime(u32 us);
+s32 _rtw_get_passing_time_ms(systime start);
+s32 _rtw_get_remaining_time_ms(systime end);
+s32 _rtw_get_time_interval_ms(systime start, systime end);
+bool _rtw_time_after(systime a, systime b);
 
 #ifdef DBG_SYSTIME
 #define rtw_get_current_time() ({systime __stime = _rtw_get_current_time(); __stime;})
+#define rtw_systime_to_us(stime) ({u32 __us = _rtw_systime_to_us(stime); typecheck(systime, stime); __us;})
 #define rtw_systime_to_ms(stime) ({u32 __ms = _rtw_systime_to_ms(stime); typecheck(systime, stime); __ms;})
 #define rtw_ms_to_systime(ms) ({systime __stime = _rtw_ms_to_systime(ms); __stime;})
 #define rtw_us_to_systime(us) ({systime __stime = _rtw_us_to_systime(us); __stime;})
@@ -378,6 +381,7 @@ extern bool _rtw_time_after(systime a, systime b);
 #define rtw_time_before(a,b) ({bool __r = _rtw_time_after(b, a); typecheck(systime, a); typecheck(systime, b); __r;})
 #else
 #define rtw_get_current_time() _rtw_get_current_time()
+#define rtw_systime_to_us(stime) _rtw_systime_to_us(stime)
 #define rtw_systime_to_ms(stime) _rtw_systime_to_ms(stime)
 #define rtw_ms_to_systime(ms) _rtw_ms_to_systime(ms)
 #define rtw_us_to_systime(us) _rtw_us_to_systime(us)
@@ -465,7 +469,7 @@ extern const char *_rtw_pwait_type_str[];
 
 int rtw_pwctx_config(struct rtw_pwait_ctx *pwctx, enum rtw_pwait_type type, s32 time, s32 cnt_lmt);
 
-extern void rtw_init_timer(_timer *ptimer, void *padapter, void *pfunc, void *ctx);
+void rtw_init_timer(_timer *ptimer, void *pfunc, void *ctx);
 
 
 __inline static unsigned char _cancel_timer_ex(_timer *ptimer)

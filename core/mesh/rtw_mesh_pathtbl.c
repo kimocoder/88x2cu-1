@@ -610,7 +610,7 @@ struct rtw_mesh_path *rtw_mesh_path_new(_adapter *adapter,
 	new_mpath->frame_queue_len = 0;
 	new_mpath->exp_time = rtw_get_current_time();
 	_rtw_spinlock_init(&new_mpath->state_lock);
-	rtw_init_timer(&new_mpath->timer, adapter, rtw_mesh_path_timer, new_mpath);
+	rtw_init_timer(&new_mpath->timer, rtw_mesh_path_timer, new_mpath);
 
 	return new_mpath;
 }

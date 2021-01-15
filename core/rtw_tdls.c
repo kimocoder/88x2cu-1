@@ -3403,15 +3403,15 @@ void _tdls_pti_timer_hdl(void *FunctionContext)
 void rtw_init_tdls_timer(_adapter *padapter, struct sta_info *psta)
 {
 	psta->padapter = padapter;
-	rtw_init_timer(&psta->TPK_timer, padapter, _tdls_tpk_timer_hdl, psta);
+	rtw_init_timer(&psta->TPK_timer, _tdls_tpk_timer_hdl, psta);
 #ifdef CONFIG_TDLS_CH_SW
-	rtw_init_timer(&psta->ch_sw_timer, padapter, _tdls_ch_switch_timer_hdl, psta);
-	rtw_init_timer(&psta->delay_timer, padapter, _tdls_delay_timer_hdl, psta);
-	rtw_init_timer(&psta->stay_on_base_chnl_timer, padapter, _tdls_stay_on_base_chnl_timer_hdl, psta);
-	rtw_init_timer(&psta->ch_sw_monitor_timer, padapter, _tdls_ch_switch_monitor_timer_hdl, psta);
+	rtw_init_timer(&psta->ch_sw_timer, _tdls_ch_switch_timer_hdl, psta);
+	rtw_init_timer(&psta->delay_timer, _tdls_delay_timer_hdl, psta);
+	rtw_init_timer(&psta->stay_on_base_chnl_timer, _tdls_stay_on_base_chnl_timer_hdl, psta);
+	rtw_init_timer(&psta->ch_sw_monitor_timer, _tdls_ch_switch_monitor_timer_hdl, psta);
 #endif
-	rtw_init_timer(&psta->handshake_timer, padapter, _tdls_handshake_timer_hdl, psta);
-	rtw_init_timer(&psta->pti_timer, padapter, _tdls_pti_timer_hdl, psta);
+	rtw_init_timer(&psta->handshake_timer, _tdls_handshake_timer_hdl, psta);
+	rtw_init_timer(&psta->pti_timer, _tdls_pti_timer_hdl, psta);
 }
 
 void rtw_cancel_tdls_timer(struct sta_info *psta)

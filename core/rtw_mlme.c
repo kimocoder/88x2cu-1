@@ -27,11 +27,11 @@ void rtw_init_mlme_timer(_adapter *padapter)
 {
 	struct	mlme_priv *pmlmepriv = &padapter->mlmepriv;
 
-	rtw_init_timer(&(pmlmepriv->assoc_timer), padapter, rtw_join_timeout_handler, padapter);
-	rtw_init_timer(&(pmlmepriv->scan_to_timer), padapter, rtw_scan_timeout_handler, padapter);
+	rtw_init_timer(&(pmlmepriv->assoc_timer), rtw_join_timeout_handler, padapter);
+	rtw_init_timer(&(pmlmepriv->scan_to_timer), rtw_scan_timeout_handler, padapter);
 
 #ifdef CONFIG_SET_SCAN_DENY_TIMER
-	rtw_init_timer(&(pmlmepriv->set_scan_deny_timer), padapter, rtw_set_scan_deny_timer_hdl, padapter);
+	rtw_init_timer(&(pmlmepriv->set_scan_deny_timer), rtw_set_scan_deny_timer_hdl, padapter);
 #endif
 
 #ifdef RTK_DMP_PLATFORM
@@ -132,7 +132,7 @@ sint	_rtw_init_mlme_priv(_adapter *padapter)
 		}
 	}
 #ifdef CONFIG_PLATFORM_CMAP_INTFS
-	rtw_init_timer(&pmlmepriv->cmap_unassoc_sta_timer, padapter, cmap_unassoc_sta_report_info_timer, padapter);
+	rtw_init_timer(&pmlmepriv->cmap_unassoc_sta_timer, cmap_unassoc_sta_report_info_timer, padapter);
 #endif
 #endif
 	/* allocate DMA-able/Non-Page memory for cmd_buf and rsp_buf */

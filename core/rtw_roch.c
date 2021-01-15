@@ -577,7 +577,7 @@ void rtw_init_roch_info(_adapter *padapter)
 	_rtw_memset(prochinfo, 0x00, sizeof(struct roch_info));
 
 #ifdef CONFIG_CONCURRENT_MODE
-	rtw_init_timer(&prochinfo->ap_roch_ch_switch_timer, padapter, rtw_ap_roch_ch_switch_timer_process, padapter);
+	rtw_init_timer(&prochinfo->ap_roch_ch_switch_timer, rtw_ap_roch_ch_switch_timer_process, padapter);
 #ifdef CONFIG_IOCTL_CFG80211
 	prochinfo->min_home_dur = 1500; 		/* min duration for traffic, home_time */
 	prochinfo->max_away_dur = 250;		/* max acceptable away duration, home_away_time */
@@ -585,7 +585,7 @@ void rtw_init_roch_info(_adapter *padapter)
 #endif
 
 #ifdef CONFIG_IOCTL_CFG80211
-	rtw_init_timer(&prochinfo->remain_on_ch_timer, padapter, rtw_ro_ch_timer_process, padapter);
+	rtw_init_timer(&prochinfo->remain_on_ch_timer, rtw_ro_ch_timer_process, padapter);
 #endif
 }
 #endif /* (defined(CONFIG_P2P) && defined(CONFIG_CONCURRENT_MODE)) || defined(CONFIG_IOCTL_CFG80211) */

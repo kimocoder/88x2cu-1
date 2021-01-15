@@ -3385,9 +3385,9 @@ void rtw_mesh_init_mesh_info(_adapter *adapter)
 	_rtw_init_listhead(&minfo->preq_queue.list);
 	_rtw_spinlock_init(&minfo->mesh_preq_queue_lock);
 	
-	rtw_init_timer(&adapter->mesh_path_timer, adapter, rtw_ieee80211_mesh_path_timer, adapter);
-	rtw_init_timer(&adapter->mesh_path_root_timer, adapter, rtw_ieee80211_mesh_path_root_timer, adapter);
-	rtw_init_timer(&adapter->mesh_atlm_param_req_timer, adapter, rtw_mesh_atlm_param_req_timer, adapter);
+	rtw_init_timer(&adapter->mesh_path_timer, rtw_ieee80211_mesh_path_timer, adapter);
+	rtw_init_timer(&adapter->mesh_path_root_timer, rtw_ieee80211_mesh_path_root_timer, adapter);
+	rtw_init_timer(&adapter->mesh_atlm_param_req_timer, rtw_mesh_atlm_param_req_timer, adapter);
 	_init_workitem(&adapter->mesh_work, rtw_mesh_work_hdl, NULL);
 }
 

@@ -118,8 +118,7 @@ int rtw_init_rm(_adapter *padapter)
 	prmpriv->enable = _TRUE;
 
 	/* clock timer */
-	rtw_init_timer(&prmpriv->rm_timer,
-		padapter, rm_timer_callback, padapter);
+	rtw_init_timer(&prmpriv->rm_timer, rm_timer_callback, padapter);
 	_set_timer(&prmpriv->rm_timer, CLOCK_UNIT);
 
 	prmpriv->meas_token = 1;

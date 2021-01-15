@@ -48,7 +48,7 @@ enum {
 #define COMP_PHL_LED BIT13
 #define COMP_PHL_MCC BIT14
 
-//extern u32 phl_log_components;
+extern u32 phl_log_components;
 extern u8 phl_log_level;
 #define DEBUG_MAX_NAME_LEN 50
 
@@ -68,10 +68,8 @@ struct dbg_mem_ctx {
 };
 
 
-// NEO : TODO : mark off first
 #undef PHL_TRACE
 #undef PHL_DATA
-#if 0
 #define PHL_TRACE(comp, level, fmt, ...)     \
 	do {\
 		if(((comp) & phl_log_components) && (level <= phl_log_level)) {\
@@ -86,16 +84,6 @@ struct dbg_mem_ctx {
 		} \
 	} while (0)
 
-#else // NEO
-#define PHL_TRACE(comp, level, fmt, ...)     \
-	do {\
-	} while (0)
-
-#define PHL_DATA(comp, level, fmt, ...)     \
-	do {\
-	} while (0)
-
-#endif // if 0 NEO
 
 #undef PHL_ASSERT
 #define PHL_ASSERT(fmt, ...) \

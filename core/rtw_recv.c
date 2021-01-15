@@ -143,7 +143,7 @@ sint rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter)
 	res = rtw_intf_init_recv_priv(adapter_to_dvobj(padapter));
 
 #ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS
-	rtw_init_timer(&precvpriv->signal_stat_timer, padapter, rtw_signal_stat_timer_hdl, padapter);
+	rtw_init_timer(&precvpriv->signal_stat_timer, rtw_signal_stat_timer_hdl, padapter);
 
 	precvpriv->signal_stat_sampling_interval = 2000; /* ms */
 	/* precvpriv->signal_stat_converging_constant = 5000; */ /* ms */

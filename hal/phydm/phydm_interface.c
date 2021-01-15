@@ -718,7 +718,7 @@ void odm_initialize_timer(struct dm_struct *dm, struct phydm_timer_list *timer,
 #elif (DM_ODM_SUPPORT_TYPE & ODM_IOT)
 	struct _ADAPTER *adapter = dm->adapter;
 
-	rtw_init_timer(timer, adapter->pnetdev, (TIMER_FUN)call_back_func, dm, NULL);
+	rtw_init_timer(timer, (TIMER_FUN)call_back_func, dm, NULL);
 #endif
 }
 

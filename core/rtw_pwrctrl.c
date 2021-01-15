@@ -2266,7 +2266,7 @@ void rtw_init_pwrctrl_priv(PADAPTER padapter)
 #ifdef CONFIG_LPS_RPWM_TIMER
 	pwrctrlpriv->brpwmtimeout = _FALSE;
 	_init_workitem(&pwrctrlpriv->rpwmtimeoutwi, rpwmtimeout_workitem_callback, NULL);
-	rtw_init_timer(&pwrctrlpriv->pwr_rpwm_timer, padapter, pwr_rpwm_timeout_handler, padapter);
+	rtw_init_timer(&pwrctrlpriv->pwr_rpwm_timer, pwr_rpwm_timeout_handler, padapter);
 #endif /* CONFIG_LPS_RPWM_TIMER */
 #endif /* CONFIG_LPS_LCLK */
 
@@ -2278,7 +2278,7 @@ void rtw_init_pwrctrl_priv(PADAPTER padapter)
 	#endif
 #endif
 
-	rtw_init_timer(&pwrctrlpriv->pwr_state_check_timer, padapter, pwr_state_check_handler, padapter);
+	rtw_init_timer(&pwrctrlpriv->pwr_state_check_timer, pwr_state_check_handler, padapter);
 
 	pwrctrlpriv->wowlan_mode = _FALSE;
 	pwrctrlpriv->wowlan_ap_mode = _FALSE;

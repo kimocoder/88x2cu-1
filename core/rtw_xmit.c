@@ -418,20 +418,16 @@ s32	_rtw_init_xmit_priv(struct xmit_priv *pxmitpriv, _adapter *padapter)
 #endif
 
 #ifdef CONFIG_TX_AMSDU
-	rtw_init_timer(&(pxmitpriv->amsdu_vo_timer), padapter,
-		rtw_amsdu_vo_timeout_handler, padapter);
+	rtw_init_timer(&(pxmitpriv->amsdu_vo_timer), rtw_amsdu_vo_timeout_handler, padapter);
 	pxmitpriv->amsdu_vo_timeout = RTW_AMSDU_TIMER_UNSET;
 
-	rtw_init_timer(&(pxmitpriv->amsdu_vi_timer), padapter,
-		rtw_amsdu_vi_timeout_handler, padapter);
+	rtw_init_timer(&(pxmitpriv->amsdu_vi_timer), rtw_amsdu_vi_timeout_handler, padapter);
 	pxmitpriv->amsdu_vi_timeout = RTW_AMSDU_TIMER_UNSET;
 
-	rtw_init_timer(&(pxmitpriv->amsdu_be_timer), padapter,
-		rtw_amsdu_be_timeout_handler, padapter);
+	rtw_init_timer(&(pxmitpriv->amsdu_be_timer), rtw_amsdu_be_timeout_handler, padapter);
 	pxmitpriv->amsdu_be_timeout = RTW_AMSDU_TIMER_UNSET;
 
-	rtw_init_timer(&(pxmitpriv->amsdu_bk_timer), padapter,
-		rtw_amsdu_bk_timeout_handler, padapter);
+	rtw_init_timer(&(pxmitpriv->amsdu_bk_timer), rtw_amsdu_bk_timeout_handler, padapter);
 	pxmitpriv->amsdu_bk_timeout = RTW_AMSDU_TIMER_UNSET;
 
 	pxmitpriv->amsdu_debug_set_timer = 0;
@@ -8696,7 +8692,7 @@ void rtw_tx_poll_init(_adapter *padapter)
 		return;
 	}
 
-	rtw_init_timer(timer, padapter, rtw_tx_poll_timeout_handler, padapter);
+	rtw_init_timer(timer, rtw_tx_poll_timeout_handler, padapter);
 	rtw_tx_poll_timer_set(padapter, 1);
 	RTW_INFO("Tx poll timer init!\n");
 }

@@ -335,7 +335,7 @@ int rtw_rfctl_init(_adapter *adapter)
 #ifdef CONFIG_DFS_MASTER
 	rfctl->dfs_region_domain = regsty->dfs_region_domain;
 	rfctl->cac_start_time = rfctl->cac_end_time = RTW_CAC_STOPPED;
-	rtw_init_timer(&(rfctl->radar_detect_timer), adapter, rtw_dfs_rd_timer_hdl, rfctl);
+	rtw_init_timer(&(rfctl->radar_detect_timer), rtw_dfs_rd_timer_hdl, rfctl);
 #endif
 #if CONFIG_DFS_SLAVE_WITH_RADAR_DETECT
 	rfctl->dfs_slave_with_rd = 1;
@@ -1437,22 +1437,22 @@ void init_mlme_ext_timer(_adapter *padapter)
 {
 	struct	mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
 
-	rtw_init_timer(&pmlmeext->survey_timer, padapter, survey_timer_hdl, padapter);
-	rtw_init_timer(&pmlmeext->link_timer, padapter, link_timer_hdl, padapter);
+	rtw_init_timer(&pmlmeext->survey_timer, survey_timer_hdl, padapter);
+	rtw_init_timer(&pmlmeext->link_timer, link_timer_hdl, padapter);
 #ifdef CONFIG_RTW_80211R
-	rtw_init_timer(&pmlmeext->ft_link_timer, padapter, rtw_ft_link_timer_hdl, padapter);
-	rtw_init_timer(&pmlmeext->ft_roam_timer, padapter, rtw_ft_roam_timer_hdl, padapter);
+	rtw_init_timer(&pmlmeext->ft_link_timer, rtw_ft_link_timer_hdl, padapter);
+	rtw_init_timer(&pmlmeext->ft_roam_timer, rtw_ft_roam_timer_hdl, padapter);
 #endif
 
 #ifdef CONFIG_RTW_REPEATER_SON
-	rtw_init_timer(&pmlmeext->rson_scan_timer, padapter, rson_timer_hdl, padapter);
+	rtw_init_timer(&pmlmeext->rson_scan_timer, rson_timer_hdl, padapter);
 #endif
 #ifdef CONFIG_RTW_TOKEN_BASED_XMIT
-	rtw_init_timer(&pmlmeext->tbtx_xmit_timer, padapter, rtw_tbtx_xmit_timer_hdl, padapter);
-	rtw_init_timer(&pmlmeext->tbtx_token_dispatch_timer, padapter, rtw_tbtx_token_dispatch_timer_hdl, padapter);
+	rtw_init_timer(&pmlmeext->tbtx_xmit_timer, rtw_tbtx_xmit_timer_hdl, padapter);
+	rtw_init_timer(&pmlmeext->tbtx_token_dispatch_timer, rtw_tbtx_token_dispatch_timer_hdl, padapter);
 #endif
 #ifdef CONFIG_DFS
-	rtw_init_timer(&pmlmeext->csa_timer, padapter->pnetdev, csa_timer_hdl, padapter);
+	rtw_init_timer(&pmlmeext->csa_timer, csa_timer_hdl, padapter);
 #endif
 }
 

@@ -1158,21 +1158,6 @@ inline void rtw_hlist_del_rcu(rtw_hlist_node *n)
 #endif
 }
 
-void rtw_init_timer(_timer *ptimer, void *padapter, void *pfunc, void *ctx)
-{
-	_adapter *adapter = (_adapter *)padapter;
-
-#ifdef PLATFORM_LINUX
-	_init_timer(ptimer, pfunc, ctx);
-#endif
-#ifdef PLATFORM_FREEBSD
-	_init_timer(ptimer, pfunc, ctx);
-#endif
-#ifdef PLATFORM_WINDOWS
-	_init_timer(ptimer, pfunc, ctx);
-#endif
-}
-
 /*
 
 Caller must check if the list is empty before calling rtw_list_delete
@@ -1393,59 +1378,6 @@ u32 rtw_end_of_queue_search(_list *head, _list *plist)
 }
 
 
-systime _rtw_get_current_time(void)
-{
-
-#ifdef PLATFORM_LINUX
-	return jiffies;
-#endif
-#ifdef PLATFORM_FREEBSD
-	struct timeval tvp;
-	getmicrotime(&tvp);
-	return tvp.tv_sec;
-#endif
-#ifdef PLATFORM_WINDOWS
-	LARGE_INTEGER	SystemTime;
-	NdisGetCurrentSystemTime(&SystemTime);
-	return SystemTime.LowPart;/* count of 100-nanosecond intervals */
-#endif
-}
-
-inline u32 _rtw_systime_to_ms(systime stime)
-{
-#ifdef PLATFORM_LINUX
-	return jiffies_to_msecs(stime);
-#endif
-#ifdef PLATFORM_FREEBSD
-	return stime * 1000;
-#endif
-#ifdef PLATFORM_WINDOWS
-	return stime / 10000 ;
-#endif
-}
-
-inline systime _rtw_ms_to_systime(u32 ms)
-{
-#ifdef PLATFORM_LINUX
-	return msecs_to_jiffies(ms);
-#endif
-#ifdef PLATFORM_FREEBSD
-	return ms / 1000;
-#endif
-#ifdef PLATFORM_WINDOWS
-	return ms * 10000 ;
-#endif
-}
-
-inline systime _rtw_us_to_systime(u32 us)
-{
-#ifdef PLATFORM_LINUX
-	return usecs_to_jiffies(us);
-#else
-	#error "TBD\n"
-#endif
-}
-
 /* the input parameter start use the same unit as returned by rtw_get_current_time */
 inline s32 _rtw_get_passing_time_ms(systime start)
 {
@@ -1460,15 +1392,6 @@ inline s32 _rtw_get_remaining_time_ms(systime end)
 inline s32 _rtw_get_time_interval_ms(systime start, systime end)
 {
 	return _rtw_systime_to_ms(end - start);
-}
-
-inline bool _rtw_time_after(systime a, systime b)
-{
-#ifdef PLATFORM_LINUX
-	return time_after(a, b);
-#else
-	#error "TBD\n"
-#endif
 }
 
 sysptime rtw_sptime_get(void)

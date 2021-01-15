@@ -1868,8 +1868,8 @@ void rtw_bf_init(PADAPTER adapter)
 	info->cur_csi_rpt_rate = HALMAC_OFDM24;
 
 	_sounding_init(&info->sounding_info);
-	rtw_init_timer(&info->sounding_timer, adapter, _sounding_timer_handler, adapter);
-	rtw_init_timer(&info->sounding_timeout_timer, adapter, _sounding_timeout_timer_handler, adapter);
+	rtw_init_timer(&info->sounding_timer,  _sounding_timer_handler, adapter);
+	rtw_init_timer(&info->sounding_timeout_timer, _sounding_timeout_timer_handler, adapter);
 
 	info->SetHalBFEnterOnDemandCnt = 0;
 	info->SetHalBFLeaveOnDemandCnt = 0;

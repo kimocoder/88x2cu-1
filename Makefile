@@ -275,6 +275,7 @@ endif
 
 
 _OS_INTFS_FILES :=	os_dep/osdep_service.o \
+			os_dep/osdep_service_linux.o \
 			os_dep/linux/os_intfs.o \
 			os_dep/linux/$(HCI_NAME)_intf.o \
 			os_dep/linux/$(HCI_NAME)_ops_linux.o \
