@@ -38,10 +38,10 @@ void hal_set_ops_8822cu(struct rtw_phl_com_t *phl_com,
 	RTW_INFO("%s NEO\n", __func__);
 	hal_set_ops_8822c(phl_com, hal);
 
-#if 0 // NEO TODO
-	hal_hook_ps_ops_8822c(hal);
+	//hal_hook_ps_ops_8822c(hal);
 
-	ops->init_hal_spec = init_hal_spec_8852au;
+	ops->init_hal_spec = init_hal_spec_8822cu;
+#if 0 // NEO TODO
 	ops->hal_get_efuse = hal_get_efuse_8852au;
 	ops->hal_init = hal_init_8852au;
 	ops->hal_deinit = hal_deinit_8852au;

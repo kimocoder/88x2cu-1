@@ -50,23 +50,27 @@ static void _hal_pre_init_8852au(struct rtw_phl_com_t *phl_com,
 	init_52au->ic_name = "rtl8852au";
 }
 
-void init_hal_spec_8852au(struct rtw_phl_com_t *phl_com,
+#endif // if 0 NEO 
+
+void init_hal_spec_8822cu(struct rtw_phl_com_t *phl_com,
 					struct hal_info_t *hal)
 {
 	struct rtw_hal_com_t *hal_com = hal->hal_com;
 	struct bus_hw_cap_t *bus_hw_cap = &hal_com->bus_hw_cap;
 
-	init_hal_spec_8852a(phl_com, hal);
+	//init_hal_spec_8852a(phl_com, hal);
 	phl_com->dev_cap.hw_sup_flags |= HW_SUP_USB_MULTI_FUN;
-	bus_hw_cap->tx_buf_size = 20480;
+	bus_hw_cap->tx_buf_size = 2048;
 	bus_hw_cap->tx_buf_num = 4;
 	bus_hw_cap->tx_mgnt_buf_size = 1536;
 	bus_hw_cap->tx_mgnt_buf_num = 32;
 	bus_hw_cap->tx_h2c_buf_num = MAX_H2C_PKT_NUM;
-	bus_hw_cap->rx_buf_size = 512*60;
-	bus_hw_cap->rx_buf_num = 128;
-	bus_hw_cap->in_token_num = 6;
+	bus_hw_cap->rx_buf_size = 24576;
+	bus_hw_cap->rx_buf_num = 8;
+	bus_hw_cap->in_token_num = 4;
 }
+
+#if 0 // NEO
 
 enum rtw_hal_status hal_get_efuse_8852au(struct rtw_phl_com_t *phl_com,
 					 struct hal_info_t *hal_info)
