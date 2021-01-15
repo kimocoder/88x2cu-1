@@ -1073,7 +1073,6 @@ enum rtw_phl_status rtw_phl_init(void *drv_priv, void **phl,
 		goto error_module_init;
 	}
 
-#if 0 // NEO TODO
 	/* init led_ctrl */
 	phl_status = phl_led_ctrl_init(phl_info);
 	if (phl_status != RTW_PHL_STATUS_SUCCESS) {
@@ -1081,6 +1080,7 @@ enum rtw_phl_status rtw_phl_init(void *drv_priv, void **phl,
 		goto error_led_ctrl_init;
 	}
 
+#if 0 // NEO TODO
 	/* init macid_ctrl , stainfo_ctrl*/
 	/* init after get hw cap - macid number*/
 	phl_status = phl_macid_ctrl_init(phl_info);
@@ -1102,9 +1102,9 @@ enum rtw_phl_status rtw_phl_init(void *drv_priv, void **phl,
 #if 0 // NEO TODO
 error_stainfo_ctrl_init:
 	phl_macid_ctrl_deinit(phl_info);
+#endif // if 0
 error_macid_ctrl_init:
 	phl_led_ctrl_deinit(phl_info);
-#endif // if 0
 error_led_ctrl_init:
 	phl_module_deinit(phl_info);
 
@@ -1146,8 +1146,8 @@ void rtw_phl_deinit(void *phl)
 #if 0 // NEO TODO
 		phl_stainfo_ctrl_deinie(phl_info);
 		phl_macid_ctrl_deinit(phl_info);
-		phl_led_ctrl_deinit(phl_info);
 #endif // if 0
+		phl_led_ctrl_deinit(phl_info);
 		/*deinit mr_ctrl, wifi_role[]*/
 		phl_module_deinit(phl_info);
 		phl_mr_ctrl_deinit(phl_info);

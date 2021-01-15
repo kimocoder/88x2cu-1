@@ -28,6 +28,7 @@ _PHL_FILES := $(phl_path)phl_init.o \
 		$(phl_path)phl_cmd_job.o \
 		$(phl_path)phl_debug.o \
 		$(phl_path)phl_fsm.o \
+		$(phl_path)phl_led.o \
 		$(phl_path)phl_mr.o \
 		$(phl_path)phl_msg_hub.o \
 		$(phl_path)phl_pkt_ofld.o \
@@ -58,7 +59,6 @@ _PHL_FILES := $(phl_path)phl_init.o \
 			$(phl_path)phl_chnlplan.o \
 			$(phl_path)phl_country.o \
 			$(phl_path)phl_regulation.o \
-			$(phl_path)phl_led.o \
 			$(phl_path)phl_trx_mit.o \
 			$(phl_path)test/phl_dbg_cmd.o \
 			$(phl_path)phl_acs.o \
