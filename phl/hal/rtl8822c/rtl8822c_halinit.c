@@ -24,9 +24,10 @@ void init_hal_spec_8822c(struct rtw_phl_com_t *phl_com,
 	struct rtw_hal_com_t *hal_com = hal->hal_com;
 	struct protocol_cap_t *hw_proto_cap = hal_com->proto_hw_cap;
 
-#if 0 //NEO
 	hal_spec->ic_name = "rtl8852a";
-	hal_spec->macid_num = hal_mac_get_macid_num(hal);
+	//hal_spec->macid_num = hal_mac_get_macid_num(hal);
+	hal_spec->macid_num = 128; // NEO TODO need to check macid numm of 8822cu
+#if 0 //NEO
 	/* hal_spec->sec_cam_ent_num follow halmac setting */
 	hal_spec->sec_cap = SEC_CAP_CHK_BMC;
 

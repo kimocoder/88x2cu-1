@@ -1131,10 +1131,13 @@ phl_mr_ctrl_init(struct phl_info_t *phl_info)
 		role->active = false;
 		role->chanctx = NULL;
 	}
+
+#ifdef CONFIG_MCC_SUPPORT
 	if (RTW_PHL_STATUS_SUCCESS != (status = rtw_phl_mcc_init(phl_info))) {
 		PHL_ERR("%s mcc init fail\n", __func__);
 		/* todo, need to discuss with Georgia*/
 	}
+#endif
 	return RTW_PHL_STATUS_SUCCESS;
 }
 
@@ -1146,7 +1149,9 @@ _phl_band_ctrl_deinit(struct phl_info_t *phl_info)
 	struct hw_band_ctl_t *band_ctrl;
 	u8 band_idx = 0;
 
+#ifdef CONFIG_MCC_SUPPORT
 	rtw_phl_mcc_deinit(phl_info);
+#endif
 	for (band_idx = 0; band_idx < MAX_BAND_NUM; band_idx++) {
 		band_ctrl = &(mr_ctl->band_ctrl[band_idx]);
 		phl_chanctx_free(phl_info, band_ctrl);
