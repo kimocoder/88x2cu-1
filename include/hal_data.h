@@ -607,25 +607,7 @@ typedef struct hal_com_data {
 	*	LOG_INTERRUPT		InterruptLog; */
 	u32			sdio_himr;
 	u32			sdio_hisr;
-#ifndef RTW_HALMAC
-	/*  */
-	/* SDIO Tx FIFO related. */
-	/*  */
-	/* HIQ, MID, LOW, PUB free pages; padapter->xmitpriv.free_txpg */
-#ifdef CONFIG_RTL8192F
-	u16			SdioTxFIFOFreePage[SDIO_TX_FREE_PG_QUEUE];
-#else
-	u8			SdioTxFIFOFreePage[SDIO_TX_FREE_PG_QUEUE];
-#endif/*CONFIG_RTL8192F*/
-#ifdef CONFIG_SDIO_TX_ENABLE_AVAL_INT
-	u8			sdio_avail_int_en_q;
-#endif
-	_lock		SdioTxFIFOFreePageLock;
-	u8			SdioTxOQTMaxFreeSpace;
-	u8			SdioTxOQTFreeSpace;
-#else /* RTW_HALMAC */
 	u16			SdioTxOQTFreeSpace;
-#endif /* RTW_HALMAC */
 
 	/*  */
 	/* SDIO Rx FIFO related. */
@@ -637,9 +619,6 @@ typedef struct hal_com_data {
 	u16			SdioRxFIFOSize;
 #endif
 
-#ifndef RTW_HALMAC
-	u32			sdio_tx_max_len[SDIO_MAX_TX_QUEUE];/* H, N, L, used for sdio tx aggregation max length per queue */
-#else
 #ifdef CONFIG_RTL8821C
 	u16			tx_high_page;
 	u16			tx_low_page;
@@ -658,7 +637,6 @@ typedef struct hal_com_data {
 	u16			max_xmit_page_bk;
 
 #endif /*#ifdef CONFIG_RTL8821C*/
-#endif /* !RTW_HALMAC */
 #endif /* CONFIG_SDIO_HCI */
 
 #ifdef CONFIG_USB_HCI
@@ -774,9 +752,7 @@ typedef struct hal_com_data {
 #endif
 	struct hal_iqk_reg_backup iqk_reg_backup[MAX_IQK_INFO_BACKUP_CHNL_NUM];
 
-#ifdef RTW_HALMAC
 	u16 drv_rsvd_page_number;
-#endif
 
 #ifdef CONFIG_BEAMFORMING
 	u8 backup_snd_ptcl_ctrl;
@@ -833,8 +809,6 @@ typedef struct hal_com_data HAL_DATA_TYPE, *PHAL_DATA_TYPE;
 
 #endif
 
-#ifdef RTW_HALMAC
 int rtw_halmac_deinit_adapter(struct dvobj_priv *);
-#endif /* RTW_HALMAC */
 
 #endif /* __HAL_DATA_H__ */

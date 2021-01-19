@@ -238,7 +238,6 @@ static int proc_get_hw_rate_map_test(struct seq_file *m, void *v)
 }
 #endif
 
-#ifdef RTW_HALMAC
 extern void rtw_halmac_get_version(char *str, u32 len);
 
 static int proc_get_halmac_info(struct seq_file *m, void *v)
@@ -251,7 +250,6 @@ static int proc_get_halmac_info(struct seq_file *m, void *v)
 
 	return 0;
 }
-#endif
 
 /*
 * rtw_drv_proc:
@@ -276,9 +274,7 @@ const struct rtw_proc_hdl drv_proc_hdls[] = {
 #ifdef CONFIG_RTW_DEBUG
 	RTW_PROC_HDL_SSEQ("hw_rate_map_test", proc_get_hw_rate_map_test, NULL),
 #endif
-#ifdef RTW_HALMAC
 	RTW_PROC_HDL_SSEQ("halmac_info", proc_get_halmac_info, NULL),
-#endif /* RTW_HALMAC */
 };
 
 const int drv_proc_hdls_num = sizeof(drv_proc_hdls) / sizeof(struct rtw_proc_hdl);

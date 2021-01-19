@@ -1395,12 +1395,7 @@ int rtw_mp_thermal(struct net_device *dev,
 	if ((strncmp(extra, "write", 6) == 0)) {
 		int i;
 		u16 raw_cursize = 0, raw_maxsize = 0;
-#ifdef RTW_HALMAC
 		raw_maxsize = efuse_GetavailableSize(padapter);
-#else
-		efuse_GetCurrentSize(padapter, &raw_cursize);
-		raw_maxsize = efuse_GetMaxSize(padapter);
-#endif
 		RTW_INFO("[eFuse available raw size]= %d bytes\n", raw_maxsize - raw_cursize);
 		if (2 > raw_maxsize - raw_cursize) {
 			RTW_INFO("no available efuse!\n");

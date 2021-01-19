@@ -1241,7 +1241,6 @@ struct lite_data_buf {
 	struct xmit_buf *pxmitbuf;
 };
 
-#ifdef RTW_HALMAC
 struct halmac_indicator {
 	struct submit_ctx *sctx;
 	u8 *buffer;
@@ -1269,7 +1268,6 @@ struct halmacpriv {
 	u16 txpage[HW_QUEUE_ENTRY];
 #endif /* CONFIG_SDIO_HCI */
 };
-#endif /* RTW_HALMAC */
 
 #ifdef CONFIG_FW_MULTI_PORT_SUPPORT
 /*info for H2C-0x2C*/
@@ -1435,10 +1433,8 @@ struct dvobj_priv {
 	u8 en_napi_dynamic;
 #endif /* CONFIG_RTW_NAPI_DYNAMIC */
 
-#ifdef RTW_HALMAC
 	void *halmac;
 	struct halmacpriv hmpriv;
-#endif /* RTW_HALMAC */
 
 #ifdef CONFIG_FW_MULTI_PORT_SUPPORT
 	/*info for H2C-0x2C*/

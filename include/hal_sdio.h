@@ -17,11 +17,6 @@
 
 #define ffaddr2deviceId(pdvobj, addr)	(pdvobj->Queue2Pipe[addr])
 
-#ifndef RTW_HALMAC
-extern const char *_sdio_tx_queue_str[];
-#define sdio_tx_queue_str(_page_idx) (_page_idx >= SDIO_MAX_TX_QUEUE ? "UNKNOWN" : _sdio_tx_queue_str[_page_idx])
-#endif
-
 u8 rtw_hal_sdio_max_txoqt_free_space(_adapter *padapter);
 u8 rtw_hal_sdio_query_tx_freepage(_adapter *padapter, u8 PageIdx, u8 RequiredPageNum);
 void rtw_hal_sdio_update_tx_freepage(_adapter *padapter, u8 PageIdx, u8 RequiredPageNum);

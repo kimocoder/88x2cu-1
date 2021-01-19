@@ -327,10 +327,8 @@ void hal_com_config_channel_plan(
 );
 
 int hal_config_macaddr(_adapter *adapter, bool autoload_fail);
-#ifdef RTW_HALMAC
 void rtw_hal_hw_port_enable(_adapter *adapter);
 void rtw_hal_hw_port_disable(_adapter *adapter);
-#endif
 
 BOOLEAN
 HAL_IsLegalChannel(
@@ -665,9 +663,7 @@ s32 rtw_set_ps_rsvd_page(_adapter *adapter);
 #endif
 
 #ifdef CONFIG_P2P_PS
-#ifdef RTW_HALMAC
 void rtw_set_p2p_ps_offload_cmd(_adapter *adapter, u8 p2p_ps_state);
-#endif
 #endif
 
 #ifdef RTW_CHANNEL_SWITCH_OFFLOAD

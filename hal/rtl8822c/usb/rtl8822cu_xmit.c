@@ -423,9 +423,7 @@ static s32 rtw_dump_xframe(PADAPTER padapter, struct xmit_frame *pxmitframe)
 				w_sz = sz + TXDESC_SIZE + PACKET_OFFSET_SZ;
 		}
 
-#ifdef RTW_HALMAC
 		pxmitbuf->bulkout_id = rtw_halmac_usb_get_bulkout_id(pdvobj, mem_addr, w_sz);
-#endif
 		ff_hwaddr = rtw_get_ff_hwaddr(pxmitframe);
 
 #ifdef CONFIG_XMIT_THREAD_MODE
@@ -739,9 +737,7 @@ agg_end:
 #endif /*CONFIG_TX_EARLY_MODE*/
 
 	/* 4. write xmit buffer to USB FIFO */
-#ifdef RTW_HALMAC
 	pxmitbuf->bulkout_id = rtw_halmac_usb_get_bulkout_id(pdvobj, pfirstframe->buf_addr, pfirstframe->attrib.last_txcmdsz);
-#endif
 	ff_hwaddr = rtw_get_ff_hwaddr(pfirstframe);
 
 #ifdef CONFIG_XMIT_THREAD_MODE

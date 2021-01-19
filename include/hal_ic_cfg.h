@@ -612,9 +612,6 @@
 	#undef RTL8723F_SUPPORT
 	#define RTL8723F_SUPPORT				1
 
-	/* Use HALMAC architecture, necessary for 8723F */
-	#define RTW_HALMAC
-
 	/*#define DBG_LA_MODE*/
 
 	#ifndef CONFIG_FW_C2H_PKT

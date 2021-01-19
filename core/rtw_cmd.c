@@ -4519,12 +4519,7 @@ static s32 rtw_mp_cmd_hdl(_adapter *padapter, u8 mp_cmd_id)
 				}
 				rtw_hal_iface_init(padapter);
 			}
-#ifndef RTW_HALMAC
-			rtw_intf_start(padapter);
-#endif /* !RTW_HALMAC */
-#ifdef RTW_HALMAC /*for New IC*/
 			MPT_InitializeAdapter(padapter, 1);
-#endif /* CONFIG_MP_INCLUDED */
 		}
 
 		if (padapter->registrypriv.mp_mode == 0) {
@@ -4576,9 +4571,6 @@ static s32 rtw_mp_cmd_hdl(_adapter *padapter, u8 mp_cmd_id)
 				}
 				rtw_hal_iface_init(padapter);
 			}
-#ifndef RTW_HALMAC
-			rtw_intf_start(padapter);
-#endif /* !RTW_HALMAC */
 		}
 
 		if (padapter->mppriv.mode != MP_OFF) {

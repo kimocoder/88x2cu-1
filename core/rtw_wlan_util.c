@@ -3488,21 +3488,6 @@ void update_wireless_mode(_adapter *padapter)
 	pmlmeext->cur_wireless_mode = network_type & padapter->registrypriv.wireless_mode;
 	/* RTW_INFO("network_type=%02x, padapter->registrypriv.wireless_mode=%02x\n", network_type, padapter->registrypriv.wireless_mode); */
 
-#ifndef RTW_HALMAC
-	/* HALMAC IC do not set HW_VAR_RESP_SIFS here */
-#if 0
-	if ((pmlmeext->cur_wireless_mode == WIRELESS_11G) ||
-	    (pmlmeext->cur_wireless_mode == WIRELESS_11BG)) /* WIRELESS_MODE_G) */
-		SIFS_Timer = 0x0a0a;/* CCK */
-	else
-		SIFS_Timer = 0x0e0e;/* pHalData->SifsTime; //OFDM */
-#endif
-
-	SIFS_Timer = 0x0a0a0808; /* 0x0808->for CCK, 0x0a0a->for OFDM
-                              * change this value if having IOT issues. */
-
-	rtw_hal_set_hwreg(padapter, HW_VAR_RESP_SIFS, (u8 *)&SIFS_Timer);
-#endif
 
 	rtw_hal_set_hwreg(padapter, HW_VAR_WIRELESS_MODE, (u8 *)&(pmlmeext->cur_wireless_mode));
 

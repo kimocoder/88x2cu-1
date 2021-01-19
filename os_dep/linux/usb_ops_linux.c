@@ -303,20 +303,12 @@ unsigned int bulkid2pipe(struct dvobj_priv *pdvobj, u32 addr, u8 bulk_out)
 	else if (addr == RECV_INT_IN_ADDR)
 		pipe = usb_rcvintpipe(pusbd, pusb_data->RtInPipe[1]);
 
-#ifdef RTW_HALMAC
          /* halmac already translate queue id to bulk out id (addr 0~3) */
 		 /* 8814BU bulk out id range is 0~6 */
         else if (addr < MAX_BULKOUT_NUM) {
                 ep_num = pusb_data->RtOutPipe[addr];
                 pipe = usb_sndbulkpipe(pusbd, ep_num);
         }
-#else
-        else if (addr < HW_QUEUE_ENTRY) {
-                ep_num = pdvobj->Queue2Pipe[addr];
-                pipe = usb_sndbulkpipe(pusbd, ep_num);
-        }
-#endif
-
 
 	return pipe;
 }
@@ -616,11 +608,7 @@ u32 rtw_usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 len, u8 *wmem)
 	purb = xmiturb->urb;
 
 	/* translate DMA FIFO addr to pipehandle */
-#ifdef RTW_HALMAC
 	pipe = bulkid2pipe(pdvobj, pxmitbuf->bulkout_id, _TRUE);
-#else
-	pipe = bulkid2pipe(pdvobj, addr, _TRUE);
-#endif
 
 #ifdef CONFIG_REDUCE_USB_TX_INT
 	if ((pxmitpriv->free_xmitbuf_cnt % NR_XMITBUFF == 0)

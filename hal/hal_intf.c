@@ -521,9 +521,7 @@ uint rtw_hal_iface_init(_adapter *adapter)
 	uint status = _SUCCESS;
 
 	rtw_hal_set_hwreg(adapter, HW_VAR_MAC_ADDR, adapter_mac_addr(adapter));
-	#ifdef RTW_HALMAC
 	rtw_hal_hw_port_enable(adapter);
-	#endif
 	rtw_sec_restore_wep_key(adapter);
 	rtw_hal_init_opmode(adapter);
 	rtw_hal_start_thread(adapter);
@@ -571,11 +569,9 @@ uint rtk_hal_init(_adapter *padapter)
 		rtw_phydm_tdmadig(padapter, TDMADIG_INIT);
 		#endif/*CONFIG_TDMADIG*/
 		rtw_phydm_dyn_rrsr_en(padapter,padapter->registrypriv.en_dyn_rrsr);
-		#ifdef RTW_HALMAC
 		RTW_INFO("%s: padapter->registrypriv.set_rrsr_value=0x%x\n", __func__,padapter->registrypriv.set_rrsr_value);
 		if(padapter->registrypriv.set_rrsr_value != 0xFFFFFFFF)
 			rtw_phydm_set_rrsr(padapter, padapter->registrypriv.set_rrsr_value, TRUE);
-		#endif
 	} else {
 		rtw_set_hw_init_completed(padapter, _FALSE);
 		RTW_ERR("%s: hal_init fail\n", __func__);
@@ -668,7 +664,6 @@ s32 rtw_hal_fw_dl(_adapter *padapter, u8 wowlan)
 	return ret;
 }
 
-#ifdef RTW_HALMAC
 s32 rtw_hal_fw_mem_dl(_adapter *padapter, enum fw_mem mem)
 {
 	systime dlfw_start_time = rtw_get_current_time();
@@ -685,7 +680,6 @@ s32 rtw_hal_fw_mem_dl(_adapter *padapter, enum fw_mem mem)
 		RTW_INFO("%s dbg_fw_mem_dl_error_cnt:%d\n", __func__, pdbgpriv->dbg_fw_mem_dl_error_cnt);
 	return rst;
 }
-#endif
 
 #if defined(CONFIG_WOWLAN) || defined(CONFIG_AP_WOWLAN)
 void rtw_hal_clear_interrupt(_adapter *padapter)
@@ -1316,37 +1310,6 @@ s32 c2h_handler(_adapter *adapter, u8 id, u8 seq, u8 plen, u8 *payload)
 	return ret;
 }
 
-#ifndef RTW_HALMAC
-s32 rtw_hal_c2h_handler(_adapter *adapter, u8 id, u8 seq, u8 plen, u8 *payload)
-{
-	s32 ret = _FAIL;
-
-	ret = adapter->hal_func.c2h_handler(adapter, id, seq, plen, payload);
-	if (ret != _SUCCESS)
-		ret = c2h_handler(adapter, id, seq, plen, payload);
-
-	return ret;
-}
-
-s32 rtw_hal_c2h_id_handle_directly(_adapter *adapter, u8 id, u8 seq, u8 plen, u8 *payload)
-{
-	switch (id) {
-	case C2H_CCX_TX_RPT:
-	case C2H_BT_MP_INFO:
-	case C2H_FW_CHNL_SWITCH_COMPLETE:
-	case C2H_IQK_FINISH:
-	case C2H_MCC:
-	case C2H_BCN_EARLY_RPT:
-	case C2H_AP_REQ_TXRPT:
-	case C2H_SPC_STAT:
-	case C2H_SET_TXPWR_FINISH:
-		return _TRUE;
-	default:
-		return _FALSE;
-	}
-}
-#endif /* !RTW_HALMAC */
-
 s32 rtw_hal_is_disable_sw_channel_plan(PADAPTER padapter)
 {
 	return GET_HAL_DATA(padapter)->bDisableSWChannelPlan;
@@ -1833,9 +1796,7 @@ u8 rtw_hal_get_txbuff_rsvd_page_num(_adapter *adapter, bool wowlan)
 	if (adapter->hal_func.hal_get_tx_buff_rsvd_page_num) {
 		num = adapter->hal_func.hal_get_tx_buff_rsvd_page_num(adapter, wowlan);
 	} else {
-#ifdef RTW_HALMAC
 		num = GET_HAL_DATA(adapter)->drv_rsvd_page_number;
-#endif /* RTW_HALMAC */
 	}
 
 	return num;
@@ -1929,7 +1890,6 @@ s8 rtw_hal_get_txpwr_target_extra_bias(_adapter *adapter, enum rf_path rfpath
 	return val;
 }
 
-#ifdef RTW_HALMAC
 /*
  * Description:
  *	Initialize MAC registers
@@ -1955,7 +1915,6 @@ u8 rtw_hal_init_phy(PADAPTER adapter)
 {
 	return adapter->hal_func.init_phy(adapter);
 }
-#endif /* RTW_HALMAC */
 
 #ifdef CONFIG_RFKILL_POLL
 bool rtw_hal_rfkill_poll(_adapter *adapter, u8 *valid)
@@ -2163,17 +2122,10 @@ u8 rtw_hal_ops_check(_adapter *padapter)
 		ret = _FAIL;
 	}
 
-#ifdef RTW_HALMAC
 	if (NULL == padapter->hal_func.hal_mac_c2h_handler) {
 		rtw_hal_error_msg("hal_mac_c2h_handler");
 		ret = _FAIL;
 	}
-#elif !defined(CONFIG_RTL8188E)
-	if (NULL == padapter->hal_func.c2h_handler) {
-		rtw_hal_error_msg("c2h_handler");
-		ret = _FAIL;
-	}
-#endif
 
 #if defined(CONFIG_LPS) || defined(CONFIG_WOWLAN) || defined(CONFIG_AP_WOWLAN)
 	if (NULL == padapter->hal_func.fill_fake_txdesc) {
@@ -2181,13 +2133,6 @@ u8 rtw_hal_ops_check(_adapter *padapter)
 		ret = _FAIL;
 	}
 #endif
-
-#ifndef RTW_HALMAC
-	if (NULL == padapter->hal_func.hal_get_tx_buff_rsvd_page_num) {
-		rtw_hal_error_msg("hal_get_tx_buff_rsvd_page_num");
-		ret = _FAIL;
-	}
-#endif /* !RTW_HALMAC */
 
 #if defined(CONFIG_WOWLAN) || defined(CONFIG_AP_WOWLAN)
 #if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
@@ -2256,7 +2201,6 @@ u8 rtw_hal_ops_check(_adapter *padapter)
 	}
 #endif  /* #ifdef DBG_CONFIG_ERROR_DETECT */
 
-#ifdef RTW_HALMAC
 	if (NULL == padapter->hal_func.init_mac_register) {
 		rtw_hal_error_msg("init_mac_register");
 		ret = _FAIL;
@@ -2265,7 +2209,6 @@ u8 rtw_hal_ops_check(_adapter *padapter)
 		rtw_hal_error_msg("init_phy");
 		ret = _FAIL;
 	}
-#endif /* RTW_HALMAC */
 
 #ifdef CONFIG_RFKILL_POLL
 	if (padapter->hal_func.hal_radio_onoff_check == NULL) {

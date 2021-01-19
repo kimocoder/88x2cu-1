@@ -19,9 +19,7 @@
 
 #include "hal_data.h"
 
-#ifdef RTW_HALMAC
 #include "../../hal/hal_halmac.h"
-#endif
 
 void rtw_dump_fw_info(void *sel, _adapter *adapter)
 {
@@ -1102,29 +1100,11 @@ void rtw_hal_set_hw_macaddr(PADAPTER adapter, u8 *mac_addr)
 	rtw_ps_deny_cancel(adapter, PS_DENY_IOCTL);
 }
 
-#ifdef RTW_HALMAC
 void rtw_hal_hw_port_enable(_adapter *adapter)
 {
-#if 1
 	u8 port_enable = _TRUE;
 
 	rtw_hal_set_hwreg(adapter, HW_VAR_PORT_CFG, &port_enable);
-#else
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-	struct rtw_halmac_bcn_ctrl bcn_ctrl;
-
-	_rtw_memset(&bcn_ctrl, 0, sizeof(struct rtw_halmac_bcn_ctrl));
-	bcn_ctrl.enable_bcn = 1;
-	bcn_ctrl.rx_bssid_fit = 1;
-	bcn_ctrl.rxbcn_rpt = 1;
-
-	/*rtw_halmac_get_bcn_ctrl(struct dvobj_priv *d, enum phl_hw_port hwport,
-				struct rtw_halmac_bcn_ctrl *bcn_ctrl)*/
-	if (rtw_halmac_set_bcn_ctrl(dvobj, get_hw_port(adapter), &bcn_ctrl) == -1) {
-		RTW_ERR(ADPT_FMT" - hw port(%d) enable fail!!\n", ADPT_ARG(adapter), get_hw_port(adapter));
-		rtw_warn_on(1);
-	}
-#endif
 }
 void rtw_hal_hw_port_disable(_adapter *adapter)
 {
@@ -1149,7 +1129,6 @@ void rtw_restore_hw_port_cfg(_adapter *adapter)
 	}
 #endif
 }
-#endif
 
 void rtw_mi_set_mac_addr(_adapter *adapter)
 {
@@ -1250,78 +1229,12 @@ exit:
 #endif
 void rtw_hal_c2h_pkt_pre_hdl(_adapter *adapter, u8 *buf, u16 len)
 {
-#ifdef RTW_HALMAC
 	/* TODO: extract hal_mac IC's code here*/
-#else
-	u8 parse_fail = 0;
-	u8 hdl_here = 0;
-	s32 ret = _FAIL;
-	u8 id, seq, plen;
-	u8 *payload;
-
-	if (rtw_hal_c2h_pkt_hdr_parse(adapter, buf, len, &id, &seq, &plen, &payload) != _SUCCESS) {
-		parse_fail = 1;
-		goto exit;
-	}
-
-	hdl_here = rtw_hal_c2h_id_handle_directly(adapter, id, seq, plen, payload) == _TRUE ? 1 : 0;
-	if (hdl_here) 
-		ret = rtw_hal_c2h_handler(adapter, id, seq, plen, payload);
-	else
-		ret = rtw_c2h_packet_wk_cmd(adapter, buf, len);
-
-exit:
-	if (parse_fail)
-		RTW_ERR("%s parse fail, buf=%p, len=:%u\n", __func__, buf, len);
-	else if (ret != _SUCCESS || DBG_C2H_PKT_PRE_HDL > 0) {
-		RTW_PRINT("%s: id=0x%02x, seq=%u, plen=%u, %s %s\n", __func__, id, seq, plen
-			, hdl_here ? "handle" : "enqueue"
-			, ret == _SUCCESS ? "ok" : "fail"
-		);
-		if (DBG_C2H_PKT_PRE_HDL >= 2)
-			RTW_PRINT_DUMP("dump: ", buf, len);
-	}
-#endif
 }
 
 void rtw_hal_c2h_pkt_hdl(_adapter *adapter, u8 *buf, u16 len)
 {
-#ifdef RTW_HALMAC
 	adapter->hal_func.hal_mac_c2h_handler(adapter, buf, len);
-#else
-	u8 parse_fail = 0;
-	u8 bypass = 0;
-	s32 ret = _FAIL;
-	u8 id, seq, plen;
-	u8 *payload;
-
-	if (rtw_hal_c2h_pkt_hdr_parse(adapter, buf, len, &id, &seq, &plen, &payload) != _SUCCESS) {
-		parse_fail = 1;
-		goto exit;
-	}
-
-#ifdef CONFIG_WOWLAN
-	if (adapter_to_pwrctl(adapter)->wowlan_mode == _TRUE) {
-		bypass = 1;
-		ret = _SUCCESS;
-		goto exit;
-	}
-#endif
-
-	ret = rtw_hal_c2h_handler(adapter, id, seq, plen, payload);
-
-exit:
-	if (parse_fail)
-		RTW_ERR("%s parse fail, buf=%p, len=:%u\n", __func__, buf, len);
-	else if (ret != _SUCCESS || bypass || DBG_C2H_PKT_HDL > 0) {
-		RTW_PRINT("%s: id=0x%02x, seq=%u, plen=%u, %s %s\n", __func__, id, seq, plen
-			, !bypass ? "handle" : "bypass"
-			, ret == _SUCCESS ? "ok" : "fail"
-		);
-		if (DBG_C2H_PKT_HDL >= 2)
-			RTW_PRINT_DUMP("dump: ", buf, len);
-	}
-#endif
 }
 #endif /* CONFIG_FW_C2H_PKT */
 
@@ -2191,40 +2104,8 @@ static u32 hw_bcn_ctrl_addr(_adapter *adapter, u8 hw_port)
 
 static void rtw_hal_get_msr(_adapter *adapter, u8 *net_type)
 {
-#ifdef RTW_HALMAC
 	rtw_halmac_get_network_type(adapter_to_dvobj(adapter),
 				adapter->hw_port, net_type);
-#else /* !RTW_HALMAC */
-	switch (adapter->hw_port) {
-	case HW_PORT0:
-		/*REG_CR - BIT[17:16]-Network Type for port 1*/
-		*net_type = rtw_read8(adapter, MSR) & 0x03;
-		break;
-	case HW_PORT1:
-		/*REG_CR - BIT[19:18]-Network Type for port 1*/
-		*net_type = (rtw_read8(adapter, MSR) & 0x0C) >> 2;
-		break;
-#if defined(CONFIG_RTL8814A)
-	case HW_PORT2:
-		/*REG_CR_EXT- BIT[1:0]-Network Type for port 2*/
-		*net_type = rtw_read8(adapter, MSR1) & 0x03;
-		break;
-	case HW_PORT3:
-		/*REG_CR_EXT- BIT[3:2]-Network Type for port 3*/
-		*net_type = (rtw_read8(adapter, MSR1) & 0x0C) >> 2;
-		break;
-	case HW_PORT4:
-		/*REG_CR_EXT- BIT[5:4]-Network Type for port 4*/
-		*net_type = (rtw_read8(adapter, MSR1) & 0x30) >> 4;
-		break;
-#endif /*#if defined(CONFIG_RTL8814A)*/
-	default:
-		RTW_INFO("[WARN] "ADPT_FMT"- invalid hw port -%d\n",
-			 ADPT_ARG(adapter), adapter->hw_port);
-		rtw_warn_on(1);
-		break;
-	}
-#endif /* !RTW_HALMAC */
 }
 
 #if defined(CONFIG_MI_WITH_MBSSID_CAM) && defined(CONFIG_MBSSID_CAM) /*For 2 hw ports - 88E/92E/8812/8821/8723B*/
@@ -2239,58 +2120,11 @@ static u8 rtw_hal_net_type_decision(_adapter *adapter, u8 net_type)
 #endif
 static void rtw_hal_set_msr(_adapter *adapter, u8 net_type)
 {
-#ifdef RTW_HALMAC
 	#if defined(CONFIG_MI_WITH_MBSSID_CAM) && defined(CONFIG_MBSSID_CAM)
 	net_type = rtw_hal_net_type_decision(adapter, net_type);
 	#endif
 	rtw_halmac_set_network_type(adapter_to_dvobj(adapter),
 				adapter->hw_port, net_type);
-#else /* !RTW_HALMAC */
-	u8 val8 = 0;
-
-	switch (adapter->hw_port) {
-	case HW_PORT0:
-		#if defined(CONFIG_MI_WITH_MBSSID_CAM) && defined(CONFIG_MBSSID_CAM)
-		net_type = rtw_hal_net_type_decision(adapter, net_type);
-		#endif
-		/*REG_CR - BIT[17:16]-Network Type for port 0*/
-		val8 = rtw_read8(adapter, MSR) & 0x0C;
-		val8 |= net_type;
-		rtw_write8(adapter, MSR, val8);
-		break;
-	case HW_PORT1:
-		/*REG_CR - BIT[19:18]-Network Type for port 1*/
-		val8 = rtw_read8(adapter, MSR) & 0x03;
-		val8 |= net_type << 2;
-		rtw_write8(adapter, MSR, val8);
-		break;
-#if defined(CONFIG_RTL8814A)
-	case HW_PORT2:
-		/*REG_CR_EXT- BIT[1:0]-Network Type for port 2*/
-		val8 = rtw_read8(adapter, MSR1) & 0xFC;
-		val8 |= net_type;
-		rtw_write8(adapter, MSR1, val8);
-		break;
-	case HW_PORT3:
-		/*REG_CR_EXT- BIT[3:2]-Network Type for port 3*/
-		val8 = rtw_read8(adapter, MSR1) & 0xF3;
-		val8 |= net_type << 2;
-		rtw_write8(adapter, MSR1, val8);
-		break;
-	case HW_PORT4:
-		/*REG_CR_EXT- BIT[5:4]-Network Type for port 4*/
-		val8 = rtw_read8(adapter, MSR1) & 0xCF;
-		val8 |= net_type << 4;
-		rtw_write8(adapter, MSR1, val8);
-		break;
-#endif /* CONFIG_RTL8814A */
-	default:
-		RTW_INFO("[WARN] "ADPT_FMT"- invalid hw port -%d\n",
-			 ADPT_ARG(adapter), adapter->hw_port);
-		rtw_warn_on(1);
-		break;
-	}
-#endif /* !RTW_HALMAC */
 }
 
 #ifndef SEC_CAM_ACCESS_TIMEOUT_MS
@@ -3225,28 +3059,6 @@ u16 rtw_hal_bcn_interval_adjust(_adapter *adapter, u16 bcn_interval)
 
 #else
 
-#ifndef RTW_HALMAC
-static u32 _get_macaddr_reg(enum phl_hw_port hwport)
-{
-	u32 reg_macaddr = REG_MACID;
-
-	#ifdef CONFIG_CONCURRENT_MODE
-	if (hwport == HW_PORT1)
-		reg_macaddr = REG_MACID1;
-	#if defined(CONFIG_RTL8814A)
-	else if (hwport == HW_PORT2)
-		reg_macaddr = REG_MACID2;
-	else if (hwport == HW_PORT3)
-		reg_macaddr = REG_MACID3;
-	else if (hwport == HW_PORT4)
-		reg_macaddr = REG_MACID4;
-	#endif /*CONFIG_RTL8814A*/
-	#endif /*CONFIG_CONCURRENT_MODE*/
-
-	return reg_macaddr;
-}
-#endif /*!RTW_HALMAC*/
-
 static void rtw_hal_set_macaddr_port(_adapter *adapter, u8 *mac_addr)
 {
 	enum phl_hw_port hwport;
@@ -3258,17 +3070,7 @@ static void rtw_hal_set_macaddr_port(_adapter *adapter, u8 *mac_addr)
 	RTW_INFO("%s "ADPT_FMT"- hw port(%d) mac_addr ="MAC_FMT"\n",  __func__,
 		 ADPT_ARG(adapter), hwport, MAC_ARG(mac_addr));
 
-#ifdef RTW_HALMAC /*8822B ~ 8814B*/
 	rtw_halmac_set_mac_address(adapter_to_dvobj(adapter), hwport, mac_addr);
-#else /* !RTW_HALMAC */
-	{
-		u8 idx = 0;
-		u32 reg_macaddr = _get_macaddr_reg(hwport);
-
-		for (idx = 0; idx < ETH_ALEN; idx++)
-			rtw_write8(GET_PRIMARY_ADAPTER(adapter), (reg_macaddr + idx), mac_addr[idx]);
-	}
-#endif /* !RTW_HALMAC */
 }
 
 static void rtw_hal_get_macaddr_port(_adapter *adapter, u8 *mac_addr)
@@ -3280,57 +3082,18 @@ static void rtw_hal_get_macaddr_port(_adapter *adapter, u8 *mac_addr)
 	hwport = get_hw_port(adapter);
 
 	_rtw_memset(mac_addr, 0, ETH_ALEN);
-#ifdef RTW_HALMAC /*8822B ~ 8814B*/
 	rtw_halmac_get_mac_address(adapter_to_dvobj(adapter), hwport, mac_addr);
-#else /* !RTW_HALMAC */
-	{
-		u8 idx = 0;
-		u32 reg_macaddr = _get_macaddr_reg(hwport);
-
-		for (idx = 0; idx < ETH_ALEN; idx++)
-			mac_addr[idx] = rtw_read8(GET_PRIMARY_ADAPTER(adapter), (reg_macaddr + idx));
-	}
-#endif /* !RTW_HALMAC */
 
 	RTW_DBG("%s "ADPT_FMT"- hw port(%d) mac_addr ="MAC_FMT"\n",  __func__,
 		 ADPT_ARG(adapter), hwport, MAC_ARG(mac_addr));
 }
 #endif/*#ifdef CONFIG_MI_WITH_MBSSID_CAM*/
 
-#ifndef RTW_HALMAC
-static u32 _get_bssid_reg(enum phl_hw_port hw_port)
-{
-	u32 reg_bssid = REG_BSSID;
-
-	#ifdef CONFIG_CONCURRENT_MODE
-	if (hw_port == HW_PORT1)
-		reg_bssid = REG_BSSID1;
-	#if defined(CONFIG_RTL8814A)
-	else if (hw_port == HW_PORT2)
-		reg_bssid = REG_BSSID2;
-	else if (hw_port == HW_PORT3)
-		reg_bssid = REG_BSSID3;
-	else if (hw_port == HW_PORT4)
-		reg_bssid = REG_BSSID4;
-	#endif /*CONFIG_RTL8814A*/
-	#endif /*CONFIG_CONCURRENT_MODE*/
-
-	return reg_bssid;
-}
-#endif /*!RTW_HALMAC*/
 static void rtw_hal_set_bssid(_adapter *adapter, u8 *val)
 {
 	enum phl_hw_port hw_port = rtw_hal_get_port(adapter);
-#ifdef RTW_HALMAC
 
 	rtw_halmac_set_bssid(adapter_to_dvobj(adapter), hw_port, val);
-#else /* !RTW_HALMAC */
-	u8 idx = 0;
-	u32 reg_bssid = _get_bssid_reg(hw_port);
-
-	for (idx = 0 ; idx < ETH_ALEN; idx++)
-		rtw_write8(adapter, (reg_bssid + idx), val[idx]);
-#endif /* !RTW_HALMAC */
 
 	RTW_INFO("%s "ADPT_FMT"- hw port -%d BSSID: "MAC_FMT"\n",
 		__func__, ADPT_ARG(adapter), hw_port, MAC_ARG(val));
@@ -3746,11 +3509,7 @@ static void hw_var_set_bcn_interval(_adapter *adapter, u16 interval)
 	interval = rtw_hal_bcn_interval_adjust(adapter, interval);
 #endif
 
-#ifdef RTW_HALMAC
 	rtw_halmac_set_bcn_interval(adapter_to_dvobj(adapter), adapter->hw_port, interval);
-#else
-	rtw_write16(adapter, REG_MBSSID_BCN_SPACE, interval);
-#endif
 
 #ifdef CONFIG_INTERRUPT_BASED_TXBCN_EARLY_INT
 	{
@@ -4430,7 +4189,6 @@ exit :
 #endif /*CONFIG_FW_MULTI_PORT_SUPPORT*/
 
 #ifdef CONFIG_P2P_PS
-#ifdef RTW_HALMAC
 void rtw_set_p2p_ps_offload_cmd(_adapter *adapter, u8 p2p_ps_state)
 {
 	PHAL_DATA_TYPE hal = GET_HAL_DATA(adapter);
@@ -4559,7 +4317,6 @@ void rtw_set_p2p_ps_offload_cmd(_adapter *adapter, u8 p2p_ps_state)
 	_rtw_memcpy(&hal->p2p_ps_offload , (&p2p_ps_para) , sizeof(hal->p2p_ps_offload));
 
 }
-#endif /* RTW_HALMAC */
 #endif /* CONFIG_P2P */
 
 #if defined(CONFIG_RTL8822C) && defined(CONFIG_SUPPORT_DYNAMIC_TXPWR)
@@ -4903,22 +4660,6 @@ void rtw_hal_set_FwAoacRsvdPage_cmd(PADAPTER padapter, PRSVDPAGE_LOC rsvdpageloc
 				   u1H2CAoacRsvdPageParm);
 		pwrpriv->wowlan_aoac_rpt_loc = rsvdpageloc->LocAOACReport;
 	}
-#if defined(CONFIG_PNO_SUPPORT) && !defined(RTW_HALMAC)
-	else {
-
-		if (!pwrpriv->wowlan_in_resume) {
-			RTW_INFO("NLO_INFO=%d\n", rsvdpageloc->LocPNOInfo);
-			_rtw_memset(&u1H2CAoacRsvdPageParm, 0,
-				    sizeof(u1H2CAoacRsvdPageParm));
-			SET_H2CCMD_AOAC_RSVDPAGE_LOC_NLO_INFO(u1H2CAoacRsvdPageParm,
-						      rsvdpageloc->LocPNOInfo);
-			ret = rtw_hal_fill_h2c_cmd(padapter,
-						   H2C_AOAC_RSVDPAGE3,
-						   H2C_AOAC_RSVDPAGE_LOC_LEN,
-						   u1H2CAoacRsvdPageParm);
-		}
-	}
-#endif /* defined(CONFIG_PNO_SUPPORT) && !defined(RTW_HALMAC) */
 #endif /* CONFIG_WOWLAN */
 }
 
@@ -4970,31 +4711,10 @@ int rtw_hal_get_rsvd_page(_adapter *adapter, u32 page_offset,
 			__func__, buffer_size, size);
 		return rst;
 	}
-#ifdef RTW_HALMAC
 	if (rtw_halmac_dump_fifo(adapter_to_dvobj(adapter), 2, addr, size, buffer) < 0)
 		rst = _FALSE;
 	else
 		rst = _TRUE;
-#else
-	txbndy = rtw_read8(adapter, REG_TDECTRL + 1);
-
-	offset = (txbndy + page_offset) * page_size / 8;
-	count = (buffer_size / 8) + 1;
-
-	rtw_write8(adapter, REG_PKT_BUFF_ACCESS_CTRL, 0x69);
-
-	for (i = 0 ; i < count ; i++) {
-		rtw_write32(adapter, REG_PKTBUF_DBG_CTRL, offset + i);
-		data_low = rtw_read32(adapter, REG_PKTBUF_DBG_DATA_L);
-		data_high = rtw_read32(adapter, REG_PKTBUF_DBG_DATA_H);
-		_rtw_memcpy(buffer + (i * 8),
-			&data_low, sizeof(data_low));
-		_rtw_memcpy(buffer + ((i * 8) + 4),
-			&data_high, sizeof(data_high));
-	}
-	rtw_write8(adapter, REG_PKT_BUFF_ACCESS_CTRL, 0x0);
-	rst = _TRUE;
-#endif /*RTW_HALMAC*/
 
 #ifdef DBG_GET_RSVD_PAGE
 	RTW_INFO("%s [page_offset:%d , page_num:%d][start_addr:0x%04x , size:%d]\n",
@@ -5174,39 +4894,6 @@ static u8 rtw_hal_pause_rx_dma(_adapter *adapter)
 }
 
 #if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-#ifndef RTW_HALMAC
-static u8 rtw_hal_enable_cpwm2(_adapter *adapter)
-{
-	u8 ret = 0;
-	int res = 0;
-	u32 tmp = 0;
-#ifdef CONFIG_GPIO_WAKEUP
-	return _SUCCESS;
-#else
-	RTW_PRINT("%s\n", __func__);
-
-	res = sdio_local_read(adapter, SDIO_REG_HIMR, 4, (u8 *)&tmp);
-	if (!res)
-		RTW_INFO("read SDIO_REG_HIMR: 0x%08x\n", tmp);
-	else
-		RTW_INFO("sdio_local_read fail\n");
-
-	tmp = SDIO_HIMR_CPWM2_MSK;
-
-	res = sdio_local_write(adapter, SDIO_REG_HIMR, 4, (u8 *)&tmp);
-
-	if (!res) {
-		res = sdio_local_read(adapter, SDIO_REG_HIMR, 4, (u8 *)&tmp);
-		RTW_INFO("read again SDIO_REG_HIMR: 0x%08x\n", tmp);
-		ret = _SUCCESS;
-	} else {
-		RTW_INFO("sdio_local_write fail\n");
-		ret = _FAIL;
-	}
-	return ret;
-#endif /* CONFIG_CPIO_WAKEUP */
-}
-#endif
 #endif /* CONFIG_SDIO_HCI, CONFIG_GSPI_HCI */
 #endif /* CONFIG_WOWLAN || CONFIG_AP_WOWLAN */
 
@@ -5300,31 +4987,6 @@ static u8 rtw_hal_check_wow_ctrl(_adapter *adapter, u8 chk_type)
 	return res;
 }
 
-#if defined(CONFIG_PNO_SUPPORT) && !defined(RTW_HALMAC)
-static u8 rtw_hal_check_pno_enabled(_adapter *adapter)
-{
-	struct pwrctrl_priv *ppwrpriv = adapter_to_pwrctl(adapter);
-	u8 res = 0, count = 0;
-	u8 ret = _FALSE;
-
-	if (ppwrpriv->wowlan_pno_enable && ppwrpriv->wowlan_in_resume == _FALSE) {
-		res = rtw_read8(adapter, REG_PNO_STATUS);
-		while (!(res & BIT(7)) && count < 25) {
-			RTW_INFO("[%d] cmd: 0x81 REG_PNO_STATUS: 0x%02x\n",
-				 count, res);
-			res = rtw_read8(adapter, REG_PNO_STATUS);
-			count++;
-			rtw_msleep_os(2);
-		}
-		if (res & BIT(7))
-			ret = _TRUE;
-		else
-			ret = _FALSE;
-		RTW_INFO("cmd: 0x81 REG_PNO_STATUS: ret(%d)\n", ret);
-	}
-	return ret;
-}
-#endif
 
 static void rtw_hal_backup_rate(_adapter *adapter)
 {
@@ -6075,28 +5737,6 @@ static u8 rtw_hal_set_scan_offload_info_cmd(_adapter *adapter,
 {
 	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(adapter);
 	u8 ret = _FAIL;
-#ifndef RTW_HALMAC
-	u8 u1H2CScanOffloadInfoParm[H2C_SCAN_OFFLOAD_CTRL_LEN] = {0};
-
-	RTW_INFO("%s: loc_probe_packet:%d, loc_scan_info: %d loc_ssid_info:%d\n",
-		 __func__, rsvdpageloc->LocProbePacket,
-		 rsvdpageloc->LocScanInfo, rsvdpageloc->LocSSIDInfo);
-
-	SET_H2CCMD_AOAC_NLO_FUN_EN(u1H2CScanOffloadInfoParm, enable);
-	SET_H2CCMD_AOAC_NLO_IPS_EN(u1H2CScanOffloadInfoParm, enable);
-	SET_H2CCMD_AOAC_RSVDPAGE_LOC_SCAN_INFO(u1H2CScanOffloadInfoParm,
-					       rsvdpageloc->LocScanInfo);
-	SET_H2CCMD_AOAC_RSVDPAGE_LOC_PROBE_PACKET(u1H2CScanOffloadInfoParm,
-			rsvdpageloc->LocProbePacket);
-	/*
-		SET_H2CCMD_AOAC_RSVDPAGE_LOC_SSID_INFO(u1H2CScanOffloadInfoParm,
-				rsvdpageloc->LocSSIDInfo);
-	*/
-	ret = rtw_hal_fill_h2c_cmd(adapter,
-				   H2C_D0_SCAN_OFFLOAD_INFO,
-				   H2C_SCAN_OFFLOAD_CTRL_LEN,
-				   u1H2CScanOffloadInfoParm);
-#else
 	u8 u1H2CNLOINFOInfoParm[H2C_NLO_INFO_LEN] = {0};
 
 	RTW_INFO("%s: loc_nlo_info: %d enable %d\n", __func__,
@@ -6115,7 +5755,6 @@ static u8 rtw_hal_set_scan_offload_info_cmd(_adapter *adapter,
 		H2C_NLO_INFO,
 		H2C_NLO_INFO_LEN,
 		u1H2CNLOINFOInfoParm);
-#endif
 	return ret;
 }
 #endif /* CONFIG_PNO_SUPPORT */
@@ -6162,9 +5801,6 @@ void rtw_hal_set_fw_wow_related_cmd(_adapter *padapter, u8 enable)
 				rtw_hal_set_keep_alive_cmd(padapter, enable, pkt_type);
                         }
 		}
-#if defined(CONFIG_PNO_SUPPORT) && !defined(RTW_HALMAC)
-		rtw_hal_check_pno_enabled(padapter);
-#endif /* defined(CONFIG_PNO_SUPPORT) && !defined(RTW_HALMAC) */
 #ifdef CONFIG_WAR_OFFLOAD
 		rtw_hal_set_war_offload_ctrl_cmd(padapter, enable);
 #endif /* CONFIG_WAR_OFFLOAD */
@@ -8700,21 +8336,9 @@ static void rtw_hal_construct_PNO_info(_adapter *padapter,
 	_rtw_memcpy(pPnoInfoPkt, &pwrctl->pnlo_info->hidden_ssid_num, 1);
 
 	pPnoInfoPkt += 3;
-#ifdef RTW_HALMAC
 	/* Pattern check for 3081 ICs */
 	_rtw_memset(pPnoInfoPkt, 0xA5A5A5A5, 4);
 	pPnoInfoPkt += 12;
-#else
-	_rtw_memcpy(pPnoInfoPkt, &pwrctl->pnlo_info->fast_scan_period, 1);
-
-	pPnoInfoPkt += 4;
-	_rtw_memcpy(pPnoInfoPkt, &pwrctl->pnlo_info->fast_scan_iterations, 4);
-
-	pPnoInfoPkt += 4;
-	_rtw_memcpy(pPnoInfoPkt, &pwrctl->pnlo_info->slow_scan_period, 4);
-
-	pPnoInfoPkt += 4;
-#endif
 	_rtw_memcpy(pPnoInfoPkt, &pwrctl->pnlo_info->ssid_length, MAX_PNO_LIST_COUNT);
 
 	pPnoInfoPkt += MAX_PNO_LIST_COUNT;
@@ -8728,15 +8352,9 @@ static void rtw_hal_construct_PNO_info(_adapter *padapter,
 
 	pPnoInfoPkt += MAX_HIDDEN_AP;
 
-#ifdef RTW_HALMAC
 	/* SSID is located at 72th byte in NLO info Page for ICs that have HAMMAC */
 	*pLength += 72;
 	pPnoInfoPkt = pframe + 72;
-#else
-	/* SSID is located at 128th Byte in NLO info Page for ICs that don't have HAMMAC */
-	*pLength += 128;
-	pPnoInfoPkt = pframe + 128;
-#endif
 	for (i = 0; i < pwrctl->pnlo_info->ssid_num ; i++) {
 		_rtw_memcpy(pPnoInfoPkt, &pwrctl->pno_ssid_list->node[i].SSID,
 			    pwrctl->pnlo_info->ssid_length[i]);
@@ -8745,81 +8363,6 @@ static void rtw_hal_construct_PNO_info(_adapter *padapter,
 	}
 }
 
-#ifndef RTW_HALMAC
-static void rtw_hal_construct_ssid_list(_adapter *padapter,
-					u8 *pframe, u32 *pLength)
-{
-	struct pwrctrl_priv *pwrctl = adapter_to_pwrctl(padapter);
-	u8 *pSSIDListPkt = pframe;
-	int i;
-
-	pSSIDListPkt = (u8 *)(pframe + *pLength);
-
-	for (i = 0; i < pwrctl->pnlo_info->ssid_num ; i++) {
-		_rtw_memcpy(pSSIDListPkt, &pwrctl->pno_ssid_list->node[i].SSID,
-			    pwrctl->pnlo_info->ssid_length[i]);
-
-		*pLength += WLAN_SSID_MAXLEN;
-		pSSIDListPkt += WLAN_SSID_MAXLEN;
-	}
-}
-
-static void rtw_hal_construct_scan_info(_adapter *padapter,
-					u8 *pframe, u32 *pLength)
-{
-	struct pwrctrl_priv *pwrctl = adapter_to_pwrctl(padapter);
-	u8 *pScanInfoPkt = pframe;
-	int i;
-
-	pScanInfoPkt = (u8 *)(pframe + *pLength);
-
-	_rtw_memcpy(pScanInfoPkt, &pwrctl->pscan_info->channel_num, 1);
-
-	*pLength += 1;
-	pScanInfoPkt += 1;
-	_rtw_memcpy(pScanInfoPkt, &pwrctl->pscan_info->orig_ch, 1);
-
-
-	*pLength += 1;
-	pScanInfoPkt += 1;
-	_rtw_memcpy(pScanInfoPkt, &pwrctl->pscan_info->orig_bw, 1);
-
-
-	*pLength += 1;
-	pScanInfoPkt += 1;
-	_rtw_memcpy(pScanInfoPkt, &pwrctl->pscan_info->orig_40_offset, 1);
-
-	*pLength += 1;
-	pScanInfoPkt += 1;
-	_rtw_memcpy(pScanInfoPkt, &pwrctl->pscan_info->orig_80_offset, 1);
-
-	*pLength += 1;
-	pScanInfoPkt += 1;
-	_rtw_memcpy(pScanInfoPkt, &pwrctl->pscan_info->periodScan, 1);
-
-	*pLength += 1;
-	pScanInfoPkt += 1;
-	_rtw_memcpy(pScanInfoPkt, &pwrctl->pscan_info->period_scan_time, 1);
-
-	*pLength += 1;
-	pScanInfoPkt += 1;
-	_rtw_memcpy(pScanInfoPkt, &pwrctl->pscan_info->enableRFE, 1);
-
-	*pLength += 1;
-	pScanInfoPkt += 1;
-	_rtw_memcpy(pScanInfoPkt, &pwrctl->pscan_info->rfe_type, 8);
-
-	*pLength += 8;
-	pScanInfoPkt += 8;
-
-	for (i = 0 ; i < MAX_SCAN_LIST_COUNT ; i++) {
-		_rtw_memcpy(pScanInfoPkt,
-			    &pwrctl->pscan_info->ssid_channel_info[i], 4);
-		*pLength += 4;
-		pScanInfoPkt += 4;
-	}
-}
-#endif /* !RTW_HALMAC */
 #endif /* CONFIG_PNO_SUPPORT */
 
 #ifdef CONFIG_WAR_OFFLOAD
@@ -9742,12 +9285,10 @@ bool rtw_read_from_frame_mask(_adapter *adapter, u8 idx)
 		/* 8723F cannot indirect access tx fifo
 		 * rtw_halmac_dump_fifo(dvobj, fifo_sel, fifo_addr, buf_sz, buf)
 		 */
-		#ifdef RTW_HALMAC
 		rtw_halmac_dump_fifo(adapter_to_dvobj(adapter),
 		2,
 		(pwrctl->pattern_rsvd_page_loc * page_sz) + (idx * WKFMCAM_ADDR_NUM * 4),
 		WKFMCAM_ADDR_NUM*4, (u8*)buffer);
-		#endif
 
 		for (i = 0; i < (WKFMCAM_ADDR_NUM / 2); i++) {
 			RTW_INFO("[%d]: %08x %08x\n", i, *(buffer + i*2), *(buffer + i*2 + 1));
@@ -10493,10 +10034,7 @@ static void rtw_hal_wow_enable(_adapter *adapter)
 	RTW_PRINT("wowlan_wake_reason: 0x%02x\n",
 		  pwrctl->wowlan_wake_reason);
 
-#if defined(RTW_HALMAC) && defined(CONFIG_PNO_SUPPORT)
-	if(pwrctl->wowlan_pno_enable)
-		rtw_halmac_pno_scanoffload(adapter->dvobj, 1);
-#endif
+	// PNO NEO - deleted in mistake
 
 #ifdef CONFIG_GTK_OL_DBG
 	dump_sec_cam(RTW_DBGDUMP, adapter);
@@ -10609,7 +10147,7 @@ static void rtw_hal_wow_disable(_adapter *adapter)
 		else
 			RTW_INFO("%s: psta is null\n", __func__);
 	}
-#if defined(RTW_HALMAC) && defined(CONFIG_PNO_SUPPORT)
+#if defined(CONFIG_PNO_SUPPORT)
 	else {
 		rtw_halmac_pno_scanoffload(adapter->dvobj, 0);
 	}
@@ -11310,44 +10848,6 @@ void rtw_hal_set_wow_fw_rsvd_page(_adapter *adapter, u8 *pframe, u16 index,
 #ifdef CONFIG_PNO_SUPPORT
 		if (pwrctl->wowlan_in_resume == _FALSE &&
 		    pwrctl->pno_inited == _TRUE) {
-#ifndef RTW_HALMAC
-			/* Broadcast Probe Request */
-			rsvd_page_loc->LocProbePacket = *page_num;
-
-			RTW_INFO("loc_probe_req: %d\n",
-				 rsvd_page_loc->LocProbePacket);
-
-			rtw_hal_construct_ProbeReq(
-				adapter,
-				&pframe[index],
-				&ProbeReqLength,
-				NULL);
-
-			rtw_hal_fill_fake_txdesc(adapter,
-						 &pframe[index - tx_desc],
-				 ProbeReqLength, _FALSE, _FALSE, _FALSE);
-
-			CurtPktPageNum =
-				(u8)PageNum(tx_desc + ProbeReqLength, page_size);
-
-			*page_num += CurtPktPageNum;
-
-			index += (CurtPktPageNum * page_size);
-			RSVD_PAGE_CFG("WOW-ProbeReq", CurtPktPageNum, *page_num, 0);
-
-			/* Scan Info Page */
-			rsvd_page_loc->LocScanInfo = *page_num;
-			RTW_INFO("LocScanInfo: %d\n", rsvd_page_loc->LocScanInfo);
-			rtw_hal_construct_scan_info(adapter,
-						    &pframe[index - tx_desc],
-						    &ScanInfoLength);
-
-			CurtPktPageNum = (u8)PageNum(ScanInfoLength, page_size);
-			*page_num += CurtPktPageNum;
-
-			index += (CurtPktPageNum * page_size);
-			RSVD_PAGE_CFG("WOW-ScanInfo", CurtPktPageNum, *page_num, *total_pkt_len);
-#endif
 			/* Hidden SSID Probe Request */
 			ssid_num = pwrctl->pnlo_info->hidden_ssid_num;
 
@@ -13715,17 +13215,7 @@ u8 SetHwReg(_adapter *adapter, u8 variable, u8 *val)
 #ifdef CONFIG_RTS_FULL_BW
 	case HW_VAR_SET_RTS_BW:
 	{
-		#ifdef RTW_HALMAC
 			rtw_halmac_set_rts_full_bw(adapter_to_dvobj(adapter), (*val));
-		#else
-			u8 temp;
-			if(*val)
-				temp = (( rtw_read8(adapter, REG_INIRTS_RATE_SEL)) | BIT5 );
-			else
-				temp = (( rtw_read8(adapter, REG_INIRTS_RATE_SEL)) & (~BIT5));
-			rtw_write8(adapter, REG_INIRTS_RATE_SEL, temp);
-			/*RTW_INFO("HW_VAR_SET_RTS_BW	val=%u REG480=0x%x\n", *val, rtw_read8(adapter, REG_INIRTS_RATE_SEL));*/
-		#endif
 	}
 	break;
 #endif/*CONFIG_RTS_FULL_BW*/
@@ -13853,7 +13343,6 @@ void GetHwReg(_adapter *adapter, u8 variable, u8 *val)
 
 static u32 _get_page_size(struct _ADAPTER *a)
 {
-#ifdef RTW_HALMAC
 	struct dvobj_priv *d;
 	u32 size = 0;
 	int err = 0;
@@ -13867,7 +13356,6 @@ static u32 _get_page_size(struct _ADAPTER *a)
 
 	RTW_WARN(FUNC_ADPT_FMT ": Fail to get Page size!!(err=%d)\n",
 		 FUNC_ADPT_ARG(a), err);
-#endif /* RTW_HALMAC */
 
 	return PAGE_SIZE_128;
 }
@@ -15087,49 +14575,10 @@ void dm_DynamicUsbTxAgg(_adapter *padapter, u8 from_timer)
 	if (!registry_par->dynamic_agg_enable)
 		return;
 
-#ifdef RTW_HALMAC
 	if (IS_HARDWARE_TYPE_8822BU(padapter) || IS_HARDWARE_TYPE_8821CU(padapter) 
 		|| IS_HARDWARE_TYPE_8822CU(padapter) || IS_HARDWARE_TYPE_8814BU(padapter)
 		|| IS_HARDWARE_TYPE_8723FU(padapter))
 		rtw_hal_set_hwreg(padapter, HW_VAR_RXDMA_AGG_PG_TH, NULL);
-#else /* !RTW_HALMAC */
-	if (IS_HARDWARE_TYPE_8821U(padapter)) { /* || IS_HARDWARE_TYPE_8192EU(padapter)) */
-		/* This AGG_PH_TH only for UsbRxAggMode == USB_RX_AGG_USB */
-		if ((pHalData->rxagg_mode == RX_AGG_USB) && (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE)) {
-			if (pdvobjpriv->traffic_stat.cur_tx_tp > 2 && pdvobjpriv->traffic_stat.cur_rx_tp < 30)
-				rtw_write16(padapter , REG_RXDMA_AGG_PG_TH , 0x1010);
-			else if (pdvobjpriv->traffic_stat.last_tx_bytes > 220000 && pdvobjpriv->traffic_stat.cur_rx_tp < 30)
-				rtw_write16(padapter , REG_RXDMA_AGG_PG_TH , 0x1006);
-			else
-				rtw_write16(padapter, REG_RXDMA_AGG_PG_TH, 0x2005); /* dmc agg th 20K */
-
-			/* RTW_INFO("TX_TP=%u, RX_TP=%u\n", pdvobjpriv->traffic_stat.cur_tx_tp, pdvobjpriv->traffic_stat.cur_rx_tp); */
-		}
-	} else if (IS_HARDWARE_TYPE_8812(padapter)) {
-#ifdef CONFIG_CONCURRENT_MODE
-		u8 i;
-		_adapter *iface;
-		u8 bassocaed = _FALSE;
-		struct mlme_ext_priv *mlmeext;
-
-		for (i = 0; i < pdvobjpriv->iface_nums; i++) {
-			iface = pdvobjpriv->padapters[i];
-			mlmeext = &iface->mlmeextpriv;
-			if (rtw_linked_check(iface) == _TRUE) {
-				if (mlmeext->cur_wireless_mode >= cur_wireless_mode)
-					cur_wireless_mode = mlmeext->cur_wireless_mode;
-				bassocaed = _TRUE;
-			}
-		}
-		if (bassocaed)
-#endif
-			rtw_set_usb_agg_by_mode(padapter, cur_wireless_mode);
-#ifdef CONFIG_PLATFORM_NOVATEK_NT72668
-	} else {
-		rtw_set_usb_agg_by_mode(padapter, cur_wireless_mode);
-#endif /* CONFIG_PLATFORM_NOVATEK_NT72668 */
-	}
-#endif /* RTW_HALMAC */
 #endif /* CONFIG_USB_RX_AGGREGATION */
 
 }
@@ -16132,11 +15581,9 @@ void ResumeTxBeacon(_adapter *padapter)
 		rtw_read8(padapter, REG_FWHW_TXQ_CTRL + 2) | BIT(6));
 	#endif
 
-#ifdef RTW_HALMAC
 	/* Add this for driver using HALMAC because driver doesn't have setup time init by self */
 	/* TBTT setup time */
 	rtw_write8(padapter, REG_TBTT_PROHIBIT, TBTT_PROHIBIT_SETUP_TIME);
-#endif
 
 	/* TBTT hold time: 0x540[19:8] */
 	rtw_write8(padapter, REG_TBTT_PROHIBIT + 1, TBTT_PROHIBIT_HOLD_TIME & 0xFF);

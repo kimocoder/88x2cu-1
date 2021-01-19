@@ -51,7 +51,6 @@ enum _EFUSE_DEF_TYPE {
 #define		EFUSE_MAX_BANK_SIZE		512
 
 /*RTL8822B 8821C BT EFUSE Define 1 BANK 128 size logical map 1024*/
-#ifdef RTW_HALMAC
 #define BANK_NUM		1
 #if defined(CONFIG_RTL8723F)
 #define EFUSE_BT_REAL_BANK_CONTENT_LEN		512
@@ -71,7 +70,6 @@ enum _EFUSE_DEF_TYPE {
 #define EFUSE_PROTECT_BYTES_BANK		16
 #endif
 #define AVAILABLE_EFUSE_ADDR(addr)	(addr < EFUSE_BT_REAL_CONTENT_LEN - EFUSE_PROTECT_BYTES_BANK)
-#endif /* #ifdef RTW_HALMAC */
 
 #define EXT_HEADER(header) ((header & 0x1F) == 0x0F)
 #define ALL_WORDS_DISABLED(wde)	((wde & 0x0F) == 0x0F)

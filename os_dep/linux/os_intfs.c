@@ -2192,16 +2192,6 @@ static int _netdev_open(struct net_device *pnetdev)
 			goto netdev_open_error;
 		
 		rtw_led_control(padapter, LED_CTL_NO_LINK);
-		#ifndef RTW_HALMAC
-		status = rtw_mi_start_drv_threads(padapter);
-		if (status == _FAIL) {
-			RTW_ERR(FUNC_NDEV_FMT "Initialize driver thread failed!\n", FUNC_NDEV_ARG(pnetdev));
-			goto netdev_open_error;
-		}
-
-		rtw_intf_start(GET_PRIMARY_ADAPTER(padapter));
-		#endif /* !RTW_HALMAC */
-
 		{
 	#ifdef CONFIG_BT_COEXIST_SOCKET_TRX
 			_adapter *prim_adpt = GET_PRIMARY_ADAPTER(padapter);
@@ -2320,12 +2310,6 @@ int  ips_netdrv_open(_adapter *padapter)
 		}
 		rtw_mi_hal_iface_init(padapter);
 	}
-#if 0
-	rtw_mi_set_mac_addr(padapter);
-#endif
-#ifndef RTW_HALMAC
-	rtw_intf_start(padapter);
-#endif /* !RTW_HALMAC */
 
 #ifndef CONFIG_IPS_CHECK_IN_WD
 	rtw_set_pwr_state_check_timer(adapter_to_pwrctl(padapter));
@@ -2420,15 +2404,6 @@ int _pm_netdev_open(_adapter *padapter)
 		if (status == _FAIL)
 			goto netdev_open_error;
 		rtw_led_control(padapter, LED_CTL_NO_LINK);
-		#ifndef RTW_HALMAC
-		status = rtw_mi_start_drv_threads(padapter);
-		if (status == _FAIL) {
-			RTW_ERR(FUNC_NDEV_FMT "Initialize driver thread failed!\n", FUNC_NDEV_ARG(pnetdev));
-			goto netdev_open_error;
-		}
-
-		rtw_intf_start(GET_PRIMARY_ADAPTER(padapter));
-		#endif /* !RTW_HALMAC */
 
 		{
 			_set_timer(&adapter_to_dvobj(padapter)->dynamic_chk_timer, 2000);
@@ -2947,8 +2922,8 @@ void rtw_dev_unload(PADAPTER padapter)
 		if (padapter->xmitpriv.ack_tx)
 			rtw_ack_tx_done(&padapter->xmitpriv, RTW_SCTX_DONE_DRV_STOP);
 #endif
-
-		rtw_intf_stop(padapter);
+		// NEO
+		//rtw_intf_stop(padapter);
 		
 		rtw_stop_drv_threads(padapter);
 
@@ -3180,13 +3155,7 @@ int rtw_suspend_wow(_adapter *padapter)
 
 	if (pwrpriv->wowlan_pno_enable) {
 		RTW_PRINT("%s: pno: %d\n", __func__, pwrpriv->wowlan_pno_enable);
-#ifndef RTW_HALMAC
-#ifdef CONFIG_FWLPS_IN_IPS
-		rtw_set_fw_in_ips_mode(padapter, _TRUE);
-#endif
-#else /* RTW_HALMAC */
 		/* ICs with HALMAC that use NLO PS 32K no need to do anything */
-#endif
 	}
 #ifdef CONFIG_LPS
 	else {
@@ -3457,13 +3426,7 @@ int rtw_resume_process_wow(_adapter *padapter)
 
 	if (pwrpriv->wowlan_pno_enable) {
 		RTW_PRINT("%s: pno: %d\n", __func__, pwrpriv->wowlan_pno_enable);
-#ifndef RTW_HALMAC
-#ifdef CONFIG_FWLPS_IN_IPS
-		rtw_set_fw_in_ips_mode(padapter, _FALSE);
-#endif
-#else /* RTW_HALMAC */
 		/* ToDo: ICs with HALMAC that use NLO PS 32K should leave LCLK here */
-#endif
 	} else {
 #ifdef CONFIG_LPS
 		if(pwrpriv->wowlan_power_mgmt != PM_PS_MODE_ACTIVE) {
