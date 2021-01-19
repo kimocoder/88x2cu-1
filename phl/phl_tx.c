@@ -1250,7 +1250,7 @@ void phl_datapath_stop(struct phl_info_t *phl_info)
 {
 	struct phl_hci_trx_ops *hci_trx_ops = phl_info->hci_trx_ops;
 
-	hci_trx_ops->trx_stop(phl_info);
+	//hci_trx_ops->trx_stop(phl_info);
 	phl_free_deferred_tx_ring(phl_info);
 }
 
