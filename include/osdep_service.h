@@ -485,9 +485,6 @@ static __inline void thread_enter(char *name)
 	printf("%s", "RTKTHREAD_enter");
 #endif
 }
-void _rtw_init_completion(_completion *comp);
-void _rtw_wait_for_comp_timeout(_completion *comp);
-void _rtw_wait_for_comp(_completion *comp);
 
 __inline static _OS_STATUS res_to_status(sint res)
 {

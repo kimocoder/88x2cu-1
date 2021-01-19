@@ -386,7 +386,22 @@ struct rtw_timer_list {
 };
 
 typedef struct rtw_timer_list _timer;
+
+/*completion*/
 typedef struct completion _completion;
+static inline void _rtw_init_completion(_completion *comp)
+{
+	init_completion(comp);
+}
+static inline unsigned long _rtw_wait_for_comp_timeout(_completion *comp, unsigned long timeout)
+{
+	return wait_for_completion_timeout(comp, timeout);
+}
+static inline void _rtw_wait_for_comp(_completion *comp)
+{
+	return wait_for_completion(comp);
+}
+
 
 struct	__queue	{
 	struct	list_head	queue;
