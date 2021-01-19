@@ -16,7 +16,6 @@
 /* #define CONFIG_DISABLE_ODM */
 
 //#define RTW_WKARD_CORE_RSSI_V1
-#define CONFIG_NEW_NETDEV_HDL
 
 /*
  * Public  General Config

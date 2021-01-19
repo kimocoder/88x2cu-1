@@ -744,7 +744,6 @@ void rtw_mi_buddy_intf_stop(_adapter *adapter)
 	_rtw_mi_process(adapter, _TRUE, NULL, _rtw_mi_intf_stop);
 }
 
-#ifdef CONFIG_NEW_NETDEV_HDL
 u8 rtw_mi_hal_iface_init(_adapter *padapter)
 {
 	int i;
@@ -760,7 +759,6 @@ u8 rtw_mi_hal_iface_init(_adapter *padapter)
 	}
 	return ret;
 }
-#endif
 
 static u8 _rtw_mi_suspend_free_assoc_resource(_adapter *padapter, void *data)
 {

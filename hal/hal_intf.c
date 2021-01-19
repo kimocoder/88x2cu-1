@@ -516,7 +516,6 @@ void rtw_hal_init_opmode(_adapter *padapter)
 	rtw_setopmode_cmd(padapter, networkType, RTW_CMDF_DIRECTLY);
 }
 
-#ifdef CONFIG_NEW_NETDEV_HDL
 uint rtw_hal_iface_init(_adapter *adapter)
 {
 	uint status = _SUCCESS;
@@ -583,78 +582,6 @@ uint rtk_hal_init(_adapter *padapter)
 	}
 	return status;
 }
-#else
-uint	 rtk_hal_init(_adapter *padapter)
-{
-	uint	status = _SUCCESS;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
-	PHAL_DATA_TYPE pHalData = GET_HAL_DATA(padapter);
-	int i;
-
-	halrf_set_rfsupportability(adapter_to_phydm(padapter));
-
-	status = padapter->hal_func.hal_init(padapter);
-
-	if(pHalData ->phydm_init_result) {
-
-		status = _FAIL;
-		RTW_ERR("%s phydm init fail reason=%u \n",
-				__func__,
-				pHalData->phydm_init_result);
-	}
-
-	if (status == _SUCCESS) {
-		rtw_set_hw_init_completed(padapter, _TRUE);
-		rtw_mi_set_mac_addr(padapter);/*set mac addr of all ifaces*/
-		#ifdef RTW_HALMAC
-		rtw_restore_hw_port_cfg(padapter);
-		#endif
-		if (padapter->registrypriv.notch_filter == 1)
-			rtw_hal_notch_filter(padapter, 1);
-
-		for (i = 0; i < dvobj->iface_nums; i++)
-			rtw_sec_restore_wep_key(dvobj->padapters[i]);
-
-		rtw_led_control(padapter, LED_CTL_POWER_ON);
-
-		init_hw_mlme_ext(padapter);
-
-		rtw_hal_init_opmode(padapter);
-
-		#ifdef CONFIG_RF_POWER_TRIM
-		rtw_bb_rf_gain_offset(padapter);
-		#endif /*CONFIG_RF_POWER_TRIM*/
-
-		#ifdef CONFIG_SUPPORT_MULTI_BCN
-		rtw_ap_multi_bcn_cfg(padapter);
-		#endif
-
-#if (RTL8822B_SUPPORT == 1) || (RTL8192F_SUPPORT == 1)
-#ifdef CONFIG_DYNAMIC_SOML
-		rtw_dyn_soml_config(padapter);
-#endif
-#endif
-		#ifdef CONFIG_TDMADIG
-		rtw_phydm_tdmadig(padapter, TDMADIG_INIT);
-		#endif/*CONFIG_TDMADIG*/
-
-		rtw_phydm_dyn_rrsr_en(padapter,padapter->registrypriv.en_dyn_rrsr);
-		#ifdef RTW_HALMAC
-		RTW_INFO("%s: padapter->registrypriv.set_rrsr_value=0x%x\n", __func__,padapter->registrypriv.set_rrsr_value);
-		if(padapter->registrypriv.set_rrsr_value != 0xFFFFFFFF)
-			rtw_phydm_set_rrsr(padapter, padapter->registrypriv.set_rrsr_value, TRUE);
-		#endif
-
-	} else {
-		rtw_set_hw_init_completed(padapter, _FALSE);
-		RTW_ERR("%s: fail\n", __func__);
-	}
-
-
-	return status;
-
-}
-#endif
 
 uint rtk_hal_deinit(_adapter *padapter)
 {

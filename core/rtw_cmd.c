@@ -4511,7 +4511,6 @@ static s32 rtw_mp_cmd_hdl(_adapter *padapter, u8 mp_cmd_id)
 			}
 #endif /*CONFIG_RF_POWER_TRIM*/
 			rtw_reset_drv_sw(padapter);
-#ifdef CONFIG_NEW_NETDEV_HDL
 			if (!rtw_is_hw_init_completed(padapter)) {
 				status = rtk_hal_init(padapter);
 				if (status == _FAIL) {
@@ -4520,13 +4519,6 @@ static s32 rtw_mp_cmd_hdl(_adapter *padapter, u8 mp_cmd_id)
 				}
 				rtw_hal_iface_init(padapter);
 			}
-#else
-			status = rtk_hal_init(padapter);
-			if (status == _FAIL) {
-				ret = H2C_REJECTED;
-				goto exit;
-			}
-#endif /*CONFIG_NEW_NETDEV_HDL*/
 #ifndef RTW_HALMAC
 			rtw_intf_start(padapter);
 #endif /* !RTW_HALMAC */
@@ -4576,7 +4568,6 @@ static s32 rtw_mp_cmd_hdl(_adapter *padapter, u8 mp_cmd_id)
 			pHalData->EEPROMBluetoothCoexist = padapter->mppriv.CureFuseBTCoex;
 #endif
 			rtw_reset_drv_sw(padapter);
-#ifdef CONFIG_NEW_NETDEV_HDL
 			if (!rtw_is_hw_init_completed(padapter)) {
 				status = rtk_hal_init(padapter);
 				if (status == _FAIL) {
@@ -4585,13 +4576,6 @@ static s32 rtw_mp_cmd_hdl(_adapter *padapter, u8 mp_cmd_id)
 				}
 				rtw_hal_iface_init(padapter);
 			}
-#else
-			status = rtk_hal_init(padapter);
-			if (status == _FAIL) {
-				ret = H2C_REJECTED;
-				goto exit;
-			}
-#endif /*CONFIG_NEW_NETDEV_HDL*/
 #ifndef RTW_HALMAC
 			rtw_intf_start(padapter);
 #endif /* !RTW_HALMAC */
