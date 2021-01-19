@@ -11966,7 +11966,7 @@ thread_return lbk_thread(thread_context context)
 
 	ploopback->bstop = _TRUE;
 
-	thread_exit(NULL);
+	complete_and_exit(NULL, 0);
 	return 0;
 }
 

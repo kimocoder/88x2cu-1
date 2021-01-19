@@ -15,7 +15,6 @@
 #define _OSDEP_SERVICE_LINUX_C_
 #include <drv_types.h>
 
-#if 0 // NEO mark off first 
 
 #ifdef DBG_MEMORY_LEAK
 ATOMIC_T _malloc_cnt = ATOMIC_INIT(0);
@@ -142,8 +141,6 @@ inline void rtw_hlist_del_rcu(rtw_hlist_node *n)
 {
 	hlist_del_rcu(n);
 }
-
-#endif // if 0 NEO
 
 void rtw_init_timer(_timer *ptimer, void *pfunc, void *ctx)
 {

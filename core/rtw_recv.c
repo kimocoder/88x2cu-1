@@ -2857,7 +2857,7 @@ static void recv_fwd_pkt_hdl(_adapter *adapter, struct sk_buff *pkt
 	struct sk_buff *fwd_pkt = pkt;
 
 	if (act & RTW_RX_MSDU_ACT_INDICATE) {
-		fwd_pkt = rtw_os_pkt_copy(pkt);
+		fwd_pkt = rtw_skb_copy(pkt);
 		if (!fwd_pkt) {
 			#ifdef DBG_TX_DROP_FRAME
 			RTW_INFO("DBG_TX_DROP_FRAME %s rtw_os_pkt_copy fail\n", __func__);
@@ -2880,7 +2880,7 @@ static void recv_fwd_pkt_hdl(_adapter *adapter, struct sk_buff *pkt
 			if (!fwd_frame && rtw_is_list_empty(b2u_list)) /* the last fwdstruct sk_buff */
 				b2uframe->pkt = fwd_pkt;
 			else
-				b2uframe->pkt = rtw_os_pkt_copy(fwd_pkt);
+				b2uframe->pkt = rtw_skb_copy(fwd_pkt);
 			if (!b2uframe->pkt) {
 				rtw_free_xmitframe(xmitpriv, b2uframe);
 				continue;
@@ -3015,10 +3015,10 @@ int amsdu_to_msdu(_adapter *padapter, union recv_frame *prframe)
 		}
 		#endif
 
-		if (rtw_recv_indicatepkt_check(prframe, rtw_os_pkt_data(sub_pkt), rtw_os_pkt_len(sub_pkt)) == _SUCCESS)
+		if (rtw_recv_indicatepkt_check(prframe, sub_pkt->data, sub_pkt->len) == _SUCCESS)
 			subframes[nr_subframes++] = sub_pkt;
 		else
-			rtw_os_pkt_free(sub_pkt);
+			rtw_skb_free(sub_pkt);
 
 move_to_next:
 		/* move the data point to data content */

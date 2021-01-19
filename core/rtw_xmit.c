@@ -5666,7 +5666,7 @@ s32 rtw_xmit(_adapter *padapter, struct sk_buff **ppkt, u16 os_qid)
 				list = get_next(list);
 				rtw_list_delete(&b2uframe->list);
 
-				b2uframe->pkt = rtw_os_pkt_copy(*ppkt);
+				b2uframe->pkt = rtw_skb_copy(*ppkt);
 				if (!b2uframe->pkt) {
 					if (res == RTW_BMC_NO_NEED)
 						res = _SUCCESS;

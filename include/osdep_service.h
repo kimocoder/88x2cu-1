@@ -308,11 +308,6 @@ void _rtw_usb_buffer_free(struct usb_device *dev, size_t size, void *addr, dma_a
 extern void	*rtw_malloc2d(int h, int w, size_t size);
 extern void	rtw_mfree2d(void *pbuf, int h, int w, int size);
 
-void rtw_os_pkt_free(struct sk_buff *pkt);
-struct sk_buff *rtw_os_pkt_copy(struct sk_buff *pkt);
-void *rtw_os_pkt_data(struct sk_buff *pkt);
-u32 rtw_os_pkt_len(struct sk_buff *pkt);
-
 extern void	_rtw_memcpy(void *dec, const void *sour, u32 sz);
 extern void _rtw_memmove(void *dst, const void *src, u32 sz);
 extern int	_rtw_memcmp(const void *dst, const void *src, u32 sz);
@@ -490,7 +485,6 @@ static __inline void thread_enter(char *name)
 	printf("%s", "RTKTHREAD_enter");
 #endif
 }
-void thread_exit(_completion *comp);
 void _rtw_init_completion(_completion *comp);
 void _rtw_wait_for_comp_timeout(_completion *comp);
 void _rtw_wait_for_comp(_completion *comp);

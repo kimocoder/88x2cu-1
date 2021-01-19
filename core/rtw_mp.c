@@ -1313,7 +1313,7 @@ exit:
 	pmptx->pallocated_buf = NULL;
 	pmptx->stop = 1;
 
-	thread_exit(NULL);
+	complete_and_exit(NULL, 0);
 	return 0;
 }
 

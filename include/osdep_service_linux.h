@@ -128,10 +128,6 @@
 	#include <linux/netlink.h>
 #endif /* CONFIG_BT_COEXIST_SOCKET_TRX */
 
-#ifdef CONFIG_USB_HCI
-	typedef struct urb   *PURB;
-#endif
-
 #if defined(CONFIG_RTW_GRO) && (!defined(CONFIG_RTW_NAPI))
 
 	#error "Enable NAPI before enable GRO\n"
@@ -153,7 +149,126 @@
 
 #endif
 
-typedef struct	semaphore _sema;
+
+#define ATOMIC_T atomic_t
+
+#ifdef DBG_MEMORY_LEAK
+extern ATOMIC_T _malloc_cnt;
+extern ATOMIC_T _malloc_size;
+#endif
+
+static inline void *_rtw_vmalloc(u32 sz)
+{
+	void *pbuf;
+
+	pbuf = vmalloc(sz);
+
+#ifdef DBG_MEMORY_LEAK
+	if (pbuf != NULL) {
+		atomic_inc(&_malloc_cnt);
+		atomic_add(sz, &_malloc_size);
+	}
+#endif /* DBG_MEMORY_LEAK */
+
+	return pbuf;
+}
+
+static inline void *_rtw_zvmalloc(u32 sz)
+{
+	void *pbuf;
+
+	pbuf = _rtw_vmalloc(sz);
+	if (pbuf != NULL)
+		memset(pbuf, 0, sz);
+
+	return pbuf;
+}
+
+static inline void _rtw_vmfree(void *pbuf, u32 sz)
+{
+	vfree(pbuf);
+
+#ifdef DBG_MEMORY_LEAK
+	atomic_dec(&_malloc_cnt);
+	atomic_sub(sz, &_malloc_size);
+#endif /* DBG_MEMORY_LEAK */
+}
+
+static inline void *_rtw_malloc(u32 sz)
+{
+	void *pbuf = NULL;
+
+	#ifdef RTK_DMP_PLATFORM
+	if (sz > 0x4000)
+		pbuf = dvr_malloc(sz);
+	else
+	#endif
+		pbuf = kmalloc(sz, in_interrupt() ? GFP_ATOMIC : GFP_KERNEL);
+
+#ifdef DBG_MEMORY_LEAK
+	if (pbuf != NULL) {
+		atomic_inc(&_malloc_cnt);
+		atomic_add(sz, &_malloc_size);
+	}
+#endif /* DBG_MEMORY_LEAK */
+
+	return pbuf;
+
+}
+
+static inline void *_rtw_zmalloc(u32 sz)
+{
+#if 0
+	void *pbuf = _rtw_malloc(sz);
+
+	if (pbuf != NULL)
+		memset(pbuf, 0, sz);
+#else
+	/*kzalloc in KERNEL_VERSION(2, 6, 14)*/
+	void *pbuf = kzalloc( sz, in_interrupt() ? GFP_ATOMIC : GFP_KERNEL);
+
+#endif
+	return pbuf;
+}
+
+static inline void _rtw_mfree(void *pbuf, u32 sz)
+{
+	#ifdef RTK_DMP_PLATFORM
+	if (sz > 0x4000)
+		dvr_free(pbuf);
+	else
+	#endif
+		kfree(pbuf);
+
+#ifdef DBG_MEMORY_LEAK
+	atomic_dec(&_malloc_cnt);
+	atomic_sub(sz, &_malloc_size);
+#endif /* DBG_MEMORY_LEAK */
+
+}
+
+#ifdef CONFIG_USB_HCI
+typedef struct urb *PURB;
+
+static inline void *_rtw_usb_buffer_alloc(struct usb_device *dev, size_t size, dma_addr_t *dma)
+{
+	#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 35))
+	return usb_alloc_coherent(dev, size, (in_interrupt() ? GFP_ATOMIC : GFP_KERNEL), dma);
+	#else
+	return usb_buffer_alloc(dev, size, (in_interrupt() ? GFP_ATOMIC : GFP_KERNEL), dma);
+	#endif
+}
+static inline void _rtw_usb_buffer_free(struct usb_device *dev, size_t size, void *addr, dma_addr_t dma)
+{
+	#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 35))
+	usb_free_coherent(dev, size, addr, dma);
+	#else
+	usb_buffer_free(dev, size, addr, dma);
+	#endif
+}
+#endif /* CONFIG_USB_HCI */
+
+
 typedef	spinlock_t	_lock;
 
 static inline void _rtw_spinlock_init(_lock *plock)
@@ -189,6 +304,26 @@ __inline static void _rtw_spinunlock_bh(_lock *plock)
 	spin_unlock_bh(plock);
 }
 
+/*lock - semaphore*/
+typedef struct	semaphore _sema;
+static inline void _rtw_init_sema(_sema *sema, int init_val)
+{
+	sema_init(sema, init_val);
+}
+static inline void _rtw_free_sema(_sema *sema)
+{
+}
+static inline void _rtw_up_sema(_sema *sema)
+{
+	up(sema);
+}
+static inline u32 _rtw_down_sema(_sema *sema)
+{
+	if (down_interruptible(sema))
+		return _FAIL;
+	else
+		return _SUCCESS;
+}
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37))
 	typedef struct mutex		_mutex;
@@ -637,6 +772,62 @@ static inline int rtw_netif_queue_stopped(struct net_device *pnetdev)
 	return netif_queue_stopped(pnetdev);
 #endif
 }
+
+#ifdef CONFIG_HWSIM
+int _rtw_netif_rx(_nic_hdl ndev, struct sk_buff *skb);
+#else
+static inline int _rtw_netif_rx(_nic_hdl ndev, struct sk_buff *skb)
+{
+#if defined(CONFIG_RTW_FC_FASTFWD)
+extern int fwdEngine_wifi_rx(struct sk_buff *skb);
+enum {
+	RE8670_RX_STOP=0,
+	RE8670_RX_CONTINUE,
+	RE8670_RX_STOP_SKBNOFREE,
+	RE8670_RX_END
+};
+int ret = 0;
+
+	skb->dev = ndev;
+	skb->data-=14;
+	skb->len+=14;
+
+	ret = fwdEngine_wifi_rx(skb);
+
+	if(ret==RE8670_RX_CONTINUE)
+	{
+		skb->data+=14;
+		skb->len-=14;
+	return netif_rx(skb);
+}
+	else if(ret==RE8670_RX_STOP)
+	{
+		kfree_skb(skb);
+	}
+
+	return 0;
+#else
+	skb->dev = ndev;
+	return netif_rx(skb);
+#endif
+}
+#endif
+
+#ifdef CONFIG_RTW_NAPI
+static inline int _rtw_netif_receive_skb(_nic_hdl ndev, struct sk_buff *skb)
+{
+	skb->dev = ndev;
+	return netif_receive_skb(skb);
+}
+
+#ifdef CONFIG_RTW_GRO
+static inline gro_result_t _rtw_napi_gro_receive(struct napi_struct *napi, struct sk_buff *skb)
+{
+	return napi_gro_receive(napi, skb);
+}
+#endif /* CONFIG_RTW_GRO */
+#endif /* CONFIG_RTW_NAPI */
+
 
 static inline void rtw_netif_wake_queue(struct net_device *pnetdev)
 {
