@@ -2278,9 +2278,12 @@ int netdev_open(struct net_device *pnetdev)
 		return 0;
 	}
 
-	_enter_critical_mutex(&(adapter_to_dvobj(padapter)->hw_init_mutex), NULL);
+
+	RTW_INFO(FUNC_NDEV_FMT" , netif_up=%d\n", FUNC_NDEV_ARG(pnetdev), padapter->netif_up);
+	/*rtw_dump_stack();*/
+	_rtw_mutex_lock_interruptible(&(adapter_to_dvobj(padapter)->hw_init_mutex));
 	ret = _netdev_open(pnetdev);
-	_exit_critical_mutex(&(adapter_to_dvobj(padapter)->hw_init_mutex), NULL);
+	_rtw_mutex_unlock(&(adapter_to_dvobj(padapter)->hw_init_mutex));
 
 
 #ifdef CONFIG_AUTO_AP_MODE
