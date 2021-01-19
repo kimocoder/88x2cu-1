@@ -75,6 +75,7 @@ static void rtw_dev_shutdown(struct device *dev)
 						RTW_INFO("%s call halt notify\n", __FUNCTION__);
 						rtw_btcoex_HaltNotify(adapter);
 						#endif
+						rtw_hw_stop(dvobj);
 						rtk_hal_deinit(adapter);
 						dev_set_surprise_removed(dvobj);
 					}

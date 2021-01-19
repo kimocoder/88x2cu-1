@@ -1369,6 +1369,7 @@ enum rtw_phl_status phl_fsm_start_root(struct fsm_root *root)
 	void *d = phl_to_drvpriv(root->phl_info);
 
 #ifdef CONFIG_LINUX_THREAD
+aa
 	root->thread = kthread_create(fsm_thread_share, root,
 			"fsm_thread_share");
 	wake_up_process(root->thread);

@@ -1215,10 +1215,12 @@ enum rtw_phl_status phl_trx_cfg_usb(struct phl_info_t *phl_info)
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_SUCCESS;
 
 #ifdef CONFIG_PHL_USB_RX_AGGREGATION
+aa
 	rtw_hal_usb_rx_agg_cfg(phl_info->hal, PHL_RX_AGG_DEFAULT,
 		0, 0, 0, 0, 0);
 #endif
-	pstatus = _phl_rx_start_usb(phl_info);
+	// NEO
+	//pstatus = _phl_rx_start_usb(phl_info);
 
 	return pstatus;
 }

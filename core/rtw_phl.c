@@ -701,7 +701,6 @@ _free_hal :
 	return rst;
 }
 
-#if 0 // NEO
 
 u8 rtw_hw_start(struct dvobj_priv *dvobj)
 {
@@ -726,6 +725,8 @@ void rtw_hw_stop(struct dvobj_priv *dvobj)
 	dvobj_to_pci(dvobj)->irq_enabled = 0;
 	#endif
 }
+
+#if 0 // NEO
 
 bool rtw_hw_get_init_completed(struct dvobj_priv *dvobj)
 {

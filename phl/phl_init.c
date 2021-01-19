@@ -1284,12 +1284,15 @@ enum rtw_phl_status rtw_phl_preload(void *phl)
 	return RTW_PHL_STATUS_SUCCESS;
 }
 
+#endif // if 0 NEO
+
 enum rtw_phl_status rtw_phl_start(void *phl)
 {
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	enum rtw_phl_status phl_status = RTW_PHL_STATUS_FAILURE;
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_SUCCESS;
 
+#if 0 // NEO
 	hal_status = rtw_hal_start(phl_info->phl_com, phl_info->hal);
 	if (hal_status == RTW_HAL_STATUS_MAC_INIT_FAILURE) {
 		phl_status = RTW_PHL_STATUS_HAL_INIT_FAILURE;
@@ -1307,6 +1310,7 @@ enum rtw_phl_status rtw_phl_start(void *phl)
 		phl_status = RTW_PHL_STATUS_HAL_INIT_FAILURE;
 		goto error_hal_start;
 	}
+#endif // if 0 NEO
 
 	/* start FSM framework */
 	phl_status = phl_fsm_start(phl_info);
@@ -1327,7 +1331,8 @@ enum rtw_phl_status rtw_phl_start(void *phl)
 	if (phl_status != RTW_PHL_STATUS_SUCCESS)
 		goto error_phl_datapath_start;
 
-	rtw_hal_enable_interrupt(phl_info->phl_com, phl_info->hal);
+	// NEO
+	//rtw_hal_enable_interrupt(phl_info->phl_com, phl_info->hal);
 
 	phl_status = RTW_PHL_STATUS_SUCCESS;
 
@@ -1340,7 +1345,7 @@ error_phl_module_start:
 error_phl_fsm_module_start:
 	phl_fsm_stop(phl_info);
 error_phl_fsm_start:
-	rtw_hal_stop(phl_info->phl_com, phl_info->hal);
+	//rtw_hal_stop(phl_info->phl_com, phl_info->hal);
 error_hal_start:
 	return phl_status;
 }
@@ -1349,16 +1354,18 @@ void rtw_phl_stop(void *phl)
 {
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 
-	rtw_hal_disable_interrupt(phl_info->phl_com, phl_info->hal);
+	//rtw_hal_disable_interrupt(phl_info->phl_com, phl_info->hal);
 	phl_module_stop(phl_info);
 #ifdef DBG_PHL_MR
 	phl_mr_info_dbg(phl_info);
 #endif
 	phl_fsm_module_stop(phl_info);
 	phl_fsm_stop(phl_info);
-	rtw_hal_stop(phl_info->phl_com, phl_info->hal);
+	//rtw_hal_stop(phl_info->phl_com, phl_info->hal);
 	phl_datapath_stop(phl_info);
 }
+
+#if 0 // NEO mark off first
 
 enum rtw_phl_status phl_wow_start(struct phl_info_t *phl_info, struct rtw_phl_stainfo_t *sta)
 {

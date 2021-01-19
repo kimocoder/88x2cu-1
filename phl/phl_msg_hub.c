@@ -285,7 +285,6 @@ enum rtw_phl_status phl_msg_hub_send(struct phl_info_t* phl,
 #endif // if 0 NEO
 }
 
-#if 0 // NEO TODO
 
 enum rtw_phl_status phl_msg_hub_register_recver(void* phl,
 		struct phl_msg_receiver* ctx, enum phl_msg_recver_layer layer)
@@ -426,4 +425,3 @@ void phl_msg_hub_power_mgnt_evt_hdlr(struct phl_info_t* phl,
 	}
 }
 
-#endif // if 0

@@ -2182,9 +2182,15 @@ static int _netdev_open(struct net_device *pnetdev)
 		dev_clr_drv_stopped(dvobj);
 		RTW_ENABLE_FUNC(dvobj, DF_RX_BIT);
 		RTW_ENABLE_FUNC(dvobj, DF_TX_BIT);
+
 		status = rtk_hal_init(padapter);
 		if (status == _FAIL)
 			goto netdev_open_error;
+
+		status = rtw_hw_start(dvobj);
+		if (status == _FAIL)
+			goto netdev_open_error;
+		
 		rtw_led_control(padapter, LED_CTL_NO_LINK);
 		#ifndef RTW_HALMAC
 		status = rtw_mi_start_drv_threads(padapter);
