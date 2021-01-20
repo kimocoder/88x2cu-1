@@ -103,10 +103,10 @@ void usb_read_interrupt_complete(struct urb *purb, struct pt_regs *regs);
 u32 usb_read_interrupt(struct intf_hdl *pintfhdl, u32 addr);
 #endif
 
-u32 g6_rtw_usb_read_port(void *d, void *rxobj,
+u32 rtw_usb_g6_read_port(void *d, void *rxobj,
 	u8 *inbuf, u32 inbuf_len, u8 bulk_id, u8 minlen);
 
-void g6_rtw_usb_read_port_cancel(void *d);
+void rtw_usb_g6_read_port_cancel(void *d);
 
 
 #endif

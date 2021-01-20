@@ -284,8 +284,8 @@ exit:
 	/*usb_bulkout_zero_complete(purb)*/
 #define rtw_usb_write_port_complete(purb, regs)\
 	rtw_usb_write_port_complete(purb)
-#define g6_rtw_usb_read_port_complete(purb, regs)\
-	g6_rtw_usb_read_port_complete(purb)
+#define rtw_usb_g6_read_port_complete(purb, regs)\
+	rtw_usb_g6_read_port_complete(purb)
 #define rtw_usb_read_interrupt_complete(purb, regs)\
 	rtw_usb_read_interrupt_complete(purb)
 #endif
@@ -1172,7 +1172,7 @@ u32 usb_read_interrupt(struct intf_hdl *pintfhdl, u32 addr)
 #endif /* CONFIG_USB_INTERRUPT_IN_PIPE */
 
 
-static void g6_rtw_usb_read_port_complete(struct urb *urb, struct pt_regs *regs)
+static void rtw_usb_g6_read_port_complete(struct urb *urb, struct pt_regs *regs)
 {
 	struct lite_data_buf *literecvbuf =
 		(struct lite_data_buf *)urb->context;
@@ -1267,7 +1267,7 @@ exit:
 	rtw_free_dataurb(rx_urb_q, recvurb);
 }
 
-u32 g6_rtw_usb_read_port(void *d, void *rxobj,
+u32 rtw_usb_g6_read_port(void *d, void *rxobj,
 	u8 *inbuf, u32 inbuf_len, u8 bulk_id, u8 minlen)
 {
 	int err;
@@ -1328,7 +1328,7 @@ u32 g6_rtw_usb_read_port(void *d, void *rxobj,
 		usb_fill_bulk_urb(recvurb->urb, usbd, pipe,
 			literecvbuf->pbuf,
 			inbuf_len,
-			g6_rtw_usb_read_port_complete,
+			rtw_usb_g6_read_port_complete,
 			literecvbuf);
 	} else {
 		#ifdef CONFIG_USB_INTERRUPT_IN_PIPE
@@ -1336,13 +1336,13 @@ u32 g6_rtw_usb_read_port(void *d, void *rxobj,
 			usb_fill_bulk_urb(recvurb->urb, usbd, pipe,
 				literecvbuf->pbuf,
 				inbuf_len,
-				g6_rtw_usb_read_port_complete,
+				rtw_usb_g6_read_port_complete,
 				literecvbuf);
 		else
 			usb_fill_int_urb(recvurb->urb, usbd, pipe,
 				literecvbuf->pbuf,
 				inbuf_len,
-				g6_rtw_usb_read_port_complete,
+				rtw_usb_g6_read_port_complete,
 				literecvbuf,
 				1);
 		#endif
@@ -1374,7 +1374,7 @@ exit:
 	return ret;
 }
 
-void g6_rtw_usb_read_port_cancel(void *d)
+void rtw_usb_g6_read_port_cancel(void *d)
 {
 	int i;
 	struct dvobj_priv *dvobj = (struct dvobj_priv *)d;

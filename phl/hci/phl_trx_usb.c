@@ -250,6 +250,7 @@ enum rtw_phl_status _phl_in_token_usb(struct phl_info_t *phl_info, u8 pipe_idx)
 	struct rtw_rx_buf *rx_buf = NULL;
 	_os_list* obj = NULL;
 
+	RTW_INFO("%s : NEO start\n", __func__);
 	//PHL_TRACE(COMP_PHL_RECV, _PHL_INFO_, "[1] %s:: 000 idle_rxbuf_list.cnt=%d\n",
 	//							__FUNCTION__, rx_buf_ring->idle_rxbuf_list.cnt);
 
@@ -301,6 +302,7 @@ enum rtw_phl_status _phl_rx_start_usb(struct phl_info_t *phl_info)
 	struct bus_cap_t *bus_cap = &hal_com->bus_cap;
 	u8 pipe_idx = 0;
 
+	RTW_INFO("%s: NEO: max_bulkin_num=%d\n", __func__, hal_spec->max_bulkin_num);
 	for (pipe_idx = 0; pipe_idx < hal_spec->max_bulkin_num ; pipe_idx++) {
 
 		/* Send the bulk IN request down.	*/
@@ -1219,8 +1221,7 @@ aa
 	rtw_hal_usb_rx_agg_cfg(phl_info->hal, PHL_RX_AGG_DEFAULT,
 		0, 0, 0, 0, 0);
 #endif
-	// NEO
-	//pstatus = _phl_rx_start_usb(phl_info);
+	pstatus = _phl_rx_start_usb(phl_info);
 
 	return pstatus;
 }

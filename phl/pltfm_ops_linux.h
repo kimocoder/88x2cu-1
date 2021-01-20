@@ -760,7 +760,7 @@ static __inline void os_in_token_free(void *drv_priv)
 
 static __inline u8 os_send_usb_in_token(void *drv_priv, void *rxobj, u8 *inbuf, u32 inbuf_len, u8 pipe_idx, u8 minLen)
 {
-	return g6_rtw_usb_read_port(drv_priv, rxobj, inbuf, inbuf_len, pipe_idx, minLen);
+	return rtw_usb_g6_read_port(drv_priv, rxobj, inbuf, inbuf_len, pipe_idx, minLen);
 }
 
 static __inline void os_enable_usb_in_pipes(void *drv_priv)
@@ -770,7 +770,7 @@ static __inline void os_enable_usb_in_pipes(void *drv_priv)
 static __inline void os_disable_usb_in_pipes(void *drv_priv)
 {
 	// Cancel Pending IN IRPs.
-	g6_rtw_usb_read_port_cancel(drv_priv);
+	rtw_usb_g6_read_port_cancel(drv_priv);
 }
 
 #endif /*CONFIG_USB_HCI*/
