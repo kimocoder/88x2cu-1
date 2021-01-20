@@ -1272,6 +1272,8 @@ phl_pend_rxbuf_usb(struct phl_info_t *phl_info, void *rxobj, u32 inbuf_len, u8 s
 		return RTW_PHL_STATUS_SUCCESS;
 #endif
 
+	RTW_INFO("%s : NEO : status:%d, usb buffer: %p, first word:0x%x\n", __func__, status_code, rx_buf->buffer, *((u16 *)(rx_buf->buffer)));
+
 	if(status_code == RTW_PHL_STATUS_SUCCESS)
 	{
 		if(_phl_in_token_usb(phl_info, rx_buf->pipe_idx) == RTW_PHL_STATUS_RESOURCE)
@@ -1342,6 +1344,7 @@ struct rtw_phl_rx_pkt *phl_get_single_rx(struct phl_info_t *phl_info,
 	bool brel = true, balloc = false;
 	_os_spinlockfg sp_flags;
 
+
 	//initialize for compiler
 	pkt_buf = rx_buf->buffer;
 	pkt_buf_end = rx_buf->buffer + rx_buf->transfer_len;
@@ -1359,13 +1362,15 @@ struct rtw_phl_rx_pkt *phl_get_single_rx(struct phl_info_t *phl_info,
 
 		}
 
+
 		// TODO::  Hal handle rx packet (rx desc/physts/hal rx data statistic)
 		hstatus = rtw_hal_handle_rx_buffer(phl_info->phl_com,
 							phl_info->hal,
 							pkt_buf, transfer_len,
 							phl_rx);
 
-		RTW_INFO("%s : NEO : rtw_hal_handle_rx_buffer return %d\n", __func__, hstatus);
+		RTW_INFO("%s : NEO : rtw_hal_handle_rx_buffer return %d, fail first\n", __func__, hstatus);
+		
 		if (RTW_HAL_STATUS_SUCCESS != hstatus) {
 			phl_release_phl_rx(phl_info, phl_rx);
 			phl_rx = NULL;
@@ -1376,6 +1381,7 @@ struct rtw_phl_rx_pkt *phl_get_single_rx(struct phl_info_t *phl_info,
 				PHL_ASSERT("[3] %s:: [Notice] one of ampdu damaged\n", __FUNCTION__);
 			break;
 		}
+
 
 		pkt_offset = (s32)(phl_rx->r.pkt_list[0].vir_addr - pkt_buf) + phl_rx->r.pkt_list[0].length;
 
@@ -1547,16 +1553,20 @@ static enum rtw_phl_status phl_rx_usb(struct phl_info_t *phl_info)
 		else
 			break;
 
+		RTW_INFO("%s : NEO: rx_buf: %p, first word: 0x%x\n", __func__, rx_buf->buffer, *((u16 *)(rx_buf->buffer)));
+
 		switch(rx_buf->pipe_idx){
 			case WLAN_IN_MPDU_PIPE_IDX:
 			{
 				/* phl_rx maybe single or link-list */
 				phl_rx = phl_get_single_rx(phl_info, rx_buf);
-
+				RTW_INFO("%s : NEO after phl_get_single_rx : phl_rx=%p\n", __func__, phl_rx);
+#if 0 // NEO
 				if(phl_rx)
 				{
 					phl_rx_process_usb(phl_info, phl_rx);
 				}
+#endif // if 0 NEO
 			}
 			break;
 

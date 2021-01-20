@@ -256,7 +256,6 @@ _hal_parsing_rx_wd_8822c(struct hal_info_t *hal, u8 *desc,
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_FAILURE;
 	struct rtw_hal_com_t *hal_com = hal->hal_com;
 
-	RTW_INFO("%s : NEO : DOING\n", __func__);
 
 	mdata->pktlen = (u16)GET_RX_DESC_PKT_LEN_8822C(desc);
 	mdata->shift = (u8)GET_RX_DESC_SHIFT_8822C(desc);
@@ -359,6 +358,8 @@ _hal_parsing_rx_wd_8822c(struct hal_info_t *hal, u8 *desc,
 	else
 		hstatus = RTW_HAL_STATUS_SUCCESS;
 
+	RTW_INFO("%s : NEO : pktlen=%d, hstatus=%d\n", __func__, mdata->pktlen, hstatus);
+
 	return hstatus;
 }
 
@@ -419,8 +420,12 @@ hal_parsing_rx_wd_8822c(struct rtw_phl_com_t *phl_com,
 			(RX_8852A_DESC_PKT_T_PPDU_STATUS != mdata->rpkt_type))
 			*pkt = desc + shift + RX_PPDU_MAC_INFO_SIZE_8822C;
 		else
-#endif // if 0
 			*pkt = desc + shift;
+#else // NEO
+		desc_l = RX_DESC_S_SIZE_8822C;
+		shift = (u8)(mdata->shift * 2 + mdata->drv_info_size * 8 + desc_l);
+		*pkt = desc + shift;
+#endif // if 0
 		*pkt_len = (u16)mdata->pktlen;
 
 	} while (false);
@@ -495,6 +500,8 @@ hal_handle_rx_buffer_8822c(struct rtw_phl_com_t *phl_com,
 	if( (pkt->vir_addr + pkt->length) > (buf + buf_len) )
 		return RTW_HAL_STATUS_FAILURE;
 
+	RTW_INFO("%s : NEO stop here first\n", __func__);
+#if 0 // NEO
 	/* hana_todo */
 	r->pkt_cnt = 1;
 
@@ -508,7 +515,6 @@ hal_handle_rx_buffer_8822c(struct rtw_phl_com_t *phl_com,
 		//hal_rx_ppdu_sts_normal_data(phl_com, pkt->vir_addr, mdata);
 	}
 	break;
-#if 0 // NEO
 	case RX_8852A_DESC_PKT_T_TX_PD_RELEASE_HOST :
 	{
 		phl_rx->type = RTW_RX_TYPE_TX_WP_RELEASE_HOST;
@@ -619,7 +625,6 @@ hal_handle_rx_buffer_8822c(struct rtw_phl_com_t *phl_com,
 		/* DL MU Report ; UL OFDMA Trigger Report */
 	}
 	break;
-#endif // if 0 NEO
 	case RX_8822C_DESC_PKT_T_C2H :
 	{
 		struct rtw_c2h_info c = {0};
@@ -640,6 +645,7 @@ hal_handle_rx_buffer_8822c(struct rtw_phl_com_t *phl_com,
 	default:
 	break;
 	}
+#endif // if 0 NEO
 	return hstatus;
 }
 

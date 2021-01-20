@@ -296,19 +296,17 @@ unsigned int bulkid2pipe(struct dvobj_priv *pdvobj, u32 addr, u8 bulk_out)
 	PUSB_DATA pusb_data = dvobj_to_usb(pdvobj);
 	struct usb_device *pusbd = pusb_data->pusbdev;
 
+	RTW_INFO("%s : NEO : addr == 0x%x, bulk_out=%d\n", __func__, addr, bulk_out);
 
-	if (addr == RECV_BULK_IN_ADDR)
-		pipe = usb_rcvbulkpipe(pusbd, pusb_data->RtInPipe[0]);
-
-	else if (addr == RECV_INT_IN_ADDR)
-		pipe = usb_rcvintpipe(pusbd, pusb_data->RtInPipe[1]);
-
-         /* halmac already translate queue id to bulk out id (addr 0~3) */
-		 /* 8814BU bulk out id range is 0~6 */
-        else if (addr < MAX_BULKOUT_NUM) {
+	if (!bulk_out) {
+		if (addr == RECV_BULK_IN_ADDR)
+			pipe = usb_rcvbulkpipe(pusbd, pusb_data->RtInPipe[0]);
+		else
+			pipe = usb_rcvintpipe(pusbd, pusb_data->RtInPipe[1]);
+	} else {
                 ep_num = pusb_data->RtOutPipe[addr];
                 pipe = usb_sndbulkpipe(pusbd, ep_num);
-        }
+	}
 
 	return pipe;
 }
@@ -1322,7 +1320,7 @@ u32 rtw_usb_g6_read_port(void *d, void *rxobj,
 	literecvbuf->dataurb = recvurb;
 	literecvbuf->phl_buf_ptr = rxobj;
 
-	pipe = bulkid2pipe(dvobj, bulk_id, _FALSE);
+	pipe = bulkid2pipe(dvobj, bulk_id | 0x80, _FALSE);
 
 	if (bulk_id == REALTEK_USB_BULK_IN_EP_IDX) {
 		usb_fill_bulk_urb(recvurb->urb, usbd, pipe,
@@ -1347,6 +1345,8 @@ u32 rtw_usb_g6_read_port(void *d, void *rxobj,
 				1);
 		#endif
 	}
+
+	RTW_INFO("%s : NEO: rxbuf: %p, size: %d\n", __func__, literecvbuf->pbuf, inbuf_len);
 
 	err = usb_submit_urb(recvurb->urb, GFP_ATOMIC);
 	if ((err) && (err != (-EPERM))) {

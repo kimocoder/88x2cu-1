@@ -20,7 +20,7 @@
 #include "../hal/halmac/halmac_api.h"	/* MAC REG definition */
 
 #ifdef CONFIG_SUPPORT_TRX_SHARED
-#define DEF_RECVBUF_SZ		24576	/* RX 24K */
+#define DEF_RECVBUF_SZ		15360	/* RX 24K */
 #if (DFT_TRX_SHARE_MODE == 1)
 #define RX_FIFO_EXPANDING 40960	/* RX= 24K+40K=64K , TX=256K-40K=216K */
 #elif (DFT_TRX_SHARE_MODE == 2)
@@ -37,7 +37,7 @@
 #ifdef CONFIG_PCI_HCI
 #define MAX_RECVBUF_SZ		12288	/* 12KB */
 #else
-#define MAX_RECVBUF_SZ		24576	/* 24KB, TX: 256KB */
+#define MAX_RECVBUF_SZ		15360	/* 24KB, TX: 256KB */
 #endif /* !CONFIG_PCI_HCI */
 #endif /* !CONFIG_SUPPORT_TRX_SHARED */
 
