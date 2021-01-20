@@ -18,6 +18,7 @@
 #ifdef CONFIG_RTW_DEBUG
 
 u32 phl_log_components = COMP_PHL_DBG |
+			 COMP_PHL_RECV |
 			 COMP_PHL_XMIT |
 			 COMP_PHL_WOW | 0;
 u8 phl_log_level = _PHL_INFO_;

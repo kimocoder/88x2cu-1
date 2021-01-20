@@ -91,9 +91,12 @@ static void _hal_trx_8852a_dump_rxcnt(struct hal_ppdu_sts *ppdu_sts)
 	PHL_TRACE(COMP_PHL_PSTS, _PHL_INFO_, "HAL_RXCNT_RXDMA = 0x%x\n",
 			ppdu_sts->rx_cnt.ppdu_cnt[HAL_RXCNT_RXDMA]);
 }
+#endif // if 0 NEO
 
 static void _hal_dump_rxdesc(u8 *buf, struct rtw_r_meta_data *mdata)
 {
+	RTW_INFO("%s NEO enter\n", __func__);
+
 	PHL_TRACE(COMP_PHL_RECV, _PHL_INFO_, "%s ==>\n", __FUNCTION__);
 
 	debug_dump_data(buf, 56, "_hal_dump_rxdesc:: ");
@@ -176,7 +179,7 @@ static void _hal_dump_rxdesc(u8 *buf, struct rtw_r_meta_data *mdata)
 					mdata->chksum_ofld_en);
 	PHL_TRACE(COMP_PHL_RECV, _PHL_INFO_, "mdata->with_llc = 0x%X",
 					mdata->with_llc);
-	if (mdata->long_rxd == 1) {
+	//if (mdata->long_rxd == 1) {
 		PHL_TRACE(COMP_PHL_RECV, _PHL_INFO_, "mdata->frame_type = 0x%X",
 						mdata->frame_type);
 		PHL_TRACE(COMP_PHL_RECV, _PHL_INFO_, "mdata->mc = 0x%X",
@@ -223,10 +226,9 @@ static void _hal_dump_rxdesc(u8 *buf, struct rtw_r_meta_data *mdata)
 						mdata->rx_pl_match);
 
 		debug_dump_data(mdata->mac_addr, 6, "mdata->mac_addr = \n");
-	}
+	//}
 }
 
-#endif // if 0 NEO
 
  static enum rtw_hal_status
  hal_handle_chaninfo_8822c(struct hal_info_t *hal)
@@ -431,7 +433,7 @@ hal_parsing_rx_wd_8822c(struct rtw_phl_com_t *phl_com,
 	} while (false);
 
 
-	//_hal_dump_rxdesc(desc, mdata);
+	_hal_dump_rxdesc(desc, mdata);
 
 	return hstatus;
 }
@@ -490,7 +492,6 @@ hal_handle_rx_buffer_8822c(struct rtw_phl_com_t *phl_com,
 	struct test_bp_info bp_info;
 #endif
 
-	RTW_INFO("%s : NEO enter\n", __func__);
 
 	hstatus = hal_parsing_rx_wd_8822c(phl_com, hal, buf,
 					&pkt->vir_addr, &pkt->length, mdata);
@@ -500,10 +501,9 @@ hal_handle_rx_buffer_8822c(struct rtw_phl_com_t *phl_com,
 	if( (pkt->vir_addr + pkt->length) > (buf + buf_len) )
 		return RTW_HAL_STATUS_FAILURE;
 
-	RTW_INFO("%s : NEO stop here first\n", __func__);
-#if 0 // NEO
 	/* hana_todo */
 	r->pkt_cnt = 1;
+	RTW_INFO("%s : NEO stop here first, rpkt_type:%d, hstatus=%d\n", __func__, mdata->rpkt_type, hstatus);
 
 	switch (mdata->rpkt_type) {
 	case RX_8822C_DESC_PKT_T_WIFI :
@@ -515,6 +515,7 @@ hal_handle_rx_buffer_8822c(struct rtw_phl_com_t *phl_com,
 		//hal_rx_ppdu_sts_normal_data(phl_com, pkt->vir_addr, mdata);
 	}
 	break;
+#if 0 // NEO
 	case RX_8852A_DESC_PKT_T_TX_PD_RELEASE_HOST :
 	{
 		phl_rx->type = RTW_RX_TYPE_TX_WP_RELEASE_HOST;
@@ -625,12 +626,14 @@ hal_handle_rx_buffer_8822c(struct rtw_phl_com_t *phl_com,
 		/* DL MU Report ; UL OFDMA Trigger Report */
 	}
 	break;
+#endif // if 0 NEO
 	case RX_8822C_DESC_PKT_T_C2H :
 	{
 		struct rtw_c2h_info c = {0};
 
 		phl_rx->type = RTW_RX_TYPE_C2H;
-		rtw_hal_mac_parse_c2h(hal, pkt->vir_addr, mdata->pktlen, (void *)&c);
+		RTW_INFO("%s : NEO : TODO rtw_hal_mac_parse_c2h\n", __func__);
+		//rtw_hal_mac_parse_c2h(hal, pkt->vir_addr, mdata->pktlen, (void *)&c);
 
 		//NEO
 		//hal_c2h_post_process(phl_com, hal, (void *)&c);
@@ -645,7 +648,6 @@ hal_handle_rx_buffer_8822c(struct rtw_phl_com_t *phl_com,
 	default:
 	break;
 	}
-#endif // if 0 NEO
 	return hstatus;
 }
 

@@ -1362,7 +1362,6 @@ struct rtw_phl_rx_pkt *phl_get_single_rx(struct phl_info_t *phl_info,
 
 		}
 
-
 		// TODO::  Hal handle rx packet (rx desc/physts/hal rx data statistic)
 		hstatus = rtw_hal_handle_rx_buffer(phl_info->phl_com,
 							phl_info->hal,
@@ -1370,6 +1369,7 @@ struct rtw_phl_rx_pkt *phl_get_single_rx(struct phl_info_t *phl_info,
 							phl_rx);
 
 		RTW_INFO("%s : NEO : rtw_hal_handle_rx_buffer return %d, fail first\n", __func__, hstatus);
+		hstatus = RTW_HAL_STATUS_FAILURE;
 		
 		if (RTW_HAL_STATUS_SUCCESS != hstatus) {
 			phl_release_phl_rx(phl_info, phl_rx);
