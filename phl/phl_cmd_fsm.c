@@ -443,7 +443,7 @@ struct fsm_main *phl_cmd_new_fsm(struct fsm_root *root,
 	tb.evt_tbl = cmd_event_tbl;
 	tb.dump_obj = cmd_dump_obj;
 	tb.dump_fsm = cmd_dump_fsm;
-	tb.dbg_level = FSM_DBG_WARN;
+	tb.dbg_level = FSM_DBG_MAX;
 	tb.evt_level = FSM_DBG_WARN;
 	tb.debug = cmd_debug;
 

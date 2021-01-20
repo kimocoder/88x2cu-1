@@ -1190,7 +1190,6 @@ rtw_phl_trx_free(void *phl)
 	phl_trx_test_deinit(phl);
 }
 
-#if 0 // NEO : TODO : mark off first
 
 bool rtw_phl_is_init_completed(void *phl)
 {
@@ -1198,6 +1197,8 @@ bool rtw_phl_is_init_completed(void *phl)
 
 	return rtw_hal_is_inited(phl_info->phl_com, phl_info->hal);
 }
+
+#if 0 // NEO : TODO : mark off first
 
 #ifdef RTW_PHL_BCN
 
@@ -1292,7 +1293,6 @@ enum rtw_phl_status rtw_phl_start(void *phl)
 	enum rtw_phl_status phl_status = RTW_PHL_STATUS_FAILURE;
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_SUCCESS;
 
-#if 0 // NEO
 	hal_status = rtw_hal_start(phl_info->phl_com, phl_info->hal);
 	if (hal_status == RTW_HAL_STATUS_MAC_INIT_FAILURE) {
 		phl_status = RTW_PHL_STATUS_HAL_INIT_FAILURE;
@@ -1310,7 +1310,6 @@ enum rtw_phl_status rtw_phl_start(void *phl)
 		phl_status = RTW_PHL_STATUS_HAL_INIT_FAILURE;
 		goto error_hal_start;
 	}
-#endif // if 0 NEO
 
 	/* start FSM framework */
 	phl_status = phl_fsm_start(phl_info);
@@ -1335,6 +1334,7 @@ enum rtw_phl_status rtw_phl_start(void *phl)
 	//rtw_hal_enable_interrupt(phl_info->phl_com, phl_info->hal);
 
 	phl_status = RTW_PHL_STATUS_SUCCESS;
+	RTW_INFO("%s: NEO : success\n", __func__);
 
 	return phl_status;
 
@@ -1345,7 +1345,7 @@ error_phl_module_start:
 error_phl_fsm_module_start:
 	phl_fsm_stop(phl_info);
 error_phl_fsm_start:
-	//rtw_hal_stop(phl_info->phl_com, phl_info->hal);
+	rtw_hal_g6_stop(phl_info->phl_com, phl_info->hal);
 error_hal_start:
 	return phl_status;
 }
@@ -1354,6 +1354,7 @@ void rtw_phl_stop(void *phl)
 {
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 
+	phl_datapath_stop(phl_info);
 	//rtw_hal_disable_interrupt(phl_info->phl_com, phl_info->hal);
 	phl_module_stop(phl_info);
 #ifdef DBG_PHL_MR
@@ -1361,8 +1362,7 @@ void rtw_phl_stop(void *phl)
 #endif
 	phl_fsm_module_stop(phl_info);
 	phl_fsm_stop(phl_info);
-	//rtw_hal_stop(phl_info->phl_com, phl_info->hal);
-	phl_datapath_stop(phl_info);
+	rtw_hal_g6_stop(phl_info->phl_com, phl_info->hal);
 }
 
 #if 0 // NEO mark off first
@@ -1447,7 +1447,7 @@ enum rtw_phl_status phl_wow_start(struct phl_info_t *phl_info, struct rtw_phl_st
 
 	if (RTW_PHL_STATUS_SUCCESS != pstatus) {
 		PHL_ERR("[wow] %s : error entering wowlan!\n", __func__);
-		rtw_hal_stop(phl_info->phl_com, phl_info->hal);
+		rtw_hal_g6_stop(phl_info->phl_com, phl_info->hal);
 		phl_datapath_stop(phl_info);
 		rtw_hal_disable_interrupt(phl_info->phl_com, phl_info->hal);
 		wow_info->enter_wow = false;
@@ -1540,7 +1540,7 @@ enum rtw_phl_status rtw_phl_radio_off(void *phl)
 
 	rtw_hal_disable_interrupt(phl_info->phl_com, phl_info->hal);
 	phl_role_suspend(phl_info);
-	rtw_hal_stop(phl_info->phl_com, phl_info->hal);
+	rtw_hal_g6_stop(phl_info->phl_com, phl_info->hal);
 	ops->trx_reset(phl_info);
 
 	return RTW_PHL_STATUS_SUCCESS;
@@ -1628,7 +1628,7 @@ enum rtw_phl_status rtw_phl_reset(void *phl)
 	if(rtw_phl_is_init_completed(phl_info))
 		phl_status = RTW_PHL_STATUS_SUCCESS;
 
-	rtw_hal_stop(phl_info->phl_com, phl_info->hal);
+	rtw_hal_g6_stop(phl_info->phl_com, phl_info->hal);
 
 	ops->trx_reset(phl_info);
 	ops->trx_resume(phl_info, PHL_REQ_PAUSE_TX|PHL_REQ_PAUSE_RX);

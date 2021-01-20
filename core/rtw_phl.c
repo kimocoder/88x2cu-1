@@ -726,7 +726,6 @@ void rtw_hw_stop(struct dvobj_priv *dvobj)
 	#endif
 }
 
-#if 0 // NEO
 
 bool rtw_hw_get_init_completed(struct dvobj_priv *dvobj)
 {
@@ -738,6 +737,7 @@ bool rtw_hw_is_init_completed(struct dvobj_priv *dvobj)
 	return (rtw_phl_is_init_completed(GET_HAL_INFO(dvobj))) ? _TRUE : _FALSE;
 }
 
+#if 0 // NEO
 #define NSS_VALID(nss) (nss > 0)
 void rtw_hw_cap_init(struct dvobj_priv *dvobj)
 {

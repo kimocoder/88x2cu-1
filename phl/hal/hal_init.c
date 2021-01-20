@@ -1307,6 +1307,8 @@ enum rtw_hal_status hal_rfe_type_chk(struct rtw_phl_com_t *phl_com,
 	return hal_status;
 }
 
+#endif // if 0 NEO
+
 enum rtw_hal_status rtw_hal_start(struct rtw_phl_com_t *phl_com, void *hal)
 {
 	struct hal_info_t *hal_info = (struct hal_info_t *)hal;
@@ -1315,6 +1317,8 @@ enum rtw_hal_status rtw_hal_start(struct rtw_phl_com_t *phl_com, void *hal)
 #ifdef RTW_WKARD_DEF_CMACTBL_CFG
 	enum rf_type tx, rx;
 #endif
+
+#if 0 // NEO
 	hal_status = hal_rfe_type_chk(phl_com, hal_info);
 	if(hal_status != RTW_HAL_STATUS_SUCCESS){
 		PHL_ERR("%s: Unknown RFE type!!!\n", __FUNCTION__);
@@ -1325,10 +1329,13 @@ enum rtw_hal_status rtw_hal_start(struct rtw_phl_com_t *phl_com, void *hal)
 	if (hal_status != RTW_HAL_STATUS_SUCCESS)
 		return hal_status;
 
+#endif // if 0 NEO
+
 	hal_status = RTW_HAL_STATUS_SUCCESS;
 	hal_info->hal_com->is_hal_init = true;
 	hal_info->hal_com->assoc_sta_cnt = 0;
 
+#if 0 // NEO
 	rtw_hal_rf_set_power(hal_info, HW_PHY_0, PWR_BY_RATE);
 #ifdef RTW_WKARD_DEF_CMACTBL_CFG
 	if (phl_com->phy_cap[0].txss < hal_info->hal_com->rfpath_tx_num)
@@ -1345,22 +1352,27 @@ enum rtw_hal_status rtw_hal_start(struct rtw_phl_com_t *phl_com, void *hal)
 	rtw_hal_btc_radio_state_ntfy(hal_info, true);
 	#endif
 
+#endif // if 0 NEO
 	return hal_status;
 }
 
-void rtw_hal_stop(struct rtw_phl_com_t *phl_com, void *hal)
+void rtw_hal_g6_stop(struct rtw_phl_com_t *phl_com, void *hal)
 {
 	struct hal_info_t *hal_info = (struct hal_info_t *)hal;
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
 	struct hal_ops_t *hal_ops = hal_get_ops(hal_info);
 
+#if 0 // NEO
 	#ifdef CONFIG_BTCOEX
 	rtw_hal_btc_radio_state_ntfy(hal_info, false);
 	#endif
 
 	hal_status = hal_ops->hal_stop(phl_com, hal_info);
+#endif // if 0 NEO
 	hal_info->hal_com->is_hal_init = false;
 }
+
+#if 0 // NEO
 
 enum rtw_hal_status rtw_hal_restart(struct rtw_phl_com_t *phl_com, void *hal)
 {

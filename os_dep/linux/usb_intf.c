@@ -1425,7 +1425,7 @@ static void rtw_dev_remove(struct usb_interface *pusb_intf)
 #endif
 	_adapter *padapter = dvobj_get_primary_adapter(dvobj);
 
-	RTW_INFO("+rtw_dev_remove\n");
+	RTW_INFO("+%s\n", __func__);
 
 	dvobj->processing_dev_remove = _TRUE;
 
@@ -1467,12 +1467,16 @@ static void rtw_dev_remove(struct usb_interface *pusb_intf)
 	rtw_btcoex_HaltNotify(padapter);
 #endif
 
+	if (rtw_hw_is_init_completed(dvobj))
+		rtw_hw_stop(dvobj);
+
 	rtw_usb_primary_adapter_deinit(padapter);
 
 #ifdef CONFIG_CONCURRENT_MODE
 	rtw_drv_free_vir_ifaces(dvobj);
 #endif /* CONFIG_CONCURRENT_MODE */
 
+	rtw_hw_deinit(dvobj);
 	devobj_trx_resource_deinit(dvobj);
 	usb_dvobj_deinit(pusb_intf);
 
@@ -1542,7 +1546,6 @@ static void __exit rtw_drv_halt(void)
 	usb_drv.drv_registered = _FALSE;
 
 	usb_deregister(&usb_drv.usbdrv);
-
 	platform_wifi_power_off();
 
 	rtw_suspend_lock_uninit();

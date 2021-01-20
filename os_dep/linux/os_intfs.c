@@ -2190,7 +2190,7 @@ static int _netdev_open(struct net_device *pnetdev)
 		status = rtw_hw_start(dvobj);
 		if (status == _FAIL)
 			goto netdev_open_error;
-		
+
 		rtw_led_control(padapter, LED_CTL_NO_LINK);
 		{
 	#ifdef CONFIG_BT_COEXIST_SOCKET_TRX
