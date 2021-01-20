@@ -253,7 +253,6 @@ enum rtw_hal_status
 }
 #endif
 
-#if 0 // NEO : mark off first
 
 enum rtw_hal_status
 rtw_hal_handle_rx_buffer(struct rtw_phl_com_t *phl_com, void* hal,
@@ -270,6 +269,7 @@ rtw_hal_handle_rx_buffer(struct rtw_phl_com_t *phl_com, void* hal,
 	return hstatus;
 }
 
+#if 0 // NEO : mark off first
 #ifdef CONFIG_SDIO_HCI
 void rtw_hal_sdio_rx_agg_cfg(void *hal, bool enable, u8 drv_define,
 			     u8 timeout, u8 size, u8 pkt_num)

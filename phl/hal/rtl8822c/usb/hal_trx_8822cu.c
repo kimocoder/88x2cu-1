@@ -385,8 +385,8 @@ static struct hal_trx_ops ops= {
 	.map_hw_tx_chnl = hal_mapping_hw_tx_chnl_8852au,
 	.get_bulkout_id = hal_get_bulkout_id_8852au,
 	.hal_fill_wd = hal_fill_wd_8852au,
-	.handle_rx_buffer = hal_handle_rx_buffer_8852a,
 #endif 
+	.handle_rx_buffer = hal_handle_rx_buffer_8822c,
 	.query_hal_info = hal_query_info_8822cu,
 #if 0 // NEO
 	.usb_tx_agg_cfg = hal_usb_tx_agg_cfg_8852au,

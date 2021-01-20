@@ -17,13 +17,13 @@
 
 #define RX_DESC_S_SIZE_8822C 24 
 
-#if 0 //NEO : mark off first
 
 /* wifi packet(RXD.RPKT_TYPE = 0x0) = 32 bytes, otherwise 16 bytes */
 
-#define RX_DESC_L_SIZE_8852A 32
+#define RX_DESC_L_SIZE_8822C 24
 #define RX_BD_INFO_SIZE 4
 
+#if 0 //NEO : mark off first
 #define RX_PPDU_MAC_INFO_SIZE_8852A 4
 
 #define ACH0_QUEUE_IDX_8852A 0x0
@@ -40,86 +40,129 @@
 #define HIQ_B1_QUEUE_IDX_8852A 0xb
 #define FWCMD_QUEUE_IDX_8852A 0xc
 
-/* AX RX DESC */
-/* DWORD 0 ; Offset 00h */
-#define GET_RX_AX_DESC_PKT_LEN_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc, 0, 14)
-#define GET_RX_AX_DESC_SHIFT_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc, 14, 2)
-#define GET_RX_AX_DESC_HDR_IV_L_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc, 16, 6)
-#define GET_RX_AX_DESC_BB_SEL_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc, 22, 1)
-#define GET_RX_AX_DESC_MAC_INFO_VLD_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE( __pRxStatusDesc, 23, 1)
-#define GET_RX_AX_DESC_RPKT_TYPE_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc, 24, 4)
-#define GET_RX_AX_DESC_DRV_INFO_SIZE_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE( __pRxStatusDesc, 28, 3)
-#define GET_RX_AX_DESC_LONG_RXD_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc, 31, 1)
-
-/* DWORD 1 ; Offset 04h */
-#define GET_RX_AX_DESC_PPDU_TYPE_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+4, 0, 4)
-#define GET_RX_AX_DESC_PPDU_CNT_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+4, 4, 3)
-#define GET_RX_AX_DESC_SR_EN_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+4, 7, 1)
-#define GET_RX_AX_DESC_USER_ID_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+4, 8, 8)
-#define GET_RX_AX_DESC_RX_DATARATE_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+4, 16, 9)
-#define GET_RX_AX_DESC_RX_GI_LTF_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+4, 25, 3)
-#define GET_RX_AX_DESC_NON_SRG_PPDU_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+4, 28, 1)
-#define GET_RX_AX_DESC_INTER_PPDU_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+4, 29, 1)
-#define GET_RX_AX_DESC_BW_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+4, 30, 2)
-
-/* DWORD 2 ; Offset 08h */
-#define GET_RX_AX_DESC_FREERUN_CNT_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+8, 0, 32)
-
-/* DWORD 3 ; Offset 0ch */
-#define GET_RX_AX_DESC_A1_MATCH_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+12, 0, 1)
-#define GET_RX_AX_DESC_SW_DEC_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+12, 1, 1)
-#define GET_RX_AX_DESC_HW_DEC_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+12, 2, 1)
-#define GET_RX_AX_DESC_AMPDU_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+12, 3, 1)
-#define GET_RX_AX_DESC_AMPDU_EDN_PKT_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+12, 4, 1)
-#define GET_RX_AX_DESC_AMSDU_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+12, 5, 1)
-#define GET_RX_AX_DESC_AMSDU_CUT_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+12, 6, 1)
-#define GET_RX_AX_DESC_LAST_MSDU_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+12, 7, 1)
-#define GET_RX_AX_DESC_BYPASS_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+12, 8, 1)
-#define GET_RX_AX_DESC_CRC32_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+12, 9, 1)
-#define GET_RX_AX_DESC_ICVERR_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+12, 10, 1)
-#define GET_RX_AX_DESC_MAGIC_WAKE_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+12, 11, 1)
-#define GET_RX_AX_DESC_UNICAST_WAKE_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+12, 12, 1)
-#define GET_RX_AX_DESC_PATTERN_WAKE_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+12, 13, 1)
-
-#define GET_RX_AX_DESC_CH_INFO_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+12, 14, 1)
-#define GET_RX_AX_DESC_STATISTICS_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+12, 15, 1)
-#define GET_RX_AX_DESC_PATTERN_IDX_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+12, 16, 5)
-#define GET_RX_AX_DESC_TARGET_IDC_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+12, 21, 3)
-#define GET_RX_AX_DESC_CHKSUM_OFFLOAD_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+12, 24, 1)
-#define GET_RX_AX_DESC_WITH_LLC_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+12, 25, 1)
+#endif // if 0 NEO
 
 
-/* DWORD 4 ; Offset 10h */
-#define GET_RX_AX_DESC_TYPE_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+16, 0, 2)
-#define GET_RX_AX_DESC_MC_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+16, 2, 1)
-#define GET_RX_AX_DESC_BC_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+16, 3, 1)
-#define GET_RX_AX_DESC_MD_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+16, 4, 1)
-#define GET_RX_AX_DESC_MF_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+16, 5, 1)
-#define GET_RX_AX_DESC_PWR_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+16, 6, 1)
-#define GET_RX_AX_DESC_QOS_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+16, 7, 1)
-#define GET_RX_AX_DESC_TID_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+16, 8, 4)
-#define GET_RX_AX_DESC_EOSP_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+16, 12, 1)
-#define GET_RX_AX_DESC_HTC_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+16, 13, 1)
-#define GET_RX_AX_DESC_QNULL_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+16, 14, 1)
+#define GET_RX_DESC_SWDEC(rxdesc) LE_BITS_TO_4BYTE(rxdesc + 0x00, 27, 1)
+#define GET_RX_DESC_PHYST(rxdesc) LE_BITS_TO_4BYTE(rxdesc + 0x00, 26, 1)
+#define GET_RX_DESC_SHIFT(rxdesc) LE_BITS_TO_4BYTE(rxdesc + 0x00, 24, 2)
+#define GET_RX_DESC_QOS(rxdesc) LE_BITS_TO_4BYTE(rxdesc + 0x00, 23, 1)
+#define GET_RX_DESC_SECURITY(rxdesc) LE_BITS_TO_4BYTE(rxdesc + 0x00, 20, 3)
+#define GET_RX_DESC_DRV_INFO_SIZE(rxdesc) LE_BITS_TO_4BYTE(rxdesc + 0x00, 16, 4)
+#define GET_RX_DESC_ICV_ERR(rxdesc) LE_BITS_TO_4BYTE(rxdesc + 0x00, 15, 1)
+#define GET_RX_DESC_CRC32(rxdesc) LE_BITS_TO_4BYTE(rxdesc + 0x00, 14, 1)
+#define GET_RX_DESC_PKT_LEN(rxdesc) LE_BITS_TO_4BYTE(rxdesc + 0x00, 0, 14)
 
-#define GET_RX_AX_DESC_SEQ_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+16, 16, 12)
-#define GET_RX_AX_DESC_FRAG_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+16, 28, 4)
+#define GET_RX_DESC_C2H(rxdesc) LE_BITS_TO_4BYTE(rxdesc + 0x08, 28, 1)
+#define GET_RX_DESC_AMSDU(rxdesc) LE_BITS_TO_4BYTE(rxdesc + 0x04, 13, 1)
+#define GET_RX_DESC_MF(rxdesc) LE_BITS_TO_4BYTE(rxdesc + 0x04, 27, 1)
+#define GET_RX_DESC_MD(rxdesc) LE_BITS_TO_4BYTE(rxdesc + 0x04, 26, 1)
+#define GET_RX_DESC_PWR(rxdesc) LE_BITS_TO_4BYTE(rxdesc + 0x04, 25, 1)
 
-/* DWORD 5 ; Offset 14h */
-#define GET_RX_AX_DESC_CAM_IDX_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+20, 0, 8)
-#define GET_RX_AX_DESC_ADDR_CAM_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+20, 8, 8)
-#define GET_RX_AX_DESC_MACID_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+20, 16, 8)
-#define GET_RX_AX_DESC_PL_ID_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+20, 24, 4)
-#define GET_RX_AX_DESC_CAM_VLD_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+20, 28, 1)
-#define GET_RX_AX_DESC_FWD_EN_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+20, 29, 1)
-#define GET_RX_AX_DESC_PL_MATCH_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+20, 30, 1)
+#define GET_RX_DESC_FRAG(rxdesc) LE_BITS_TO_4BYTE(rxdesc + 0x08, 12, 4)
+#define GET_RX_DESC_SEQ(rxdesc) LE_BITS_TO_4BYTE(rxdesc + 0x08, 0, 12)
+#define GET_RX_DESC_PAGGR(rxdesc) LE_BITS_TO_4BYTE(rxdesc + 0x04, 15, 1)
 
-/* DWORD 6 ; Offset 18h */
-//#define GET_RX_AX_DESC_MAC_ADDR_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+24, 0, 32)
+#define GET_RX_DESC_RX_SCRAMBLER(rxdesc) LE_BITS_TO_4BYTE(rxdesc + 0x10, 9, 7)
+#define GET_RX_DESC_RX_EOF(rxdesc) LE_BITS_TO_4BYTE(rxdesc + 0x10, 8, 1)
 
-/* DWORD 7 ; Offset 1ch */
-//#define GET_RX_AX_DESC_MAC_ADDR_H_8852A(__pRxStatusDesc) LE_BITS_TO_4BYTE(__pRxStatusDesc+28, 0, 16)
+#define GET_RX_DESC_PPDU_CNT(rxdesc) LE_BITS_TO_4BYTE(rxdesc + 0x08, 29, 2)
 
+/*RXDESC_WORD1*/
+
+#define GET_RX_DESC_BC(rxdesc) LE_BITS_TO_4BYTE(rxdesc + 0x04, 31, 1)
+#define GET_RX_DESC_MC(rxdesc) LE_BITS_TO_4BYTE(rxdesc + 0x04, 30, 1)
+
+/*RXDESC_WORD0*/
+
+#define GET_RX_DESC_EOR_8822C(rxdesc) GET_RX_DESC_EOR(rxdesc)
+#define GET_RX_DESC_PHYPKTIDC_8822C(rxdesc) GET_RX_DESC_PHYPKTIDC(rxdesc)
+#define GET_RX_DESC_SWDEC_8822C(rxdesc) GET_RX_DESC_SWDEC(rxdesc)
+#define GET_RX_DESC_PHYST_8822C(rxdesc) GET_RX_DESC_PHYST(rxdesc)
+#define GET_RX_DESC_SHIFT_8822C(rxdesc) GET_RX_DESC_SHIFT(rxdesc)
+#define GET_RX_DESC_QOS_8822C(rxdesc) GET_RX_DESC_QOS(rxdesc)
+#define GET_RX_DESC_SECURITY_8822C(rxdesc) GET_RX_DESC_SECURITY(rxdesc)
+#define GET_RX_DESC_DRV_INFO_SIZE_8822C(rxdesc)                                \
+	GET_RX_DESC_DRV_INFO_SIZE(rxdesc)
+#define GET_RX_DESC_ICV_ERR_8822C(rxdesc) GET_RX_DESC_ICV_ERR(rxdesc)
+#define GET_RX_DESC_CRC32_8822C(rxdesc) GET_RX_DESC_CRC32(rxdesc)
+#define GET_RX_DESC_PKT_LEN_8822C(rxdesc) GET_RX_DESC_PKT_LEN(rxdesc)
+
+/*RXDESC_WORD1*/
+
+#define GET_RX_DESC_BC_8822C(rxdesc) GET_RX_DESC_BC(rxdesc)
+#define GET_RX_DESC_MC_8822C(rxdesc) GET_RX_DESC_MC(rxdesc)
+#define GET_RX_DESC_TY_PE_8822C(rxdesc) GET_RX_DESC_TY_PE(rxdesc)
+#define GET_RX_DESC_MF_8822C(rxdesc) GET_RX_DESC_MF(rxdesc)
+#define GET_RX_DESC_MD_8822C(rxdesc) GET_RX_DESC_MD(rxdesc)
+#define GET_RX_DESC_PWR_8822C(rxdesc) GET_RX_DESC_PWR(rxdesc)
+#define GET_RX_DESC_PAM_8822C(rxdesc) GET_RX_DESC_PAM(rxdesc)
+#define GET_RX_DESC_CHK_VLD_8822C(rxdesc) GET_RX_DESC_CHK_VLD(rxdesc)
+#define GET_RX_DESC_RX_IS_TCP_UDP_8822C(rxdesc)                                \
+	GET_RX_DESC_RX_IS_TCP_UDP(rxdesc)
+#define GET_RX_DESC_RX_IPV_8822C(rxdesc) GET_RX_DESC_RX_IPV(rxdesc)
+#define GET_RX_DESC_CHKERR_8822C(rxdesc) GET_RX_DESC_CHKERR(rxdesc)
+#define GET_RX_DESC_PAGGR_8822C(rxdesc) GET_RX_DESC_PAGGR(rxdesc)
+#define GET_RX_DESC_RXID_MATCH_8822C(rxdesc) GET_RX_DESC_RXID_MATCH(rxdesc)
+#define GET_RX_DESC_AMSDU_8822C(rxdesc) GET_RX_DESC_AMSDU(rxdesc)
+#define GET_RX_DESC_MACID_VLD_8822C(rxdesc) GET_RX_DESC_MACID_VLD(rxdesc)
+#define GET_RX_DESC_TID_8822C(rxdesc) GET_RX_DESC_TID(rxdesc)
+#define GET_RX_DESC_MACID_8822C(rxdesc) GET_RX_DESC_MACID(rxdesc)
+
+/*RXDESC_WORD2*/
+
+#define GET_RX_DESC_FCS_OK_8822C(rxdesc) GET_RX_DESC_FCS_OK(rxdesc)
+#define GET_RX_DESC_PPDU_CNT_8822C(rxdesc) GET_RX_DESC_PPDU_CNT(rxdesc)
+#define GET_RX_DESC_C2H_8822C(rxdesc) GET_RX_DESC_C2H(rxdesc)
+#define GET_RX_DESC_HWRSVD_8822C(rxdesc) GET_RX_DESC_HWRSVD(rxdesc)
+#define GET_RX_DESC_WLANHD_IV_LEN_8822C(rxdesc)                                \
+	GET_RX_DESC_WLANHD_IV_LEN(rxdesc)
+#define GET_RX_DESC_RX_STATISTICS_8822C(rxdesc)                                \
+	GET_RX_DESC_RX_STATISTICS(rxdesc)
+#define GET_RX_DESC_RX_IS_QOS_8822C(rxdesc) GET_RX_DESC_RX_IS_QOS(rxdesc)
+#define GET_RX_DESC_FRAG_8822C(rxdesc) GET_RX_DESC_FRAG(rxdesc)
+#define GET_RX_DESC_SEQ_8822C(rxdesc) GET_RX_DESC_SEQ(rxdesc)
+
+/*RXDESC_WORD3*/
+
+#define GET_RX_DESC_MAGIC_WAKE_8822C(rxdesc) GET_RX_DESC_MAGIC_WAKE(rxdesc)
+#define GET_RX_DESC_UNICAST_WAKE_8822C(rxdesc) GET_RX_DESC_UNICAST_WAKE(rxdesc)
+#define GET_RX_DESC_PATTERN_MATCH_8822C(rxdesc)                                \
+	GET_RX_DESC_PATTERN_MATCH(rxdesc)
+#define GET_RX_DESC_RXPAYLOAD_MATCH_8822C(rxdesc)                              \
+	GET_RX_DESC_RXPAYLOAD_MATCH(rxdesc)
+#define GET_RX_DESC_RXPAYLOAD_ID_8822C(rxdesc) GET_RX_DESC_RXPAYLOAD_ID(rxdesc)
+#define GET_RX_DESC_DMA_AGG_NUM_8822C(rxdesc) GET_RX_DESC_DMA_AGG_NUM(rxdesc)
+#define GET_RX_DESC_BSSID_FIT_1_0_8822C(rxdesc)                                \
+	GET_RX_DESC_BSSID_FIT_1_0(rxdesc)
+#define GET_RX_DESC_EOSP_8822C(rxdesc) GET_RX_DESC_EOSP(rxdesc)
+#define GET_RX_DESC_HTC_8822C(rxdesc) GET_RX_DESC_HTC(rxdesc)
+#define GET_RX_DESC_BSSID_FIT_4_2_8822C(rxdesc)                                \
+	GET_RX_DESC_BSSID_FIT_4_2(rxdesc)
+#define GET_RX_DESC_RX_RATE_8822C(rxdesc) GET_RX_DESC_RX_RATE(rxdesc)
+
+/*RXDESC_WORD4*/
+
+#define GET_RX_DESC_A1_FIT_8822C(rxdesc) GET_RX_DESC_A1_FIT(rxdesc)
+#define GET_RX_DESC_MACID_RPT_BUFF_8822C(rxdesc)                               \
+	GET_RX_DESC_MACID_RPT_BUFF(rxdesc)
+#define GET_RX_DESC_RX_PRE_NDP_VLD_8822C(rxdesc)                               \
+	GET_RX_DESC_RX_PRE_NDP_VLD(rxdesc)
+#define GET_RX_DESC_RX_SCRAMBLER_8822C(rxdesc) GET_RX_DESC_RX_SCRAMBLER(rxdesc)
+#define GET_RX_DESC_RX_EOF_8822C(rxdesc) GET_RX_DESC_RX_EOF(rxdesc)
+#define GET_RX_DESC_PATTERN_IDX_8822C(rxdesc) GET_RX_DESC_PATTERN_IDX(rxdesc)
+
+/*RXDESC_WORD5*/
+
+#define GET_RX_DESC_TSFL_8822C(rxdesc) GET_RX_DESC_TSFL(rxdesc)
+
+/*
+0000: WIFI packet
+1010: C2H packet */
+#define RX_8822C_DESC_PKT_T_WIFI 0
+#define RX_8822C_DESC_PKT_T_C2H 10
+
+#if 0 // NEO
 
 /*
 0000: WIFI packet
@@ -167,12 +210,13 @@ struct rx_ppdu_status{
 	//struct phy_info phyinfo;
 };
 
+#endif // if 0 NEO
+
 enum rtw_hal_status
-hal_handle_rx_buffer_8852a(struct rtw_phl_com_t *phl_com,
+hal_handle_rx_buffer_8822c(struct rtw_phl_com_t *phl_com,
 				struct hal_info_t *hal,
 				u8 *buf, u32 buf_len,
 				struct rtw_phl_rx_pkt *phl_rx);
 
-#endif // if 0
 
 #endif /*_HAL_TRX_8822C_H_*/

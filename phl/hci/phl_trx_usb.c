@@ -250,7 +250,6 @@ enum rtw_phl_status _phl_in_token_usb(struct phl_info_t *phl_info, u8 pipe_idx)
 	struct rtw_rx_buf *rx_buf = NULL;
 	_os_list* obj = NULL;
 
-	RTW_INFO("%s : NEO start\n", __func__);
 	//PHL_TRACE(COMP_PHL_RECV, _PHL_INFO_, "[1] %s:: 000 idle_rxbuf_list.cnt=%d\n",
 	//							__FUNCTION__, rx_buf_ring->idle_rxbuf_list.cnt);
 
@@ -302,7 +301,6 @@ enum rtw_phl_status _phl_rx_start_usb(struct phl_info_t *phl_info)
 	struct bus_cap_t *bus_cap = &hal_com->bus_cap;
 	u8 pipe_idx = 0;
 
-	RTW_INFO("%s: NEO: max_bulkin_num=%d\n", __func__, hal_spec->max_bulkin_num);
 	for (pipe_idx = 0; pipe_idx < hal_spec->max_bulkin_num ; pipe_idx++) {
 
 		/* Send the bulk IN request down.	*/
@@ -1120,6 +1118,7 @@ static void _phl_rx_callback_usb(void *context)
 	struct phl_hci_trx_ops *hci_trx_ops = phl_info->hci_trx_ops;
 	/* void *drvpriv = phl_to_drvpriv(phl_info); */
 
+	RTW_INFO("%s NEO\n", __func__);
 	do {
 		if (false == phl_check_recv_ring_resource(phl_info))
 			break;
@@ -1328,7 +1327,6 @@ phl_release_rxbuf_usb(struct phl_info_t *phl_info, void *r, u8 ch, enum rtw_rx_t
 	return pstatus;
 }
 
-#if 0 // NEO TODO mark off first
 struct rtw_phl_rx_pkt *phl_get_single_rx(struct phl_info_t *phl_info,
 					 struct rtw_rx_buf *rx_buf)
 {
@@ -1367,6 +1365,8 @@ struct rtw_phl_rx_pkt *phl_get_single_rx(struct phl_info_t *phl_info,
 							pkt_buf, transfer_len,
 							phl_rx);
 
+		RTW_INFO("%s : NEO : rtw_hal_handle_rx_buffer return %d\n", __func__, hstatus);
+		hstatus = RTW_HAL_STATUS_FAILURE;
 		if (RTW_HAL_STATUS_SUCCESS != hstatus) {
 			phl_release_phl_rx(phl_info, phl_rx);
 			phl_rx = NULL;
@@ -1454,7 +1454,6 @@ struct rtw_phl_rx_pkt *phl_get_single_rx(struct phl_info_t *phl_info,
 	}
 	return phl_rxhead;
 }
-#endif
 
 void rtw_phl_post_in_complete(void *phl, void *rxobj, u32 inbuf_len, u8 status_code)
 {
@@ -1532,8 +1531,6 @@ static void phl_rx_process_usb(struct phl_info_t *phl_info,
 
 static enum rtw_phl_status phl_rx_usb(struct phl_info_t *phl_info)
 {
-	RTW_ERR("%s TODO NEO\n", __func__);
-#if 0 // NEO TODO
 	void *drv = phl_to_drvpriv(phl_info);
 	struct hci_info_t *hci_info = (struct hci_info_t *)phl_info->hci;
 	struct rtw_phl_rx_pkt *phl_rx = NULL;
@@ -1580,7 +1577,6 @@ static enum rtw_phl_status phl_rx_usb(struct phl_info_t *phl_info)
 		}
 
 	}
-#endif // if 0 NEO
 	return RTW_PHL_STATUS_SUCCESS;
 }
 
