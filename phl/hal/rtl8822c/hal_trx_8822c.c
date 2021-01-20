@@ -406,10 +406,9 @@ hal_parsing_rx_wd_8822c(struct rtw_phl_com_t *phl_com,
 			/* len); */
 		}
 
-#if 0 // NEO
-
 		if (RTW_HAL_STATUS_SUCCESS != hstatus)
 			break;
+#if 0 // NEO
 		/* TODO :: Need Double Check*/
 		desc_l = mdata->long_rxd ? RX_DESC_L_SIZE_8822C :
 						RX_DESC_S_SIZE_8822C;
@@ -420,8 +419,8 @@ hal_parsing_rx_wd_8822c(struct rtw_phl_com_t *phl_com,
 			(RX_8852A_DESC_PKT_T_PPDU_STATUS != mdata->rpkt_type))
 			*pkt = desc + shift + RX_PPDU_MAC_INFO_SIZE_8822C;
 		else
-			*pkt = desc + shift;
 #endif // if 0
+			*pkt = desc + shift;
 		*pkt_len = (u16)mdata->pktlen;
 
 	} while (false);
@@ -432,11 +431,8 @@ hal_parsing_rx_wd_8822c(struct rtw_phl_com_t *phl_com,
 	return hstatus;
 }
 
-#if 0 // NEO
-
-
 static void
-_hal_rx_wlanhdr_check_8852a(void *drvpriv, void *hdr, struct rtw_r_meta_data *mdata)
+_hal_rx_wlanhdr_check_8822c(void *drvpriv, void *hdr, struct rtw_r_meta_data *mdata)
 {
 	/*Check Retry BIT*/
 	u8 retry = 0;
@@ -462,7 +458,7 @@ _hal_rx_wlanhdr_check_8852a(void *drvpriv, void *hdr, struct rtw_r_meta_data *md
 }
 
 static void
-_hal_rx_sts_8852a(struct hal_info_t *hal, struct rtw_r_meta_data *meta)
+_hal_rx_sts_8822c(struct hal_info_t *hal, struct rtw_r_meta_data *meta)
 {
 	struct rtw_hal_com_t *hal_com = hal->hal_com;
 	struct rtw_trx_stat *trx_stat = &hal_com->trx_stat;
@@ -473,8 +469,6 @@ _hal_rx_sts_8852a(struct hal_info_t *hal, struct rtw_r_meta_data *meta)
 	else
 		trx_stat->rx_ok_cnt++;
 }
-
-#endif // if 0
 
 enum rtw_hal_status
 hal_handle_rx_buffer_8822c(struct rtw_phl_com_t *phl_com,
@@ -501,19 +495,20 @@ hal_handle_rx_buffer_8822c(struct rtw_phl_com_t *phl_com,
 	if( (pkt->vir_addr + pkt->length) > (buf + buf_len) )
 		return RTW_HAL_STATUS_FAILURE;
 
-#if 0 // NEO
 	/* hana_todo */
 	r->pkt_cnt = 1;
 
 	switch (mdata->rpkt_type) {
-	case RX_8852A_DESC_PKT_T_WIFI :
+	case RX_8822C_DESC_PKT_T_WIFI :
 	{
 		phl_rx->type = RTW_RX_TYPE_WIFI;
-		_hal_rx_wlanhdr_check_8852a(drv, pkt->vir_addr, mdata);
-		_hal_rx_sts_8852a(hal, mdata);
-		hal_rx_ppdu_sts_normal_data(phl_com, pkt->vir_addr, mdata);
+		_hal_rx_wlanhdr_check_8822c(drv, pkt->vir_addr, mdata);
+		_hal_rx_sts_8822c(hal, mdata);
+		//NEO
+		//hal_rx_ppdu_sts_normal_data(phl_com, pkt->vir_addr, mdata);
 	}
 	break;
+#if 0 // NEO
 	case RX_8852A_DESC_PKT_T_TX_PD_RELEASE_HOST :
 	{
 		phl_rx->type = RTW_RX_TYPE_TX_WP_RELEASE_HOST;
@@ -624,17 +619,19 @@ hal_handle_rx_buffer_8822c(struct rtw_phl_com_t *phl_com,
 		/* DL MU Report ; UL OFDMA Trigger Report */
 	}
 	break;
-	case RX_8852A_DESC_PKT_T_C2H :
+#endif // if 0 NEO
+	case RX_8822C_DESC_PKT_T_C2H :
 	{
 		struct rtw_c2h_info c = {0};
 
 		phl_rx->type = RTW_RX_TYPE_C2H;
 		rtw_hal_mac_parse_c2h(hal, pkt->vir_addr, mdata->pktlen, (void *)&c);
 
-		hal_c2h_post_process(phl_com, hal, (void *)&c);
+		//NEO
+		//hal_c2h_post_process(phl_com, hal, (void *)&c);
 	}
 	break;
-	case RX_8852A_DESC_PKT_T_TX_RPT:
+	case RX_8822C_DESC_PKT_T_TX_RPT:
 	{
 		phl_rx->type = RTW_RX_TYPE_TX_RPT;
 	}
@@ -643,7 +640,6 @@ hal_handle_rx_buffer_8822c(struct rtw_phl_com_t *phl_com,
 	default:
 	break;
 	}
-#endif // if 0
 	return hstatus;
 }
 

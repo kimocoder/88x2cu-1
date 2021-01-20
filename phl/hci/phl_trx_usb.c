@@ -1366,7 +1366,6 @@ struct rtw_phl_rx_pkt *phl_get_single_rx(struct phl_info_t *phl_info,
 							phl_rx);
 
 		RTW_INFO("%s : NEO : rtw_hal_handle_rx_buffer return %d\n", __func__, hstatus);
-		hstatus = RTW_HAL_STATUS_FAILURE;
 		if (RTW_HAL_STATUS_SUCCESS != hstatus) {
 			phl_release_phl_rx(phl_info, phl_rx);
 			phl_rx = NULL;
@@ -1470,9 +1469,6 @@ void rtw_phl_post_in_complete(void *phl, void *rxobj, u32 inbuf_len, u8 status_c
 static void phl_rx_process_usb(struct phl_info_t *phl_info,
 							struct rtw_phl_rx_pkt *phl_rxhead)
 {
-	RTW_ERR("%s TODO \n", __func__);
-
-#if 0 // NEO TODO mark off first
 	struct rtw_phl_rx_pkt *phl_rx = NULL;
 
 	do {
@@ -1487,6 +1483,8 @@ static void phl_rx_process_usb(struct phl_info_t *phl_info,
 
 		list_del(&phl_rx->list);
 
+		RTW_INFO("%s : NEO : phl_rx->type:%d\n", __func__, phl_rx->type);
+#if 0 // NEO
 		switch (phl_rx->type) {
 		case RTW_RX_TYPE_WIFI:
 			// phl_recycle_rx_buf would in phl_rx_handle_normal or core_rx.
@@ -1525,8 +1523,8 @@ static void phl_rx_process_usb(struct phl_info_t *phl_info,
 			phl_rx = NULL;
 			break;
 		}
+#endif // if 0 NEO
 	} while(phl_rxhead != NULL);
-#endif
 }
 
 static enum rtw_phl_status phl_rx_usb(struct phl_info_t *phl_info)

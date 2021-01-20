@@ -158,8 +158,10 @@
 
 /*
 0000: WIFI packet
+0110: TX report
 1010: C2H packet */
 #define RX_8822C_DESC_PKT_T_WIFI 0
+#define RX_8822C_DESC_PKT_T_TX_RPT 6
 #define RX_8822C_DESC_PKT_T_C2H 10
 
 #if 0 // NEO
