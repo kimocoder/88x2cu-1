@@ -290,6 +290,7 @@ u32 rtl8822cu_inirp_init(PADAPTER padapter)
 
 	precvpriv->ff_hwaddr = RECV_BULK_IN_ADDR;
 
+#if 0 // NEO mark off first
 	/* issue Rx irp to receive data */
 	precvbuf = (struct recv_buf *)precvpriv->precv_buf;
 	for (i = 0; i < regsty->recvbuf_nr; i++) {
@@ -301,6 +302,7 @@ u32 rtl8822cu_inirp_init(PADAPTER padapter)
 		precvbuf++;
 		precvpriv->free_recv_buf_queue_cnt--;
 	}
+#endif // if 0 NEO
 
 #ifdef CONFIG_USB_INTERRUPT_IN_PIPE
 	if (pdev->RtInPipe[REALTEK_USB_IN_INT_EP_IDX] != 0x05) {
