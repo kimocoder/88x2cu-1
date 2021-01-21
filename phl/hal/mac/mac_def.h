@@ -13,15 +13,19 @@
  *
  ******************************************************************************/
 
-#ifndef _MAC_AX_MAC_DEF_H_
-#define _MAC_AX_MAC_DEF_H_
+#ifndef _MAC_DEF_H_
+#define _MAC_DEF_H_
+
+
 
 #include "pltfm_cfg.h"
 #include "feature_cfg.h"
 #include "chip_cfg.h"
-#include "mac_ax/state_mach.h"
+//NEO
+//#include "mac_ax/state_mach.h"
 #include "errors.h"
 
+#if 0 // NEO
 #if MAC_AX_FEATURE_HV
 #include "hv_type.h"
 #endif
@@ -1559,11 +1563,15 @@ struct mac_ax_gpio_info {
 	u8 sw_io_output[MAC_AX_GPIO_NUM];
 };
 
-struct mac_ax_trx_info {
-	enum mac_ax_trx_mode trx_mode;
-	enum mac_ax_qta_mode qta_mode;
-	struct mac_ax_host_rpr_cfg *rpr_cfg;
+#endif // if 0 NEO
+
+struct mac_trx_info {
+//	enum mac_trx_mode trx_mode;
+//	enum mac_qta_mode qta_mode;
+//	struct mac_ax_host_rpr_cfg *rpr_cfg;
 };
+
+#if 0 // NEO
 
 struct mac_ax_fwdl_info {
 	u8 fw_en;
@@ -1598,7 +1606,10 @@ struct mac_ax_rxdma_ch_map {
 	enum mac_ax_pcie_func_ctrl rpq;
 };
 
-struct mac_ax_intf_info {
+#endif // if 0 NEO
+
+struct mac_intf_info {
+#if 0 //NEO
 	enum mac_ax_bd_trunc_mode txbd_trunc_mode;
 	enum mac_ax_bd_trunc_mode rxbd_trunc_mode;
 	enum mac_ax_rxbd_mode rxbd_mode;
@@ -1608,15 +1619,20 @@ struct mac_ax_intf_info {
 	enum mac_ax_wd_dma_intvl wd_dma_idle_intvl;
 	enum mac_ax_wd_dma_intvl wd_dma_act_intvl;
 	enum mac_ax_multi_tag_num multi_tag_num;
+#endif // if 0 NEO
 	u16 rx_sep_append_len;
 	u8 *txbd_buf;
 	u8 *rxbd_buf;
 	u8 skip_all;
+#if 0 // NEO
 	struct mac_ax_txdma_ch_map *txch_map;
 	enum mac_ax_pcie_func_ctrl lbc_en;
 	enum mac_ax_lbc_tmr lbc_tmr;
 	enum mac_ax_pcie_func_ctrl autok_en;
+#endif // if 0 NEO
 };
+
+#if 0 //NEO
 
 struct mac_ax_pcie_trx_mitigation {
 	struct mac_ax_txdma_ch_map *txch_map;
@@ -4405,7 +4421,7 @@ struct mac_ax_pltfm_cb {
 #endif/*CONFIG_NEW_HALMAC_INTERFACE*/
 
 struct mac_ax_adapter {
-	struct mac_ax_ops *ops;
+	struct mac_ops *ops;
 	void *drv_adapter; //hal_com adapter
 	void *phl_adapter; //phl_com adapter
 	struct mac_ax_pltfm_cb *pltfm_cb;
@@ -4538,8 +4554,10 @@ struct mac_ax_intf_ops {
 
 };
 
+#endif // if 0 NEO
+
 /**
- * struct mac_ax_ops - callbacks for mac control
+ * struct mac_ops - callbacks for mac control
  * All callbacks can be used after initializing mac_ax_ops by mac_ax_ops_init.
  * @intf_ops: interface related callbacks, refer struct mac_ax_intf_ops to get
  *	more deatails.
@@ -4547,8 +4565,10 @@ struct mac_ax_intf_ops {
  * @mac_txdesc_len:
  * @build_mac_txdesc:
  */
-struct mac_ax_ops {
-	struct mac_ax_intf_ops *intf_ops;
+struct mac_ops {
+	struct mac_intf_ops *intf_ops;
+
+#if 0 // NEO
 	/*System level*/
 	u32 (*hal_init)(struct mac_ax_adapter *adapter,
 			struct mac_ax_trx_info *trx_info,
@@ -5038,6 +5058,9 @@ struct mac_ax_ops {
 	u32 (*read_ofld_value)(struct mac_ax_adapter *adapter,
 			       u8 **val_buf, u16 *val_len);
 #endif
+
+#endif // if 0 NEO
 };
 
-#endif
+
+#endif /* _MAC_DEF_H_ */

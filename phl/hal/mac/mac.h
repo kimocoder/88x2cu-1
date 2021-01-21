@@ -13,10 +13,12 @@
  *
  ******************************************************************************/
 
-#ifndef _MAC_AX_H_
-#define _MAC_AX_H_
+#ifndef _MAC_H_
+#define _MAC_H_
 
 #include "mac_def.h"
+
+#if 0 //NEO
 #include "mac_ax/fwcmd.h"
 #include "mac_ax/security_cam.h"
 #include "mac_ax/efuse.h"
@@ -62,5 +64,7 @@ u32 mac_ax_ops_exit(struct mac_ax_adapter *adapter);
 u32 is_chip_id(struct mac_ax_adapter *adapter, enum mac_ax_chip_id id);
 
 u32 is_chip_cut(struct mac_ax_adapter *adapter, enum rtw_cut_version cut);
+
+#endif // if 0 NEO
 
 #endif

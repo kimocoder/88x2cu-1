@@ -19,6 +19,8 @@
 #include "mac/mac_ax/fwcmd.h"
 #endif
 
+#if 0 // NEO
+
 #define RTL8852A_FPGA_VERIFICATION 1
 
 u16 hal_mac_get_macid_num(struct hal_info_t *hal)
@@ -765,6 +767,7 @@ void rtw_plt_cb_init(void)
 
 #endif /*CONFIG_NEW_HALMAC_INTERFACE*/
 
+
 /* halmac wrapper API for hal and proto type is at hal_api_mac.h */
 #define MAC_STATUS_MAX	MACSDIOSEQERR+1 /* Wrong interface */
 const char *const ma_status[] = {
@@ -824,6 +827,8 @@ void rtw_hal_mac_get_version(char *ver_str, u16 len)
 		     MAC_AX_SUB_VER, MAC_AX_SUB_INDEX);
 }
 
+#endif // if 0 NEO
+
 /**
  * rtw_hal_mac_get_fw_ver() - Get Firmware version
  * @hal_info:	struct hal_info_t *
@@ -836,12 +841,17 @@ void rtw_hal_mac_get_version(char *ver_str, u16 len)
  */
 void rtw_hal_mac_get_fw_ver(struct hal_info_t *hal_info, char *ver_str, u16 len)
 {
+	RTW_INFO("%s TODO NEO mac_ax_adapter\n", __func__);
+#if 0 // NEO
 	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
 
 	_os_snprintf(ver_str, len, "V%u.%u.%u.%u",
 		     mac->fw_info.major_ver,mac->fw_info.minor_ver,
 		     mac->fw_info.sub_ver, mac->fw_info.sub_idx);
+#endif // if 0 NEO
 }
+
+#if 0 // NEO
 
 #define _IS_FW_READY(hal_info) \
 		(hal_to_mac(hal_info)->sm.fwdl == MAC_AX_FWDL_INIT_RDY)
@@ -944,6 +954,7 @@ u32 rtw_hal_mac_deinit(struct rtw_phl_com_t *phl_com,
 	return hal_status;
 }
 #endif
+
 
 u8 _hal_mac_ax_dmach2datach(u8 dmach)
 {
@@ -1581,6 +1592,8 @@ _exit:
 /* halmac wrapper API for hal and proto type is at hal_api_mac.h */
 enum rtw_hal_status rtw_hal_mac_dbcc_pre_cfg(struct hal_info_t *hal_info, u8 dbcc_en)
 {
+	RTW_INFO("%s NEO TODO\n", __func__);
+#if 0 // NEO
 	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_trx_info trx_info = { 0 };
 	struct mac_ax_pkt_drop_info drop_info = { 0 };
@@ -1600,11 +1613,14 @@ enum rtw_hal_status rtw_hal_mac_dbcc_pre_cfg(struct hal_info_t *hal_info, u8 dbc
 		if (mac->ops->pkt_drop(mac, &drop_info) != MACSUCCESS)
 			return RTW_HAL_STATUS_FAILURE;
 	}
+#endif // if 0 NEO
 	return RTW_HAL_STATUS_SUCCESS;
 }
 
 enum rtw_hal_status rtw_hal_mac_dbcc_cfg(struct hal_info_t *hal_info, u8 dbcc_en)
 {
+	RTW_INFO("%s NEO TODO\n", __func__);
+#if 0 // NEO
 	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_trx_info trx_info = { 0 };
 
@@ -1617,7 +1633,7 @@ enum rtw_hal_status rtw_hal_mac_dbcc_cfg(struct hal_info_t *hal_info, u8 dbcc_en
 		if (mac->ops->dbcc_enable(mac, &trx_info, dbcc_en) != MACSUCCESS)
 			return RTW_HAL_STATUS_FAILURE;
 	}
-
+#endif // if 0 NEO
 	return RTW_HAL_STATUS_SUCCESS;
 }
 
@@ -1814,24 +1830,36 @@ u32 rtw_hal_mac_get_bt_polt_cnt(struct rtw_hal_com_t *hal_com, u8 band, u16 *cnt
 
 	return (result);
 }
+#endif // if 0 NEO
 
 u32 rtw_hal_mac_set_coex_ctrl(struct rtw_hal_com_t *hal_com, u32 val)
 {
+	RTW_INFO("%s TODO NEO - set_hw_value\n", __func__);
+#if 0 // NEO
 	struct hal_info_t *hal = hal_com->hal_priv;
 	struct mac_ax_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_ops *ops = mac->ops;
 
 	return (ops->set_hw_value(mac, MAC_AX_HW_SET_COEX_CTRL, &val));
+#endif // if 0 NEO
+	return 82; // MACNOTSUP
 }
+
 
 u32 rtw_hal_mac_get_coex_ctrl(struct rtw_hal_com_t *hal_com, u32* val)
 {
+	RTW_INFO("%s TODO NEO - get_hw_value\n", __func__);
+#if 0 // NEO
 	struct hal_info_t *hal = hal_com->hal_priv;
 	struct mac_ax_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_ops *ops = mac->ops;
 
 	return (ops->get_hw_value(mac, MAC_AX_HW_GET_COEX_CTRL, val));
+#endif // if 0 NEO
+	return 82; // MACNOTSUP
 }
+
+#if 0 // NEO
 
 u32 rtw_hal_mac_coex_reg_write(struct rtw_hal_com_t *hal_com, u32 offset, u32 value)
 {
@@ -2387,7 +2415,7 @@ rtw_hal_mac_init_mac(void *mac,struct hal_init_info_t *init_info)
 {
 	struct mac_ax_adapter *mac_info = (struct mac_ax_adapter *)mac;
 	struct mac_ax_ops *hal_mac_ops = mac_info->ops;
-	struct mac_ax_trx_info trx_info;
+	struct mac_trx_info trx_info;
 
 	trx_info.trx_mode = init_info->trx_info.trx_mode;
 	trx_info.qta_mode = init_info->trx_info.qta_mode;
@@ -2406,7 +2434,7 @@ rtw_hal_mac_trx_init(void *mac, struct hal_init_info_t *init_info)
 {
 	struct mac_ax_adapter *mac_info = (struct mac_ax_adapter *)mac;
 	struct mac_ax_ops *hal_mac_ops = mac_info->ops;
-	struct mac_ax_trx_info trx_info;
+	struct mac_trx_info trx_info;
 
 	trx_info.trx_mode = init_info->trx_info.trx_mode;
 	trx_info.qta_mode = init_info->trx_info.qta_mode;
@@ -5322,6 +5350,8 @@ rtw_hal_mac_get_sch_tx_en(struct rtw_hal_com_t *hal_com, u8 band_idx, u16 *tx_en
 	return ret;
 }
 
+#endif // if 0 NEO
+
 enum rtw_hal_status
 rtw_hal_tx_pause(struct rtw_hal_com_t *hal_com,
 		 u8 band_idx, bool tx_pause, enum tx_pause_rson rson)
@@ -5331,6 +5361,8 @@ rtw_hal_tx_pause(struct rtw_hal_com_t *hal_com,
 	u16 tx_cfg = 0;
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_FAILURE;
 
+	RTW_INFO("%s NEO TODO\n", __func__);
+#if 0 // NEO
 	if (tx_pause == true) {
 		switch (rson) {
 		case PAUSE_RSON_NOR_SCAN:
@@ -5364,8 +5396,11 @@ rtw_hal_tx_pause(struct rtw_hal_com_t *hal_com,
 	if (hstatus != RTW_HAL_STATUS_SUCCESS)
 		PHL_ERR("mac_set_sch_tx_en failed\n");
 _error:
+#endif // if 0 NEO
 	return hstatus;
 }
+
+#if 0 // NEO
 
 
 bool rtw_hal_is_macid_pause(struct rtw_hal_com_t *hal_com, u16 macid)
@@ -7612,4 +7647,4 @@ exit:
 }
 #endif /* CONFIG_MCC_SUPPORT */
 
-
+#endif // if 0 NEO

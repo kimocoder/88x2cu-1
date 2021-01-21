@@ -52,6 +52,7 @@
 #include "hal_struct.h"
 #include "hal_io.h"
 
+#include "hal_api.h"
 #include "hal_api_mac.h"
 #include "hal_api_bb.h"
 #include "hal_api_rf.h"

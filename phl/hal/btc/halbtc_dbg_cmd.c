@@ -366,6 +366,8 @@ static void _show_bt_info(struct btc_t *btc, u32 *used, char input[][MAX_ARGV],
 	u8 *afh = bt_linfo->afh_map;
 	u16 polt_cnt = 0;
 
+	RTW_INFO("%s NEO TODO\n", __func__);
+#if 0 //NEO
 	btc->chip->ops->update_bt_cnt(btc);
 	_chk_err_state(btc, BTC_DCNT_BTCNT_FREEZE, 0);
 
@@ -462,6 +464,7 @@ static void _show_bt_info(struct btc_t *btc, u32 *used, char input[][MAX_ARGV],
 		     cx->cnt_bt[BTC_BCNT_LOPRI_RX],
 		     cx->cnt_bt[BTC_BCNT_LOPRI_TX],
 		     polt_cnt);
+#endif // if 0 NEO
 }
 
 static void _show_dm_info(struct btc_t *btc, u32 *used, char input[][MAX_ARGV],
@@ -534,6 +537,8 @@ static void _show_mreg(struct btc_t *btc, u32 *used, char input[][MAX_ARGV],
 	u8 i = 0, type = 0, cnt = 0;
 	u32 val, offset;
 
+	RTW_INFO("%s TODO NEO\n", __func__);
+#if 0 // NEO
 	if (!(btc->dm.coex_info_map & BTC_COEX_INFO_MREG))
 		return;
 
@@ -604,6 +609,7 @@ static void _show_mreg(struct btc_t *btc, u32 *used, char input[][MAX_ARGV],
 			     id_to_str(BTC_STR_GDBG, (u32)i),
 			     gdbg->gpio_map[i]);
 	}
+#endif // if 0 NEO
 }
 
 static void _show_summary(struct btc_t *btc, u32 *used, char input[][MAX_ARGV],

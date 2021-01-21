@@ -160,14 +160,20 @@ _send_fw_cmd(struct btc_t *btc, u8 h2c_class, u8 h2c_func, u8 *param, u16 len)
 u32 _read_cx_reg(struct btc_t *btc, u32 offset)
 {
 	u32 val = 0;
+	RTW_INFO("%s NEO TODO\n", __func__);
+#if 0 // NEO
 	rtw_hal_mac_coex_reg_read(btc->hal, offset, &val);
+#endif // if 0 NEO
 	return val;
 }
 
 u8 _read_cx_ctrl(struct btc_t *btc)
 {
 	u32 val = 0;
+	RTW_INFO("%s NEO TODO\n", __func__);
+#if 0 // NEO
 	rtw_hal_mac_get_coex_ctrl(btc->hal, &val);
+#endif // if 0 NEO
 
 	return ((u8)val);
 }
@@ -177,6 +183,8 @@ u32 _read_scbd(struct btc_t *btc)
 	const struct btc_chip *chip = btc->chip;
 	u32 scbd_val = 0;
 
+	RTW_INFO("%s TODO NEO\n", __func__);
+#if 0 // NEO
 	if (!chip->scbd)
 		return 0;
 
@@ -184,6 +192,7 @@ u32 _read_scbd(struct btc_t *btc)
 
 	PHL_INFO("[BTC], read scbd : 0x%08x \n", scbd_val);
 	btc->cx.cnt_bt[BTC_BCNT_SCBDUPDATE]++;
+#endif // if 0 NEO
 	return (scbd_val);
 }
 
@@ -193,6 +202,8 @@ void _write_scbd(struct btc_t *btc, u32 val, bool state)
 	struct btc_wl_info *wl = &btc->cx.wl;
 	u32 scbd_val = 0;
 
+	RTW_INFO("%s TODO NEO\n", __func__);
+#if 0 //NEO
 	if (!chip->scbd)
 		return;
 
@@ -206,6 +217,7 @@ void _write_scbd(struct btc_t *btc, u32 val, bool state)
 
 		btc->cx.cnt_wl[BTC_WCNT_SCBDUPDATE]++;
 	}
+#endif // if 0 NEO
 }
 
 static u8

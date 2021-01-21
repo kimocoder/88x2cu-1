@@ -642,6 +642,8 @@ void _set_gnt_wl(struct btc_t *btc, u8 phy_map, u8 state)
 	struct btc_gnt_ctrl *g = dm->gnt;
 	u8 i;
 
+	RTW_INFO("%s TODO NEO\n", __func__);
+#if 0 // NEO
 	if (phy_map > BTC_PHY_ALL)
 		return;
 
@@ -666,6 +668,7 @@ void _set_gnt_wl(struct btc_t *btc, u8 phy_map, u8 state)
 	}
 
 	rtw_hal_mac_set_grant(h, (u8*)g);
+#endif // if 0 NEO
 }
 
 void _set_gnt_bt(struct btc_t *btc, u8 phy_map, u8 state)
@@ -675,6 +678,8 @@ void _set_gnt_bt(struct btc_t *btc, u8 phy_map, u8 state)
 	struct btc_gnt_ctrl *g = dm->gnt;
 	u8 i;
 
+	RTW_INFO("%s NEO TODO\n", __func__);
+#if 0 // NEO
 	if (phy_map > BTC_PHY_ALL)
 		return;
 
@@ -699,10 +704,13 @@ void _set_gnt_bt(struct btc_t *btc, u8 phy_map, u8 state)
 	}
 
 	rtw_hal_mac_set_grant(h, (u8*)g);
+#endif // if 0 NEO
 }
 
 static void _set_bt_plut(struct btc_t *btc, u8 phy_map, u8 tx_val, u8 rx_val)
 {
+	RTW_INFO("%s NEO TODO\n", __func__);
+#if 0 // NEO
 	if (phy_map & BTC_PHY_0)
 		rtw_hal_mac_set_polluted(btc->hal, HW_PHY_0, tx_val, rx_val);
 
@@ -711,6 +719,7 @@ static void _set_bt_plut(struct btc_t *btc, u8 phy_map, u8 tx_val, u8 rx_val)
 
 	if (phy_map & BTC_PHY_1)
 		rtw_hal_mac_set_polluted(btc->hal, HW_PHY_1, tx_val, rx_val);
+#endif // if 0 NEO
 }
 
 static void _set_ant(struct btc_t *btc, bool force_exec, u8 phy_map, u8 type)

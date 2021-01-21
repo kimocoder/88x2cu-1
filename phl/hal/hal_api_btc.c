@@ -13,7 +13,9 @@
  *
  *****************************************************************************/
 #define _HAL_API_BTC_C_
+
 #include "hal_headers.h"
+#include "hal_headers_le.h"
 #include "btc/hal_btc.h"
 
 #ifdef CONFIG_BTCOEX

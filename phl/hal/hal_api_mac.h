@@ -14,7 +14,7 @@
  *****************************************************************************/
 #ifndef _HAL_API_MAC_H_
 #define _HAL_API_MAC_H_
-#include "mac/mac_ax.h"
+#include "mac/mac.h"
 
 
 #define POLLING_HALMAC_TIME 1
@@ -105,8 +105,8 @@ int rtw_hal_mac_sdio_rx(struct rtw_hal_com_t *hal,
 #endif
 
 struct hal_init_info_t {
-	struct mac_ax_trx_info trx_info;
-	struct mac_ax_intf_info intf_info;
+	struct mac_trx_info trx_info;
+	struct mac_intf_info intf_info;
 	char *ic_name;
 };
 enum rtw_hal_status
@@ -189,6 +189,7 @@ enum rtw_hal_status
 rtw_hal_mac_set_hw_ampdu_cfg(struct hal_info_t *hal_info, u8 band,
 								  u16 max_agg_num, u8 max_agg_time);
 
+#if 0 //NEO
 enum rtw_hal_status rtw_hal_dmc_tbl_cfg(struct hal_info_t *hal_info,
 					struct mac_ax_dctl_info *dctl_info,
 					u16 macid);
@@ -200,6 +201,8 @@ enum rtw_hal_status rtw_hal_cmc_tbl_cfg(struct hal_info_t *hal_info,
 
 enum rtw_hal_status rtw_hal_bacam_cfg(struct hal_info_t *hal_info,
 				      struct mac_ax_bacam_info *ba_cam);
+
+#endif // if 0 NEO
 
 enum rtw_hal_status
 rtw_hal_mac_port_init(struct hal_info_t *hal_info,

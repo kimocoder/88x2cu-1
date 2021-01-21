@@ -14,10 +14,10 @@ phl_path_d1 := $(src)/$(HAL)
 endif
 
 # Base directory
-path_hm := $(phl_path)/mac
+path_hm := phl/hal/mac
 # Level 1 directory
-path_hm_d1 := $(path_hm)/mac_ax
-path_fw_d1 := $(path_hm)/fw_ax
+path_hm_d1 := $(path_hm)/mac_ac
+path_fw_d1 := $(path_hm)/fw_ac
 
 ifeq ($(CONFIG_PCI_HCI), y)
 pci := y
@@ -34,7 +34,10 @@ endif
 # Modify level 1 directory if needed
 #			$(path_hm_d1)/fwdl.o
 
+#halmac-y += $(path_hm_d1)/fwcmd.o
+#halmac-y += phl/hal/mac/mac_ac/fwcmd.o
 halmac-y +=
+
 #halmac-y +=		$(path_hm_d1)/addr_cam.o \
 			$(path_hm_d1)/cmac_tx.o \
 			$(path_hm_d1)/coex.o \

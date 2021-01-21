@@ -542,6 +542,9 @@ enum rtw_hal_status hal_bf_release_target_bf_entry(
 	void *drv_priv = hal_to_drvpriv(hal_info);
 	u8 bfee_idx = 0;
 	u16 macid_rsvd = 0;
+
+	RTW_INFO("%s TODO NEO\n", __func__);
+#if 0 // NEO
 	FUNCIN();
 	if (bf_obj != NULL && bf_entry != NULL) {
 		if (bf_entry->bfee != NULL) {
@@ -576,6 +579,7 @@ enum rtw_hal_status hal_bf_release_target_bf_entry(
 		status = RTW_HAL_STATUS_SUCCESS;
 	}
 	FUNCOUT();
+#endif // if 0 NEO
 	return status;
 }
 
@@ -694,6 +698,8 @@ enum rtw_hal_status hal_bf_set_entry_hwcfg(
 	u8 bfee_idx = 0;
 	u16 csi_buf = 0;
 
+	RTW_INFO("%s NEO TODO\n", __func__);
+#if 0 // NEO
 	/*TODO: 8852A : SU : 0 ~ N-1;  MU : N ~ M*/
 	bfee_idx = bf_entry->bfee->idx +
 		((bf_entry->bfee->type == HAL_BFEE_MU) ?
@@ -723,7 +729,7 @@ enum rtw_hal_status hal_bf_set_entry_hwcfg(
 				bf_entry->csi_buf&CSI_BUF_IDX_HW_MSK);
 	}
 	/*2.TODO: HALBB Settings if needed*/
-
+#endif // if 0 NEO
 	return status;
 }
 
@@ -741,6 +747,9 @@ void hal_bf_update_entry_snd_sts(struct hal_info_t *hal_info, void *entry)
 	struct hal_bf_obj *bf_obj = (struct hal_bf_obj *)hal_com->bf_obj;
 	struct hal_bf_entry *bf_entry = (struct hal_bf_entry *)entry;
 	u8 bfee_idx = 0;
+
+	RTW_INFO("%s TODO NEO\n", __func__);
+#if 0 // NEO
 	/*TODO: 8852A : SU : 0 ~ N-1;  MU : N ~ M*/
 	if (NULL == bf_entry) {
 		PHL_TRACE(COMP_PHL_SOUND, _PHL_INFO_, "[ERROR] hal_bf_update_entry_snd_sts BF_Entry = NULL\n");
@@ -764,6 +773,7 @@ void hal_bf_update_entry_snd_sts(struct hal_info_t *hal_info, void *entry)
 	bf_entry->bfee->snd_sts = (status == RTW_HAL_STATUS_SUCCESS) ? 1 : 0;
 	PHL_TRACE(COMP_PHL_SOUND, _PHL_INFO_, "hal_bf_update_entry_snd_sts bf_entry->bfee->snd_sts = 0x%x \n",
 		  bf_entry->bfee->snd_sts);
+#endif // if 0 NEO
 
 }
 
@@ -774,6 +784,9 @@ hal_bf_hw_mac_deinit_bfee(struct hal_info_t *hal_info, u8 band)
 	struct rtw_hal_com_t *hal_com = hal_info->hal_com;
 	struct hal_bf_obj *bf_obj = (struct hal_bf_obj *)hal_com->bf_obj;
 
+	RTW_INFO("%s TODO NEO\n", __func__);
+
+#if 0 // NEO
 	do {
 		if (band >= 2) {
 			status = RTW_HAL_STATUS_FAILURE;
@@ -791,6 +804,7 @@ hal_bf_hw_mac_deinit_bfee(struct hal_info_t *hal_info, u8 band)
 
 		bf_obj->self_bf_cap[band] &= ~(BF_CAP_HE_BFEE|BF_CAP_VHT_BFEE);
 	} while (0);
+#endif // if 0 NEO
 
 	return status;
 }
@@ -844,6 +858,9 @@ enum rtw_hal_status hal_bf_hw_mac_init_bfee(
 	struct rtw_hal_com_t *hal_com = hal_info->hal_com;
 	struct hal_bf_obj *bf_obj = (struct hal_bf_obj *)hal_com->bf_obj;
 
+	RTW_INFO("%s NEO TODO\n", __func__);
+
+#if 0 // NEO 
 	do {
 		if (band >= 2) {
 			status = RTW_HAL_STATUS_FAILURE;
@@ -859,6 +876,7 @@ enum rtw_hal_status hal_bf_hw_mac_init_bfee(
 		bf_obj->self_bf_cap[band] |= BF_CAP_HE_BFEE|BF_CAP_VHT_BFEE;
 
 	} while (0);
+#endif // if 0 NEO
 
 	return status;
 }
@@ -916,6 +934,8 @@ enum rtw_hal_status hal_bf_set_bfee_csi_para(struct hal_info_t *hal_info,
 	enum rtw_hal_status status = RTW_HAL_STATUS_SUCCESS;
 	u32 rrsc = BIT(HAL_BF_RRSC_6M) | BIT(HAL_BF_RRSC_24M);
 
+	RTW_INFO("%s TODO NEO\n", __func__);
+#if 0 // NEO
 	if (false == cr_cctl) {
 		status = rtw_hal_mac_ax_bfee_para_reg(hal_info->mac, sta);
 	} else {
@@ -958,7 +978,7 @@ enum rtw_hal_status hal_bf_set_bfee_csi_para(struct hal_info_t *hal_info,
 			sta->wrole->hw_band, rrsc);
 		PHL_TRACE(COMP_PHL_DBG, _PHL_INFO_, " set bfee csi rrsc =  0x%x\n", rrsc);
 	}
-
+#endif // if 0 NEO
 	return status;
 }
 
@@ -982,6 +1002,8 @@ enum rtw_hal_status hal_bf_hw_mac_init_bfer(
 	u8 i = 0;
 #endif
 
+	RTW_INFO("%s NEO TODO\n", __func__);
+#if 0 // NEO
 	do {
 		if (band >= 2) {
 			status = RTW_HAL_STATUS_FAILURE;
@@ -1006,7 +1028,7 @@ enum rtw_hal_status hal_bf_hw_mac_init_bfer(
 		bf_obj->self_bf_cap[band] |= BF_CAP_HE_BFER|BF_CAP_VHT_BFER;
 
 	} while (0);
-
+#endif // if 0 NEO
 	return status;
 }
 

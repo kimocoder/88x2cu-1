@@ -17,10 +17,12 @@
 #define _MAC_AX_FW_CMD_H_
 
 #include "../type.h"
-#include "fwcmd_intf.h"
-#include "fwcmd_intf_f2p.h"
-#include "trx_desc.h"
-#include "fwofld.h"
+
+
+//#include "fwcmd_intf.h"
+//#include "fwcmd_intf_f2p.h"
+//#include "trx_desc.h"
+//#include "fwofld.h"
 
 #define FWCMD_HDR_LEN		8
 
@@ -41,6 +43,8 @@
 
 #define FWCMD_C2H_CL_NULL		0xFF
 #define FWCMD_C2H_FUNC_NULL		0xFF
+
+#if 0 // NEO mark off first
 
 enum h2c_buf_class {
 	H2CB_CLASS_CMD,		/* FW command */
@@ -162,5 +166,7 @@ u32 h2c_end_flow(struct mac_ax_adapter *adapter);
 u32 mac_send_h2creg(struct mac_ax_adapter *adapter, u32 *content, u8 len);
 u32 mac_process_c2hreg(struct mac_ax_adapter *adapter,
 		       struct mac_ax_c2hreg_info *info);
+
+#endif // if 0 NEO
 
 #endif

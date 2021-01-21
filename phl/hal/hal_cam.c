@@ -33,6 +33,9 @@ rtw_hal_set_key(void *hal, struct rtw_phl_stainfo_t *sta, u8 type, u8 ext_key, u
 {
 	struct hal_info_t *hal_info = (struct hal_info_t *)hal;
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
+
+	RTW_INFO("%s TODO NEO\n", __func__);
+#if 0 //NEO
 	u8 macid = (u8)sta->macid;
 
 	if (keybuf == NULL) {
@@ -51,7 +54,7 @@ rtw_hal_set_key(void *hal, struct rtw_phl_stainfo_t *sta, u8 type, u8 ext_key, u
 					spp, keyid, keytype, keybuf);
 		}
 	}
-
+#endif // if 0 NEO
 	return hal_status;
 }
 
@@ -63,10 +66,12 @@ rtw_hal_search_key_idx(void *hal, struct rtw_phl_stainfo_t *sta,
 	u32 sec_cam_idx = 0;
 	u8 macid = (u8)sta->macid;
 
+	RTW_INFO("%s TODO NEO\n", __func__);
+#if 0 //NEO
 	sec_cam_idx = rtw_hal_mac_search_key_idx(hal_info,
 						 macid,
 						 keyid,
 						 keytype);
-
+#endif // if 0 NEO
 	return sec_cam_idx;
 }

@@ -71,6 +71,11 @@ enum rtw_hal_status rtw_hal_scan_flush_queue(void *hinfo,
 	struct hal_info_t *hal_info = (struct hal_info_t *)hinfo;
 	int wait = 5; /* 10ms */
 	u8 val8;
+
+	RTW_ERR("%s NEO TODO\n", __func__);
+
+#if 0 // NEO
+
 #if 0
 	unsigned long sp_flags;
 	struct phl_queue *sta_queue;
@@ -124,6 +129,7 @@ enum rtw_hal_status rtw_hal_scan_flush_queue(void *hinfo,
 	if (val8 == DLE_QUEUE_EMPTY)
 		return RTW_HAL_STATUS_SUCCESS;
 
+#endif // if 0 NEO
 	return RTW_HAL_STATUS_FAILURE;
 }
 
@@ -167,8 +173,11 @@ rtw_hal_proc_cmd(void *hal, char proc_cmd, struct rtw_proc_cmd *incmd,
 			hal_status = RTW_HAL_STATUS_SUCCESS;
 	}
 	if(proc_cmd == RTW_PROC_CMD_MAC){
+		RTW_INFO("%s NEO TODO RTW_PROC_CMD_MAC\n", __func__);
+#if 0 // NEO
 		if(rtw_hal_mac_proc_cmd(hal_info, incmd, output, out_len))
 			hal_status = RTW_HAL_STATUS_SUCCESS;
+#endif // if 0 NEO
 	}
 #ifdef CONFIG_BTCOEX
 	if(proc_cmd == RTW_PROC_CMD_BTC){
@@ -194,6 +203,8 @@ rtw_hal_set_mu_edca(void *hal, u8 band, u8 ac,
 	u8 aifs_us;
 	u8 slot_time, sifs;
 
+	RTW_INFO("%s NEO TODO\n", __func__);
+#if 0
 	/* TODO: Get aSlotTime and aSIFS according to current PHY */
 	slot_time = 9;
 	sifs = 16;
@@ -201,6 +212,7 @@ rtw_hal_set_mu_edca(void *hal, u8 band, u8 ac,
 	aifs_us = (aifsn == 0)?0:(aifsn*slot_time + sifs);
 	hal_status = rtw_hal_mac_set_mu_edca(hal_info->hal_com,
 					band, ac, timer_32us, cw_min, cw_max, aifs_us);
+#endif // if 0 NEO
 	return hal_status;
 }
 
@@ -210,8 +222,11 @@ rtw_hal_set_mu_edca_ctrl(void *hal, u8 band, u8 wmm, u8 set)
 	struct hal_info_t *hal_info = (struct hal_info_t *)hal;
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
 
+	RTW_INFO("%s TODO NEO\n", __func__);
+#if 0 // NEO
 	hal_status = rtw_hal_mac_set_mu_edca_ctrl(hal_info->hal_com,
 					band, wmm, set);
+#endif // if 0 NEO
 	return hal_status;
 }
 enum rtw_hal_status
