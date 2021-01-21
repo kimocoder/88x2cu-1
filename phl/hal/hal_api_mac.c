@@ -891,6 +891,7 @@ u32 rtw_hal_mac_init(struct rtw_phl_com_t *phl_com,
 			(phl_com->hci_type ==  RTW_HCI_GSPI))
 			intf = MAC_INTF_SDIO;
 
+		RTW_INFO("intf=%d\n", (int)intf);
 		rtw_plt_cb_init();
 		status = mac_ops_init(hal_com,
 				&rtw_plt_cb, intf, &mac, &mac_ops);
