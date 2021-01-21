@@ -21,7 +21,7 @@
 /* [Note] Modify MakeFile to reduce code size */
 
 /* Debug package for debugging */
-#define MAC_AX_FEATURE_DBGPKG	1
+#define MAC_AX_FEATURE_DBGPKG	0
 
 /* Hadrware verification module */
 #define MAC_AX_FEATURE_HV	0
@@ -33,7 +33,7 @@
 #define MAC_AX_FPGA_TEST	0
 
 /* Temp code for lack of BTC driver*/
-#define MAC_AX_ASIC_TEMP	1
+#define MAC_AX_ASIC_TEMP	0
 
 /* temp for h2c alloc move to phl layer*/
 #define MAC_AX_PHL_H2C		1

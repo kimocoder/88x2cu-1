@@ -97,12 +97,13 @@ path_fw_8852a := $(path_fw_d1)/rtl8852a
 		
 endif
 
-ifeq ($(CONFIG_RTL8852B), y)
-ic := 8852b
+ifeq ($(CONFIG_RTL8822C), y)
+ic := 8822c
 
 # Level 2 directory
-path_hm_8852b := $(path_hm_d1)/mac_$(ic)
+path_hm_8822c := $(path_hm_d1)/mac_$(ic)
 
+halmac-y	+=	$(path_hm_8822c)/init_$(ic).o
 #halmac-y	+=	$(path_hm_8852b)/gpio_$(ic).o \
 			$(path_hm_8852b)/init_$(ic).o \
 			$(path_hm_8852b)/pwr_seq_$(ic).o

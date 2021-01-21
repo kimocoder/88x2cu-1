@@ -31,21 +31,27 @@
 #define MAC_AX_8852B_SUPPORT	0
 #endif
 
+#ifdef CONFIG_RTL8852B
+#define MAC_AC_8822C_SUPPORT	1
+#else
+#define MAC_AC_8822C_SUPPORT	0
+#endif
+
 /* Interface support */
 #ifdef CONFIG_SDIO_HCI
-#define MAC_AX_SDIO_SUPPORT	1
+#define MAC_SDIO_SUPPORT	1
 #else
-#define MAC_AX_SDIO_SUPPORT	0
+#define MAC_SDIO_SUPPORT	0
 #endif
 #ifdef CONFIG_USB_HCI
-#define MAC_AX_USB_SUPPORT	1
+#define MAC_USB_SUPPORT	1
 #else
-#define MAC_AX_USB_SUPPORT	0
+#define MAC_USB_SUPPORT	0
 #endif
 #ifdef CONFIG_PCI_HCI
-#define MAC_AX_PCIE_SUPPORT	1
+#define MAC_PCIE_SUPPORT	1
 #else
-#define MAC_AX_PCIE_SUPPORT	0
+#define MAC_PCIE_SUPPORT	0
 #endif
 
 #else /* for WD1 test program */
@@ -56,9 +62,9 @@
 #define MAC_AX_8852B_SUPPORT	1
 
 /* Interface support */
-#define MAC_AX_SDIO_SUPPORT	1
-#define MAC_AX_USB_SUPPORT	1
-#define MAC_AX_PCIE_SUPPORT	1
+#define MAC_SDIO_SUPPORT	1
+#define MAC_USB_SUPPORT	1
+#define MAC_PCIE_SUPPORT	1
 
 #endif // #else /* for WD1 test program */
 

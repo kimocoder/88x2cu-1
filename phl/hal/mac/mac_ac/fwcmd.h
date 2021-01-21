@@ -150,8 +150,12 @@ u32 h2c_pkt_build_txd(struct mac_ax_adapter *adapter, struct h2c_buf *h2cb);
 u32 fwcmd_wq_enqueue(struct mac_ax_adapter *adapter, struct h2c_buf *h2cb);
 struct h2c_buf *fwcmd_wq_dequeue(struct mac_ax_adapter *adapter, u32 id);
 u32 fwcmd_wq_idle(struct mac_ax_adapter *adapter, u32 id);
-u32 mac_process_c2h(struct mac_ax_adapter *adapter, u8 *buf, u32 len,
+#endif // if 0 NEO
+
+u32 mac_process_c2h(struct mac_adapter *adapter, u8 *buf, u32 len,
 		    u8 *ret);
+
+#if 0 // NEO
 u8 c2h_field_parsing(struct fwcmd_hdr *hdr, struct rtw_c2h_info *info);
 u32 mac_fw_log_cfg(struct mac_ax_adapter *adapter,
 		   struct mac_ax_fw_log *log_cfg);

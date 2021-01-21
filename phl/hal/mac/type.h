@@ -13,10 +13,13 @@
  *
  ******************************************************************************/
 
-#ifndef _MAC_AX_TYPE_H_
-#define _MAC_AX_TYPE_H_
+#ifndef _MAC_TYPE_H_
+#define _MAC_TYPE_H_
 
 #include "mac_def.h"
+
+#if 0 // NEO
+
 #include "mac_reg.h"
 #include "mac_hw_info.h"
 #include "txdesc.h"
@@ -765,5 +768,7 @@ struct mac_ax_err_status {
 	enum mac_ax_err_info err;
 	u8 rst_en;
 };
+
+#endif // if 0 NEO
 
 #endif

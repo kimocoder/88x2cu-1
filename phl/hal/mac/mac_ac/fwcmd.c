@@ -1654,6 +1654,10 @@ u32 mac_process_c2h(struct mac_ax_adapter *adapter, u8 *buf, u32 len,
 	u8 cat;
 	u32 val;
 
+	RTW_INFO("%s NEO TODO\n", __func__);
+
+#if 0 // NEO
+
 	hdr = (struct fwcmd_hdr *)buf;
 
 	info = (struct rtw_c2h_info *)ret;
@@ -1700,6 +1704,9 @@ u32 mac_process_c2h(struct mac_ax_adapter *adapter, u8 *buf, u32 len,
 	}
 
 	return handler(adapter, buf, len, info);
+#endif // if 0
+	return MACNOITEM;
+
 }
 
 #if 0 // NEO

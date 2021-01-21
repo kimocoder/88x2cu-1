@@ -201,6 +201,8 @@
 #define MAC_REG_W32(addr, val) ops->reg_write32(adapter, addr, val)
 #endif /*CONFIG_NEW_HALMAC_INTERFACE*/
 
+#endif // if 0
+
 /*--------------------Define MACRO--------------------------------------*/
 #define MAC_AX_MAX_RU_NUM	4
 #define WLAN_ADDR_LEN			6
@@ -208,16 +210,18 @@
 #define MAX_HE_SUPPORT_SOUND_STA	8
 #define MAC_AX_BCN_INTERVAL_DEFAULT 100
 /*--------------------Define Enum---------------------------------------*/
-enum mac_ax_intf {
-	MAC_AX_INTF_USB,
-	MAC_AX_INTF_SDIO,
-	MAC_AX_INTF_PCIE,
+enum mac_intf {
+	MAC_INTF_USB,
+	MAC_INTF_SDIO,
+	MAC_INTF_PCIE,
 
 	/* keep last */
-	MAC_AX_INTF_LAST,
-	MAC_AX_INTF_MAX = MAC_AX_INTF_LAST,
-	MAC_AX_INTF_INVALID = MAC_AX_INTF_LAST,
+	MAC_INTF_LAST,
+	MAC_INTF_MAX = MAC_INTF_LAST,
+	MAC_INTF_INVALID = MAC_INTF_LAST,
 };
+
+#if 0 // NEO
 
 enum mac_ax_feature {
 	MAC_AX_FT_DUMP_EFUSE,
@@ -4364,11 +4368,12 @@ struct mac_ax_max_tx_time {
 	u8 is_cctrl;
 	u32 max_tx_time; /* us */
 };
+#endif // if 0
 
 /*--------------------Define Adapter & OPs------------------------------------*/
 #ifndef CONFIG_NEW_HALMAC_INTERFACE
-struct mac_ax_pltfm_cb {
-#if MAC_AX_SDIO_SUPPORT
+struct mac_pltfm_cb {
+#if MAC_SDIO_SUPPORT
 	u8 (*sdio_cmd52_r8)(void *drv_adapter, u32 addr);
 	u8 (*sdio_cmd53_r8)(void *drv_adapter, u32 addr);
 	u16 (*sdio_cmd53_r16)(void *drv_adapter, u32 addr);
@@ -4381,7 +4386,7 @@ struct mac_ax_pltfm_cb {
 	u8 (*sdio_cmd53_wn)(void *drv_adapter, u32 addr, u32 size, u8 *val);
 	u8 (*sdio_cmd52_cia_r8)(void *drv_adapter, u32 addr);
 #endif
-#if (MAC_AX_USB_SUPPORT || MAC_AX_PCIE_SUPPORT)
+#if (MAC_USB_SUPPORT || MAC_PCIE_SUPPORT)
 	u8 (*reg_r8)(void *drv_adapter, u32 addr);
 	u16 (*reg_r16)(void *drv_adapter, u32 addr);
 	u32 (*reg_r32)(void *drv_adapter, u32 addr);
@@ -4389,7 +4394,7 @@ struct mac_ax_pltfm_cb {
 	void (*reg_w16)(void *drv_adapter, u32 addr, u16 val);
 	void (*reg_w32)(void *drv_adapter, u32 addr, u32 val);
 #endif
-#if MAC_AX_PHL_H2C
+#if MAC_PHL_H2C
 	enum rtw_hal_status (*tx)(struct rtw_phl_com_t *phl_com,
 				  struct rtw_hal_com_t *hal_com,
 				  struct rtw_h2c_pkt *pkt);
@@ -4420,7 +4425,6 @@ struct mac_ax_pltfm_cb {
 };
 #endif/*CONFIG_NEW_HALMAC_INTERFACE*/
 
-#endif // if 0
 
 struct mac_adapter {
 	struct mac_ops *ops;
