@@ -591,16 +591,13 @@ static void hal_mac_mutex_unlock(void *h, mac_ax_mutex *mutex)
 	_os_mutex_unlock(hal->drv_priv, mutex);
 }
 
-#if 0 // NEO
-
 static void hal_mac_event_notify(void *h,
-			enum mac_ax_feature mac_ft,
-			enum mac_ax_status stat, u8 *buf, u32 size)
+			enum mac_feature mac_ft,
+			enum mac_status stat, u8 *buf, u32 size)
 {
 	//struct rtw_hal_com_t *hal = (struct rtw_hal_com_t *)h;
 
 }
-#endif // if 0 NEO
 
 struct rtw_h2c_pkt *hal_query_h2c_pkt(struct rtw_phl_com_t *phl_com,
 									  struct rtw_hal_com_t *hal_com,
@@ -751,8 +748,7 @@ void rtw_plt_cb_init(void)
 	rtw_plt_cb.rtl_mutex_unlock = hal_mac_mutex_unlock;
 
 	rtw_plt_cb.msg_print = hal_mac_msg_print;
-	// NEO mark off first
-	//rtw_plt_cb.event_notify = hal_mac_event_notify;
+	rtw_plt_cb.event_notify = hal_mac_event_notify;
 
 	/*.tx = ;	*/
 #if MAC_AX_PHL_H2C

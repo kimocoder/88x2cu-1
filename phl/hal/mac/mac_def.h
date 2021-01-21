@@ -228,14 +228,14 @@ enum mac_feature {
 	MAC_FT_INVALID = MAC_FT_LAST,
 };
 
-#if 0 // NEO
-enum mac_ax_status {
-	MAC_AX_STATUS_IDLE,
-	MAC_AX_STATUS_PROC,
-	MAC_AX_STATUS_DONE,
-	MAC_AX_STATUS_ERR,
+enum mac_status {
+	MAC_STATUS_IDLE,
+	MAC_STATUS_PROC,
+	MAC_STATUS_DONE,
+	MAC_STATUS_ERR,
 };
 
+#if 0 // NEO
 enum mac_ax_sdio_4byte_mode {
 	MAC_AX_SDIO_4BYTE_MODE_DISABLE,
 	MAC_AX_SDIO_4BYTE_MODE_RW,
@@ -4425,8 +4425,8 @@ struct mac_pltfm_cb {
 	void (*msg_print)(void *drv_adapter, s8 *fmt, ...);
 
 	void (*event_notify)(void *drv_adapter,
-			     enum mac_ax_feature mac_ft,
-			     enum mac_ax_status stat, u8 *buf, u32 size);
+			     enum mac_feature mac_ft,
+			     enum mac_status stat, u8 *buf, u32 size);
 };
 #endif/*CONFIG_NEW_HALMAC_INTERFACE*/
 
