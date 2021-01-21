@@ -4030,18 +4030,26 @@ rtw_hal_mac_ax_set_mu_table_whole(void *mac, void *hal_score_tbl)
 	return hal_status;
 }
 
+#endif // if 0 NEO
+
 
 enum rtw_hal_status
 rtw_hal_mac_parse_c2h(void *hal, u8 *buf, u32 buf_len, void *c2h)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
 	struct hal_info_t *hal_info = (struct hal_info_t *)hal;
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal_info->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 
-	hal_status = mac->ops->process_c2h(mac, buf, buf_len, (u8 *)c2h);
+	RTW_INFO("%s NEO TODO\n", __func__);
+	if (mac->ops->process_c2h)
+		hal_status = mac->ops->process_c2h(mac, buf, buf_len, (u8 *)c2h);
+	else
+		RTW_INFO("%s NEO TODO mac ops process_c2h is not linked well\n", __func__);
 
 	return hal_status;
 }
+
+#if 0 // NEO
 
 /**
  * Required information in (hal_handle_rx_buffer_XXXXX case RX_DESC_PKT_TYPE_PPDU_STATUS),

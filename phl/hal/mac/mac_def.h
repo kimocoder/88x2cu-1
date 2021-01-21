@@ -4420,10 +4420,14 @@ struct mac_ax_pltfm_cb {
 };
 #endif/*CONFIG_NEW_HALMAC_INTERFACE*/
 
-struct mac_ax_adapter {
+#endif // if 0
+
+struct mac_adapter {
 	struct mac_ops *ops;
 	void *drv_adapter; //hal_com adapter
 	void *phl_adapter; //phl_com adapter
+
+#if 0 // NEO
 	struct mac_ax_pltfm_cb *pltfm_cb;
 	struct mac_ax_state_mach sm;
 	struct mac_ax_hw_info *hw_info;
@@ -4454,7 +4458,10 @@ struct mac_ax_adapter {
 #if MAC_AX_FEATURE_HV
 	struct hv_ax_ops *hv_ops;
 #endif
+#endif // if 0
 };
+
+#if 0 // NEO
 
 /**
  * mac_ax_intf_ops - interface related callbacks
@@ -4686,8 +4693,10 @@ struct mac_ops {
 	u32 (*set_hwseq_reg)(struct mac_ax_adapter *adapter,
 			     u8 reg_seq_idx,
 			     u16 reg_seq_val);
-	u32 (*process_c2h)(struct mac_ax_adapter *adapter, u8 *buf, u32 len,
+#endif // if 0 NEO
+	u32 (*process_c2h)(struct mac_adapter *adapter, u8 *buf, u32 len,
 			   u8 *ret);
+#if 0 // NEO
 	u32 (*parse_dfs)(struct mac_ax_adapter *adapter,
 			 u8 *buf, u32 dfs_len, struct mac_ax_dfs_rpt *rpt);
 	u32 (*parse_ppdu)(struct mac_ax_adapter *adapter,
