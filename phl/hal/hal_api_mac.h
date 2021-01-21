@@ -20,7 +20,7 @@
 #define POLLING_HALMAC_TIME 1
 #define POLLING_HALMAC_CNT 100
 
-#define hal_to_mac(_halinfo)	((struct mac_ax_adapter *)((_halinfo)->mac))
+#define hal_to_mac(_halinfo)	((struct mac_adapter *)((_halinfo)->mac))
 
 #ifdef CONFIG_SDIO_HCI
 u8 hal_mac_sdio_read8(struct rtw_hal_com_t *hal, u32 addr);

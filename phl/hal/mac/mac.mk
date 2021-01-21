@@ -29,7 +29,7 @@ ifeq ($(CONFIG_USB_HCI), y)
 usb := y
 endif
 
-#halmac-y +=		$(path_hm)/mac_ax.o
+halmac-y +=		$(path_hm_ac)/../mac.o
 
 # Modify level 1 directory if needed
 #			$(path_hm_d1)/fwdl.o

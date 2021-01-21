@@ -25,7 +25,6 @@
 //#include "mac_ax/state_mach.h"
 #include "errors.h"
 
-#if 0 // NEO
 #if MAC_AX_FEATURE_HV
 #include "hv_type.h"
 #endif
@@ -201,8 +200,6 @@
 #define MAC_REG_W32(addr, val) ops->reg_write32(adapter, addr, val)
 #endif /*CONFIG_NEW_HALMAC_INTERFACE*/
 
-#endif // if 0
-
 /*--------------------Define MACRO--------------------------------------*/
 #define MAC_AX_MAX_RU_NUM	4
 #define WLAN_ADDR_LEN			6
@@ -221,17 +218,17 @@ enum mac_intf {
 	MAC_INTF_INVALID = MAC_INTF_LAST,
 };
 
-#if 0 // NEO
 
-enum mac_ax_feature {
-	MAC_AX_FT_DUMP_EFUSE,
+enum mac_feature {
+	MAC_FT_DUMP_EFUSE,
 
 	/* keep last */
-	MAC_AX_FT_LAST,
-	MAC_AX_FT_MAX = MAC_AX_FT_LAST,
-	MAC_AX_FT_INVALID = MAC_AX_FT_LAST,
+	MAC_FT_LAST,
+	MAC_FT_MAX = MAC_FT_LAST,
+	MAC_FT_INVALID = MAC_FT_LAST,
 };
 
+#if 0 // NEO
 enum mac_ax_status {
 	MAC_AX_STATUS_IDLE,
 	MAC_AX_STATUS_PROC,
@@ -1469,11 +1466,13 @@ struct mac_ax_sch_tx_en {
 	u8 twt1:1;
 };
 
-struct mac_ax_hw_info {
+#endif // if 0 NEO
+
+struct mac_hw_info {
 	u8 done;
 	u8 chip_id;
 	u8 chip_cut;
-	enum mac_ax_intf intf;
+	enum mac_intf intf;
 	u8 tx_ch_num;
 	u8 tx_data_ch_num;
 	u8 wd_body_len;
@@ -1500,9 +1499,10 @@ struct mac_ax_hw_info {
 	u8 payload_desc_size;
 	u8 wd_checksum_en;
 	u32 sw_amsdu_max_size;
-	mac_ax_mutex ind_access_lock;
+	//mac_ax_mutex ind_access_lock;
 };
 
+#if 0 // NEO
 struct mac_ax_fw_info {
 	u8 major_ver;
 	u8 minor_ver;
@@ -4436,10 +4436,10 @@ struct mac_adapter {
 	void *drv_adapter; //hal_com adapter
 	void *phl_adapter; //phl_com adapter
 
+	struct mac_pltfm_cb *pltfm_cb;
+	//struct mac_ax_state_mach sm;
+	struct mac_hw_info *hw_info;
 #if 0 // NEO
-	struct mac_ax_pltfm_cb *pltfm_cb;
-	struct mac_ax_state_mach sm;
-	struct mac_ax_hw_info *hw_info;
 	struct mac_ax_fw_info fw_info;
 	struct mac_ax_efuse_param efuse_param;
 	struct mac_ax_mac_pwr_info mac_pwr_info;

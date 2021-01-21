@@ -17,6 +17,7 @@
 #define _MAC_H_
 
 #include "mac_def.h"
+#include "mac_ac/init.h"
 
 #if 0 //NEO
 #include "mac_ax/fwcmd.h"
@@ -33,13 +34,14 @@
 #if MAC_AX_FEATURE_HV
 #include "hv_type.h"
 #endif
+#endif // if 0 NEO
 
-#define MAC_AX_MAJOR_VER	0	/*Software Architcture Modify*/
-#define MAC_AX_PROTOTYPE_VER	20	/*New Feature;Regular Release*/
-#define MAC_AX_SUB_VER		15	/*for bug fix*/
-#define MAC_AX_SUB_INDEX	220	/*for HP branch used*/
+#define MAC_MAJOR_VER	0	/*Software Architcture Modify*/
+#define MAC_PROTOTYPE_VER	20	/*New Feature;Regular Release*/
+#define MAC_SUB_VER		15	/*for bug fix*/
+#define MAC_SUB_INDEX	220	/*for HP branch used*/
 
-#define MAC_AX_SRC_VER(a, b, c, d)                                             \
+#define MAC_SRC_VER(a, b, c, d)                                             \
 				(((a) << 24) + ((b) << 16) + ((c) << 8) + (d))
 
 #ifdef CONFIG_NEW_HALMAC_INTERFACE
@@ -49,22 +51,22 @@ u32 mac_ax_ops_init_v1(void *phl_adapter, void *drv_adapter,
 		       struct mac_ax_adapter **mac_adapter,
 		       struct mac_ax_ops **mac_ops);
 #else
-u32 mac_ax_ops_init(void *drv_adapter, struct mac_ax_pltfm_cb *pltfm_cb,
-		    enum mac_ax_intf intf,
-		    struct mac_ax_adapter **mac_adapter,
-		    struct mac_ax_ops **mac_ops);
+u32 mac_ops_init(void *drv_adapter, struct mac_pltfm_cb *pltfm_cb,
+		    enum mac_intf intf,
+		    struct mac_adapter **mac_adapter,
+		    struct mac_ops **mac_ops);
 
 #endif
+
 #if MAC_AX_PHL_H2C
 u32 mac_ax_phl_init(void *phl_adapter, struct mac_ax_adapter *mac_adapter);
 #endif
 
-u32 mac_ax_ops_exit(struct mac_ax_adapter *adapter);
+u32 mac_ops_exit(struct mac_adapter *adapter);
 
-u32 is_chip_id(struct mac_ax_adapter *adapter, enum mac_ax_chip_id id);
+u32 is_chip_id(struct mac_adapter *adapter, enum mac_chip_id id);
 
-u32 is_chip_cut(struct mac_ax_adapter *adapter, enum rtw_cut_version cut);
+//u32 is_chip_cut(struct mac_adapter *adapter, enum rtw_cut_version cut);
 
-#endif // if 0 NEO
 
 #endif

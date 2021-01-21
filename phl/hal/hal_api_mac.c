@@ -403,6 +403,7 @@ u32 hal_mac_sdio_iread32(struct rtw_hal_com_t *hal, u32 addr)
 #endif /* CONFIG_SDIO_INDIRECT_ACCESS */
 #endif /* CONFIG_SDIO_HCI */
 
+#endif // if 0 NEO
 
 #ifndef CONFIG_NEW_HALMAC_INTERFACE
 #ifdef CONFIG_SDIO_HCI
@@ -479,13 +480,10 @@ static u8 hal_mac_reg_r8(void *h, u32 addr)
 {
 	return hal_read8((struct rtw_hal_com_t *)h, addr);
 }
-//NEO : TODO : mark off first
-#if 0
 static u16 hal_mac_reg_r16(void *h, u32 addr)
 {
 	return hal_read16((struct rtw_hal_com_t *)h, addr);
 }
-#endif
 static u32 hal_mac_reg_r32(void *h, u32 addr)
 {
 	return hal_read32((struct rtw_hal_com_t *)h, addr);
@@ -593,6 +591,8 @@ static void hal_mac_mutex_unlock(void *h, mac_ax_mutex *mutex)
 	_os_mutex_unlock(hal->drv_priv, mutex);
 }
 
+#if 0 // NEO
+
 static void hal_mac_event_notify(void *h,
 			enum mac_ax_feature mac_ft,
 			enum mac_ax_status stat, u8 *buf, u32 size)
@@ -600,6 +600,7 @@ static void hal_mac_event_notify(void *h,
 	//struct rtw_hal_com_t *hal = (struct rtw_hal_com_t *)h;
 
 }
+#endif // if 0 NEO
 
 struct rtw_h2c_pkt *hal_query_h2c_pkt(struct rtw_phl_com_t *phl_com,
 									  struct rtw_hal_com_t *hal_com,
@@ -705,7 +706,8 @@ void hal_mac_msg_print(void *p, s8 *fmt, ...)
 #endif
 }
 
-struct mac_ax_pltfm_cb rtw_plt_cb = {0};
+
+struct mac_pltfm_cb rtw_plt_cb = {0};
 void rtw_plt_cb_init(void)
 {
 	/* R/W register */
@@ -724,15 +726,12 @@ void rtw_plt_cb_init(void)
 #endif /* CONFIG_SDIO_HCI */
 
 #if defined(CONFIG_USB_HCI) || defined(CONFIG_PCI_HCI)
-//NEO : TODO : mark off first
-#if 0
 	rtw_plt_cb.reg_r8 = hal_mac_reg_r8;
 	rtw_plt_cb.reg_r16 = hal_mac_reg_r16;
 	rtw_plt_cb.reg_r32 = hal_mac_reg_r32;
 	rtw_plt_cb.reg_w8 = hal_mac_reg_w8;
 	rtw_plt_cb.reg_w16 = hal_mac_reg_w16;
 	rtw_plt_cb.reg_w32 = hal_mac_reg_w32;
-#endif
 #endif /* CONFIG_USB_HCI || CONFIG_PCI_HCI */
 
 	/* Memory allocate */
@@ -752,15 +751,13 @@ void rtw_plt_cb_init(void)
 	rtw_plt_cb.rtl_mutex_unlock = hal_mac_mutex_unlock;
 
 	rtw_plt_cb.msg_print = hal_mac_msg_print;
-	rtw_plt_cb.event_notify = hal_mac_event_notify;
+	// NEO mark off first
+	//rtw_plt_cb.event_notify = hal_mac_event_notify;
 
 	/*.tx = ;	*/
 #if MAC_AX_PHL_H2C
-//NEO : TODO : mark off first
-#if 0
 	rtw_plt_cb.tx = hal_pltfm_tx;
 	rtw_plt_cb.rtl_query_h2c = hal_query_h2c_pkt;
-#endif
 #endif
 }
 
@@ -811,6 +808,8 @@ const char *const ma_status[] = {
 
 #define mac_sstr(status) (((status) >= MAC_STATUS_MAX) ? "unknown" : ma_status[(status)])
 
+#if 0 // NEO
+
 /**
  * rtw_hal_mac_get_version() - Get HALMAC version
  * @ver_str:	string buffer for storing version string
@@ -854,7 +853,7 @@ void rtw_hal_mac_get_fw_ver(struct hal_info_t *hal_info, char *ver_str, u16 len)
 #if 0 // NEO
 
 #define _IS_FW_READY(hal_info) \
-		(hal_to_mac(hal_info)->sm.fwdl == MAC_AX_FWDL_INIT_RDY)
+		(hal_to_mac(hal_info)->sm.fwdl == MAC_FWDL_INIT_RDY)
 
 void hal_mac_print_fw_version(struct hal_info_t *hal_info)
 {
@@ -863,6 +862,8 @@ void hal_mac_print_fw_version(struct hal_info_t *hal_info)
 	PHL_PRINT("%s: FW version %s, %sReady\n", __func__, ver,
 		  _IS_FW_READY(hal_info) ? "" : "Not ");
 }
+
+#endif // if 0 NEO
 
 u32 rtw_hal_mac_init(struct rtw_phl_com_t *phl_com,
 					struct hal_info_t *hal_info)
@@ -895,7 +896,7 @@ u32 rtw_hal_mac_init(struct rtw_phl_com_t *phl_com,
 				&rtw_plt_cb, intf, &mac, &mac_ops);
 		#if MAC_AX_PHL_H2C
 		if (status == MACSUCCESS && mac != NULL)
-			mac_ax_phl_init(phl_com, mac);
+			mac_phl_init(phl_com, mac);
 		#endif
 	}
 #endif
@@ -952,6 +953,7 @@ u32 rtw_hal_mac_deinit(struct rtw_phl_com_t *phl_com,
 	return hal_status;
 }
 
+#if 0 // NEO 
 
 u8 _hal_mac_ax_dmach2datach(u8 dmach)
 {
