@@ -51,7 +51,6 @@ static inline void hal_set_ops_usb(struct rtw_phl_com_t *phl_com,
 
 	#ifdef CONFIG_RTL8822C
 	if (hal_get_chip_id(hal->hal_com) == CHIP_WIFI5_8822C) {
-		RTW_INFO("%s NEO before do hal_set_ops_8822cu()\n", __func__);
 		hal_set_ops_8822cu(phl_com, hal);
 		hal_hook_trx_ops_8822cu(hal);
 	}
