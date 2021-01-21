@@ -154,6 +154,7 @@ static struct mac_ax_intf_ops mac8852a_pcie_ops = {
 
 static struct mac_ops mac8822c_ops = {
 	NULL, /* intf_ops */
+#if 0 // NEO
 	/*System level*/
 	NULL, /* mac_hal_init, */ /* hal_init */
 	NULL, /* mac_hal_fast_init, *//* hal_fast_init */
@@ -211,7 +212,9 @@ static struct mac_ops mac8822c_ops = {
 	NULL, /* mac_enable_cut_hwamsdu, */ /* enable_cut_hwamsdu */
 	NULL, /* mac_hdr_conv, */ /* hdr_conv */
 	NULL, /* mac_set_hwseq_reg, */ /* set hw seq by reg */
+#endif // NEO if 0
 	mac_process_c2h, /* process_c2h */
+#if 0 // NEO
 	NULL, /* mac_parse_dfs, */ /* parse_dfs */
 	NULL, /* mac_parse_ppdu, */ /* parse_ppdu */
 	NULL, /* mac_cfg_phy_rpt, */ /* cfg_phy_rpt */
@@ -397,6 +400,7 @@ static struct mac_ops mac8822c_ops = {
 	mac_read_ofld, /* read_ofld */
 	mac_read_ofld_value, /* read_ofld_value */
 #endif
+#endif // NEO if 0
 };
 
 

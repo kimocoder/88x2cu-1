@@ -632,8 +632,8 @@ hal_handle_rx_buffer_8822c(struct rtw_phl_com_t *phl_com,
 		struct rtw_c2h_info c = {0};
 
 		phl_rx->type = RTW_RX_TYPE_C2H;
-		RTW_INFO("%s NEO TODO C2H : mac_ax_adapter\n", __func__);
-		//rtw_hal_mac_parse_c2h(hal, pkt->vir_addr, mdata->pktlen, (void *)&c);
+		RTW_INFO("%s NEO TODO C2H : rtw_hal_mac_parse_c2h\n", __func__);
+		rtw_hal_mac_parse_c2h(hal, pkt->vir_addr, mdata->pktlen, (void *)&c);
 
 		//NEO
 		//hal_c2h_post_process(phl_com, hal, (void *)&c);
