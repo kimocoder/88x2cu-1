@@ -1005,8 +1005,6 @@ enum rtw_hal_status rtw_hal_init(void *drv_priv,
 #endif // if 0 NEO
 
 	hal_status = rtw_hal_mac_init(phl_com, hal_info);
-	RTW_INFO("%s NEO TODO stop here first\n", __func__);
-	hal_status = RTW_HAL_STATUS_FAILURE;
 	if ((hal_status != RTW_HAL_STATUS_SUCCESS) || (hal_info->mac == NULL)) {
 		PHL_ERR("rtw_hal_mac_init failed\n");
 		goto error_mac_init;

@@ -236,7 +236,7 @@ u8 hal_mac_sdio_read8(struct rtw_hal_com_t *hal, u32 addr)
 	struct hal_info_t *hal_info = hal->hal_priv;
 	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *mac_api = mac->ops;
-	struct mac_ax_intf_ops *mac_intf_ops = mac_api->intf_ops;
+	struct mac_intf_ops *mac_intf_ops = mac_api->intf_ops;
 
 	return mac_intf_ops->reg_read8(mac, addr);
 }
@@ -246,7 +246,7 @@ u16 hal_mac_sdio_read16(struct rtw_hal_com_t *hal, u32 addr)
 	struct hal_info_t *hal_info = hal->hal_priv;
 	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *mac_api = mac->ops;
-	struct mac_ax_intf_ops *mac_intf_ops = mac_api->intf_ops;
+	struct mac_intf_ops *mac_intf_ops = mac_api->intf_ops;
 
 	return mac_intf_ops->reg_read16(mac, addr);
 }
@@ -256,7 +256,7 @@ u32 hal_mac_sdio_read32(struct rtw_hal_com_t *hal, u32 addr)
 	struct hal_info_t *hal_info = hal->hal_priv;
 	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *mac_api = mac->ops;
-	struct mac_ax_intf_ops *mac_intf_ops = mac_api->intf_ops;
+	struct mac_intf_ops *mac_intf_ops = mac_api->intf_ops;
 
 	return mac_intf_ops->reg_read32(mac, addr);
 }
@@ -266,7 +266,7 @@ int hal_mac_sdio_write8(struct rtw_hal_com_t *hal, u32 addr, u8 value)
 	struct hal_info_t *hal_info = hal->hal_priv;
 	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *mac_api = mac->ops;
-	struct mac_ax_intf_ops *mac_intf_ops = mac_api->intf_ops;
+	struct mac_intf_ops *mac_intf_ops = mac_api->intf_ops;
 
 	mac_intf_ops->reg_write8(mac, addr, value);
 	return 0;
@@ -277,7 +277,7 @@ int hal_mac_sdio_write16(struct rtw_hal_com_t *hal, u32 addr, u16 value)
 	struct hal_info_t *hal_info = hal->hal_priv;
 	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *mac_api = mac->ops;
-	struct mac_ax_intf_ops *mac_intf_ops = mac_api->intf_ops;
+	struct mac_intf_ops *mac_intf_ops = mac_api->intf_ops;
 
 	mac_intf_ops->reg_write16(mac, addr, value);
 	return 0;
@@ -288,7 +288,7 @@ int hal_mac_sdio_write32(struct rtw_hal_com_t *hal, u32 addr, u32 value)
 	struct hal_info_t *hal_info = hal->hal_priv;
 	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *mac_api = mac->ops;
-	struct mac_ax_intf_ops *mac_intf_ops = mac_api->intf_ops;
+	struct mac_intf_ops *mac_intf_ops = mac_api->intf_ops;
 
 	mac_intf_ops->reg_write32(mac, addr, value);
 	return 0;
@@ -343,7 +343,7 @@ static int _sdio_read_local(struct rtw_hal_com_t *hal, u32 addr, u32 cnt, u8 *bu
 	/*struct hal_info_t *hal_info = hal->hal_priv;*/
 	/*struct mac_ax_adapter *mac = hal_to_mac(hal_info);*/
 	/*struct mac_ax_ops *mac_api = mac->ops;*/
-	/*struct mac_ax_intf_ops *mac_intf_ops = mac_api->intf_ops;*/
+	/*struct mac_intf_ops *mac_intf_ops = mac_api->intf_ops;*/
 
 	if (buf == NULL)
 		return -1;
@@ -376,7 +376,7 @@ u8 hal_mac_sdio_iread8(struct rtw_hal_com_t *hal, u32 addr)
 	struct hal_info_t *hal_info = hal->hal_priv;
 	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *mac_api = mac->ops;
-	struct mac_ax_intf_ops *mac_intf_ops = mac_api->intf_ops;
+	struct mac_intf_ops *mac_intf_ops = mac_api->intf_ops;
 
 	return mac_intf_ops->reg_read8(mac, addr);
 }
@@ -386,7 +386,7 @@ u16 hal_mac_sdio_iread16(struct rtw_hal_com_t *hal, u32 addr)
 	struct hal_info_t *hal_info = hal->hal_priv;
 	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *mac_api = mac->ops;
-	struct mac_ax_intf_ops *mac_intf_ops = mac_api->intf_ops;
+	struct mac_intf_ops *mac_intf_ops = mac_api->intf_ops;
 
 	return mac_intf_ops->reg_read16(mac, addr);
 }
@@ -396,7 +396,7 @@ u32 hal_mac_sdio_iread32(struct rtw_hal_com_t *hal, u32 addr)
 	struct hal_info_t *hal_info = hal->hal_priv;
 	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *mac_api = mac->ops;
-	struct mac_ax_intf_ops *mac_intf_ops = mac_api->intf_ops;
+	struct mac_intf_ops *mac_intf_ops = mac_api->intf_ops;
 
 	return 0;
 }
@@ -887,7 +887,6 @@ u32 rtw_hal_mac_init(struct rtw_phl_com_t *phl_com,
 			(phl_com->hci_type ==  RTW_HCI_GSPI))
 			intf = MAC_INTF_SDIO;
 
-		RTW_INFO("intf=%d\n", (int)intf);
 		rtw_plt_cb_init();
 		status = mac_ops_init(hal_com,
 				&rtw_plt_cb, intf, &mac, &mac_ops);

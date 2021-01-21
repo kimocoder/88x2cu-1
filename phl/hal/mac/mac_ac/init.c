@@ -60,12 +60,10 @@ struct mac_adapter *get_mac_adapter(enum mac_intf intf,
 						pltfm_cb);
 		break;
 #endif
-#if MAC_AC_8822C_SUPPORT
 	case MAC_CHIP_ID_8822C:
 		adapter = get_mac_8822c_adapter(intf, chip_cut, drv_adapter,
 						pltfm_cb);
 		break;
-#endif
 
 	default:
 		return NULL;

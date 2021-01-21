@@ -328,15 +328,14 @@ u32 mac_ops_init(void *drv_adapter, struct mac_pltfm_cb *pltfm_cb,
 	if (!chk_pltfm_endian())
 		return MACPFED;
 
-#if 0 // NEO
 	pltfm_cb->msg_print(drv_adapter,
-			    "MAC_AX_MAJOR_VER = %d\n"
-			    "MAC_AX_PROTOTYPE_VER = %d\n"
-			    "MAC_AX_SUB_VER = %d\n"
-			    "MAC_AX_SUB_INDEX = %d\n",
-			    MAC_AX_MAJOR_VER, MAC_AX_PROTOTYPE_VER,
-			    MAC_AX_SUB_VER, MAC_AX_SUB_INDEX);
-#endif // if 0 NEO
+			    "MAC_MAJOR_VER = %d\n"
+			    "MAC_PROTOTYPE_VER = %d\n"
+			    "MAC_SUB_VER = %d\n"
+			    "MAC_SUB_INDEX = %d\n",
+			    MAC_MAJOR_VER, MAC_PROTOTYPE_VER,
+			    MAC_SUB_VER, MAC_SUB_INDEX);
+
 	ret = get_chip_info(drv_adapter, pltfm_cb, intf, &chip_id, &chip_cut);
 	if (ret)
 		return ret;

@@ -15,6 +15,7 @@
 
 
 #include "init_8822c.h"
+#include "../../mac_def.h"
 
 #if 0 // NEO
 #include "../pwr.h"
@@ -57,6 +58,7 @@
 #include "../twt.h"
 #include "../mport.h"
 #include "../p2p.h"
+#endif // if 0 NEO
 
 #if MAC_SDIO_SUPPORT
 #include "../_sdio.h"
@@ -71,7 +73,8 @@
 #include "../dbgpkg.h"
 #endif
 
-#if MAC_AX_SDIO_SUPPORT
+
+#if MAC_SDIO_SUPPORT
 static struct mac_ax_intf_ops mac8852a_sdio_ops = {
 	reg_read8_sdio, /* reg_read8 */
 	reg_write8_sdio, /* reg_write8 */
@@ -96,8 +99,8 @@ static struct mac_ax_intf_ops mac8852a_sdio_ops = {
 };
 #endif
 
-#if MAC_AX_USB_SUPPORT
-static struct mac_ax_intf_ops mac8852a_usb_ops = {
+#if MAC_USB_SUPPORT
+static struct mac_intf_ops mac8822c_usb_ops = {
 	reg_read8_usb, /* reg_read8 */
 	reg_write8_usb, /* reg_write8 */
 	reg_read16_usb, /* reg_read16 */
@@ -115,13 +118,15 @@ static struct mac_ax_intf_ops mac8852a_usb_ops = {
 	u2u3_switch, /*u2u3_switch*/
 	get_usb_mode, /*get_usb_mode*/
 	get_usb_support_ability,/*get_usb_support_ability*/
+#if 0 // NEO
 	usb_tx_agg_cfg, /*usb_tx_agg_cfg*/
 	usb_rx_agg_cfg, /*usb_rx_agg_cfg*/
 	set_usb_wowlan, /*set_wowlan*/
+#endif // if 0 NEO
 };
 #endif
 
-#if MAC_AX_PCIE_SUPPORT
+#if MAC_PCIE_SUPPORT
 static struct mac_ax_intf_ops mac8852a_pcie_ops = {
 	reg_read8_pcie, /* reg_read8 */
 	reg_write8_pcie, /* reg_write8 */
@@ -146,7 +151,6 @@ static struct mac_ax_intf_ops mac8852a_pcie_ops = {
 };
 #endif
 
-#endif // if 0 NEO
 
 static struct mac_ops mac8822c_ops = {
 	NULL, /* intf_ops */
@@ -395,20 +399,19 @@ static struct mac_ops mac8822c_ops = {
 #endif
 };
 
-#if 0 // NEO
 
-static struct mac_ax_hw_info mac8852a_hw_info = {
+static struct mac_hw_info mac8822c_hw_info = {
 	0, /* done */
-	MAC_AX_CHIP_ID_8852A, /* chip_id */
+	MAC_CHIP_ID_8822C, /* chip_id */
 	0xFF, /* chip_cut */
-	MAC_AX_INTF_INVALID, /* intf */
+	MAC_INTF_INVALID, /* intf */
 	19, /* tx_ch_num */
 	10, /* tx_data_ch_num */
-	WD_BODY_LEN, /* wd_body_len */
-	WD_INFO_LEN, /* wd_info_len */
-	pwr_on_seq_8852a, /* pwr_on_seq */
-	pwr_off_seq_8852a, /* pwr_off_seq */
-	PWR_SEQ_VER_8852A, /* pwr_seq_ver */
+	0, /* WD_BODY_LEN, */ /* wd_body_len */
+	0, /* WD_INFO_LEN, */ /* wd_info_len */
+	NULL, /* pwr_on_seq_8852a,*/ /* pwr_on_seq */
+	NULL, /* pwr_off_seq_8852a,*/ /* pwr_off_seq */
+	NULL, /* PWR_SEQ_VER_8852A, */ /* pwr_seq_ver */
 	458752, /* fifo_size */
 	128, /* macid_num */
 	20, /* bssid_num */
@@ -428,6 +431,7 @@ static struct mac_ax_hw_info mac8852a_hw_info = {
 	24, /* payload_desc_size */
 };
 
+#if 0 // NEO
 static struct mac_ax_ft_status mac_8852a_ft_status[] = {
 	{MAC_AX_FT_DUMP_EFUSE, MAC_AX_STATUS_IDLE, NULL, 0},
 	{MAC_AX_FT_MAX, MAC_AX_STATUS_ERR, NULL, 0},
@@ -462,7 +466,7 @@ static struct mac_adapter mac_8822c_adapter = {
 	{0, 0, 0, NULL}, /* pkt_ofld_pkt */
 	{{{0}, {0}, {0}, {0}}}, /* mcc_group_info */
 	{NULL}, /* wowlan_info */
-#if MAC_AX_SDIO_SUPPORT
+#if MAC_SDIO_SUPPORT
 	{MAC_AX_SDIO_4BYTE_MODE_DISABLE, MAC_AX_SDIO_TX_MODE_AGG,
 	MAC_AX_SDIO_SPEC_VER_2_00, 512, 1, 8, 0}, /* sdio_info */
 #endif
@@ -529,39 +533,37 @@ struct mac_adapter *get_mac_8822c_adapter(enum mac_intf intf,
 					     u8 chip_cut, void *drv_adapter,
 					     struct mac_pltfm_cb *pltfm_cb)
 {
-	struct mac_ax_adapter *adapter = NULL;
-	struct mac_ax_hw_info *hw_info = NULL;
-	struct mac_ax_mac_pwr_info *pwr_info;
+	struct mac_adapter *adapter = NULL;
+	struct mac_hw_info *hw_info = NULL;
+	//struct mac_ax_mac_pwr_info *pwr_info;
 
 	RTW_INFO("%s NEO TODO\n", __func__);
-	return NULL;
-#if 0 // NEO
 	if (!pltfm_cb)
 		return NULL;
 
-	adapter = (struct mac_ax_adapter *)pltfm_cb->rtl_malloc(drv_adapter,
-		sizeof(struct mac_ax_adapter));
+	adapter = (struct mac_adapter *)pltfm_cb->rtl_malloc(drv_adapter,
+		sizeof(struct mac_adapter));
 	if (!adapter) {
 		pltfm_cb->msg_print(drv_adapter, "Malloc adapter fail\n");
 		return NULL;
 	}
 
-	pltfm_cb->rtl_memcpy(drv_adapter, adapter, &mac_8852a_adapter,
-		     sizeof(struct mac_ax_adapter));
+	pltfm_cb->rtl_memcpy(drv_adapter, adapter, &mac_8822c_adapter,
+		     sizeof(struct mac_adapter));
 
 	/*Alloc HW INFO */
-	hw_info = (struct mac_ax_hw_info *)pltfm_cb->rtl_malloc(drv_adapter,
-		sizeof(struct mac_ax_hw_info));
+	hw_info = (struct mac_hw_info *)pltfm_cb->rtl_malloc(drv_adapter,
+		sizeof(struct mac_hw_info));
 
 	if (!hw_info) {
 		pltfm_cb->msg_print(drv_adapter, "Malloc hw info fail\n");
 		return NULL;
 	}
 
-	pltfm_cb->rtl_memcpy(drv_adapter, hw_info, &mac8852a_hw_info,
-		sizeof(struct mac_ax_hw_info));
+	pltfm_cb->rtl_memcpy(drv_adapter, hw_info, &mac8822c_hw_info,
+		sizeof(struct mac_hw_info));
 
-	pwr_info = &adapter->mac_pwr_info;
+	//pwr_info = &adapter->mac_pwr_info;
 
 	adapter->drv_adapter = drv_adapter;
 	adapter->pltfm_cb = pltfm_cb;
@@ -572,21 +574,22 @@ struct mac_adapter *get_mac_8822c_adapter(enum mac_intf intf,
 
 	switch (intf) {
 #if MAC_SDIO_SUPPORT
-	case MAC_AX_INTF_SDIO:
+	case MAC_INTF_SDIO:
 		adapter->ops->intf_ops = &mac8852a_sdio_ops;
-		pwr_info->intf_pwr_switch = sdio_pwr_switch;
+		//pwr_info->intf_pwr_switch = sdio_pwr_switch;
 		break;
 #endif
 #if MAC_USB_SUPPORT
-	case MAC_AX_INTF_USB:
-		adapter->ops->intf_ops = &mac8852a_usb_ops;
-		pwr_info->intf_pwr_switch = usb_pwr_switch;
+	case MAC_INTF_USB:
+		adapter->ops->intf_ops = &mac8822c_usb_ops;
+		// NEO
+		//pwr_info->intf_pwr_switch = usb_pwr_switch;
 		break;
 #endif
 #if MAC_PCIE_SUPPORT
-	case MAC_AX_INTF_PCIE:
+	case MAC_INTF_PCIE:
 		adapter->ops->intf_ops = &mac8852a_pcie_ops;
-		pwr_info->intf_pwr_switch = pcie_pwr_switch;
+		//pwr_info->intf_pwr_switch = pcie_pwr_switch;
 		break;
 #endif
 	default:
@@ -594,7 +597,7 @@ struct mac_adapter *get_mac_8822c_adapter(enum mac_intf intf,
 	}
 
 	return adapter;
-#endif // if 0 NEO
 }
-#endif
+#endif /* CONFIG_NEW_HALMAC_INTERFACE */
+
 

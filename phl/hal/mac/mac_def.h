@@ -84,9 +84,9 @@
 #define PLTFM_MSG_PRINT(...)	\
 	hal_mac_msg_print(drv_adapter, __VA_ARGS__)
 
-#define adapter_to_mac_ops(adapter) ((struct mac_ax_ops *)((adapter)->ops))
+#define adapter_to_mac_ops(adapter) ((struct mac_ops *)((adapter)->ops))
 #define adapter_to_intf_ops(adapter)                                           \
-	((struct mac_ax_intf_ops *)((adapter)->ops->intf_ops))
+	((struct mac_intf_ops *)((adapter)->ops->intf_ops))
 
 #define PLTFM_REG_R8(addr)                                                     \
 	hal_read8(adapter->drv_adapter, addr)
@@ -188,9 +188,9 @@
 #define PLTFM_MSG_PRINT(...)	\
 	adapter->pltfm_cb->msg_print(drv_adapter, __VA_ARGS__)
 
-#define adapter_to_mac_ops(adapter) ((struct mac_ax_ops *)((adapter)->ops))
+#define adapter_to_mac_ops(adapter) ((struct mac_ops *)((adapter)->ops))
 #define adapter_to_intf_ops(adapter)                                           \
-	((struct mac_ax_intf_ops *)((adapter)->ops->intf_ops))
+	((struct mac_intf_ops *)((adapter)->ops->intf_ops))
 
 #define MAC_REG_R8(addr) ops->reg_read8(adapter, addr)
 #define MAC_REG_R16(addr) ops->reg_read16(adapter, addr)
@@ -4470,10 +4470,9 @@ struct mac_adapter {
 #endif // if 0
 };
 
-#if 0 // NEO
 
 /**
- * mac_ax_intf_ops - interface related callbacks
+ * mac_intf_ops - interface related callbacks
  * @reg_read8:
  * @reg_write8:
  * @reg_read16:
@@ -4486,91 +4485,91 @@ struct mac_adapter {
  * @reg_read_n_sdio:
  * @get_bulkout_id:
  */
-struct mac_ax_intf_ops {
-	u8 (*reg_read8)(struct mac_ax_adapter *adapter, u32 addr);
-	void (*reg_write8)(struct mac_ax_adapter *adapter, u32 addr, u8 val);
-	u16 (*reg_read16)(struct mac_ax_adapter *adapter, u32 addr);
-	void (*reg_write16)(struct mac_ax_adapter *adapter, u32 addr, u16 val);
-	u32 (*reg_read32)(struct mac_ax_adapter *adapter, u32 addr);
-	void (*reg_write32)(struct mac_ax_adapter *adapter, u32 addr, u32 val);
+struct mac_intf_ops {
+	u8 (*reg_read8)(struct mac_adapter *adapter, u32 addr);
+	void (*reg_write8)(struct mac_adapter *adapter, u32 addr, u8 val);
+	u16 (*reg_read16)(struct mac_adapter *adapter, u32 addr);
+	void (*reg_write16)(struct mac_adapter *adapter, u32 addr, u16 val);
+	u32 (*reg_read32)(struct mac_adapter *adapter, u32 addr);
+	void (*reg_write32)(struct mac_adapter *adapter, u32 addr, u32 val);
 	/**
 	 * @tx_allow_sdio
 	 * Only support SDIO interface. Using this API in other interface
 	 * may cause system crash or segmentation fault.
 	 */
-	u32 (*tx_allow_sdio)(struct mac_ax_adapter *adapter,
+	u32 (*tx_allow_sdio)(struct mac_adapter *adapter,
 			     struct mac_ax_sdio_tx_info *info);
 	/**
 	 * @tx_cmd_addr_sdio
 	 * Only support SDIO interface. Using this API in other interface
 	 * may cause system crash or segmentation fault.
 	 */
-	u32 (*tx_cmd_addr_sdio)(struct mac_ax_adapter *adapter,
+	u32 (*tx_cmd_addr_sdio)(struct mac_adapter *adapter,
 				struct mac_ax_sdio_tx_info *info,
 				u32 *cmd_addr);
-	u32 (*intf_pre_init)(struct mac_ax_adapter *adapter, void *param);
-	u32 (*intf_init)(struct mac_ax_adapter *adapter, void *param);
-	u32 (*intf_deinit)(struct mac_ax_adapter *adapter, void *param);
+	u32 (*intf_pre_init)(struct mac_adapter *adapter, void *param);
+	u32 (*intf_init)(struct mac_adapter *adapter, void *param);
+	u32 (*intf_deinit)(struct mac_adapter *adapter, void *param);
 	/**
 	 * @reg_read_n_sdio
 	 * Only support SDIO interface. Using this API in other interface
 	 * may cause system crash or segmentation fault.
 	 */
-	u32 (*reg_read_n_sdio)(struct mac_ax_adapter *adapter, u32 addr,
+	u32 (*reg_read_n_sdio)(struct mac_adapter *adapter, u32 addr,
 			       u32 size, u8 *val);
 	/**
 	 * @get_bulkout_id
 	 * Only support USB interface. Using this API in other interface
 	 * may cause system crash or segmentation fault.
 	 */
-	u8 (*get_bulkout_id)(struct mac_ax_adapter *adapter, u8 ch_dma,
+	u8 (*get_bulkout_id)(struct mac_adapter *adapter, u8 ch_dma,
 			     u8 mode);
 	/**
 	 * @ltr_set_pcie
 	 * Only support PCIe interface. Using this API in other interface
 	 * may cause system crash or segmentation fault.
 	 */
-	u32 (*ltr_set_pcie)(struct mac_ax_adapter *adapter,
+	u32 (*ltr_set_pcie)(struct mac_adapter *adapter,
 			    struct mac_ax_pcie_ltr_param *param);
 	/**
 	 * @u2u3_switch
 	 * Only support USB interface. Using this API in other interface
 	 * may cause system crash or segmentation fault.
 	 */
-	u32 (*u2u3_switch)(struct mac_ax_adapter *adapter);
+	u32 (*u2u3_switch)(struct mac_adapter *adapter);
 	/**
 	 * @get_usb_mode
 	 * Only support USB interface. Using this API in other interface
 	 * may cause system crash or segmentation fault.
 	 */
-	u32 (*get_usb_mode)(struct mac_ax_adapter *adapter);
+	u32 (*get_usb_mode)(struct mac_adapter *adapter);
 	/**
 	 * @get_usb_support_ability
 	 * Only support USB interface. Using this API in other interface
 	 * may cause system crash or segmentation fault.
 	 */
-	u32 (*get_usb_support_ability)(struct mac_ax_adapter *adapter);
+	u32 (*get_usb_support_ability)(struct mac_adapter *adapter);
+#if 0 // NEO
 	/**
 	 * @usb_tx_agg_cfg
 	 * Only support USB interface. Using this API in other interface
 	 * may cause system crash or segmentation fault.
 	 */
-	u32 (*usb_tx_agg_cfg)(struct mac_ax_adapter *adapter,
+	u32 (*usb_tx_agg_cfg)(struct mac_adapter *adapter,
 			      struct mac_ax_usb_tx_agg_cfg *agg);
 	/**
 	 * @usb_rx_agg_cfg
 	 * Only support USB interface. Using this API in other interface
 	 * may cause system crash or segmentation fault.
 	 */
-	u32 (*usb_rx_agg_cfg)(struct mac_ax_adapter *adapter,
+	u32 (*usb_rx_agg_cfg)(struct mac_adapter *adapter,
 			      struct mac_ax_rx_agg_cfg *cfg);
 
-	u32 (*set_wowlan)(struct mac_ax_adapter *adapter,
+	u32 (*set_wowlan)(struct mac_adapter *adapter,
 			  enum mac_ax_wow_ctrl w_c);
-
+#endif // if 0 NEO
 };
 
-#endif // if 0 NEO
 
 /**
  * struct mac_ops - callbacks for mac control

@@ -75,7 +75,7 @@ halmac-y += $(path_hm_ac)/fwcmd.o \
 			$(path_hm_d1)/wowlan.o 
 
 halmac-$(pci) += 	$(path_hm_d1)/_pcie.o
-#halmac-$(usb) += 	$(path_hm_d1)/_usb.o
+halmac-$(usb) += 	$(path_hm_ac)/_usb.o
 halmac-$(sdio) +=	$(path_hm_d1)/_sdio.o
 
 
