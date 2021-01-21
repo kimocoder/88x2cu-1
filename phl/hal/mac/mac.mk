@@ -16,7 +16,7 @@ endif
 # Base directory
 path_hm := phl/hal/mac
 # Level 1 directory
-path_hm_d1 := $(path_hm)/mac_ac
+path_hm_ac := phl/hal/mac/mac_ac
 path_fw_d1 := $(path_hm)/fw_ac
 
 ifeq ($(CONFIG_PCI_HCI), y)
@@ -35,8 +35,8 @@ endif
 #			$(path_hm_d1)/fwdl.o
 
 #halmac-y += $(path_hm_d1)/fwcmd.o
-#halmac-y += phl/hal/mac/mac_ac/fwcmd.o
-halmac-y +=
+halmac-y += $(path_hm_ac)/fwcmd.o \
+		$(path_hm_ac)/init.o
 
 #halmac-y +=		$(path_hm_d1)/addr_cam.o \
 			$(path_hm_d1)/cmac_tx.o \
@@ -54,7 +54,6 @@ halmac-y +=
 			$(path_hm_d1)/hw_seq.o \
 			$(path_hm_d1)/hw.o \
 			$(path_hm_d1)/hwamsdu.o \
-			$(path_hm_d1)/init.o \
 			$(path_hm_d1)/la_mode.o \
 			$(path_hm_d1)/mcc.o \
 			$(path_hm_d1)/mport.o \
@@ -101,7 +100,7 @@ ifeq ($(CONFIG_RTL8822C), y)
 ic := 8822c
 
 # Level 2 directory
-path_hm_8822c := $(path_hm_d1)/mac_$(ic)
+path_hm_8822c := $(path_hm_ac)/mac_$(ic)
 
 halmac-y	+=	$(path_hm_8822c)/init_$(ic).o
 #halmac-y	+=	$(path_hm_8852b)/gpio_$(ic).o \

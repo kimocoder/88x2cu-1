@@ -1622,7 +1622,6 @@ static inline struct c2h_proc_class *c2h_proc_sel(u8 cat)
 
 	return proc;
 }
-#endif // if 0 NEO
 
 
 u8 c2h_field_parsing(struct fwcmd_hdr *hdr, struct rtw_c2h_info *info)
@@ -1642,21 +1641,23 @@ u8 c2h_field_parsing(struct fwcmd_hdr *hdr, struct rtw_c2h_info *info)
 	return MACSUCCESS;
 }
 
-u32 mac_process_c2h(struct mac_ax_adapter *adapter, u8 *buf, u32 len,
+#endif // if 0 NEO
+
+u32 mac_process_c2h(struct mac_adapter *adapter, u8 *buf, u32 len,
 		    u8 *ret)
 {
+	RTW_INFO("%s NEO TODO\n", __func__);
+#if 0 // NEO
 	u8 _class_, result;
 	struct c2h_proc_class *proc;
 	struct fwcmd_hdr *hdr;
 	struct rtw_c2h_info *info;
-	u32 (*handler)(struct mac_ax_adapter *adapter, u8 *buf, u32 len,
+	u32 (*handler)(struct mac_adapter *adapter, u8 *buf, u32 len,
 		       struct rtw_c2h_info *info) = NULL;
 	u8 cat;
 	u32 val;
 
-	RTW_INFO("%s NEO TODO\n", __func__);
 
-#if 0 // NEO
 
 	hdr = (struct fwcmd_hdr *)buf;
 

@@ -18,17 +18,15 @@
 
 #include "../../type.h"
 
-#if 0 // NEO
 #ifdef CONFIG_NEW_HALMAC_INTERFACE
 struct mac_adapter *get_mac_8822c_adapter(enum mac_ax_intf intf,
 					     u8 chip_cut, void *phl_adapter,
 					     void *drv_adapter,
 					     struct mac_pltfm_cb *pltfm_cb)
 #else
-struct mac_adapter *get_mac_8822c_adapter(enum mac_ax_intf intf,
+struct mac_adapter *get_mac_8822c_adapter(enum mac_intf intf,
 					     u8 chip_cut, void *drv_adapter,
 					     struct mac_pltfm_cb *pltfm_cb);
 #endif
 
-#endif // if 0 NEO
 #endif

@@ -1178,15 +1178,20 @@ enum mac_ax_edcca_sel {
 	MAC_AX_EDCCA_SEL_INVALID = MAC_AX_EDCCA_SEL_LAST,
 };
 
-enum mac_ax_chip_id {
-	MAC_AX_CHIP_ID_8852A = 0,
-	MAC_AX_CHIP_ID_8852B,
+#endif // if 0
+
+enum mac_chip_id {
+	MAC_CHIP_ID_8852A = 0,
+	MAC_CHIP_ID_8852B,
+	MAC_CHIP_ID_8822C,
 
 	/* keep last */
-	MAC_AX_CHIP_ID_LAST,
-	MAC_AX_CHIP_ID_MAX = MAC_AX_CHIP_ID_LAST,
-	MAC_AX_CHIP_ID_INVALID = MAC_AX_CHIP_ID_LAST,
+	MAC_CHIP_ID_LAST,
+	MAC_CHIP_ID_MAX = MAC_CHIP_ID_LAST,
+	MAC_CHIP_ID_INVALID = MAC_CHIP_ID_LAST,
 };
+
+#if 0 // NEO
 
 enum mac_ax_wdbk_mode {
 	MAC_AX_WDBK_MODE_SINGLE_BK = 0,
@@ -4394,7 +4399,7 @@ struct mac_pltfm_cb {
 	void (*reg_w16)(void *drv_adapter, u32 addr, u16 val);
 	void (*reg_w32)(void *drv_adapter, u32 addr, u32 val);
 #endif
-#if MAC_PHL_H2C
+#if MAC_AX_PHL_H2C
 	enum rtw_hal_status (*tx)(struct rtw_phl_com_t *phl_com,
 				  struct rtw_hal_com_t *hal_com,
 				  struct rtw_h2c_pkt *pkt);

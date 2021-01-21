@@ -471,7 +471,6 @@ static struct mac_adapter mac_8822c_adapter = {
 #endif
 };
 
-#if 0 // NEO
 
 #ifdef CONFIG_NEW_HALMAC_INTERFACE
 aa
@@ -526,14 +525,17 @@ struct mac_ax_adapter *get_mac_8852a_adapter(enum mac_ax_intf intf,
 	return adapter;
 }
 #else
-struct mac_adapter *get_mac_8822c_adapter(enum mac_ax_intf intf,
+struct mac_adapter *get_mac_8822c_adapter(enum mac_intf intf,
 					     u8 chip_cut, void *drv_adapter,
-					     struct mac_ax_pltfm_cb *pltfm_cb)
+					     struct mac_pltfm_cb *pltfm_cb)
 {
 	struct mac_ax_adapter *adapter = NULL;
 	struct mac_ax_hw_info *hw_info = NULL;
 	struct mac_ax_mac_pwr_info *pwr_info;
 
+	RTW_INFO("%s NEO TODO\n", __func__);
+	return NULL;
+#if 0 // NEO
 	if (!pltfm_cb)
 		return NULL;
 
@@ -569,19 +571,19 @@ struct mac_adapter *get_mac_8822c_adapter(enum mac_ax_intf intf,
 	adapter->hw_info->done = 1;
 
 	switch (intf) {
-#if MAC_AX_SDIO_SUPPORT
+#if MAC_SDIO_SUPPORT
 	case MAC_AX_INTF_SDIO:
 		adapter->ops->intf_ops = &mac8852a_sdio_ops;
 		pwr_info->intf_pwr_switch = sdio_pwr_switch;
 		break;
 #endif
-#if MAC_AX_USB_SUPPORT
+#if MAC_USB_SUPPORT
 	case MAC_AX_INTF_USB:
 		adapter->ops->intf_ops = &mac8852a_usb_ops;
 		pwr_info->intf_pwr_switch = usb_pwr_switch;
 		break;
 #endif
-#if MAC_AX_PCIE_SUPPORT
+#if MAC_PCIE_SUPPORT
 	case MAC_AX_INTF_PCIE:
 		adapter->ops->intf_ops = &mac8852a_pcie_ops;
 		pwr_info->intf_pwr_switch = pcie_pwr_switch;
@@ -592,7 +594,7 @@ struct mac_adapter *get_mac_8822c_adapter(enum mac_ax_intf intf,
 	}
 
 	return adapter;
+#endif // if 0 NEO
 }
 #endif
 
-#endif // if 0 NEO

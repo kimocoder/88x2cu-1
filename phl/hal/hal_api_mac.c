@@ -864,15 +864,13 @@ void hal_mac_print_fw_version(struct hal_info_t *hal_info)
 		  _IS_FW_READY(hal_info) ? "" : "Not ");
 }
 
-//NEO : TODO : mark off first
-#if 0
 u32 rtw_hal_mac_init(struct rtw_phl_com_t *phl_com,
 					struct hal_info_t *hal_info)
 {
 	struct rtw_hal_com_t *hal_com = hal_info->hal_com;
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_SUCCESS;
-	struct mac_ax_adapter *mac = NULL;
-	struct mac_ax_ops *mac_ops;
+	struct mac_adapter *mac = NULL;
+	struct mac_ops *mac_ops;
 	u32 status;
 
 #ifdef DBG_HAL_MAC_MEM_MOINTOR
@@ -883,17 +881,17 @@ u32 rtw_hal_mac_init(struct rtw_phl_com_t *phl_com,
 	status = new_mac_ax_ops_init(phl_com, hal_com, &mac, &mac_ops);
 #else
 	{
-		enum mac_ax_intf intf = MAC_AX_INTF_INVALID;
+		enum mac_intf intf = MAC_INTF_INVALID;
 		if (phl_com->hci_type == RTW_HCI_PCIE)
-			intf = MAC_AX_INTF_PCIE;
+			intf = MAC_INTF_PCIE;
 		else if (phl_com->hci_type ==  RTW_HCI_USB)
-			intf = MAC_AX_INTF_USB;
+			intf = MAC_INTF_USB;
 		else if ((phl_com->hci_type ==  RTW_HCI_SDIO) ||
 			(phl_com->hci_type ==  RTW_HCI_GSPI))
-			intf = MAC_AX_INTF_SDIO;
+			intf = MAC_INTF_SDIO;
 
 		rtw_plt_cb_init();
-		status = mac_ax_ops_init(hal_com,
+		status = mac_ops_init(hal_com,
 				&rtw_plt_cb, intf, &mac, &mac_ops);
 		#if MAC_AX_PHL_H2C
 		if (status == MACSUCCESS && mac != NULL)
@@ -922,7 +920,7 @@ u32 rtw_hal_mac_init(struct rtw_phl_com_t *phl_com,
 
 error_mac_init:
 	if (mac) {
-		mac_ax_ops_exit(mac);
+		mac_ops_exit(mac);
 		hal_info->mac = NULL;
 	}
 	return hal_status;
@@ -934,11 +932,11 @@ u32 rtw_hal_mac_deinit(struct rtw_phl_com_t *phl_com,
 	#ifdef DBG_HAL_MAC_MEM_MOINTOR
 	struct rtw_hal_com_t *hal = hal_info->hal_com;
 	#endif
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_SUCCESS;
 
 	if (mac) {
-		if(mac_ax_ops_exit(mac) == MACSUCCESS) {
+		if(mac_ops_exit(mac) == MACSUCCESS) {
 			hal_status = RTW_HAL_STATUS_FAILURE;
 
 			hal_info->mac = NULL;
@@ -953,7 +951,6 @@ u32 rtw_hal_mac_deinit(struct rtw_phl_com_t *phl_com,
 
 	return hal_status;
 }
-#endif
 
 
 u8 _hal_mac_ax_dmach2datach(u8 dmach)

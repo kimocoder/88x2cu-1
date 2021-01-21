@@ -13,8 +13,8 @@
  *
  ******************************************************************************/
 
-#ifndef _MAC_AX_CHIP_CFG_H_
-#define _MAC_AX_CHIP_CFG_H_
+#ifndef _MAC_CHIP_CFG_H_
+#define _MAC_CHIP_CFG_H_
 
 #ifndef __cplusplus /* for win/linux driver */
 
@@ -31,11 +31,12 @@
 #define MAC_AX_8852B_SUPPORT	0
 #endif
 
-#ifdef CONFIG_RTL8852B
+//NEO 
+//#ifdef CONFIG_RTL8852B
 #define MAC_AC_8822C_SUPPORT	1
-#else
-#define MAC_AC_8822C_SUPPORT	0
-#endif
+//#else
+//#define MAC_AC_8822C_SUPPORT	0
+//#endif
 
 /* Interface support */
 #ifdef CONFIG_SDIO_HCI
