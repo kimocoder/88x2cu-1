@@ -433,7 +433,7 @@ hal_parsing_rx_wd_8822c(struct rtw_phl_com_t *phl_com,
 	} while (false);
 
 
-	_hal_dump_rxdesc(desc, mdata);
+	//_hal_dump_rxdesc(desc, mdata);
 
 	return hstatus;
 }
@@ -496,6 +496,8 @@ hal_handle_rx_buffer_8822c(struct rtw_phl_com_t *phl_com,
 	hstatus = hal_parsing_rx_wd_8822c(phl_com, hal, buf,
 					&pkt->vir_addr, &pkt->length, mdata);
 
+	RTW_INFO("%s buf: %p, vir: %p, shift=%d\n", __func__, buf, pkt->vir_addr, pkt->vir_addr - buf);
+
 	if (RTW_HAL_STATUS_SUCCESS != hstatus)
 		return hstatus;
 	if( (pkt->vir_addr + pkt->length) > (buf + buf_len) )
@@ -503,7 +505,6 @@ hal_handle_rx_buffer_8822c(struct rtw_phl_com_t *phl_com,
 
 	/* hana_todo */
 	r->pkt_cnt = 1;
-	RTW_INFO("%s : NEO stop here first, rpkt_type:%d, hstatus=%d\n", __func__, mdata->rpkt_type, hstatus);
 
 	switch (mdata->rpkt_type) {
 	case RX_8822C_DESC_PKT_T_WIFI :
@@ -633,7 +634,8 @@ hal_handle_rx_buffer_8822c(struct rtw_phl_com_t *phl_com,
 
 		phl_rx->type = RTW_RX_TYPE_C2H;
 		RTW_INFO("%s NEO TODO C2H : rtw_hal_mac_parse_c2h\n", __func__);
-		rtw_hal_mac_parse_c2h(hal, pkt->vir_addr, mdata->pktlen, (void *)&c);
+		//rtw_hal_mac_parse_c2h(hal, pkt->vir_addr, mdata->pktlen, (void *)&c);
+		rtw_hal_mac_parse_c2h(hal, buf, buf_len, (void *)&c);
 
 		//NEO
 		//hal_c2h_post_process(phl_com, hal, (void *)&c);

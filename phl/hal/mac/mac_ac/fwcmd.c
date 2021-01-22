@@ -1624,7 +1624,7 @@ static inline struct c2h_proc_class *c2h_proc_sel(u8 cat)
 }
 
 
-u8 c2h_field_parsing(struct fwcmd_hdr *hdr, struct rtw_c2h_info *info)
+u8 c2h_field_parsing(u8 *hdr, struct rtw_c2h_info *info)
 {
 	u32 val;
 
@@ -1637,20 +1637,25 @@ u8 c2h_field_parsing(struct fwcmd_hdr *hdr, struct rtw_c2h_info *info)
 	info->content_len = GET_FIELD(val, C2H_HDR_TOTAL_LEN) -
 				FWCMD_HDR_LEN;
 	info->content = (u8 *)(hdr + 1);
-
 	return MACSUCCESS;
 }
-
 #endif // if 0 NEO
+
+void rtl8822c_c2h_handler_no_io(_adapter *adapter, u8 *pbuf, u16 len);
 
 u32 mac_process_c2h(struct mac_adapter *adapter, u8 *buf, u32 len,
 		    u8 *ret)
 {
-	RTW_INFO("%s NEO TODO\n", __func__);
+	struct rtw_hal_com_t *hal_com = (struct rtw_hal_com_t *)adapter->drv_adapter;
+	struct dvobj_priv *dvobj = hal_com->drv_priv;
+	_adapter *tadapter = dvobj_get_primary_adapter(dvobj);
+
+	rtl8822c_c2h_handler_no_io(tadapter, buf, len);
+
 #if 0 // NEO
 	u8 _class_, result;
 	struct c2h_proc_class *proc;
-	struct fwcmd_hdr *hdr;
+	//struct fwcmd_hdr *hdr;
 	struct rtw_c2h_info *info;
 	u32 (*handler)(struct mac_adapter *adapter, u8 *buf, u32 len,
 		       struct rtw_c2h_info *info) = NULL;
@@ -1658,14 +1663,14 @@ u32 mac_process_c2h(struct mac_adapter *adapter, u8 *buf, u32 len,
 	u32 val;
 
 
-
-	hdr = (struct fwcmd_hdr *)buf;
+	//hdr = (struct fwcmd_hdr *)buf;
 
 	info = (struct rtw_c2h_info *)ret;
-	val = le32_to_cpu(hdr->hdr0);
+	//val = le32_to_cpu(hdr->hdr0);
 
-	result = c2h_field_parsing(hdr, info);
+	result = c2h_field_parsing(buf, info);
 	if (result) {
+		RTW_INFO("%s test PLTFM_MSG_ERR\n", __func__);
 		PLTFM_MSG_ERR("[ERR]parsing c2h hdr error: %X\n", val);
 		return MACNOITEM;
 	}

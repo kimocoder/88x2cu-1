@@ -4035,7 +4035,6 @@ rtw_hal_mac_parse_c2h(void *hal, u8 *buf, u32 buf_len, void *c2h)
 	struct hal_info_t *hal_info = (struct hal_info_t *)hal;
 	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 
-	RTW_INFO("%s NEO TODO\n", __func__);
 	if (mac->ops->process_c2h)
 		hal_status = mac->ops->process_c2h(mac, buf, buf_len, (u8 *)c2h);
 	else

@@ -1350,6 +1350,8 @@ static int rtw_dev_probe(struct usb_interface *pusb_intf, const struct usb_devic
 		goto free_dvobj;
 	}
 
+	RTW_INFO("%s: NEO padapter=%p\n", __func__, padapter);
+
 	if (usb_reprobe_switch_usb_mode(padapter) == _TRUE) {
 		RTW_ERR("usb_reprobe_switch_usb_mode Failed!\n");
 		goto free_if_prim;

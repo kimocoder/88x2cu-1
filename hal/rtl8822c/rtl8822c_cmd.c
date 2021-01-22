@@ -610,6 +610,7 @@ void rtl8822c_c2h_handler(PADAPTER adapter, u8 *pbuf, u16 length)
 	}
 #endif /* CONFIG_WOWLAN*/
 
+	RTW_INFO("%s NEO\n", __func__);
 	process_c2h_event(adapter, pbuf, length);
 }
 
@@ -635,7 +636,7 @@ void rtl8822c_c2h_handler_no_io(PADAPTER adapter, u8 *pbuf, u16 length)
 	id = C2H_GET_CMD_ID(pc2h_content);
 	seq = C2H_GET_SEQ(pc2h_content);
 
-	RTW_DBG("%s: C2H, ID=%d seq=%d len=%d\n",
+	RTW_INFO("%s: NEO C2H, ID=%d seq=%d len=%d\n",
 		 __FUNCTION__, id, seq, length);
 
 	switch (id) {

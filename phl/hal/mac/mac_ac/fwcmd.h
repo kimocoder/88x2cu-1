@@ -30,6 +30,12 @@
 #define H2C_DATA_LEN		256
 #define H2C_LONG_DATA_LEN	2048
 
+
+#if 1 // NEO for 11ac C2H
+#define C2H_GET_CMD_ID(ch2_pkt) LE_BITS_TO_4BYTE(ch2_pkt + 0x00, 0, 8)
+#define C2H_GET_SEQ(c2h_pkt) LE_BITS_TO_4BYTE(c2h_pkt + 0x00, 8, 8)
+#endif // if 1 NEO
+
 #define SET_FWCMD_ID(_t, _ca, _cl, _f)                                         \
 		(SET_WORD(_t, H2C_HDR_DEL_TYPE) | SET_WORD(_ca, H2C_HDR_CAT) | \
 		 SET_WORD(_cl, H2C_HDR_CLASS) | SET_WORD(_f, H2C_HDR_FUNC))

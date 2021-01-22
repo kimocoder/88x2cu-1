@@ -126,6 +126,9 @@ struct rtw_g6_h2c_hdr {
  *
  */
 struct rtw_c2h_info {
+	u8 id;
+	u8 seq;
+#if 0 // NEO
 	u8 c2h_cat;
 	u8 c2h_class;
 	u8 c2h_func;
@@ -136,6 +139,7 @@ struct rtw_c2h_info {
 	u8 h2c_seq;
 	u16 content_len;
 	u8 *content;
+#endif
 };
 
 
