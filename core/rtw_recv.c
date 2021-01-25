@@ -2269,6 +2269,7 @@ sint validate_recv_frame(_adapter *adapter, union recv_frame *precv_frame)
 	u8	external_len = 0;
 #endif
 
+	RTW_INFO("%s NEO \n", __func__);
 
 #ifdef CONFIG_FIND_BEST_CHANNEL
 	if (pmlmeext->sitesurvey_res.state == SCAN_PROCESS) {
@@ -5440,6 +5441,8 @@ s32 rtw_core_update_recvframe(struct dvobj_priv *dvobj,
 	_adapter *primary_padapter = dvobj_get_primary_adapter(dvobj);
 	int err;
 
+	RTW_INFO("%s NEO \n",  __func__);
+
 	if (rx_req->mdata.bc || rx_req->mdata.mc)
 		is_bmc = _TRUE;
 
@@ -5502,6 +5505,7 @@ s32 rtw_core_update_recvframe(struct dvobj_priv *dvobj,
 
 exit:
 	prframe->u.hdr.rx_req = rx_req;
+	RTW_INFO("%s NEO rx_state=%d\n",  __func__, rx_state);
 
 	return rx_state;
 }
@@ -5526,6 +5530,7 @@ u32 rtw_core_rx_process(void *drv_priv)
 
 	while (rx_pkt_num--) {
 		prframe = rtw_alloc_recvframe(&precvpriv->free_recv_queue);
+		RTW_INFO("%s NEO prfame = %p\n", __func__, prframe);
 		if (prframe == NULL) {
 			RTW_ERR("F-%s L-%d rtw_alloc_recvframe failed\n", __FUNCTION__, __LINE__);
 			goto rx_error;
@@ -5534,6 +5539,7 @@ u32 rtw_core_rx_process(void *drv_priv)
 		//_rtw_init_listhead
 
 		rx_req = rtw_phl_query_rx_pkt(GET_HAL_INFO(dvobj));
+		RTW_INFO("%s NEO rx_req = %p\n", __func__, rx_req);
 		if(rx_req == NULL)
 			goto rx_stop;
 
@@ -5576,6 +5582,7 @@ rx_stop:
 rx_error:
 		break;
 	}
+
 	return RTW_PHL_STATUS_SUCCESS;
 }
 #endif /*RTW_PHL_RX*/

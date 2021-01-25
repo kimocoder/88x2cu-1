@@ -15,6 +15,9 @@
 #define CONFIG_SINGLE_IMG
 /* #define CONFIG_DISABLE_ODM */
 
+// NEO
+#define DBG_RECV_FRAME
+
 //#define RTW_WKARD_CORE_RSSI_V1
 
 /*

@@ -525,9 +525,6 @@ void phl_rx_handle_normal(struct phl_info_t *phl_info,
 	INIT_LIST_HEAD(&frames);
 
 	pstatus = phl_rx_reorder(phl_info, phl_rx, &frames);
-	RTW_INFO("%s NEO stop here first, status=%d\n", __func__, pstatus);
-	return;
-
 	if (pstatus == RTW_PHL_STATUS_SUCCESS)
 		phl_handle_rx_frame_list(phl_info, &frames);
 	else
