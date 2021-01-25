@@ -262,7 +262,8 @@ _hal_parsing_rx_wd_8822c(struct hal_info_t *hal, u8 *desc,
 	mdata->pktlen = (u16)GET_RX_DESC_PKT_LEN_8822C(desc);
 	mdata->shift = (u8)GET_RX_DESC_SHIFT_8822C(desc);
 	mdata->rpkt_type = GET_RX_DESC_C2H_8822C(desc) ? RX_8822C_DESC_PKT_T_C2H : RX_8822C_DESC_PKT_T_WIFI ;
-	mdata->drv_info_size = (u8)GET_RX_DESC_DRV_INFO_SIZE_8822C(desc) << 3;
+	mdata->drv_info_size = (u8)GET_RX_DESC_DRV_INFO_SIZE_8822C(desc);
+	RTW_INFO("%s NEO pktlen=%d, drv_info_size=%d, shift=%d\n", __func__, mdata->pktlen, mdata->drv_info_size, mdata->shift);
 #if 0 //NEO
 	mdata->bb_sel = GET_RX_AX_DESC_BB_SEL_8852A(desc);
 	mdata->mac_info_vld = GET_RX_AX_DESC_MAC_INFO_VLD_8852A(desc);

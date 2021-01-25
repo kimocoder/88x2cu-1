@@ -5454,6 +5454,7 @@ s32 rtw_core_update_recvframe(struct dvobj_priv *dvobj,
 	} else {
 		err = core_alloc_recvframe_pkt(prframe, rx_req);
 		if (err) {
+			RTW_ERR("%s NEO : core_alloc_recvframe_pkt failed\n", __func__);
 			rx_state = CORE_RX_FAIL;
 			goto exit;
 		}
@@ -5469,6 +5470,8 @@ s32 rtw_core_update_recvframe(struct dvobj_priv *dvobj,
 
 	if (!is_bmc) {
 		pbuf = prframe->u.hdr.rx_data;
+		print_hex_dump(KERN_INFO, "rtw_core_update_recvframe: ",
+			       DUMP_PREFIX_OFFSET, 16, 1, pbuf, prframe->u.hdr.len, 1);
 		pda = get_ra(pbuf);
 		iface = rtw_get_iface_by_macddr(primary_padapter, pda);
 		if(iface) {
@@ -5491,7 +5494,7 @@ s32 rtw_core_update_recvframe(struct dvobj_priv *dvobj,
 				}
 			} else
 			#endif
-				RTW_DBG("%s [WARN] Cannot find appropriate adapter - mac_addr : "MAC_FMT"\n"
+				RTW_ERR("%s [WARN] Cannot find appropriate adapter - mac_addr : "MAC_FMT"\n"
 						, __func__, MAC_ARG(pda));
 			rx_state = CORE_RX_FAIL;
 		}
@@ -5530,7 +5533,6 @@ u32 rtw_core_rx_process(void *drv_priv)
 
 	while (rx_pkt_num--) {
 		prframe = rtw_alloc_recvframe(&precvpriv->free_recv_queue);
-		RTW_INFO("%s NEO prfame = %p\n", __func__, prframe);
 		if (prframe == NULL) {
 			RTW_ERR("F-%s L-%d rtw_alloc_recvframe failed\n", __FUNCTION__, __LINE__);
 			goto rx_error;
@@ -5539,7 +5541,6 @@ u32 rtw_core_rx_process(void *drv_priv)
 		//_rtw_init_listhead
 
 		rx_req = rtw_phl_query_rx_pkt(GET_HAL_INFO(dvobj));
-		RTW_INFO("%s NEO rx_req = %p\n", __func__, rx_req);
 		if(rx_req == NULL)
 			goto rx_stop;
 
