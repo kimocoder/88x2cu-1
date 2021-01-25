@@ -57,7 +57,7 @@
 //#define DBG_PHL_MAC_REG_RW
 
 #define CONFIG_RTW_ACS
-#define CONFIG_RX_PSTS_PER_PKT
+//#define CONFIG_RX_PSTS_PER_PKT
 
 #define CONFIG_PHL_TXSC
 #define RTW_PHL_BCN
@@ -176,6 +176,7 @@
 #endif
 
 #ifdef CONFIG_RX_PSTS_PER_PKT
+aa
 #define CONFIG_PHL_RX_PSTS_PER_PKT
 #endif
 

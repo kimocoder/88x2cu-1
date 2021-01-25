@@ -445,6 +445,8 @@ phl_stainfo_queue_del(struct phl_info_t *phl_info,
 	return RTW_PHL_STATUS_SUCCESS;
 }
 
+#endif // if 0
+
 struct rtw_phl_stainfo_t *
 phl_stainfo_queue_search(struct phl_info_t *phl_info,
 			 struct phl_queue *sta_queue,
@@ -475,6 +477,8 @@ _exit:
 
 	return sta;
 }
+
+#if 0 // NEO
 
 struct rtw_phl_stainfo_t *
 phl_stainfo_queue_get_first(struct phl_info_t *phl_info,
@@ -1312,8 +1316,6 @@ rtw_phl_get_stainfo_by_macid(void *phl, u16 macid)
 #endif
 }
 
-#if 0 // NEO TODO
-
 /**
  * This function is called to create phl_station_info
  * return pointer to rtw_phl_stainfo_t
@@ -1343,8 +1345,6 @@ rtw_phl_get_stainfo_by_addr(void *phl, struct rtw_wifi_role_t *wrole, u8 *addr)
 _exit:
 	return sta;
 }
-
-#endif // if 0 NEO
 
 struct rtw_phl_stainfo_t *
 rtw_phl_get_stainfo_self(void *phl, struct rtw_wifi_role_t *wrole)

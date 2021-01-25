@@ -1862,6 +1862,8 @@ void rtw_phl_notify_watchdog_status(void *phl, bool inprogress)
 	phl_ser_notify_from_upper_watchdog_status(phl, inprogress);
 }
 
+#endif // if 0 NEO
+
 enum rtw_phl_status rtw_phl_msg_hub_register_recver(void* phl,
 		struct phl_msg_receiver* ctx, enum phl_msg_recver_layer layer)
 {
@@ -1882,6 +1884,9 @@ enum rtw_phl_status rtw_phl_msg_hub_send(void* phl,
 {
 	return phl_msg_hub_send((struct phl_info_t*)phl, attr, msg);
 }
+
+#if 0 // NEO TODO
+
 #ifdef PHL_PLATFORM_LINUX
 void rtw_phl_mac_reg_dump(void *sel, void *phl)
 {

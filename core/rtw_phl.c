@@ -521,8 +521,6 @@ static void _hw_ic_info_cfg(struct dvobj_priv *dvobj, struct rtw_ic_info *ic_inf
 	#endif
 }
 
-#if 0 // NEO : TODO : mark off first
-
 static void core_hdl_phl_evt(struct dvobj_priv *dvobj, u16 evt_id)
 {
 	_adapter *iface;
@@ -593,12 +591,13 @@ u8 rtw_core_register_phl_msg(struct dvobj_priv *dvobj)
 	return _SUCCESS;
 }
 
+#if 0 // NEO
+
 /*RTW_WKARD_CORE_RSSI_V1*/
 s8 rtw_phl_rssi_to_dbm(u8 rssi)
 {
 	return rssi - PHL_MAX_RSSI;
 }
-
 
 #ifdef CONFIG_MCC
 int rtw_mcc_update_noa(void *priv, struct rtw_phl_mcc_noa *param)
@@ -672,13 +671,13 @@ u8 rtw_hw_init(struct dvobj_priv *dvobj)
 	/*init datapath section*/
 	rtw_phl_trx_alloc(dvobj->phl);
 
-#if 0 // NEO : TODO : mark off first
 	evt_ops = &(dvobj->phl_com->evt_ops);
 	evt_ops->rx_process = rtw_core_rx_process;
 	evt_ops->tx_recycle = rtw_core_tx_recycle;
 
 	rtw_core_register_phl_msg(dvobj);
 
+#if 0 // NEO : TODO : mark off first
 	/* load wifi feature or capability from efuse*/
 	rtw_phl_preload(dvobj->phl);
 

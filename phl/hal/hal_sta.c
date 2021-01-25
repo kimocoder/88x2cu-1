@@ -660,6 +660,7 @@ rtw_hal_cfg_tx_ampdu(void *hal, struct rtw_phl_stainfo_t *sta)
 out:
 	return hsts;
 }
+#endif // if 0 NEO
 
 enum rtw_hal_status
 rtw_hal_set_sta_rx_sts(struct rtw_phl_stainfo_t *sta, u8 rst,
@@ -678,5 +679,4 @@ rtw_hal_set_sta_rx_sts(struct rtw_phl_stainfo_t *sta, u8 rst,
 	return RTW_HAL_STATUS_SUCCESS;
 }
 
-#endif // if 0 NEO
 

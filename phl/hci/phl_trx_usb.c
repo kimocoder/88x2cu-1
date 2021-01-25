@@ -519,19 +519,19 @@ static void _phl_rx_deinit_usb(struct phl_info_t *phl_info)
 void phl_rx_handle_normal(struct phl_info_t *phl_info,
 						 struct rtw_phl_rx_pkt *phl_rx)
 {
-	RTW_ERR("NEO TODO %s\n", __func__);
-#if 0 // NEO TODO mark off first
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_FAILURE;
 	_os_list frames;
 
 	INIT_LIST_HEAD(&frames);
 
 	pstatus = phl_rx_reorder(phl_info, phl_rx, &frames);
+	RTW_INFO("%s NEO stop here first, status=%d\n", __func__, pstatus);
+	return;
+
 	if (pstatus == RTW_PHL_STATUS_SUCCESS)
 		phl_handle_rx_frame_list(phl_info, &frames);
 	else
 		PHL_TRACE(COMP_PHL_RECV, _PHL_WARNING_, "[WARNING]handle normal rx error (0x%08X)!\n", pstatus);
-#endif
 }
 
 enum rtw_phl_status phl_tx_release_buf_usb(void *phl, u8  *tx_buf_ptr)
@@ -1489,10 +1489,9 @@ static void phl_rx_process_usb(struct phl_info_t *phl_info,
 		RTW_INFO("%s : NEO : phl_rx->type:%d\n", __func__, phl_rx->type);
 		switch (phl_rx->type) {
 		case RTW_RX_TYPE_WIFI:
-			RTW_INFO("%s : NEO %x\n", __func__, phl_rx->type);
-#if 0 // NEO mark off first
 			// phl_recycle_rx_buf would in phl_rx_handle_normal or core_rx.
 #ifdef CONFIG_PHL_RX_PSTS_PER_PKT
+aa
 			if (false == phl_rx_proc_wait_phy_sts(phl_info, phl_rx)) {
 				PHL_TRACE(COMP_PHL_PSTS, _PHL_DEBUG_,
 					  "phl_rx_proc_wait_phy_sts() return false \n");
@@ -1508,7 +1507,6 @@ static void phl_rx_process_usb(struct phl_info_t *phl_info,
 			phl_rx_proc_phy_sts(phl_info, phl_rx);
 #endif
 			phl_recycle_rx_buf(phl_info, phl_rx);
-#endif // if 0 NEO
 			break;
 		case RTW_RX_TYPE_C2H:
 		case RTW_RX_TYPE_CHANNEL_INFO:

@@ -655,7 +655,6 @@ enum rtw_phl_status phl_rx_reorder(struct phl_info_t *phl_info,
 									struct rtw_phl_rx_pkt *phl_rx,
 									_os_list *frames)
 {
-#if 0 // NEO TODO 
 	/* ref wil_rx_reorder() and ieee80211_rx_reorder_ampdu() */
 
 	void *drv_priv = phl_to_drvpriv(phl_info);
@@ -781,8 +780,6 @@ drop_frame:
 
 dont_reorder:
 	list_add_tail(&phl_rx->list, frames);
-
-#endif // if 0 NEO
 	return RTW_PHL_STATUS_SUCCESS;
 }
 

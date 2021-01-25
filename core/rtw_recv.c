@@ -5506,8 +5506,6 @@ exit:
 	return rx_state;
 }
 
-// NEO : mark off first
-#if 0
 u32 rtw_core_rx_process(void *drv_priv)
 {
 	struct dvobj_priv *dvobj = (struct dvobj_priv *)drv_priv;
@@ -5580,5 +5578,4 @@ rx_error:
 	}
 	return RTW_PHL_STATUS_SUCCESS;
 }
-#endif
 #endif /*RTW_PHL_RX*/

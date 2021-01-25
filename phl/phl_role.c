@@ -134,6 +134,8 @@ static u8 _phl_search_roleidx_by_addr(
 	return ridx;
 }
 
+#endif // if 0 NEO
+
 struct rtw_wifi_role_t *
 phl_get_wrole_by_addr(struct phl_info_t *phl_info, u8 *mac_addr)
 {
@@ -159,8 +161,6 @@ phl_get_wrole_by_addr(struct phl_info_t *phl_info, u8 *mac_addr)
 
 	return wrole;
 }
-
-#endif // if 0 NEO
 
 struct rtw_wifi_role_t *
 phl_get_wrole_by_ridx(struct phl_info_t *phl_info, u8 rold_idx)
