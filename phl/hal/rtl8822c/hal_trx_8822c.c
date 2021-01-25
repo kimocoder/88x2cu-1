@@ -512,8 +512,7 @@ hal_handle_rx_buffer_8822c(struct rtw_phl_com_t *phl_com,
 		phl_rx->type = RTW_RX_TYPE_WIFI;
 		_hal_rx_wlanhdr_check_8822c(drv, pkt->vir_addr, mdata);
 		_hal_rx_sts_8822c(hal, mdata);
-		//NEO
-		//hal_rx_ppdu_sts_normal_data(phl_com, pkt->vir_addr, mdata);
+		hal_rx_ppdu_sts_normal_data(phl_com, pkt->vir_addr, mdata);
 	}
 	break;
 #if 0 // NEO

@@ -298,6 +298,8 @@ int rtw_hal_sdio_parse_rx(void *hal, struct rtw_rx_buf *rxbuf)
 }
 #endif /* CONFIG_SDIO_HCI */
 
+#endif // if 0 NEO
+
 void
 hal_rx_ppdu_sts_normal_data(struct rtw_phl_com_t *phl_com,
 			    void *hdr,
@@ -311,6 +313,7 @@ hal_rx_ppdu_sts_normal_data(struct rtw_phl_com_t *phl_com,
 			break;
 		ppdu_info = &phl_com->ppdu_sts_info;
 		band = (meta->bb_sel > 0) ? HW_BAND_1 : HW_BAND_0;
+		RTW_INFO("%s : NEO : band=0x%x\n", __func__, band);
 		if (ppdu_info->cur_rx_ppdu_cnt[band] == meta->ppdu_cnt)
 			break;
 		/* start of the PPDU */
@@ -344,6 +347,8 @@ hal_rx_ppdu_sts_normal_data(struct rtw_phl_com_t *phl_com,
 	} while (false);
 
 }
+
+#if 0 // NEO
 
 void
 hal_rx_ppdu_sts(struct rtw_phl_com_t *phl_com,

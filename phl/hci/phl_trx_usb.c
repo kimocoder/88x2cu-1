@@ -1368,9 +1368,6 @@ struct rtw_phl_rx_pkt *phl_get_single_rx(struct phl_info_t *phl_info,
 							pkt_buf, transfer_len,
 							phl_rx);
 
-		RTW_INFO("%s : NEO : rtw_hal_handle_rx_buffer return %d, fail first\n", __func__, hstatus);
-		hstatus = RTW_HAL_STATUS_FAILURE;
-		
 		if (RTW_HAL_STATUS_SUCCESS != hstatus) {
 			phl_release_phl_rx(phl_info, phl_rx);
 			phl_rx = NULL;
@@ -1490,9 +1487,10 @@ static void phl_rx_process_usb(struct phl_info_t *phl_info,
 		list_del(&phl_rx->list);
 
 		RTW_INFO("%s : NEO : phl_rx->type:%d\n", __func__, phl_rx->type);
-#if 0 // NEO
 		switch (phl_rx->type) {
 		case RTW_RX_TYPE_WIFI:
+			RTW_INFO("%s : NEO %x\n", __func__, phl_rx->type);
+#if 0 // NEO mark off first
 			// phl_recycle_rx_buf would in phl_rx_handle_normal or core_rx.
 #ifdef CONFIG_PHL_RX_PSTS_PER_PKT
 			if (false == phl_rx_proc_wait_phy_sts(phl_info, phl_rx)) {
@@ -1510,6 +1508,7 @@ static void phl_rx_process_usb(struct phl_info_t *phl_info,
 			phl_rx_proc_phy_sts(phl_info, phl_rx);
 #endif
 			phl_recycle_rx_buf(phl_info, phl_rx);
+#endif // if 0 NEO
 			break;
 		case RTW_RX_TYPE_C2H:
 		case RTW_RX_TYPE_CHANNEL_INFO:
@@ -1529,7 +1528,6 @@ static void phl_rx_process_usb(struct phl_info_t *phl_info,
 			phl_rx = NULL;
 			break;
 		}
-#endif // if 0 NEO
 	} while(phl_rxhead != NULL);
 }
 
@@ -1561,12 +1559,10 @@ static enum rtw_phl_status phl_rx_usb(struct phl_info_t *phl_info)
 				/* phl_rx maybe single or link-list */
 				phl_rx = phl_get_single_rx(phl_info, rx_buf);
 				RTW_INFO("%s : NEO after phl_get_single_rx : phl_rx=%p\n", __func__, phl_rx);
-#if 0 // NEO
 				if(phl_rx)
 				{
 					phl_rx_process_usb(phl_info, phl_rx);
 				}
-#endif // if 0 NEO
 			}
 			break;
 
