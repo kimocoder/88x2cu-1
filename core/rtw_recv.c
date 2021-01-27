@@ -289,8 +289,8 @@ int rtw_free_recvframe(union recv_frame *precvframe)
 
 
 #ifdef RTW_PHL_RX
-	//if(precvframe->u.hdr.rx_req)
-	//	rtw_phl_return_rxbuf(GET_HAL_INFO(dvobj), (u8*)precvframe->u.hdr.rx_req);
+	if(precvframe->u.hdr.rx_req)
+		rtw_phl_return_rxbuf(GET_HAL_INFO(dvobj), (u8*)precvframe->u.hdr.rx_req);
 #endif
 
 	rtw_os_free_recvframe(precvframe);
@@ -4182,10 +4182,10 @@ static void rtw_signal_stat_timer_hdl(void *ctx)
 	u32 num_signal_qual = 0;
 	u8 ratio_pre_stat = 0, ratio_curr_stat = 0, ratio_total = 0, ratio_profile = SIGNAL_STAT_CALC_PROFILE_0;
 
-	if (adapter->recvpriv.is_signal_dbg) {
+	if (adapter_to_dvobj(adapter)->recvpriv.is_signal_dbg) {
 		/* update the user specific value, signal_strength_dbg, to signal_strength, rssi */
-		adapter->recvpriv.signal_strength = adapter->recvpriv.signal_strength_dbg;
-		adapter->recvpriv.rssi = (s8)translate_percentage_to_dbm((u8)adapter->recvpriv.signal_strength_dbg);
+		adapter_to_dvobj(adapter)->recvpriv.signal_strength = adapter_to_dvobj(adapter)->recvpriv.signal_strength_dbg;
+		adapter_to_dvobj(adapter)->recvpriv.rssi = (s8)translate_percentage_to_dbm((u8)adapter_to_dvobj(adapter)->recvpriv.signal_strength_dbg);
 	} else {
 
 		if (recvpriv->signal_strength_data.update_req == 0) { /* update_req is clear, means we got rx */

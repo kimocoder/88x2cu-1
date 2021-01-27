@@ -11745,6 +11745,7 @@ void report_survey_event(_adapter *padapter, union recv_frame *precv_frame)
 	pcmd_obj = (struct cmd_obj *)rtw_zmalloc(sizeof(struct cmd_obj));
 	if (pcmd_obj == NULL)
 		return;
+	pcmd_obj->padapter = padapter;
 
 	cmdsz = (sizeof(struct survey_event) + sizeof(struct rtw_evt_header));
 	pevtcmd = (u8 *)rtw_zmalloc(cmdsz);

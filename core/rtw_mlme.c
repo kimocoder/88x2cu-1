@@ -2041,7 +2041,7 @@ void rtw_surveydone_event_callback(_adapter	*adapter, u8 *pbuf)
 	_rtw_spinlock_bh(&pmlmepriv->lock);
 
 #ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS
-	rtw_set_signal_stat_timer(&adapter->recvpriv);
+	rtw_set_signal_stat_timer(&adapter_to_dvobj(adapter)->recvpriv);
 #endif
 
 	if (pmlmepriv->to_join == _TRUE) {
@@ -2860,7 +2860,7 @@ static void rtw_joinbss_update_network(_adapter *padapter, struct wlan_network *
 
 
 #ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS
-	rtw_set_signal_stat_timer(&padapter->recvpriv);
+	rtw_set_signal_stat_timer(&adapter_to_dvobj(padapter)->recvpriv);
 #endif
 	adapter_to_dvobj(padapter)->recvpriv.signal_strength = ptarget_wlan->network.PhyInfo.SignalStrength;
 	adapter_to_dvobj(padapter)->recvpriv.signal_qual = ptarget_wlan->network.PhyInfo.SignalQuality;
@@ -2876,7 +2876,7 @@ static void rtw_joinbss_update_network(_adapter *padapter, struct wlan_network *
 		);
 #endif
 #ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS
-	rtw_set_signal_stat_timer(&padapter->recvpriv);
+	rtw_set_signal_stat_timer(&adapter_to_dvobj(padapter)->recvpriv);
 #endif
 
 	/* update fw_state */ /* will clr WIFI_UNDER_LINKING here indirectly */
