@@ -802,7 +802,7 @@ struct cfg80211_bss *rtw_cfg80211_inform_bss(_adapter *padapter, struct wlan_net
 		return bss;
 	}
 
-	/* RTW_INFO("%s\n", __func__); */
+	RTW_INFO("%s\n", __func__);
 
 	bssinf_len = pnetwork->network.IELength + sizeof(struct rtw_ieee80211_hdr_3addr);
 	if (bssinf_len > buf_size) {
@@ -846,7 +846,8 @@ struct cfg80211_bss *rtw_cfg80211_inform_bss(_adapter *padapter, struct wlan_net
 		notify_signal = 100 * translate_percentage_to_dbm(pnetwork->network.PhyInfo.SignalStrength); /* dbm */
 	}
 
-#if 0
+#if 1 // NEO
+	RTW_INFO("%s NEO\n", __func__);
 	RTW_INFO("bssid: "MAC_FMT"\n", MAC_ARG(pnetwork->network.MacAddress));
 	RTW_INFO("Channel: %d(%d)\n", channel, freq);
 	RTW_INFO("Capability: %X\n", notify_capability);

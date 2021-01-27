@@ -5440,8 +5440,8 @@ s32 rtw_core_update_recvframe(struct dvobj_priv *dvobj,
 	enum rtw_core_rx_state rx_state = CORE_RX_CONTINUE;
 	_adapter *primary_padapter = dvobj_get_primary_adapter(dvobj);
 	int err;
-
-	RTW_INFO("%s NEO \n",  __func__);
+	struct rtw_r_meta_data *mdata  = &rx_req->mdata;
+	u8 *phydata = NULL;
 
 	if (rx_req->mdata.bc || rx_req->mdata.mc)
 		is_bmc = _TRUE;
@@ -5464,14 +5464,20 @@ s32 rtw_core_update_recvframe(struct dvobj_priv *dvobj,
 	#ifdef RTW_WKARD_CORE_RSSI_V1
 	core_update_recvframe_phyinfo(prframe, rx_req);
 	#endif
+	RTW_INFO("%s NEO physt=%d\n",  __func__, mdata->physt);
+	if (rx_req->mdata.physt) {
+		phydata = (u8 *)rx_req->pkt_list[0].vir_addr;
+		phydata -= mdata->shift * 2 + mdata->drv_info_size * 8;
+		rx_query_phy_status(prframe, phydata);
+	}
 
 	prframe->u.hdr.adapter = primary_padapter;
 	prframe->u.hdr.pkt->dev = primary_padapter->pnetdev;
 
 	if (!is_bmc) {
 		pbuf = prframe->u.hdr.rx_data;
-		print_hex_dump(KERN_INFO, "rtw_core_update_recvframe: ",
-			       DUMP_PREFIX_OFFSET, 16, 1, pbuf, prframe->u.hdr.len, 1);
+		//print_hex_dump(KERN_INFO, "rtw_core_update_recvframe: ",
+		//	       DUMP_PREFIX_OFFSET, 16, 1, pbuf, prframe->u.hdr.len, 1);
 		pda = get_ra(pbuf);
 		iface = rtw_get_iface_by_macddr(primary_padapter, pda);
 		if(iface) {

@@ -2040,6 +2040,7 @@ unsigned int OnProbeRsp(_adapter *padapter, union recv_frame *precv_frame)
 	struct wifidirect_info	*pwdinfo = &padapter->wdinfo;
 #endif
 
+	RTW_INFO("%s \n", __func__);
 
 #ifdef CONFIG_P2P
 	if (rtw_p2p_chk_state(pwdinfo, P2P_STATE_TX_PROVISION_DIS_REQ)) {

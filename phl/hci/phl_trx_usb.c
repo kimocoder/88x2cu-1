@@ -1347,8 +1347,8 @@ struct rtw_phl_rx_pkt *phl_get_single_rx(struct phl_info_t *phl_info,
 	pkt_buf_end = rx_buf->buffer + rx_buf->transfer_len;
 	transfer_len = (s32)rx_buf->transfer_len;
 
-	RTW_INFO("%s : NEO buf:%p, len=%d\n", __func__, pkt_buf, transfer_len);
-	print_hex_dump(KERN_INFO, "rx: ", DUMP_PREFIX_OFFSET, 16, 1, pkt_buf, transfer_len, 1);
+	//RTW_INFO("%s : NEO buf:%p, len=%d\n", __func__, pkt_buf, transfer_len);
+	//print_hex_dump(KERN_INFO, "rx: ", DUMP_PREFIX_OFFSET, 16, 1, pkt_buf, transfer_len, 1);
 
 	do {
 		balloc = false;
