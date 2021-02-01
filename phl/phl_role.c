@@ -15,7 +15,6 @@
 #define _PHL_ROLE_C_
 #include "phl_headers.h"
 
-#if 0 // NEO TODO 
 
 static enum rtw_phl_status
 _phl_alloc_hw_port(struct phl_info_t *phl,
@@ -134,7 +133,6 @@ static u8 _phl_search_roleidx_by_addr(
 	return ridx;
 }
 
-#endif // if 0 NEO
 
 struct rtw_wifi_role_t *
 phl_get_wrole_by_addr(struct phl_info_t *phl_info, u8 *mac_addr)
@@ -173,7 +171,6 @@ phl_get_wrole_by_ridx(struct phl_info_t *phl_info, u8 rold_idx)
 	return NULL;
 }
 
-#if 0 // NEO TODO
 
 static void
 _phl_role_notify_buf_done(void* priv, struct phl_msg* msg)
@@ -251,10 +248,14 @@ _phl_wifi_role_start(struct phl_info_t *phl_info, struct rtw_wifi_role_t *wrole)
 	struct rtw_phl_com_t *phl_com = phl_info->phl_com;
 	struct rtw_phl_stainfo_t *phl_sta = NULL;
 
+	RTW_INFO("%s NEO TODO rtw_hal_role_cfg\n", __func__);
+
+#if 0 // NEO
 	if (rtw_hal_role_cfg(phl_info->hal, wrole) != RTW_HAL_STATUS_SUCCESS) {
 		PHL_ERR("%s hal role cfg failed\n", __func__);
 		return RTW_PHL_STATUS_FAILURE;
 	}
+#endif // if 0 NEO
 
 	/*alloc sta_info for slef*/
 	phl_sta = rtw_phl_alloc_stainfo((void *)phl_info, wrole->mac_addr,
@@ -353,8 +354,6 @@ u8 rtw_phl_wifi_role_alloc(void *phl, u8 *mac_addr, enum role_type type,
 	PHL_DUMP_MR_EX(phl_info);
 	return role_idx;
 }
-
-#endif // if 0
 
 enum rtw_phl_status
 phl_role_notify(struct phl_info_t *phl_info, struct rtw_wifi_role_t *wrole)
@@ -632,6 +631,7 @@ rtw_phl_wifi_role_change(void *phl, struct rtw_wifi_role_t *wrole,
 	return pstate;
 }
 
+#endif // if 0 NEO
 
 enum rtw_phl_status
 _phl_wifi_role_stop(struct phl_info_t *phl_info, struct rtw_wifi_role_t *wrole)
@@ -644,6 +644,7 @@ _phl_wifi_role_stop(struct phl_info_t *phl_info, struct rtw_wifi_role_t *wrole)
 
 	return pstatus;
 }
+
 
 void rtw_phl_wifi_role_free(void *phl, u8 role_idx)
 {
@@ -669,8 +670,6 @@ void rtw_phl_wifi_role_free(void *phl, u8 role_idx)
 	_os_spinunlock(phl_to_drvpriv(phl_info), &mr_ctl->lock, _ps, NULL);
 	PHL_DUMP_MR_EX(phl_info);
 }
-
-#endif // if 0 NEO
 
 enum rtw_phl_status
 phl_register_mrc_module(struct phl_info_t *phl_info)

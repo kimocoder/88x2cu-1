@@ -278,6 +278,8 @@ static void _phl_init_proto_bf_cap(struct phl_info_t *phl_info,
 
 }
 
+#endif // if 0 NEO
+
 static enum rtw_phl_status
 _phl_init_protocol_cap(struct phl_info_t *phl_info,
 				u8 hw_band, enum role_type rtype,
@@ -347,7 +349,9 @@ _phl_init_protocol_cap(struct phl_info_t *phl_info,
 		proto_role_cap->partial_bw_su_in_mu = 1;
 		proto_role_cap->stbc_tx_greater_80mhz = 0;
 		proto_role_cap->stbc_rx_greater_80mhz = 0;
-		_phl_init_proto_bf_cap(phl_info, hw_band, proto_role_cap);
+		// NEO
+		RTW_INFO("%s NEO TODO - _phl_init_proto_bf_cap\n", __func__);
+		//_phl_init_proto_bf_cap(phl_info, hw_band, proto_role_cap);
 		/* All of the HT/VHT/HE BFee */
 		if ((1 == proto_role_cap->ht_su_bfme) ||
 		    (1 == proto_role_cap->vht_su_bfme) ||
@@ -504,7 +508,9 @@ _phl_init_protocol_cap(struct phl_info_t *phl_info,
 		proto_role_cap->dcm_max_const_rx = 3;
 		proto_role_cap->dcm_max_nss_rx = 0;
 
-		_phl_init_proto_bf_cap(phl_info, hw_band, proto_role_cap);
+		// NEO
+		RTW_INFO("%s NEO TODO - _phl_init_proto_bf_cap\n", __func__);
+		//_phl_init_proto_bf_cap(phl_info, hw_band, proto_role_cap);
 #ifdef RTW_WKARD_ACUT_DISABLE_CQI_FB
 		proto_role_cap->trig_cqi_fb = 0;
 		proto_role_cap->non_trig_cqi_fb = 0;
@@ -635,6 +641,7 @@ _phl_init_role_cap(struct phl_info_t *phl_info,
 	return RTW_PHL_STATUS_SUCCESS;
 }
 
+
 void
 _phl_sw_role_cap_bf_ap(struct role_sw_cap_t *sw_role_cap)
 {
@@ -726,6 +733,7 @@ rtw_phl_get_dft_cap(void *phl, u8 hw_band, struct role_cap_t *role_cap)
 	return _phl_init_role_cap(phl_info, hw_band, role_cap);
 }
 
+#if 0 // NEO
 
 void rtw_phl_final_cap_decision(void * phl)
 {
@@ -739,6 +747,4 @@ void rtw_phl_final_cap_decision(void * phl)
 	rtw_hal_final_cap_decision(phl_com, phl_info->hal);
 }
 
-
 #endif // if 0 NEO
-

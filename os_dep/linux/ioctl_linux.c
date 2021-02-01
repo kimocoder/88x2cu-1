@@ -8461,7 +8461,7 @@ int rtw_phl_test_set(struct net_device *dev,
 	core_cmd_phl_handler(padapter, extra);
 #endif
 
-exit:
+//exit:
 	return 0;
 }
 #endif

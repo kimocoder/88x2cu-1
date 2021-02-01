@@ -940,6 +940,47 @@ struct sta_info *rtw_get_stainfo(struct sta_priv *pstapriv, const u8 *hwaddr)
 
 }
 
+u32	rtw_free_self_stainfo(_adapter *adapter)
+{
+	struct sta_info *sta = NULL;
+	struct sta_priv *stapriv = &adapter->stapriv;
+
+	RTW_INFO("%s NEO TODO\n", __func__);
+
+	sta = rtw_get_stainfo(stapriv, adapter->phl_role->mac_addr);
+
+	if (sta != NULL) {
+		//_rtw_free_core_stainfo(adapter, sta);
+		rtw_free_stainfo(adapter, sta);
+		//_rtw_free_phl_stainfo(adapter, sta, _FALSE);
+	}
+
+	return _SUCCESS;
+}
+
+u32 rtw_init_self_stainfo(_adapter *padapter)
+{
+
+	struct sta_info *psta;
+	struct tx_servq *ptxservq;
+	u32 res = _SUCCESS;
+	struct sta_priv *pstapriv = &padapter->stapriv;
+
+	psta = rtw_get_stainfo(pstapriv, padapter->phl_role->mac_addr);
+
+	if (psta == NULL) {
+		psta = rtw_alloc_stainfo(pstapriv, padapter->phl_role->mac_addr);
+		if (psta == NULL) {
+			RTW_ERR("%s alloc self sta fail\n", __func__);
+			res = _FAIL;
+			goto exit;
+		}
+	}
+exit:
+	return res;
+
+}
+
 u32 rtw_init_bcmc_stainfo(_adapter *padapter)
 {
 

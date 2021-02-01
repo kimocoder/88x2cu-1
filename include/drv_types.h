@@ -1770,6 +1770,10 @@ aa
 	_list	list;
 	u8 vap_id;
 	#endif
+
+	struct rtw_wifi_role_t *phl_role;
+	u8 netif_up;
+
 	struct dvobj_priv *dvobj;
 	struct	mlme_priv mlmepriv;
 	struct	mlme_ext_priv mlmeextpriv;
@@ -1909,8 +1913,6 @@ aa
 #endif /* PLATFORM_FREEBSD */
 	u8 mac_addr[ETH_ALEN];
 	int net_closed;
-
-	u8 netif_up;
 
 	u8 bLinkInfoDump;
 	/*	Added by Albert 2012/10/26 */

@@ -763,6 +763,9 @@ extern struct sta_info *rtw_get_stainfo(struct sta_priv *pstapriv, const u8 *hwa
 extern u32 rtw_init_bcmc_stainfo(_adapter *padapter);
 extern struct sta_info *rtw_get_bcmc_stainfo(_adapter *padapter);
 
+u32 rtw_free_self_stainfo(_adapter *adapter);
+u32 rtw_init_self_stainfo(_adapter *adapter);
+
 #ifdef CONFIG_AP_MODE
 u16 rtw_aid_alloc(_adapter *adapter, struct sta_info *sta);
 void dump_aid_status(void *sel, _adapter *adapter);

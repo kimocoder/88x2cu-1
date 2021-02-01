@@ -15,7 +15,6 @@
 #define _RTW_PHL_C_
 #include <drv_types.h>
 
-#if 0 // NEO : TODO : mark off first
 
 /***************** export API to osdep/core*****************/
 
@@ -52,7 +51,7 @@ static const char *const _wl_func_str[] = {
 static const char *const hw_cap_str = "[HW-CAP]";
 void rtw_hw_dump_hal_spec(void *sel, struct dvobj_priv *dvobj)
 {
-	struct hal_spec_t *hal_spec = GET_HAL_SPEC(dvobj);
+	struct hal_spec_t *hal_spec = GET_G6_HAL_SPEC(dvobj);
 	int i;
 
 	RTW_PRINT_SEL(sel, "%s ic_name:%s\n", hw_cap_str, hal_spec->ic_name);
@@ -125,37 +124,37 @@ void rtw_dump_phl_sta_info(void *sel, struct sta_info *sta)
 
 inline bool rtw_hw_chk_band_cap(struct dvobj_priv *dvobj, u8 cap)
 {
-	return GET_HAL_SPEC(dvobj)->band_cap & cap;
+	return GET_G6_HAL_SPEC(dvobj)->band_cap & cap;
 }
 
 inline bool rtw_hw_chk_bw_cap(struct dvobj_priv *dvobj, u8 cap)
 {
-	return GET_HAL_SPEC(dvobj)->bw_cap & cap;
+	return GET_G6_HAL_SPEC(dvobj)->bw_cap & cap;
 }
 
 inline bool rtw_hw_chk_proto_cap(struct dvobj_priv *dvobj, u8 cap)
 {
-	return GET_HAL_SPEC(dvobj)->proto_cap & cap;
+	return GET_G6_HAL_SPEC(dvobj)->proto_cap & cap;
 }
 
 inline bool rtw_hw_chk_wl_func(struct dvobj_priv *dvobj, u8 func)
 {
-	return GET_HAL_SPEC(dvobj)->wl_func & func;
+	return GET_G6_HAL_SPEC(dvobj)->wl_func & func;
 }
 
 inline bool rtw_hw_is_band_support(struct dvobj_priv *dvobj, u8 band)
 {
-	return GET_HAL_SPEC(dvobj)->band_cap & band_to_band_cap(band);
+	return GET_G6_HAL_SPEC(dvobj)->band_cap & band_to_band_cap(band);
 }
 
 inline bool rtw_hw_is_bw_support(struct dvobj_priv *dvobj, u8 bw)
 {
-	return GET_HAL_SPEC(dvobj)->bw_cap & ch_width_to_bw_cap(bw);
+	return GET_G6_HAL_SPEC(dvobj)->bw_cap & ch_width_to_bw_cap(bw);
 }
 
 inline bool rtw_hw_is_wireless_mode_support(struct dvobj_priv *dvobj, u8 mode)
 {
-	u8 proto_cap = GET_HAL_SPEC(dvobj)->proto_cap;
+	u8 proto_cap = GET_G6_HAL_SPEC(dvobj)->proto_cap;
 
 	if (mode == WLAN_MD_11B)
 		if ((proto_cap & PROTO_CAP_11B) && rtw_hw_chk_band_cap(dvobj, BAND_CAP_2G))
@@ -192,8 +191,8 @@ inline bool rtw_hw_is_wireless_mode_support(struct dvobj_priv *dvobj, u8 mode)
 
 inline u8 rtw_hw_get_wireless_mode(struct dvobj_priv *dvobj)
 {
-	u8 proto_cap = GET_HAL_SPEC(dvobj)->proto_cap;
-	u8 band_cap = GET_HAL_SPEC(dvobj)->band_cap;
+	u8 proto_cap = GET_G6_HAL_SPEC(dvobj)->proto_cap;
+	u8 band_cap = GET_G6_HAL_SPEC(dvobj)->band_cap;
 	u8 wireless_mode = 0;
 
 	if(proto_cap & PROTO_CAP_11B)
@@ -226,7 +225,7 @@ inline u8 rtw_hw_get_wireless_mode(struct dvobj_priv *dvobj)
 
 inline u8 rtw_hw_get_band_type(struct dvobj_priv *dvobj)
 {
-	u8 band_cap = GET_HAL_SPEC(dvobj)->band_cap;
+	u8 band_cap = GET_G6_HAL_SPEC(dvobj)->band_cap;
 	u8 band_type = 0;
 
 	if(band_cap & BAND_CAP_2G)
@@ -247,9 +246,12 @@ inline u8 rtw_hw_get_band_type(struct dvobj_priv *dvobj)
 
 inline bool rtw_hw_is_mimo_support(struct dvobj_priv *dvobj)
 {
+	RTW_INFO("%s NEO TODO\n", __func__);
+#if 0 // NEO
 	if ((GET_HAL_TX_NSS(dvobj) == 1) &&
 		(GET_HAL_RX_NSS(dvobj) == 1))
 		return 0;
+#endif // if 0 NEO
 	return 1;
 }
 
@@ -272,8 +274,6 @@ u8 rtw_hw_largest_bw(struct dvobj_priv *dvobj, u8 in_bw)
 
 	return in_bw;
 }
-
-#endif //if 0 NEO
 
 u8 rtw_hw_get_mac_addr(struct dvobj_priv *dvobj, u8 *hw_mac_addr)
 {
@@ -815,6 +815,7 @@ int rtw_hw_set_ch_bw(struct _ADAPTER *a, u8 ch, enum channel_width bw,
 	return err;
 }
 
+
 void rtw_hw_update_chan_def(_adapter *adapter)
 {
 	struct mlme_ext_priv *mlmeext = &(adapter->mlmeextpriv);
@@ -834,6 +835,8 @@ void rtw_hw_update_chan_def(_adapter *adapter)
 	_rtw_memcpy(&phl_sta_self->chandef, &adapter->phl_role->chandef, sizeof(struct rtw_chan_def));
 }
 
+#endif // if 0 NEO
+
 static void _dump_phl_role_info(struct rtw_wifi_role_t *wrole)
 {
 	RTW_INFO("[WROLE]- role-idx: %d\n", wrole->id);
@@ -851,6 +854,7 @@ static void _dump_phl_role_info(struct rtw_wifi_role_t *wrole)
 	RTW_INFO("[WROLE]- offset: %d\n", wrole->chandef.offset);	
 	// Freddie ToDo: MBSSID
 }
+
 u8 rtw_hw_iface_init(_adapter *adapter)
 {
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
@@ -872,6 +876,8 @@ u8 rtw_hw_iface_init(_adapter *adapter)
 	}
 
 	/*init default value*/
+	RTW_INFO("%s NEO TODO - update chan def and chanctx \n", __func__);
+#if 0 // NEO
 	rtw_hw_update_chan_def(adapter);
 	chctx_num = rtw_phl_mr_get_chanctx_num(GET_HAL_INFO(dvobj), adapter->phl_role);
 
@@ -882,7 +888,7 @@ u8 rtw_hw_iface_init(_adapter *adapter)
 				adapter->phl_role->chandef.offset,
 				_FALSE);
 	}
-
+#endif // if 0 NEO
 	_dump_phl_role_info(adapter->phl_role);
 
 	/* init self staion info after wifi role alloc */
@@ -893,6 +899,8 @@ u8 rtw_hw_iface_init(_adapter *adapter)
 _error:
 	return rst;
 }
+
+#if 0 // NEO
 
 u8 rtw_hw_iface_type_change(_adapter *adapter, u8 iface_type)
 {
@@ -954,6 +962,8 @@ u8 rtw_hw_iface_type_change(_adapter *adapter, u8 iface_type)
 	return _SUCCESS;
 }
 
+#endif // if 0 NEO
+
 void rtw_hw_iface_deinit(_adapter *adapter)
 {
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
@@ -964,6 +974,8 @@ void rtw_hw_iface_deinit(_adapter *adapter)
 		adapter->phl_role = NULL;
 	}
 }
+
+#if 0 // NEO
 
 /*
  * _sec_algo_drv2phl() - Convert security algorithm to PHL's definition

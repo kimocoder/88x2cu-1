@@ -2216,6 +2216,13 @@ static int _netdev_open(struct net_device *pnetdev)
 	{
 		rtw_hal_iface_init(padapter);
 
+		if (padapter->netif_up == _FALSE) {
+			if (rtw_hw_iface_init(padapter) == _FALSE) {
+				rtw_warn_on(1);
+				goto netdev_open_error;
+			}
+		}
+
 		#ifdef CONFIG_RTW_NAPI
 		if(padapter->napi_state == NAPI_DISABLE) {
 			napi_enable(&padapter->napi);
@@ -2577,6 +2584,8 @@ static int netdev_close(struct net_device *pnetdev)
 	rtw_sdio_set_power(0);
 
 #endif /* !CONFIG_PLATFORM_INTEL_BYT */
+	rtw_hw_iface_deinit(padapter);
+	padapter->netif_up = _FALSE;
 
 	RTW_INFO("-871x_drv - drv_close, bup=%d\n", padapter->bup);
 
