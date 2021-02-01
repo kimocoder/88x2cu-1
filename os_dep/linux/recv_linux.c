@@ -67,6 +67,10 @@ int rtw_os_alloc_recvframe(_adapter *padapter, union recv_frame *precvframe, u8 
 		return res;
 	}
 
+	RTW_INFO("%s NEO pdata=%p, len=%d\n", __func__, pdata, pattrib->pkt_len);
+	print_hex_dump(KERN_INFO, "rtw_os_alloc_recvframe: ",
+		       DUMP_PREFIX_OFFSET, 16, 1, pdata, pattrib->pkt_len, 1);
+
 
 	/*	Modified by Albert 20101213 */
 	/*	For 8 bytes IP header alignment. */
@@ -195,7 +199,8 @@ int rtw_os_recvbuf_resource_alloc(_adapter *padapter, struct recv_buf *precvbuf,
 #ifdef CONFIG_USB_HCI
 #ifdef CONFIG_USE_USB_BUFFER_ALLOC_RX
 	struct dvobj_priv	*pdvobjpriv = adapter_to_dvobj(padapter);
-	struct usb_device	*pusbd = pdvobjpriv->pusbdev;
+	PUSB_DATA pusb_data = dvobj_to_usb(pdvobjpriv);
+	struct usb_device *pusbd = pusb_data->pusbdev;
 #endif
 
 	precvbuf->irp_pending = _FALSE;
@@ -242,8 +247,8 @@ int rtw_os_recvbuf_resource_free(_adapter *padapter, struct recv_buf *precvbuf)
 #ifdef CONFIG_USE_USB_BUFFER_ALLOC_RX
 
 	struct dvobj_priv	*pdvobjpriv = adapter_to_dvobj(padapter);
-	struct usb_device	*pusbd = pdvobjpriv->pusbdev;
-
+	PUSB_DATA pusb_data = dvobj_to_usb(pdvobjpriv);
+	struct usb_device *pusbd = pusb_data->pusbdev;
 	rtw_usb_buffer_free(pusbd, (size_t)precvbuf->alloc_sz, precvbuf->pallocated_buf, precvbuf->dma_transfer_addr);
 	precvbuf->pallocated_buf =  NULL;
 	precvbuf->dma_transfer_addr = 0;

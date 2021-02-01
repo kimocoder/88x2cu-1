@@ -220,6 +220,7 @@ struct rtw_r_meta_data {
 	u8 hal_port;
 	u8 ta[6]; /* Transmitter Address */
 	u8 physt;
+	u8 *drv_info;
 
 	u16 pktlen;		/* DW0 [0:13] */
 	u8 shift;		/* DW0 [14:15] */

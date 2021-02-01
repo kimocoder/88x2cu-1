@@ -2269,8 +2269,6 @@ sint validate_recv_frame(_adapter *adapter, union recv_frame *precv_frame)
 	u8	external_len = 0;
 #endif
 
-	RTW_INFO("%s NEO \n", __func__);
-
 #ifdef CONFIG_FIND_BEST_CHANNEL
 	if (pmlmeext->sitesurvey_res.state == SCAN_PROCESS) {
 		int ch_set_idx = rtw_chset_search_ch(rfctl->channel_set, rtw_get_oper_ch(adapter));
@@ -5069,6 +5067,7 @@ static int core_alloc_recvframe_pkt(union recv_frame *prframe,
 	return 0;
 }
 
+void rtl8822c_query_rx_desc(union recv_frame *precvframe, u8 *pdesc);
 void core_update_recvframe_mdata(union recv_frame *prframe, struct rtw_recv_pkt *rx_req)
 {
 	struct rx_pkt_attrib *prxattrib = &prframe->u.hdr.attrib;
@@ -5078,6 +5077,7 @@ void core_update_recvframe_mdata(union recv_frame *prframe, struct rtw_recv_pkt 
 	prxattrib->pkt_len = mdata->pktlen;
 	prxattrib->icv_err = mdata->icverr;
 	prxattrib->crc_err = mdata->crc32;
+
 #if 0 //todo
 //Security (sw-decrypt & calculate payload offset)
 	u8	bdecrypted;
@@ -5088,7 +5088,11 @@ void core_update_recvframe_mdata(union recv_frame *prframe, struct rtw_recv_pkt 
 	u8	icv_err;
 #endif
 
-
+	//NEO
+	if (mdata->physt && mdata->drv_info) {
+		rx_query_phy_status(prframe, mdata->drv_info);
+		kfree(mdata->drv_info);
+	}
 	return;
 }
 
@@ -5443,9 +5447,6 @@ s32 rtw_core_update_recvframe(struct dvobj_priv *dvobj,
 	struct rtw_r_meta_data *mdata  = &rx_req->mdata;
 	u8 *phydata = NULL;
 
-	if (rx_req->mdata.bc || rx_req->mdata.mc)
-		is_bmc = _TRUE;
-
 	//pre_recv_entry
 	//rtw_get_iface_by_macddr
 	if (rx_req->os_priv) {
@@ -5464,20 +5465,23 @@ s32 rtw_core_update_recvframe(struct dvobj_priv *dvobj,
 	#ifdef RTW_WKARD_CORE_RSSI_V1
 	core_update_recvframe_phyinfo(prframe, rx_req);
 	#endif
-	RTW_INFO("%s NEO physt=%d\n",  __func__, mdata->physt);
-	if (rx_req->mdata.physt) {
-		phydata = (u8 *)rx_req->pkt_list[0].vir_addr;
-		phydata -= mdata->shift * 2 + mdata->drv_info_size * 8;
-		rx_query_phy_status(prframe, phydata);
-	}
-
 	prframe->u.hdr.adapter = primary_padapter;
 	prframe->u.hdr.pkt->dev = primary_padapter->pnetdev;
 
+	pbuf = prframe->u.hdr.rx_data;
+	//print_hex_dump(KERN_INFO, "rtw_core_update_recvframe: ",
+	//	       DUMP_PREFIX_OFFSET, 16, 1, pbuf, prframe->u.hdr.len, 1);
+
+	if (is_broadcast_mac_addr(GetAddr1Ptr(pbuf)))
+		rx_req->mdata.bc = 1;
+
+	if (is_multicast_mac_addr(GetAddr1Ptr(pbuf)))
+		rx_req->mdata.mc = 1;
+
+	if (rx_req->mdata.bc || rx_req->mdata.mc)
+		is_bmc = _TRUE;
+
 	if (!is_bmc) {
-		pbuf = prframe->u.hdr.rx_data;
-		//print_hex_dump(KERN_INFO, "rtw_core_update_recvframe: ",
-		//	       DUMP_PREFIX_OFFSET, 16, 1, pbuf, prframe->u.hdr.len, 1);
 		pda = get_ra(pbuf);
 		iface = rtw_get_iface_by_macddr(primary_padapter, pda);
 		if(iface) {
@@ -5514,11 +5518,11 @@ s32 rtw_core_update_recvframe(struct dvobj_priv *dvobj,
 
 exit:
 	prframe->u.hdr.rx_req = rx_req;
-	RTW_INFO("%s NEO rx_state=%d\n",  __func__, rx_state);
 
 	return rx_state;
 }
 
+void rtl8822c_query_rx_desc(union recv_frame *precvframe, u8 *pdesc);
 u32 rtw_core_rx_process(void *drv_priv)
 {
 	struct dvobj_priv *dvobj = (struct dvobj_priv *)drv_priv;
@@ -5529,6 +5533,8 @@ u32 rtw_core_rx_process(void *drv_priv)
 	struct rx_pkt_attrib *prxattrib = NULL;
 	u16 rx_pkt_num = 0;
 	struct recv_priv *precvpriv = &dvobj->recvpriv;
+	struct rx_pkt_attrib *pattrib = NULL;
+	u8 *pbuf;
 
 	rx_pkt_num = rtw_phl_query_new_rx_num(GET_HAL_INFO(dvobj));
 

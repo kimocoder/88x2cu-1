@@ -16,7 +16,7 @@
 /* #define CONFIG_DISABLE_ODM */
 
 // NEO
-#define DBG_RECV_FRAME
+//#define DBG_RECV_FRAME
 
 //#define RTW_WKARD_CORE_RSSI_V1
 
@@ -222,6 +222,7 @@
  */
 /* #define CONFIG_USE_USB_BUFFER_ALLOC_TX 1 */	/* Trade-off: For TX path, improve stability on some platforms, but may cause performance degrade on other platforms. */
 /* #define CONFIG_USE_USB_BUFFER_ALLOC_RX 1	*/ /* For RX path */
+#define CONFIG_USE_USB_BUFFER_ALLOC_RX 1 /* For RX path */
 #ifdef CONFIG_USE_USB_BUFFER_ALLOC_RX
 
 #else

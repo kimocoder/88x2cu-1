@@ -1032,7 +1032,6 @@ enum rtw_phl_status rtw_phl_start_rx_process(void *phl)
 
 	FUNCIN_WSTS(pstatus);
 
-	RTW_INFO("%s : NEO TODO : phl_rx_handler\n", __func__);
 	pstatus = phl_schedule_handler(phl_info->phl_com,
 						&phl_info->phl_rx_handler);
 

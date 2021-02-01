@@ -95,8 +95,6 @@ static void _hal_trx_8852a_dump_rxcnt(struct hal_ppdu_sts *ppdu_sts)
 
 static void _hal_dump_rxdesc(u8 *buf, struct rtw_r_meta_data *mdata)
 {
-	RTW_INFO("%s NEO enter\n", __func__);
-
 	PHL_TRACE(COMP_PHL_RECV, _PHL_INFO_, "%s ==>\n", __FUNCTION__);
 
 	debug_dump_data(buf, 56, "_hal_dump_rxdesc:: ");
@@ -237,7 +235,7 @@ static void _hal_dump_rxdesc(u8 *buf, struct rtw_r_meta_data *mdata)
  }
 
  /**
- * SW Parsing Rx Desc - hal_parsing_rx_wd_8852a
+ * SW Parsing Rx Desc - hal_parsing_rx_wd_8822c
  * description:
  * 	Parsing Rx WiFi Desc by Halmac or SW Manually
  * input:
@@ -258,14 +256,20 @@ _hal_parsing_rx_wd_8822c(struct hal_info_t *hal, u8 *desc,
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_FAILURE;
 	struct rtw_hal_com_t *hal_com = hal->hal_com;
 
-
 	mdata->pktlen = (u16)GET_RX_DESC_PKT_LEN_8822C(desc);
 	mdata->shift = (u8)GET_RX_DESC_SHIFT_8822C(desc);
 	mdata->rpkt_type = GET_RX_DESC_C2H_8822C(desc) ? RX_8822C_DESC_PKT_T_C2H : RX_8822C_DESC_PKT_T_WIFI ;
 	mdata->drv_info_size = (u8)GET_RX_DESC_DRV_INFO_SIZE_8822C(desc);
-	RTW_INFO("%s NEO pktlen=%d, drv_info_size=%d, shift=%d\n", __func__, mdata->pktlen, mdata->drv_info_size, mdata->shift);
 	mdata->physt = (u8)GET_RX_DESC_PHYST_8822C(desc);
-	RTW_INFO("%s NEO physt=%d\n", __func__, mdata->physt);
+	mdata->drv_info = NULL;
+	if (mdata->drv_info_size) {
+		mdata->drv_info = (u8 *)kmalloc(mdata->drv_info_size * 8, GFP_KERNEL);
+		if (mdata->drv_info) {
+			memcpy(mdata->drv_info, desc + 24, mdata->drv_info_size * 8);
+			//print_hex_dump(KERN_INFO, "drv_info: ", DUMP_PREFIX_OFFSET, 16, 1,
+			//	       mdata->drv_info, mdata->drv_info_size * 8, 1);
+		}
+	}
 #if 0 //NEO
 	mdata->bb_sel = GET_RX_AX_DESC_BB_SEL_8852A(desc);
 	mdata->mac_info_vld = GET_RX_AX_DESC_MAC_INFO_VLD_8852A(desc);
@@ -363,8 +367,6 @@ _hal_parsing_rx_wd_8822c(struct hal_info_t *hal, u8 *desc,
 	else
 		hstatus = RTW_HAL_STATUS_SUCCESS;
 
-	RTW_INFO("%s : NEO : pktlen=%d, hstatus=%d\n", __func__, mdata->pktlen, hstatus);
-
 	return hstatus;
 }
 
@@ -392,15 +394,13 @@ hal_parsing_rx_wd_8822c(struct rtw_phl_com_t *phl_com,
 	u8 shift = 0;
 	u8 *desc = NULL;
 	u8 desc_l = 0;
+	u8 *pbuf;
 
 	do {
 		if (NULL == buf)
 			break;
 
-		if (phl_com->hci_type == RTW_HCI_PCIE)
-			desc = buf + RX_BD_INFO_SIZE;
-		else
-			desc = buf;
+		desc = buf;
 
 		if (!halmac_rx) {
 			hstatus = _hal_parsing_rx_wd_8822c(hal, desc, mdata);
@@ -414,25 +414,12 @@ hal_parsing_rx_wd_8822c(struct rtw_phl_com_t *phl_com,
 
 		if (RTW_HAL_STATUS_SUCCESS != hstatus)
 			break;
-#if 0 // NEO
-		/* TODO :: Need Double Check*/
-		desc_l = mdata->long_rxd ? RX_DESC_L_SIZE_8822C :
-						RX_DESC_S_SIZE_8822C;
 
-		shift = (u8)(mdata->shift * 2 + mdata->drv_info_size * 8 + desc_l);
-
-		if ((1 == mdata->mac_info_vld) &&
-			(RX_8852A_DESC_PKT_T_PPDU_STATUS != mdata->rpkt_type))
-			*pkt = desc + shift + RX_PPDU_MAC_INFO_SIZE_8822C;
-		else
-			*pkt = desc + shift;
-#else // NEO
 		desc_l = RX_DESC_S_SIZE_8822C;
-		shift = (u8)(mdata->shift * 2 + mdata->drv_info_size * 8 + desc_l);
-		*pkt = desc + shift;
-#endif // if 0
+		shift = (u8)(mdata->shift + mdata->drv_info_size * 8 + desc_l);
+		pbuf = (u8 *)((u64)desc + (u64)shift);
+		*pkt = pbuf;
 		*pkt_len = (u16)mdata->pktlen;
-
 	} while (false);
 
 
@@ -498,8 +485,6 @@ hal_handle_rx_buffer_8822c(struct rtw_phl_com_t *phl_com,
 
 	hstatus = hal_parsing_rx_wd_8822c(phl_com, hal, buf,
 					&pkt->vir_addr, &pkt->length, mdata);
-
-	RTW_INFO("%s buf: %p, vir: %p, shift=%d\n", __func__, buf, pkt->vir_addr, pkt->vir_addr - buf);
 
 	if (RTW_HAL_STATUS_SUCCESS != hstatus)
 		return hstatus;
@@ -635,7 +620,6 @@ hal_handle_rx_buffer_8822c(struct rtw_phl_com_t *phl_com,
 		struct rtw_c2h_info c = {0};
 
 		phl_rx->type = RTW_RX_TYPE_C2H;
-		RTW_INFO("%s NEO TODO C2H : rtw_hal_mac_parse_c2h\n", __func__);
 		//rtw_hal_mac_parse_c2h(hal, pkt->vir_addr, mdata->pktlen, (void *)&c);
 		rtw_hal_mac_parse_c2h(hal, buf, buf_len, (void *)&c);
 

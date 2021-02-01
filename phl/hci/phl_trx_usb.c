@@ -355,8 +355,6 @@ static void _phl_rx_deferred_in_token(void *phl)
 
 	PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_, "[5] %s:: ==>\n",
 							__FUNCTION__);
-	RTW_INFO("%s NEO enter\n", __func__);
-
 	/* [1] Check driver/nic state*/
 
 	/* [2] Check in token num*/
@@ -1115,7 +1113,6 @@ static void _phl_rx_callback_usb(void *context)
 	struct phl_hci_trx_ops *hci_trx_ops = phl_info->hci_trx_ops;
 	/* void *drvpriv = phl_to_drvpriv(phl_info); */
 
-	RTW_INFO("%s NEO\n", __func__);
 	do {
 		if (false == phl_check_recv_ring_resource(phl_info))
 			break;
@@ -1269,8 +1266,6 @@ phl_pend_rxbuf_usb(struct phl_info_t *phl_info, void *rxobj, u32 inbuf_len, u8 s
 		return RTW_PHL_STATUS_SUCCESS;
 #endif
 
-	RTW_INFO("%s : NEO : status:%d, usb buffer: %p, first word:0x%x\n", __func__, status_code, rx_buf->buffer, *((u16 *)(rx_buf->buffer)));
-
 	if(status_code == RTW_PHL_STATUS_SUCCESS)
 	{
 		if(_phl_in_token_usb(phl_info, rx_buf->pipe_idx) == RTW_PHL_STATUS_RESOURCE)
@@ -1388,8 +1383,6 @@ struct rtw_phl_rx_pkt *phl_get_single_rx(struct phl_info_t *phl_info,
 		align_offset = pkt_offset;
 #endif
 
-		RTW_INFO("%s NEO align_offset = %d\n", __func__, align_offset);
-
 		if(phl_rxhead == NULL)
 		{
 			phl_rxhead = phl_rx;
@@ -1488,7 +1481,6 @@ static void phl_rx_process_usb(struct phl_info_t *phl_info,
 
 		list_del(&phl_rx->list);
 
-		RTW_INFO("%s : NEO : phl_rx->type:%d\n", __func__, phl_rx->type);
 		switch (phl_rx->type) {
 		case RTW_RX_TYPE_WIFI:
 			// phl_recycle_rx_buf would in phl_rx_handle_normal or core_rx.
@@ -1551,14 +1543,11 @@ static enum rtw_phl_status phl_rx_usb(struct phl_info_t *phl_info)
 		else
 			break;
 
-		RTW_INFO("%s : NEO: rx_buf: %p, first word: 0x%x\n", __func__, rx_buf->buffer, *((u16 *)(rx_buf->buffer)));
-
 		switch(rx_buf->pipe_idx){
 			case WLAN_IN_MPDU_PIPE_IDX:
 			{
 				/* phl_rx maybe single or link-list */
 				phl_rx = phl_get_single_rx(phl_info, rx_buf);
-				RTW_INFO("%s : NEO after phl_get_single_rx : phl_rx=%p\n", __func__, phl_rx);
 				if(phl_rx)
 				{
 					phl_rx_process_usb(phl_info, phl_rx);

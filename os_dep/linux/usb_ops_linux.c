@@ -296,8 +296,6 @@ unsigned int bulkid2pipe(struct dvobj_priv *pdvobj, u32 addr, u8 bulk_out)
 	PUSB_DATA pusb_data = dvobj_to_usb(pdvobj);
 	struct usb_device *pusbd = pusb_data->pusbdev;
 
-	RTW_INFO("%s : NEO : addr == 0x%x, bulk_out=%d\n", __func__, addr, bulk_out);
-
 	if (!bulk_out) {
 		if (addr == RECV_BULK_IN_ADDR)
 			pipe = usb_rcvbulkpipe(pusbd, pusb_data->RtInPipe[0]);
@@ -753,7 +751,6 @@ void usb_init_recvbuf(_adapter *padapter, struct recv_buf *precvbuf)
 int recvbuf2recvframe(PADAPTER padapter, void *ptr);
 
 #ifdef CONFIG_USE_USB_BUFFER_ALLOC_RX
-aa
 void usb_recv_tasklet(void *priv)
 {
 	struct recv_buf *precvbuf = NULL;
@@ -856,7 +853,8 @@ u32 rtw_usb_read_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *rmem)
 	struct dvobj_priv	*pdvobj = adapter_to_dvobj(adapter);
 	struct pwrctrl_priv *pwrctl = dvobj_to_pwrctl(pdvobj);
 	struct recv_priv	*precvpriv = &adapter_to_dvobj(adapter)->recvpriv;
-	struct usb_device	*pusbd = pdvobj->pusbdev;
+	PUSB_DATA 		pusb_data = dvobj_to_usb(pdvobj);
+	struct usb_device 	*pusbd = pusb_data->pusbdev;
 
 
 	if (RTW_CANNOT_RX(pdvobj) || (precvbuf == NULL)) {
@@ -1346,7 +1344,7 @@ u32 rtw_usb_g6_read_port(void *d, void *rxobj,
 		#endif
 	}
 
-	RTW_INFO("%s : NEO: rxbuf: %p, size: %d\n", __func__, literecvbuf->pbuf, inbuf_len);
+	//RTW_INFO("%s : NEO: rxbuf: %p, size: %d\n", __func__, literecvbuf->pbuf, inbuf_len);
 
 	err = usb_submit_urb(recvurb->urb, GFP_ATOMIC);
 	if ((err) && (err != (-EPERM))) {

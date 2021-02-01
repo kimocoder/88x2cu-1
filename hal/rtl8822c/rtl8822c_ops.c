@@ -4045,9 +4045,14 @@ void rtl8822c_rxdesc2attribute(struct rx_pkt_attrib *a, u8 *desc)
 	_rtw_memset(a, 0, sizeof(struct rx_pkt_attrib));
 	a->bw = CHANNEL_WIDTH_MAX;
 
+
 	/* Get from RX DESC */
 	a->pkt_len = (u16)GET_RX_DESC_PKT_LEN_8822C(desc);
 	a->pkt_rpt_type = GET_RX_DESC_C2H_8822C(desc) ? C2H_PACKET : NORMAL_RX;
+
+	RTW_INFO("%s NEO desc=%p, len=%d\n", __func__, desc, a->pkt_len);
+	print_hex_dump(KERN_INFO, "rxdesc_to_attrib: ", DUMP_PREFIX_OFFSET,
+		       16, 1, desc, 32, 1);
 
 	if (a->pkt_rpt_type == NORMAL_RX) {
 		a->crc_err = (u8)GET_RX_DESC_CRC32_8822C(desc);
