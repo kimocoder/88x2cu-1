@@ -84,8 +84,6 @@ _phl_macid_map_clr(u32 *map, const u16 id)
 	map[map_idx] &= ~BIT(id % 32);
 }
 
-#if 0 // NEO TODO mark off first
-
 static void _phl_wrole_bcmc_id_set(struct g6_macid_ctl_t*macid_ctl,
 				struct rtw_wifi_role_t *wrole, const u16 id)
 {
@@ -445,7 +443,6 @@ phl_stainfo_queue_del(struct phl_info_t *phl_info,
 	return RTW_PHL_STATUS_SUCCESS;
 }
 
-#endif // if 0
 
 struct rtw_phl_stainfo_t *
 phl_stainfo_queue_search(struct phl_info_t *phl_info,
@@ -478,7 +475,6 @@ _exit:
 	return sta;
 }
 
-#if 0 // NEO
 
 struct rtw_phl_stainfo_t *
 phl_stainfo_queue_get_first(struct phl_info_t *phl_info,
@@ -589,6 +585,7 @@ _exit:
 	FUNCOUT();
 	return pstatus;
 }
+
 
 /*********** phl stainfo section ***********/
 #ifdef DBG_PHL_STAINFO
@@ -793,7 +790,11 @@ _phl_free_stainfo_sw(struct phl_info_t *phl_info, struct rtw_phl_stainfo_t *sta)
 		return RTW_PHL_STATUS_FAILURE;
 	}
 
+	// NEO 
+	RTW_INFO("%s NEO TODO = phl_free_rx_reorder\n", __func__);
+#if 0 // NEO
 	phl_free_rx_reorder(phl_info, sta);
+#endif // if 0 NEO
 
 	pstatus = phl_deregister_tx_ring((void *)phl_info, sta->macid);
 	if (pstatus != RTW_PHL_STATUS_SUCCESS) {
@@ -896,6 +897,9 @@ phl_free_stainfo_hw(struct phl_info_t *phl_info,
 {
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_FAILURE;
 
+	RTW_INFO("%s NEO TODO\n", __func__);
+
+#if 0 // NEO
 	if (sta == NULL) {
 		PHL_ERR("%s sta == NULL\n", __func__);
 		goto _exit;
@@ -907,6 +911,7 @@ phl_free_stainfo_hw(struct phl_info_t *phl_info,
 	else
 		PHL_ERR("rtw_hal_del_sta_entry failed\n");
 _exit:
+#endif // if 0 NEO
 	return pstatus;
 }
 
@@ -1137,12 +1142,14 @@ static void
 _phl_media_sta_notify(struct phl_info_t *phl_info,
 		struct rtw_phl_stainfo_t *sta, bool is_connect)
 {
+	RTW_INFO("%s NEO TODO\n", __func__);
+#if 0 // NEO
 	if (is_connect) {
 		phl_pkt_ofld_add_entry(phl_info->phl_com, (u8)sta->macid);
 	} else {
 		phl_pkt_ofld_del_entry(phl_info->phl_com, (u8)sta->macid);
 	}
-
+#endif // if 0 NEO
 }
 
 /**
@@ -1196,6 +1203,7 @@ rtw_phl_update_media_status(void *phl, struct rtw_phl_stainfo_t *sta,
 		}
 	}
 
+#if 0 // NEO
 	hstatus = rtw_hal_update_sta_entry(phl_info->hal, sta, is_connect);
 	if (hstatus != RTW_HAL_STATUS_SUCCESS) {
 		PHL_ERR("rtw_hal_update_sta_entry failure!\n");
@@ -1203,12 +1211,14 @@ rtw_phl_update_media_status(void *phl, struct rtw_phl_stainfo_t *sta,
 	}
 
 	if (wrole->type == PHL_RTYPE_STATION) {
+		RTW_INFO("%s NEO TODO: rtw_hal_role_cfg\n", __func__);
 		hstatus = rtw_hal_role_cfg(phl_info->hal, wrole);
 		if (hstatus != RTW_HAL_STATUS_SUCCESS) {
 			PHL_ERR("rtw_hal_role_cfg failure!\n");
 			goto _exit;
 		}
 	}
+#endif // if 0 NEO
 
 	_phl_media_sta_notify(phl_info, sta, is_connect);
 
@@ -1232,11 +1242,14 @@ phl_change_stainfo(struct phl_info_t *phl_info, struct rtw_phl_stainfo_t *sta,
 {
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_FAILURE;
 
+	RTW_INFO("%s NEO TODO\n", __func__);
+#if 0 // NEO
 	hstatus = rtw_hal_change_sta_entry(phl_info->hal, sta, mode);
 	if (hstatus != RTW_HAL_STATUS_SUCCESS) {
 		PHL_ERR("rtw_hal_change_sta_entry failure!\n");
 		return RTW_PHL_STATUS_FAILURE;
 	}
+#endif // if 0 NEO
 	return RTW_PHL_STATUS_SUCCESS;
 }
 
@@ -1282,8 +1295,6 @@ rtw_phl_change_stainfo(void *phl,
 	return phl_change_stainfo(phl_info, sta, mode);
 }
 
-#endif // if 0 NEO
-
 /**
  * This function is used to get phl sta info
  * by macid
@@ -1293,11 +1304,8 @@ rtw_phl_change_stainfo(void *phl,
 struct rtw_phl_stainfo_t *
 rtw_phl_get_stainfo_by_macid(void *phl, u16 macid)
 {
-	RTW_ERR("%s NEO TODO \n", __func__);
-	return NULL;
-#if 0 // NEO 
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct g6_macid_ctl_t*macid_ctl = phl_to_mac_ctrl(phl_info);
+	struct g6_macid_ctl_t *macid_ctl = phl_to_mac_ctrl(phl_info);
 	struct rtw_phl_stainfo_t *phl_sta = NULL;
 
 	if (macid >= macid_ctl->max_num) {
@@ -1313,7 +1321,6 @@ rtw_phl_get_stainfo_by_macid(void *phl, u16 macid)
 		_os_warn_on(1);
 	}
 	return phl_sta;
-#endif
 }
 
 /**

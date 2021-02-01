@@ -1088,7 +1088,6 @@ enum rtw_phl_status rtw_phl_init(void *drv_priv, void **phl,
 		goto error_macid_ctrl_init;
 	}
 
-#if 0 // NEO TODO
 	/*init after hal_init - hal_sta_info*/
 	phl_status = phl_stainfo_ctrl_init(phl_info);
 	if (phl_status != RTW_PHL_STATUS_SUCCESS) {
@@ -1096,7 +1095,6 @@ enum rtw_phl_status rtw_phl_init(void *drv_priv, void **phl,
 		goto error_stainfo_ctrl_init;
 	}
 	FUNCOUT();
-#endif // if 0 NEO
 	return phl_status;
 
 error_stainfo_ctrl_init:
@@ -1141,9 +1139,7 @@ void rtw_phl_deinit(void *phl)
 	void *drv_priv = phl_to_drvpriv(phl_info);
 
 	if (phl_info) {
-#if 0 // NEO TODO
 		phl_stainfo_ctrl_deinie(phl_info);
-#endif // if 0
 		phl_macid_ctrl_deinit(phl_info);
 		phl_led_ctrl_deinit(phl_info);
 		/*deinit mr_ctrl, wifi_role[]*/

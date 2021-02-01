@@ -15,7 +15,6 @@
 #define _HAL_STA_C_
 #include "hal_headers.h"
 
-#if 0 //NEO TODO
 
 void
 _hal_sta_rssi_init(struct rtw_phl_stainfo_t *sta)
@@ -29,6 +28,8 @@ _hal_sta_rssi_init(struct rtw_phl_stainfo_t *sta)
 	for (i = 0; i < HAL_RSSI_MAVG_NUM; i++)
 		sta->hal_sta->rssi_stat.ma_rssi_ele[i] = 0;
 }
+
+#if 0 //NEO TODO
 
 static enum rtw_hal_status
 _hal_bfee_init(struct hal_info_t *hal_info,
@@ -396,7 +397,7 @@ out:
 	return hal_status;
 }
 
-
+#endif // NEO if 0
 
 enum rtw_hal_status
 rtw_hal_stainfo_init(void *hal, struct rtw_phl_stainfo_t *sta)
@@ -480,8 +481,6 @@ static void _hal_sta_set_default_value(struct hal_info_t *hal_info,
 		sta->hal_sta->ba_ctl.used_map[i] = 0;
 	}
 }
-
-#endif // if 0 NEO
 
 enum rtw_hal_status
 rtw_hal_add_sta_entry(void *hal, struct rtw_phl_stainfo_t *sta)
@@ -622,10 +621,14 @@ u8 rtw_hal_get_sta_rssi(struct rtw_phl_stainfo_t *sta)
 	return rssi;
 }
 
+#endif // if 0 NEO
+
 bool rtw_hal_is_sta_linked(void *hal, struct rtw_phl_stainfo_t *sta)
 {
 	return (sta->hal_sta->ra_info.ra_registered == true) ? true : false;
 }
+
+#if 0 // NEO
 
 enum rtw_hal_status
 rtw_hal_set_edca(void *hal, struct rtw_wifi_role_t *wrole, u8 ac, u32 edca)

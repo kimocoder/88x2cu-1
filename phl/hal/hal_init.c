@@ -1376,8 +1376,6 @@ void rtw_hal_g6_stop(struct rtw_phl_com_t *phl_com, void *hal)
 	hal_info->hal_com->is_hal_init = false;
 }
 
-#if 0 // NEO
-
 enum rtw_hal_status rtw_hal_restart(struct rtw_phl_com_t *phl_com, void *hal)
 {
 	struct hal_info_t *hal_info = (struct hal_info_t *)hal;
@@ -1405,6 +1403,7 @@ enum rtw_hal_status rtw_hal_restart(struct rtw_phl_com_t *phl_com, void *hal)
 	return hal_status;
 }
 
+#if 0 // NEO
 
 enum rtw_hal_status
 rtw_hal_role_cfg(void *hal, struct rtw_wifi_role_t *wrole)
@@ -1456,6 +1455,8 @@ rtw_hal_beacon_stop(void *hal, struct rtw_wifi_role_t *wrole, bool stop)
 
 	return hsts;
 }
+
+#endif // if 0 NEO
 
 enum rtw_hal_status
 hal_ver_check(struct rtw_hal_com_t *hal_com)
@@ -1520,4 +1521,3 @@ rtw_hal_cfg_trx_path(void *hal, enum rf_path tx, u8 tx_nss,
 	return hal_status;
 }
 
-#endif // if 0 NEO
