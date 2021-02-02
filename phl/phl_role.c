@@ -248,14 +248,10 @@ _phl_wifi_role_start(struct phl_info_t *phl_info, struct rtw_wifi_role_t *wrole)
 	struct rtw_phl_com_t *phl_com = phl_info->phl_com;
 	struct rtw_phl_stainfo_t *phl_sta = NULL;
 
-	RTW_INFO("%s NEO TODO rtw_hal_role_cfg\n", __func__);
-
-#if 0 // NEO
 	if (rtw_hal_role_cfg(phl_info->hal, wrole) != RTW_HAL_STATUS_SUCCESS) {
 		PHL_ERR("%s hal role cfg failed\n", __func__);
 		return RTW_PHL_STATUS_FAILURE;
 	}
-#endif // if 0 NEO
 
 	/*alloc sta_info for slef*/
 	phl_sta = rtw_phl_alloc_stainfo((void *)phl_info, wrole->mac_addr,

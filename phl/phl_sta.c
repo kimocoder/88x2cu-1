@@ -1359,8 +1359,6 @@ rtw_phl_get_stainfo_self(void *phl, struct rtw_wifi_role_t *wrole)
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	struct rtw_phl_stainfo_t *sta = NULL;
 
-	RTW_ERR("%s NEO TODO \n", __func__);
-#if 0 // NEO
 	#if 0
 	if ((wrole->type == PHL_RTYPE_STATION) &&
 		(wrole->mstate == MLME_LINKED))
@@ -1374,7 +1372,6 @@ rtw_phl_get_stainfo_self(void *phl, struct rtw_wifi_role_t *wrole)
 	if (sta == NULL)
 		PHL_ERR("%s sta == NULL\n", __func__);
 	#endif
-#endif // if 0
 	return sta;
 }
 
