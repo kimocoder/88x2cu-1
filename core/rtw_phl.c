@@ -863,6 +863,8 @@ u8 rtw_hw_iface_init(_adapter *adapter)
 	int chctx_num = 0;
 	// Freddie ToDo: For AP mode, net type should be set to net device already.
 
+	RTW_INFO("%s NEO iface_id=0x%x\n", __func__, adapter->iface_id);
+
 	/* will allocate phl self sta info */
 	phl_role_idx = rtw_phl_wifi_role_alloc(GET_HAL_INFO(dvobj),
 			adapter_mac_addr(adapter), PHL_RTYPE_STATION,

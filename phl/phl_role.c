@@ -278,11 +278,13 @@ u8 rtw_phl_wifi_role_alloc(void *phl, u8 *mac_addr, enum role_type type,
 	struct mr_ctl_t *mr_ctl = phlcom_to_mr_ctrl(phl_com);
 	u8 role_idx = MAX_WIFI_ROLE_NUMBER;
 
+
 	if (mac_addr == NULL) {
 		PHL_ERR("%s mac_addr == NULL\n", __func__);
 		return role_idx;
 	}
 
+	RTW_INFO("%s NEO" MAC_FMT "\n", __func__, MAC_ARG(mac_addr));
 	/*search rid by mac_addr, if had assigned then return role index*/
 	role_idx = _phl_search_roleidx_by_addr(phl_info, mac_addr);
 	if (role_idx != INVALID_WIFI_ROLE_IDX) {
@@ -290,6 +292,7 @@ u8 rtw_phl_wifi_role_alloc(void *phl, u8 *mac_addr, enum role_type type,
 		*wifi_role = &phl_com->wifi_roles[role_idx];
 		return role_idx;
 	}
+	RTW_INFO("%s NEO role_idx=%d\n", __func__, role_idx);
 
 	_os_spinlock(phl_to_drvpriv(phl_info), &mr_ctl->lock, _ps, NULL);
 	if (ridx == UNSPECIFIED_ROLE_ID) {

@@ -255,11 +255,8 @@ static struct rtw_phl_tring_list *_phl_allocate_phl_tring_list(void *phl,
 	drv_priv = phl_to_drvpriv(phl_info);
 
 	buf_len = sizeof(struct rtw_phl_tring_list);
-	// TODO : NEO : return NULL first
-	pr_info("%s : force to return NULL first for channel mapping \n", __func__);
-	phl_tring_list = NULL;
-	//phl_tring_list = (struct rtw_phl_tring_list *)_os_kmem_alloc(drv_priv,
-	//							buf_len);
+	phl_tring_list = (struct rtw_phl_tring_list *)_os_kmem_alloc(drv_priv,
+								buf_len);
 
 	if (NULL != phl_tring_list) {
 		_os_mem_set(drv_priv, phl_tring_list, 0, buf_len);
@@ -271,6 +268,7 @@ static struct rtw_phl_tring_list *_phl_allocate_phl_tring_list(void *phl,
 			/* hana_todo, force band to 0 temporarily */
 			band = 0;
 			// TODO : NEO : tx channel mapping
+			RTW_INFO("%s : NEO TODO dma_ch\n", __func__);
 			//dma_ch = rtw_hal_tx_chnl_mapping(phl_info->hal, macid,
 			//				 i, band);
 			phl_tring_list->phl_ring[i].band = band;

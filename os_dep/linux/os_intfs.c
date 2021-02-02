@@ -2212,16 +2212,17 @@ static int _netdev_open(struct net_device *pnetdev)
 
 	}
 
+	if (padapter->netif_up == _FALSE) {
+		RTW_INFO("%s NEO doing rtw_hw_iface_init\n", __func__);
+		if (rtw_hw_iface_init(padapter) == _FALSE) {
+			rtw_warn_on(1);
+			goto netdev_open_error;
+		}
+	}
+
 	/*if (padapter->bup == _FALSE) */
 	{
 		rtw_hal_iface_init(padapter);
-
-		if (padapter->netif_up == _FALSE) {
-			if (rtw_hw_iface_init(padapter) == _FALSE) {
-				rtw_warn_on(1);
-				goto netdev_open_error;
-			}
-		}
 
 		#ifdef CONFIG_RTW_NAPI
 		if(padapter->napi_state == NAPI_DISABLE) {

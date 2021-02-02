@@ -41,13 +41,14 @@ void init_hal_spec_8822c(struct rtw_phl_com_t *phl_com,
 	hal_com->phy_hw_cap[1].rx_num = 2;
 	hal_com->phy_hw_cap[1].tx_num = 2;
 	hal_spec->max_tx_cnt = 2;
-
+#endif // if 0 NEO
 	hal_spec->tx_nss_num = 2;
 	hal_spec->rx_nss_num = 2;
 	hal_spec->band_cap = BAND_CAP_2G | BAND_CAP_5G | BAND_CAP_6G;
 	hal_spec->bw_cap = BW_CAP_20M | BW_CAP_40M | BW_CAP_80M;
 	hal_spec->port_num = 5;
 
+#if 0 // NEO
 	hal_spec->proto_cap = PROTO_CAP_11B | PROTO_CAP_11G | PROTO_CAP_11N |
 				PROTO_CAP_11AC | PROTO_CAP_11AX;
 
