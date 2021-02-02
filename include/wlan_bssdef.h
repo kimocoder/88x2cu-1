@@ -197,6 +197,7 @@ typedef struct _WLAN_PHY_INFO {
 	u8	SignalStrength;/* (in percentage) */
 	u8	SignalQuality;/* (in percentage) */
 	u8	Optimum_antenna;  /* for Antenna diversity */
+	s8	rssi; /*dbm*/
 	u8	is_cck_rate;	/* 1:cck_rate */
 	s8	rx_snr[4];
 #ifdef CONFIG_RTW_80211K
@@ -235,7 +236,8 @@ typedef struct _WLAN_BSSID_EX {
 	NDIS_802_11_SSID  Ssid;
 	NDIS_802_11_SSID  mesh_id;
 	u32  Privacy;
-	NDIS_802_11_RSSI  Rssi;/* (in dBM,raw data ,get from PHY) */
+// NEO
+//	NDIS_802_11_RSSI  Rssi;/* (in dBM,raw data ,get from PHY) */
 	NDIS_802_11_CONFIGURATION  Configuration;
 	NDIS_802_11_NETWORK_INFRASTRUCTURE  InfrastructureMode;
 	NDIS_802_11_RATES_EX  SupportedRates;

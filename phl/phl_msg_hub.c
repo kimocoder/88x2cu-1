@@ -257,9 +257,6 @@ enum rtw_phl_status phl_msg_hub_stop(struct phl_info_t* phl)
 enum rtw_phl_status phl_msg_hub_send(struct phl_info_t* phl,
 						struct phl_msg_attribute* attr,	struct phl_msg* msg)
 {
-	RTW_ERR("%s NEO TODO \n", __func__);
-	return RTW_PHL_STATUS_FAILURE;
-#if 0 // NEO
 	struct phl_msg_hub* hub = (struct phl_msg_hub*)phl->msg_hub;
 	void *d = phl_to_drvpriv(phl);
 	struct phl_msg_ex* ex = NULL;
@@ -282,7 +279,6 @@ enum rtw_phl_status phl_msg_hub_send(struct phl_info_t* phl,
 	PHL_TRACE(COMP_PHL_DBG, _PHL_DEBUG_, "%s, msg_id:0x%x enqueue\n",
 		  __FUNCTION__, msg->msg_id);
 	return RTW_PHL_STATUS_SUCCESS;
-#endif // if 0 NEO
 }
 
 

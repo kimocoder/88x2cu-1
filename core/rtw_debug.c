@@ -2312,7 +2312,7 @@ int proc_get_survey_info(struct seq_file *m, void *v)
 			++index,
 			MAC_ARG(pnetwork->network.MacAddress),
 			pnetwork->network.Configuration.DSConfig,
-			(int)pnetwork->network.Rssi,
+			(int)pnetwork->network.PhyInfo.rssi,
 			notify_signal,
 			notify_noise,
 			rsni,

@@ -2008,7 +2008,7 @@ int rtw_check_beacon_data(_adapter *padapter, u8 *pbuf,  int len)
 	rtw_ap_check_scan(padapter);
 
 
-	pbss_network->Rssi = 0;
+	pbss_network->PhyInfo.rssi = 0;
 
 	_rtw_memcpy(pbss_network->MacAddress, adapter_mac_addr(padapter), ETH_ALEN);
 

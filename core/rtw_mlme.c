@@ -807,7 +807,7 @@ void update_network(WLAN_BSSID_EX *dst, WLAN_BSSID_EX *src,
 	u8 ss_smp = src->PhyInfo.SignalStrength;
 	long rssi_smp = src->Rssi;
 #endif
-	long rssi_ori = dst->Rssi;
+	long rssi_ori = dst->PhyInfo.rssi;
 
 	u8 sq_smp = src->PhyInfo.SignalQuality;
 	u8 ss_final;
@@ -837,19 +837,19 @@ void update_network(WLAN_BSSID_EX *dst, WLAN_BSSID_EX *src,
 		sq_final = adapter_to_dvobj(padapter)->recvpriv.signal_qual;
 		/* the rssi value here is undecorated, and will be used for antenna diversity */
 		if (sq_smp != 101) /* from the right channel */
-			rssi_final = (src->Rssi + dst->Rssi * 4) / 5;
+			rssi_final = (src->PhyInfo.rssi + dst->PhyInfo.rssi * 4) / 5;
 		else
 			rssi_final = rssi_ori;
 	} else {
 		if (sq_smp != 101) { /* from the right channel */
 			ss_final = ((u32)(src->PhyInfo.SignalStrength) + (u32)(dst->PhyInfo.SignalStrength) * 4) / 5;
 			sq_final = ((u32)(src->PhyInfo.SignalQuality) + (u32)(dst->PhyInfo.SignalQuality) * 4) / 5;
-			rssi_final = (src->Rssi + dst->Rssi * 4) / 5;
+			rssi_final = (src->PhyInfo.rssi + dst->PhyInfo.rssi * 4) / 5;
 		} else {
 			/* bss info not receving from the right channel, use the original RX signal infos */
 			ss_final = dst->PhyInfo.SignalStrength;
 			sq_final = dst->PhyInfo.SignalQuality;
-			rssi_final = dst->Rssi;
+			rssi_final = dst->PhyInfo.rssi;
 		}
 
 	}
@@ -864,13 +864,13 @@ void update_network(WLAN_BSSID_EX *dst, WLAN_BSSID_EX *src,
 #endif
 	dst->PhyInfo.SignalStrength = ss_final;
 	dst->PhyInfo.SignalQuality = sq_final;
-	dst->Rssi = rssi_final;
+	dst->PhyInfo.rssi = rssi_final;
 
 #if defined(DBG_RX_SIGNAL_DISPLAY_SSID_MONITORED) && 1
 	if (strcmp(dst->Ssid.Ssid, DBG_RX_SIGNAL_DISPLAY_SSID_MONITORED) == 0) {
 		RTW_INFO(FUNC_ADPT_FMT" %s("MAC_FMT"), SignalStrength:%u, SignalQuality:%u, RawRSSI:%ld\n"
 			 , FUNC_ADPT_ARG(padapter)
-			, dst->Ssid.Ssid, MAC_ARG(dst->MacAddress), dst->PhyInfo.SignalStrength, dst->PhyInfo.SignalQuality, dst->Rssi);
+			, dst->Ssid.Ssid, MAC_ARG(dst->MacAddress), dst->PhyInfo.SignalStrength, dst->PhyInfo.SignalQuality, dst->PhyInfo.rssi);
 	}
 #endif
 
@@ -959,7 +959,7 @@ bool rtw_update_scanned_network(_adapter *adapter, WLAN_BSSID_EX *target)
 
 #if 0
 	RTW_INFO("%s => ssid:%s , rssi:%ld , ss:%d\n",
-		__func__, target->Ssid.Ssid, target->Rssi, target->PhyInfo.SignalStrength);
+		__func__, target->Ssid.Ssid, target->PhyInfo.rssi, target->PhyInfo.SignalStrength);
 #endif
 
 #ifdef CONFIG_P2P
@@ -1029,7 +1029,7 @@ bool rtw_update_scanned_network(_adapter *adapter, WLAN_BSSID_EX *target)
 
 #ifdef CONFIG_RSSI_PRIORITY
 		RTW_DBG("%s => ssid:%s ,bssid:"MAC_FMT"  will be deleted from scanned_queue (rssi:%ld , ss:%d)\n",
-			__func__, pnetwork->network.Ssid.Ssid, MAC_ARG(pnetwork->network.MacAddress), pnetwork->network.Rssi, pnetwork->network.PhyInfo.SignalStrength);
+			__func__, pnetwork->network.Ssid.Ssid, MAC_ARG(pnetwork->network.MacAddress), pnetwork->network.PhyInfo.rssi, pnetwork->network.PhyInfo.SignalStrength);
 #else
 		RTW_DBG("%s => ssid:%s ,bssid:"MAC_FMT" will be deleted from scanned_queue\n",
 			__func__, pnetwork->network.Ssid.Ssid, MAC_ARG(pnetwork->network.MacAddress));
@@ -2864,7 +2864,7 @@ static void rtw_joinbss_update_network(_adapter *padapter, struct wlan_network *
 #endif
 	adapter_to_dvobj(padapter)->recvpriv.signal_strength = ptarget_wlan->network.PhyInfo.SignalStrength;
 	adapter_to_dvobj(padapter)->recvpriv.signal_qual = ptarget_wlan->network.PhyInfo.SignalQuality;
-	/* the ptarget_wlan->network.Rssi is raw data, we use ptarget_wlan->network.PhyInfo.SignalStrength instead (has scaled) */
+	/* the ptarget_wlan->network.PhyInfo.rssi is raw data, we use ptarget_wlan->network.PhyInfo.SignalStrength instead (has scaled) */
 	adapter_to_dvobj(padapter)->recvpriv.rssi = translate_percentage_to_dbm(ptarget_wlan->network.PhyInfo.SignalStrength);
 #if defined(DBG_RX_SIGNAL_DISPLAY_PROCESSING) && 1
 	RTW_INFO(FUNC_ADPT_FMT" signal_strength:%3u, rssi:%3d, signal_qual:%3u"
@@ -4122,7 +4122,7 @@ static int rtw_check_roaming_candidate(struct mlme_priv *mlme
 		 competitor->network.Ssid.Ssid,
 		 MAC_ARG(competitor->network.MacAddress),
 		 competitor->network.Configuration.DSConfig,
-		 (int)competitor->network.Rssi,
+		 (int)competitor->network.PhyInfo.rssi,
 		 rtw_get_passing_time_ms(competitor->last_scanned)
 		);
 
@@ -4152,10 +4152,10 @@ static int rtw_check_roaming_candidate(struct mlme_priv *mlme
 	if (rtw_get_passing_time_ms(competitor->last_scanned) >= mlme->roam_scanr_exp_ms)
 		goto exit;
 
-	if (competitor->network.Rssi - mlme->cur_network_scanned->network.Rssi < mlme->roam_rssi_diff_th)
+	if (competitor->network.PhyInfo.rssi - mlme->cur_network_scanned->network.PhyInfo.rssi < mlme->roam_rssi_diff_th)
 		goto exit;
 
-	if (*candidate != NULL && (*candidate)->network.Rssi >= competitor->network.Rssi)
+	if (*candidate != NULL && (*candidate)->network.PhyInfo.rssi >= competitor->network.PhyInfo.rssi)
 		goto exit;
 #else
 	goto exit;
@@ -4204,7 +4204,7 @@ int rtw_select_roaming_candidate(struct mlme_priv *mlme)
 				 , pnetwork->network.Ssid.Ssid
 				 , MAC_ARG(pnetwork->network.MacAddress)
 				 , pnetwork->network.Configuration.DSConfig
-				 , (int)pnetwork->network.Rssi);
+				 , (int)pnetwork->network.PhyInfo.rssi);
 
 		rtw_check_roaming_candidate(mlme, &candidate, pnetwork);
 
@@ -4217,7 +4217,7 @@ int rtw_select_roaming_candidate(struct mlme_priv *mlme)
 		u8 rson_score;
 
 		rtw_get_rson_struct(&(mlme->cur_network_scanned->network), &rson_curr);
-		rson_score = rtw_cal_rson_score(&rson_curr, mlme->cur_network_scanned->network.Rssi);
+		rson_score = rtw_cal_rson_score(&rson_curr, mlme->cur_network_scanned->network.PhyInfo.rssi);
 		if (check_fwstate(mlme, WIFI_ASOC_STATE)
 			&& ((rson_score == RTW_RSON_SCORE_NOTCNNT)
 			|| (rson_score == RTW_RSON_SCORE_NOTSUP)))
@@ -4233,7 +4233,7 @@ int rtw_select_roaming_candidate(struct mlme_priv *mlme)
 		u8 rson_score;
 
 		rtw_get_rson_struct(&(candidate->network), &rson_curr);
-		rson_score = rtw_cal_rson_score(&rson_curr, candidate->network.Rssi);
+		rson_score = rtw_cal_rson_score(&rson_curr, candidate->network.PhyInfo.rssi);
 		RTW_INFO("%s: candidate: %s("MAC_FMT", ch:%u) rson_score:%d\n", __FUNCTION__,
 			candidate->network.Ssid.Ssid, MAC_ARG(candidate->network.MacAddress),
 			 candidate->network.Configuration.DSConfig, rson_score);
@@ -4284,7 +4284,7 @@ static int rtw_check_join_candidate(struct mlme_priv *mlme
 	if (rtw_rson_choose(candidate, competitor)) {
 		*candidate = competitor;
 		rtw_get_rson_struct(&((*candidate)->network), &rson_data);
-		rson_score = rtw_cal_rson_score(&rson_data, (*candidate)->network.Rssi);
+		rson_score = rtw_cal_rson_score(&rson_data, (*candidate)->network.PhyInfo.rssi);
 		RTW_INFO("[assoc_ssid:%s] new candidate: %s("MAC_FMT", ch%u) rson_score:%d\n",
 			 mlme->assoc_ssid.Ssid,
 			 (*candidate)->network.Ssid.Ssid,
@@ -4322,7 +4322,7 @@ static int rtw_check_join_candidate(struct mlme_priv *mlme
 	}
 #endif
 
-	if (*candidate == NULL || (*candidate)->network.Rssi < competitor->network.Rssi) {
+	if (*candidate == NULL || (*candidate)->network.PhyInfo.rssi < competitor->network.PhyInfo.rssi) {
 		*candidate = competitor;
 		updated = _TRUE;
 	}
@@ -4336,7 +4336,7 @@ static int rtw_check_join_candidate(struct mlme_priv *mlme
 			 (*candidate)->network.Ssid.Ssid,
 			 MAC_ARG((*candidate)->network.MacAddress),
 			 (*candidate)->network.Configuration.DSConfig,
-			 (int)(*candidate)->network.Rssi
+			 (int)(*candidate)->network.PhyInfo.rssi
 			);
 	}
 
@@ -4396,7 +4396,7 @@ int rtw_select_and_join_from_scanned_queue(struct mlme_priv *pmlmepriv)
 				 , pnetwork->network.Ssid.Ssid
 				 , MAC_ARG(pnetwork->network.MacAddress)
 				 , pnetwork->network.Configuration.DSConfig
-				 , (int)pnetwork->network.Rssi);
+				 , (int)pnetwork->network.PhyInfo.rssi);
 
 		rtw_check_join_candidate(pmlmepriv, &candidate, pnetwork);
 
@@ -4954,7 +4954,7 @@ void rtw_update_registrypriv_dev_network(_adapter *adapter)
 
 	pdev_network->Privacy = (psecuritypriv->dot11PrivacyAlgrthm > 0 ? 1 : 0) ; /* adhoc no 802.1x */
 
-	pdev_network->Rssi = 0;
+	pdev_network->PhyInfo.rssi = 0;
 
 	pdev_network->Configuration.DSConfig = (pregistrypriv->channel);
 

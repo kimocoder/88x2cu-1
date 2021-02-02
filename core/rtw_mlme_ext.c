@@ -2320,7 +2320,7 @@ unsigned int OnBeacon(_adapter *padapter, union recv_frame *precv_frame)
 					update_beacon_info(padapter, pframe, len, psta);
 				}
 
-				pmlmepriv->cur_network_scanned->network.Rssi = precv_frame->u.hdr.attrib.phy_info.recv_signal_power;
+				pmlmepriv->cur_network_scanned->network.PhyInfo.rssi = precv_frame->u.hdr.attrib.phy_info.recv_signal_power;
 				pmlmeext->bcn_cnt++;
 #ifdef CONFIG_BCN_RECV_TIME
 				rtw_rx_bcn_time_update(padapter, len, precv_frame->u.hdr.attrib.data_rate);
@@ -11192,7 +11192,7 @@ u8 collect_bss_info(_adapter *padapter, union recv_frame *precv_frame, WLAN_BSSI
 
 	/* get the signal strength */
 	/* bssid->Rssi = precv_frame->u.hdr.attrib.SignalStrength; */ /* 0-100 index. */
-	bssid->Rssi = precv_frame->u.hdr.attrib.phy_info.recv_signal_power; /* in dBM.raw data */
+	bssid->PhyInfo.rssi = precv_frame->u.hdr.attrib.phy_info.recv_signal_power; /* in dBM.raw data */
 	bssid->PhyInfo.SignalQuality = precv_frame->u.hdr.attrib.phy_info.signal_quality;/* in percentage */
 	bssid->PhyInfo.SignalStrength = precv_frame->u.hdr.attrib.phy_info.signal_strength;/* in percentage */
 
@@ -11392,7 +11392,7 @@ u8 collect_bss_info(_adapter *padapter, union recv_frame *precv_frame, WLAN_BSSI
 		RTW_INFO("Receiving %s("MAC_FMT", DSConfig:%u) from ch%u with ss:%3u, sq:%3u, RawRSSI:%3ld\n"
 			, bssid->Ssid.Ssid, MAC_ARG(bssid->MacAddress), bssid->Configuration.DSConfig
 			 , rtw_get_oper_ch(padapter)
-			, bssid->PhyInfo.SignalStrength, bssid->PhyInfo.SignalQuality, bssid->Rssi
+			, bssid->PhyInfo.SignalStrength, bssid->PhyInfo.SignalQuality, bssid->PhyInfo.rssi
 			);
 	}
 #endif
