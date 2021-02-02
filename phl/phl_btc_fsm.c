@@ -116,6 +116,10 @@ static int btc_service_st_hdl(void *obj, u16 event, void *param)
 	int rtn = FSM_FREE_PARAM;
 
 	FSM_DBG(pbtc->fsm, "[BTC], %s, event : 0x%x\n", __func__, event);
+
+	RTW_INFO("%s NEO TODO\n", __func__);
+
+#if 0 // NEO
 	switch (event) {
 	case FSM_EV_STATE_IN:
 		break;
@@ -218,6 +222,7 @@ static int btc_service_st_hdl(void *obj, u16 event, void *param)
 	default:
 		break;
 	}
+#endif // if 0 NEO
 	return rtn;
 }
 

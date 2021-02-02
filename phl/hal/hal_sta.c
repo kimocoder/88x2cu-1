@@ -485,12 +485,13 @@ static void _hal_sta_set_default_value(struct hal_info_t *hal_info,
 enum rtw_hal_status
 rtw_hal_add_sta_entry(void *hal, struct rtw_phl_stainfo_t *sta)
 {
-	RTW_ERR("%s TODO NEO\n", __func__);
-#if 0
 	struct hal_info_t *hal_info = (struct hal_info_t *)hal;
 
 	_hal_sta_set_default_value(hal_info, sta);
 
+	RTW_INFO("%s NEO TODO : CAM / CMAC / BB stainfo\n", __func__);
+
+#if 0 // NEO
 	/*add mac address-cam*/
 	if (rtw_hal_mac_addr_cam_add_entry(hal_info, sta) != 
 					RTW_HAL_STATUS_SUCCESS) {
@@ -511,12 +512,12 @@ rtw_hal_add_sta_entry(void *hal, struct rtw_phl_stainfo_t *sta)
 		PHL_ERR("rtw_hal_bb_stainfo_add failed\n");
 		goto _err_bbsta_add;
 	}
+#endif // if 0 NEO
 	return RTW_HAL_STATUS_SUCCESS;
 
 _err_bbsta_add:
 	rtw_hal_mac_addr_cam_del_entry(hal_info, sta);
 _exit:
-#endif
 	return RTW_HAL_STATUS_FAILURE;
 }
 
