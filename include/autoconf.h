@@ -318,6 +318,7 @@
 #define DBG	1
 
 #define DBG_CONFIG_ERROR_DETECT
+#define DBG_RX_DROP_FRAME
 
 /*
 #define DBG_CONFIG_ERROR_DETECT_INT

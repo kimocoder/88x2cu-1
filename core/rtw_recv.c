@@ -2068,14 +2068,21 @@ sint validate_recv_data_frame(_adapter *adapter, union recv_frame *precv_frame)
 	struct security_priv	*psecuritypriv = &adapter->securitypriv;
 	sint ret = _SUCCESS;
 
+
+	RTW_INFO("%s NEO pkt len=%d\n", __func__, precv_frame->u.hdr.len);
+	print_hex_dump(KERN_INFO, "validate_recv_data_frame: ", DUMP_PREFIX_OFFSET, 16, 1,
+		       ptr, precv_frame->u.hdr.len, 1);
+
 	bretry = GetRetry(ptr);
 	a4_shift = (pattrib->to_fr_ds == 3) ? ETH_ALEN : 0;
 
+#if 0 // NEO : from mdata
 	/* some address fields are different when using AMSDU */
 	if (pattrib->qos)
 		pattrib->amsdu = GetAMsdu(ptr + WLAN_HDR_A3_LEN + a4_shift);
 	else
 		pattrib->amsdu = 0;
+#endif // if 0 NEO
 
 #ifdef CONFIG_RTW_MESH
 	if (MLME_IS_MESH(adapter)) {
@@ -2269,6 +2276,9 @@ sint validate_recv_frame(_adapter *adapter, union recv_frame *precv_frame)
 	u8	external_len = 0;
 #endif
 
+
+	print_hex_dump(KERN_INFO, "validate_recv_frame: ", DUMP_PREFIX_OFFSET, 16, 1, ptr, precv_frame->u.hdr.len, 1);
+
 #ifdef CONFIG_FIND_BEST_CHANNEL
 	if (pmlmeext->sitesurvey_res.state == SCAN_PROCESS) {
 		int ch_set_idx = rtw_chset_search_ch(rfctl->channel_set, rtw_get_oper_ch(adapter));
@@ -2298,6 +2308,7 @@ sint validate_recv_frame(_adapter *adapter, union recv_frame *precv_frame)
 
 	/* add version chk */
 	if (ver != 0) {
+		RTW_ERR("%s NEO ver:%d failed\n", __func__, ver);
 		retval = _FAIL;
 		DBG_COUNTER(adapter->rx_logs.core_rx_pre_ver_err);
 		goto exit;
@@ -2335,6 +2346,7 @@ sint validate_recv_frame(_adapter *adapter, union recv_frame *precv_frame)
 #endif
 	switch (type) {
 	case WIFI_MGT_TYPE: /* mgnt */
+		//RTW_INFO("%s : NEO: mgmt\n", __func__);
 		DBG_COUNTER(adapter->rx_logs.core_rx_pre_mgmt);
 		retval = validate_recv_mgnt_frame(adapter, precv_frame);
 		if (retval == _FAIL) {
@@ -2343,6 +2355,7 @@ sint validate_recv_frame(_adapter *adapter, union recv_frame *precv_frame)
 		retval = _FAIL; /* only data frame return _SUCCESS */
 		break;
 	case WIFI_CTRL_TYPE: /* ctrl */
+		RTW_INFO("%s : NEO: ctrl\n", __func__);
 		DBG_COUNTER(adapter->rx_logs.core_rx_pre_ctrl);
 		retval = validate_recv_ctrl_frame(adapter, precv_frame);
 		if (retval == _FAIL) {
@@ -5328,6 +5341,7 @@ s32 core_rx_process_msdu(_adapter *adapter, union recv_frame *prframe)
 	int act = RTW_RX_MSDU_ACT_INDICATE;
 
 #if defined(CONFIG_AP_MODE)
+aa
 	struct xmit_frame *fwd_frame = NULL;
 	_list b2u_list;
 
@@ -5339,6 +5353,7 @@ s32 core_rx_process_msdu(_adapter *adapter, union recv_frame *prframe)
 #endif
 
 	if(wlanhdr_to_ethhdr(prframe, llc_hdl) != _SUCCESS) {
+		RTW_ERR("%s NEO wlanhdr_to_ethhdr failed\n", __func__);
 		if (act & RTW_RX_MSDU_ACT_INDICATE) {
 			#ifdef DBG_RX_DROP_FRAME
 			RTW_INFO("DBG_RX_DROP_FRAME "FUNC_ADPT_FMT" wlanhdr_to_ethhdr: drop pkt\n"
@@ -5369,12 +5384,17 @@ s32 core_rx_process_msdu(_adapter *adapter, union recv_frame *prframe)
 	#endif
 
 	if(rtw_recv_indicatepkt_check(prframe, 
-		get_recvframe_data(prframe), get_recvframe_len(prframe)) != _SUCCESS)
+		get_recvframe_data(prframe), get_recvframe_len(prframe)) != _SUCCESS) {
+		RTW_ERR("%s NEO rtw_recv_indicatepkt_check failed\n", __func__);
 		return CORE_RX_DROP;
+	}
 
-	if(rtw_recv_indicatepkt(adapter, prframe) != _SUCCESS)
+	if(rtw_recv_indicatepkt(adapter, prframe) != _SUCCESS) {
+		RTW_ERR("%s NEO rtw_recv_indicatepkt failed\n", __func__);
 		return CORE_RX_DROP;
+	}
 
+	RTW_INFO("%s NEO return RX DONE\n", __func__);
 	return CORE_RX_DONE;
 }
 
@@ -5391,13 +5411,13 @@ s32 rtw_core_rx_data_post_process(_adapter *adapter, union recv_frame *prframe)
 	  //rtw_recv_indicatepkt_check
 	  //rtw_recv_indicatepkt
 
+	RTW_INFO("%s NEO: amsdu=%d\n", __func__, prframe->u.hdr.attrib.amsdu);
 
 //todo hw amsdu
 	if (prframe->u.hdr.attrib.amsdu) 
 		return core_rx_process_amsdu(adapter, prframe);
 	else
 		return core_rx_process_msdu(adapter, prframe);
-	
 }
 
 
@@ -5469,8 +5489,6 @@ s32 rtw_core_update_recvframe(struct dvobj_priv *dvobj,
 	prframe->u.hdr.pkt->dev = primary_padapter->pnetdev;
 
 	pbuf = prframe->u.hdr.rx_data;
-	//print_hex_dump(KERN_INFO, "rtw_core_update_recvframe: ",
-	//	       DUMP_PREFIX_OFFSET, 16, 1, pbuf, prframe->u.hdr.len, 1);
 
 	if (is_broadcast_mac_addr(GetAddr1Ptr(pbuf)))
 		rx_req->mdata.bc = 1;
@@ -5481,7 +5499,12 @@ s32 rtw_core_update_recvframe(struct dvobj_priv *dvobj,
 	if (rx_req->mdata.bc || rx_req->mdata.mc)
 		is_bmc = _TRUE;
 
+	prframe->u.hdr.attrib.amsdu = mdata->amsdu;
+
 	if (!is_bmc) {
+		print_hex_dump(KERN_INFO, "rtw_core_update_recvframe: unicast - ",
+		       DUMP_PREFIX_OFFSET, 16, 1, pbuf, prframe->u.hdr.len, 1);
+
 		pda = get_ra(pbuf);
 		iface = rtw_get_iface_by_macddr(primary_padapter, pda);
 		if(iface) {
@@ -5511,9 +5534,7 @@ s32 rtw_core_update_recvframe(struct dvobj_priv *dvobj,
 	}
 	else {
 		/*clone bcmc frame for all active adapter*/
-		#ifdef CONFIG_CONCURRENT_MODE // NEO
-		rtw_mi_buddy_clone_bcmc_packet(primary_padapter, prframe);
-		#endif
+		rtw_mi_buddy_clone_bcmc_packet(primary_padapter, prframe, mdata->drv_info);
 	}
 
 exit:
@@ -5556,15 +5577,21 @@ u32 rtw_core_rx_process(void *drv_priv)
 		if(rx_req == NULL)
 			goto rx_stop;
 
-		if (!rtw_is_adapter_up(adapter))
+		if (!rtw_is_adapter_up(adapter)) {
+			RTW_ERR("%s NEO adapter is not up - drop\n", __func__);
 			goto rx_next;
+		}
 
-		if(rtw_core_update_recvframe(dvobj, prframe, rx_req) != CORE_RX_CONTINUE)
+		if(rtw_core_update_recvframe(dvobj, prframe, rx_req) != CORE_RX_CONTINUE) {
+			RTW_ERR("%s NEO rtw_core_update_recvframe failed - drop\n", __func__);
 			goto rx_next;
+		}
 
 		prxattrib = &prframe->u.hdr.attrib;
-		if (prxattrib->icv_err || prxattrib->crc_err)
+		if (prxattrib->icv_err || prxattrib->crc_err) {
+			RTW_ERR("%s NEO ICV / CRC error - drop\n", __func__);
 			goto rx_next;
+		}
 
 
 #ifdef CONFIG_RTW_CORE_RXSC
@@ -5579,8 +5606,12 @@ u32 rtw_core_rx_process(void *drv_priv)
 		if(validate_recv_frame(adapter, prframe) != CORE_RX_CONTINUE)
 			goto rx_next;
 
-		if(rtw_core_rx_data_pre_process(adapter, prframe) != CORE_RX_CONTINUE)
+		RTW_INFO("%s : NEO : process data\n", __func__);
+
+		if(rtw_core_rx_data_pre_process(adapter, prframe) != CORE_RX_CONTINUE) {
+			RTW_ERR("%s rtw_core_rx_data_pre_process failed - drop\n", __func__);
 			goto rx_next;
+		}
 
 		if(rtw_core_rx_data_post_process(adapter, prframe) == CORE_RX_DONE)
 			continue;

@@ -2040,8 +2040,6 @@ unsigned int OnProbeRsp(_adapter *padapter, union recv_frame *precv_frame)
 	struct wifidirect_info	*pwdinfo = &padapter->wdinfo;
 #endif
 
-	RTW_INFO("%s \n", __func__);
-
 #ifdef CONFIG_P2P
 	if (rtw_p2p_chk_state(pwdinfo, P2P_STATE_TX_PROVISION_DIS_REQ)) {
 		if (_TRUE == pwdinfo->tx_prov_disc_info.benable) {
@@ -3243,6 +3241,102 @@ void rtw_roam_nb_discover(_adapter *padapter, u8 bfroce)
 }
 #endif
 
+static void rtw_ie_handler(struct _ADAPTER *padapter, u8 *ie, u32 ie_len)
+{
+	int i;
+	struct _NDIS_802_11_VARIABLE_IEs *p;
+
+
+	if (!ie || (ie_len == 0))
+		return;
+
+	for (i = 0; i < ie_len;) {
+		p = (struct _NDIS_802_11_VARIABLE_IEs *)(ie + i);
+		switch (p->ElementID) {
+		case _VENDOR_SPECIFIC_IE_:
+			if (_rtw_memcmp(p->data, WMM_PARA_OUI, 6))	/* WMM */
+				WMM_param_handler(padapter, p);
+#if defined(CONFIG_P2P) && defined(CONFIG_WFD)
+			else if (_rtw_memcmp(p->data, WFD_OUI, 4))		/* WFD */
+				rtw_process_wfd_ie(padapter, (u8 *)p, p->Length, __func__);
+#endif
+			break;
+
+#ifdef CONFIG_WAPI_SUPPORT
+		case _WAPI_IE_:
+			pWapiIE = p;
+			break;
+#endif
+
+		case _HT_CAPABILITY_IE_:	/* HT caps */
+			HT_caps_handler(padapter, p);
+#ifdef ROKU_PRIVATE
+			HT_caps_handler_infra_ap(padapter, p);
+#endif /* ROKU_PRIVATE */
+			break;
+
+		case _HT_EXTRA_INFO_IE_:	/* HT info */
+			HT_info_handler(padapter, p);
+			break;
+
+#ifdef CONFIG_80211AC_VHT
+		case EID_VHTCapability:
+			VHT_caps_handler(padapter, p);
+#ifdef ROKU_PRIVATE
+			VHT_caps_handler_infra_ap(padapter, p);
+#endif /* ROKU_PRIVATE */
+			break;
+
+		case EID_VHTOperation:
+			VHT_operation_handler(padapter, p);
+			break;
+#endif
+
+#ifdef CONFIG_80211AX_HE
+		case WLAN_EID_EXTENSION:
+			if (p->data[0] == WLAN_EID_EXTENSION_HE_CAPABILITY)
+				HE_caps_handler(padapter, p);
+			else if (p->data[0] == WLAN_EID_EXTENSION_HE_OPERATION)
+				HE_operation_handler(padapter, p);
+			break;
+#endif
+
+		case _ERPINFO_IE_:
+			ERP_IE_handler(padapter, p);
+			break;
+#ifdef CONFIG_TDLS
+		case _EXT_CAP_IE_:
+			if (check_ap_tdls_prohibited(p->data, p->Length) == _TRUE)
+				padapter->tdlsinfo.ap_prohibited = _TRUE;
+			if (check_ap_tdls_ch_switching_prohibited(p->data, p->Length) == _TRUE)
+				padapter->tdlsinfo.ch_switch_prohibited = _TRUE;
+			break;
+#endif /* CONFIG_TDLS */
+
+#if 0 // NEO
+		case _EID_RRM_EN_CAP_IE_:
+			RM_IE_handler(padapter, p);
+			break;
+#endif // if 0 NEO
+
+#ifdef ROKU_PRIVATE
+		/* Infra mode, used to store AP's info , Parse the supported rates from AssocRsp */
+		case _SUPPORTEDRATES_IE_:
+			Supported_rate_infra_ap(padapter, p);
+			break;
+
+		case _EXT_SUPPORTEDRATES_IE_:
+			Extended_Supported_rate_infra_ap(padapter, p);
+			break;
+#endif /* ROKU_PRIVATE */
+		default:
+			break;
+		}
+
+		i += (p->Length + 2);
+	}
+}
+
 unsigned int OnAssocRsp(_adapter *padapter, union recv_frame *precv_frame)
 {
 	uint i;
@@ -3302,83 +3396,8 @@ unsigned int OnAssocRsp(_adapter *padapter, union recv_frame *precv_frame)
 	/* following are moved to join event callback function */
 	/* to handle HT, WMM, rate adaptive, update MAC reg */
 	/* for not to handle the synchronous IO in the tasklet */
-	for (i = (6 + WLAN_HDR_A3_LEN); i < pkt_len;) {
-		pIE = (PNDIS_802_11_VARIABLE_IEs)(pframe + i);
-
-		switch (pIE->ElementID) {
-		case _VENDOR_SPECIFIC_IE_:
-			if (_rtw_memcmp(pIE->data, WMM_PARA_OUI, 6))	/* WMM */
-				WMM_param_handler(padapter, pIE);
-#if defined(CONFIG_P2P) && defined(CONFIG_WFD)
-			else if (_rtw_memcmp(pIE->data, WFD_OUI, 4))		/* WFD */
-				rtw_process_wfd_ie(padapter, (u8 *)pIE, pIE->Length, __func__);
-#endif
-			break;
-
-#ifdef CONFIG_WAPI_SUPPORT
-		case _WAPI_IE_:
-			pWapiIE = pIE;
-			break;
-#endif
-
-		case _HT_CAPABILITY_IE_:	/* HT caps */
-			HT_caps_handler(padapter, pIE);
-#ifdef ROKU_PRIVATE
-			HT_caps_handler_infra_ap(padapter, pIE);
-#endif /* ROKU_PRIVATE */
-			break;
-
-		case _HT_EXTRA_INFO_IE_:	/* HT info */
-			HT_info_handler(padapter, pIE);
-			break;
-
-#ifdef CONFIG_80211AC_VHT
-		case EID_VHTCapability:
-			VHT_caps_handler(padapter, pIE);
-#ifdef ROKU_PRIVATE
-			VHT_caps_handler_infra_ap(padapter, pIE);
-#endif /* ROKU_PRIVATE */
-			break;
-
-		case EID_VHTOperation:
-			VHT_operation_handler(padapter, pIE);
-			break;
-#endif
-
-		case _ERPINFO_IE_:
-			ERP_IE_handler(padapter, pIE);
-			break;
-#ifdef CONFIG_TDLS
-		case _EXT_CAP_IE_:
-			if (check_ap_tdls_prohibited(pIE->data, pIE->Length) == _TRUE)
-				padapter->tdlsinfo.ap_prohibited = _TRUE;
-			if (check_ap_tdls_ch_switching_prohibited(pIE->data, pIE->Length) == _TRUE)
-				padapter->tdlsinfo.ch_switch_prohibited = _TRUE;
-			break;
-#endif /* CONFIG_TDLS */
-
-#ifdef CONFIG_RTW_80211K
-		case _EID_RRM_EN_CAP_IE_:
-			RM_IE_handler(padapter, pIE);
-			break;
-#endif
-
-#ifdef ROKU_PRIVATE
-		/* Infra mode, used to store AP's info , Parse the supported rates from AssocRsp */
-		case _SUPPORTEDRATES_IE_:
-			Supported_rate_infra_ap(padapter, pIE);
-			break;
-
-		case _EXT_SUPPORTEDRATES_IE_:
-			Extended_Supported_rate_infra_ap(padapter, pIE);
-			break;
-#endif /* ROKU_PRIVATE */
-		default:
-			break;
-		}
-
-		i += (pIE->Length + 2);
-	}
+	rtw_ie_handler(padapter, pframe + 6 + WLAN_HDR_A3_LEN,
+		       pkt_len - 6 - WLAN_HDR_A3_LEN);
 
 #ifdef CONFIG_WAPI_SUPPORT
 	rtw_wapi_on_assoc_ok(padapter, pIE);
@@ -11855,6 +11874,7 @@ u32 report_join_res(_adapter *padapter, int aid_res, u16 status)
 	pcmd_obj = (struct cmd_obj *)rtw_zmalloc(sizeof(struct cmd_obj));
 	if (pcmd_obj == NULL)
 		goto exit;
+	pcmd_obj->padapter = padapter;
 
 	cmdsz = (sizeof(struct joinbss_event) + sizeof(struct rtw_evt_header));
 	pevtcmd = (u8 *)rtw_zmalloc(cmdsz);

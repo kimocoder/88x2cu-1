@@ -532,6 +532,7 @@ static void core_hdl_phl_evt(struct dvobj_priv *dvobj, u16 evt_id)
 			if(!rtw_is_adapter_up(iface))
 				continue;
 
+#ifdef CONFIG_AP_MODE // NEO mark off first
 			if(MLME_IS_MESH(iface)
 				|| MLME_IS_AP(iface)
 				|| MLME_IS_ADHOC_MASTER(iface)) {
@@ -539,6 +540,7 @@ static void core_hdl_phl_evt(struct dvobj_priv *dvobj, u16 evt_id)
 					RTW_ERR(ADPT_FMT" issue_beacon, fail!\n",
 								ADPT_ARG(iface));
 			}
+#endif // NEO
 		}
 	}
 	else if (evt_id == MSG_EVT_SER_L2) {

@@ -1318,7 +1318,7 @@ rtw_phl_get_stainfo_by_macid(void *phl, u16 macid)
 
 	if (phl_sta == NULL) {
 		PHL_ERR("%s sta info (macid:%d) is NULL\n", __func__, macid);
-		_os_warn_on(1);
+		//_os_warn_on(1);
 	}
 	return phl_sta;
 }

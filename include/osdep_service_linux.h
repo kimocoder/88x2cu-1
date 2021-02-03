@@ -794,6 +794,7 @@ int _rtw_netif_rx(_nic_hdl ndev, struct sk_buff *skb);
 static inline int _rtw_netif_rx(_nic_hdl ndev, struct sk_buff *skb)
 {
 #if defined(CONFIG_RTW_FC_FASTFWD)
+aa
 extern int fwdEngine_wifi_rx(struct sk_buff *skb);
 enum {
 	RE8670_RX_STOP=0,
@@ -823,6 +824,7 @@ int ret = 0;
 	return 0;
 #else
 	skb->dev = ndev;
+	print_hex_dump(KERN_INFO, "netif_rx: ", DUMP_PREFIX_OFFSET, 16, 1, skb->data, skb->len, 1);
 	return netif_rx(skb);
 #endif
 }

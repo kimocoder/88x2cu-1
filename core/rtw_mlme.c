@@ -5771,7 +5771,8 @@ sint rtw_linked_check(_adapter *padapter)
 	}
 	return _FALSE;
 }
-/*#define DBG_ADAPTER_STATE_CHK*/
+
+#define DBG_ADAPTER_STATE_CHK
 u8 rtw_is_adapter_up(_adapter *padapter)
 {
 	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);

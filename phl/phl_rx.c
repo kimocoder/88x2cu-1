@@ -119,8 +119,6 @@ void phl_update_rx_stats(struct rtw_stats *stats, struct rtw_recv_pkt *rx_pkt)
 
 void phl_rx_statistics(struct phl_info_t *phl_info, struct rtw_recv_pkt *rx_pkt)
 {
-	RTW_INFO("%s NEO TODO\n", __func__);
-#if 0 // NEO
 	struct rtw_phl_com_t *phl_com = phl_info->phl_com;
 	struct rtw_stats *phl_stats = &phl_com->phl_stats;
 	struct rtw_stats *sta_stats = NULL;
@@ -139,7 +137,6 @@ void phl_rx_statistics(struct phl_info_t *phl_info, struct rtw_recv_pkt *rx_pkt)
 	phl_update_rx_stats(sta_stats, rx_pkt);
 dev_stat:
 	phl_update_rx_stats(phl_stats, rx_pkt);
-#endif // if 0 NEO
 }
 
 

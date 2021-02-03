@@ -634,8 +634,12 @@ inline void rtw_rframe_set_os_pkt(union recv_frame *rframe)
 
 int rtw_recv_indicatepkt(_adapter *padapter, union recv_frame *precv_frame)
 {
+	RTW_INFO("%s NEO pkt=%p\n", __func__, precv_frame->u.hdr.pkt);
+
 	if (precv_frame->u.hdr.pkt == NULL)
 		goto _recv_indicatepkt_drop;
+
+	print_hex_dump(KERN_INFO, "rtw_recv_indicatepkt: ", DUMP_PREFIX_OFFSET, 16, 1, precv_frame->u.hdr.pkt, precv_frame->u.hdr.len, 1);
 
 	rtw_os_recv_indicate_pkt(padapter, precv_frame->u.hdr.pkt, precv_frame);
 
