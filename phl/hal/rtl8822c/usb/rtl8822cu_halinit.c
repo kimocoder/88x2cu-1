@@ -16,12 +16,11 @@
 #include "../../hal_headers.h"
 #include "../rtl8822c_hal.h"
 
-#if 0 // NEO
-
-static void _hal_pre_init_8852au(struct rtw_phl_com_t *phl_com,
+static void _hal_pre_init_8822cu(struct rtw_phl_com_t *phl_com,
 				 struct hal_info_t *hal_info,
-				 struct hal_init_info_t *init_52au)
+				 struct hal_init_info_t *init_22cu)
 {
+#if 0 // NEO
 	struct mac_ax_trx_info *trx_info = &init_52au->trx_info;
 	struct mac_ax_host_rpr_cfg *rpr_cfg = (struct mac_ax_host_rpr_cfg *)hal_info->rpr_cfg;
 
@@ -46,11 +45,9 @@ static void _hal_pre_init_8852au(struct rtw_phl_com_t *phl_com,
 	rpr_cfg->macid_drop_en = MAC_AX_FUNC_DEF;
 
 	trx_info->rpr_cfg = rpr_cfg;
-
-	init_52au->ic_name = "rtl8852au";
+#endif // if 0 NEO
+	init_22cu->ic_name = "rtl8822cu";
 }
-
-#endif // if 0 NEO 
 
 void init_hal_spec_8822cu(struct rtw_phl_com_t *phl_com,
 					struct hal_info_t *hal)
@@ -111,17 +108,20 @@ void hal_deinit_8852au(struct rtw_phl_com_t *phl_com,
 		     hal_info->rpr_cfg,
 		     sizeof(struct mac_ax_host_rpr_cfg));
 }
+#endif // if 0 NEO
 
-enum rtw_hal_status hal_start_8852au(struct rtw_phl_com_t *phl_com,
+enum rtw_hal_status hal_start_8822cu(struct rtw_phl_com_t *phl_com,
 				    struct hal_info_t *hal_info)
 {
-	struct hal_init_info_t init_52au;
+	struct hal_init_info_t init_22cu;
 
-	_os_mem_set(hal_to_drvpriv(hal_info), &init_52au, 0, sizeof(init_52au));
-	_hal_pre_init_8852au(phl_com, hal_info, &init_52au);
+	_os_mem_set(hal_to_drvpriv(hal_info), &init_22cu, 0, sizeof(init_22cu));
+	_hal_pre_init_8822cu(phl_com, hal_info, &init_22cu);
 
-	return hal_start_8852a(phl_com, hal_info, &init_52au);
+	return hal_start_8822c(phl_com, hal_info, &init_22cu);
 }
+
+#if 0 // NEO
 
 static void hal_deinit_misc_8852au(struct hal_info_t *hal)
 {
@@ -171,17 +171,16 @@ hal_wow_deinit_8852au(struct rtw_phl_com_t *phl_com, struct hal_info_t *hal_info
 }
 #endif /* CONFIG_WOWLAN */
 
+#endif // if 0 NEO
 
-enum rtw_hal_status hal_stop_8852au(struct rtw_phl_com_t *phl_com,
+enum rtw_hal_status hal_stop_8822cu(struct rtw_phl_com_t *phl_com,
 				      struct hal_info_t *hal)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
 
-	hal_status = hal_stop_8852a(phl_com, hal);
+	hal_status = hal_stop_8822c(phl_com, hal);
 	return hal_status;
 }
-
-#endif // if 0 NEO
 
 static const char *const _usb_sp[] = {
 	"USB_SPEED_LOW",

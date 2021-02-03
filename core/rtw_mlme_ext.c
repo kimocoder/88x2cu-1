@@ -2179,6 +2179,9 @@ unsigned int OnBeacon(_adapter *padapter, union recv_frame *precv_frame)
 #endif
 #endif /* CONFIG_TDLS */
 
+	//RTW_INFO("%s: NEO len=%d\n", __func__, len);
+	//print_hex_dump(KERN_INFO, "pframe: ", DUMP_PREFIX_OFFSET, 16, 1, pframe, len, 1);
+
 	if (validate_beacon_len(pframe, len) == _FALSE)
 		return _SUCCESS;
 

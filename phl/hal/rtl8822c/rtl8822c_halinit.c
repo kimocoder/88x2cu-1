@@ -313,12 +313,15 @@ hal_fast_init_fail:
 	return hal_status;
 }
 
-enum rtw_hal_status hal_start_8852a(struct rtw_phl_com_t *phl_com,
+#endif // if 0 NEO
+
+enum rtw_hal_status hal_start_8822c(struct rtw_phl_com_t *phl_com,
 				   struct hal_info_t *hal,
 				   struct hal_init_info_t *init_info)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
 
+#if 0 // NEO
 	/* Read phy parameter files */
 	rtw_hal_dl_all_para_file(phl_com, init_info->ic_name, hal);
 
@@ -360,16 +363,27 @@ enum rtw_hal_status hal_start_8852a(struct rtw_phl_com_t *phl_com,
 	rtw_hal_bb_dm_init(hal);
 	rtw_hal_rf_dm_init(hal);
 
+#endif // if 0 NEO
+
 	/* Temporarily read hardware setting for RX
 	 * ToDo: driver control MAC setting.
 	 */
-	{
-		u32 reg32 = hal_read32(hal->hal_com, R_AX_MPDU_PROC);
-		if (reg32 & B_AX_APPEND_FCS)
-			phl_com->append_fcs = true;
-		if (reg32 & B_AX_A_ICV_ERR)
-			phl_com->accept_icv_err = true;
+	{ // NEO : process FCS
+#ifndef REG_RCR
+#define REG_RCR 0x0608
+#endif
+#ifndef BIT_APP_FCS
+#define BIT_APP_FCS BIT(31)
+#endif
+		u32 val = hal_read32(hal->hal_com, REG_RCR);
+
+		RTW_INFO("%s NEO : REG_RCR=0x%x\n", __func__, val);
+		phl_com->append_fcs = !!(val & BIT_APP_FCS);
+		RTW_INFO("%s NEO : append_fcs=%d\n", __func__, phl_com->append_fcs);
+		//phl_com->accept_icv_err = true;
 	}
+
+#if 0 // NEO
 
 #ifdef RTW_WKARD_HW_MGNT_GCMP_256_DISABLE
 	rtw_hal_mac_config_hw_mgnt_sec(hal, false);
@@ -394,6 +408,8 @@ enum rtw_hal_status hal_start_8852a(struct rtw_phl_com_t *phl_com,
 	/* Enable FW basic logs */
 	hal_fw_en_basic_log(hal->hal_com);
 
+#endif // if 0 NEO
+
 	return RTW_HAL_STATUS_SUCCESS;
 
 hal_init_fail:
@@ -401,8 +417,11 @@ hal_init_fail:
 	return hal_status;
 }
 
-enum rtw_hal_status hal_stop_8852a(struct rtw_phl_com_t *phl_com, struct hal_info_t *hal)
+enum rtw_hal_status hal_stop_8822c(struct rtw_phl_com_t *phl_com, struct hal_info_t *hal)
 {
+	return RTW_HAL_STATUS_SUCCESS;
+
+#if 0 // NEO
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
 
 #ifdef CONFIG_BTCOEX
@@ -411,7 +430,10 @@ enum rtw_hal_status hal_stop_8852a(struct rtw_phl_com_t *phl_com, struct hal_inf
 #endif
 	hal_status = rtw_hal_mac_hal_deinit(phl_com, hal);
 	return hal_status;
+#endif // if 0 NEO
 }
+
+#if 0 // NEO
 
 #ifdef CONFIG_WOWLAN
 enum rtw_hal_status

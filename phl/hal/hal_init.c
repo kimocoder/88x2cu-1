@@ -1329,11 +1329,11 @@ enum rtw_hal_status rtw_hal_start(struct rtw_phl_com_t *phl_com, void *hal)
 		return hal_status;
 	}
 
+#endif // if 0 NEO
+
 	hal_status = hal_ops->hal_start(phl_com, hal_info);
 	if (hal_status != RTW_HAL_STATUS_SUCCESS)
 		return hal_status;
-
-#endif // if 0 NEO
 
 	hal_status = RTW_HAL_STATUS_SUCCESS;
 	hal_info->hal_com->is_hal_init = true;
@@ -1370,9 +1370,9 @@ void rtw_hal_g6_stop(struct rtw_phl_com_t *phl_com, void *hal)
 	#ifdef CONFIG_BTCOEX
 	rtw_hal_btc_radio_state_ntfy(hal_info, false);
 	#endif
+#endif // if 0 NEO
 
 	hal_status = hal_ops->hal_stop(phl_com, hal_info);
-#endif // if 0 NEO
 	hal_info->hal_com->is_hal_init = false;
 }
 

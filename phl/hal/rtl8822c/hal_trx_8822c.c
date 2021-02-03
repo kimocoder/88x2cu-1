@@ -382,7 +382,6 @@ _hal_parsing_rx_wd_8822c(struct hal_info_t *hal, u8 *desc,
  * 	pkt_len : the pkt length
  * 	rxwd : rx desc
  */
-
 enum rtw_hal_status
 hal_parsing_rx_wd_8822c(struct rtw_phl_com_t *phl_com,
 				struct hal_info_t *hal,
@@ -421,7 +420,6 @@ hal_parsing_rx_wd_8822c(struct rtw_phl_com_t *phl_com,
 		*pkt = pbuf;
 		*pkt_len = (u16)mdata->pktlen;
 	} while (false);
-
 
 	//_hal_dump_rxdesc(desc, mdata);
 
