@@ -813,7 +813,7 @@ void rtw_bcn_key_err_fix(struct beacon_keys *cur, struct beacon_keys *recv);
 bool rtw_bcn_key_compare(struct beacon_keys *cur, struct beacon_keys *recv);
 int rtw_check_bcn_info(ADAPTER *Adapter, u8 *pframe, u32 packet_len);
 void update_beacon_info(_adapter *padapter, u8 *pframe, uint len, struct sta_info *psta);
-#if CONFIG_DFS
+#ifdef CONFIG_DFS
 void process_csa_ie(_adapter *padapter, u8 *ies, uint ies_len);
 #endif
 void update_capinfo(PADAPTER Adapter, u16 updateCap);

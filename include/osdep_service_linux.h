@@ -824,7 +824,7 @@ int ret = 0;
 	return 0;
 #else
 	skb->dev = ndev;
-	print_hex_dump(KERN_INFO, "netif_rx: ", DUMP_PREFIX_OFFSET, 16, 1, skb->data, skb->len, 1);
+	//print_hex_dump(KERN_INFO, "netif_rx: ", DUMP_PREFIX_OFFSET, 16, 1, skb->data, skb->len, 1);
 	return netif_rx(skb);
 #endif
 }

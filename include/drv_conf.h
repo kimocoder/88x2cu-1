@@ -362,11 +362,11 @@
 	#endif
 #endif
 
-#ifndef CONFIG_DFS
-#define CONFIG_DFS 1
-#endif
+//#ifndef CONFIG_DFS
+//#define CONFIG_DFS 1
+//#endif
 
-#if CONFIG_IEEE80211_BAND_5GHZ && CONFIG_DFS && defined(CONFIG_AP_MODE)
+#if CONFIG_IEEE80211_BAND_5GHZ && defined(CONFIG_DFS) && defined(CONFIG_AP_MODE)
 	#if !defined(CONFIG_DFS_SLAVE_WITH_RADAR_DETECT)
 	#define CONFIG_DFS_SLAVE_WITH_RADAR_DETECT 0
 	#endif

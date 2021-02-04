@@ -2644,10 +2644,12 @@ int rtw_check_bcn_info(ADAPTER *Adapter, u8 *pframe, u32 packet_len)
 		/* RTW_INFO("u_ch=%d, u_bw=%d, u_offset=%d \n", u_ch, u_bw, u_offset);
 		RTW_INFO("recv_beacon.ch=%d, recv_beacon.bw=%d, recv_beacon.offset=%d \n", recv_beacon.ch, recv_beacon.bw, recv_beacon.offset); */
 		/* rtw_dump_bcn_keys(RTW_DBGDUMP, &recv_beacon); */
-		
+
+#ifdef CONFIG_DFS
 		/* RTW_INFO("_cancel_timer_async csa_timer\n"); */
 		_cancel_timer_async(&pmlmeext->csa_timer);
-		
+#endif
+
 		/* beacon bw/offset is different from CSA IE */
 		if((recv_beacon.bw > u_bw) || 
 			((recv_beacon.offset != HAL_PRIME_CHNL_OFFSET_DONT_CARE) && ((u_offset != HAL_PRIME_CHNL_OFFSET_DONT_CARE))

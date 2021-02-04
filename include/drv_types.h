@@ -1124,7 +1124,7 @@ struct rf_ctl_t {
 
 	bool ch_sel_within_same_band;
 
-#if CONFIG_DFS
+#ifdef CONFIG_DFS
 	u8 csa_ch;
 	u8 csa_switch_cnt;
 	u8 csa_ch_offset;

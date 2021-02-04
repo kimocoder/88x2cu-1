@@ -1157,6 +1157,16 @@ check_bss:
 
 		if (check_fwstate(pmlmepriv, WIFI_MONITOR_STATE) != _TRUE) {
 			RTW_INFO("%s NEO cfg80211_connect_result\n", __func__);
+			print_hex_dump(KERN_INFO, "mac address: ", DUMP_PREFIX_OFFSET, 16, 1, cur_network->network.MacAddress, ETH_ALEN, 1);
+			print_hex_dump(KERN_INFO, "assoc req: ", DUMP_PREFIX_OFFSET, 16, 1,
+				       pmlmepriv->assoc_req + sizeof(struct rtw_ieee80211_hdr_3addr) + 2,
+				       pmlmepriv->assoc_req_len - sizeof(struct rtw_ieee80211_hdr_3addr) - 2,
+				       1);
+			print_hex_dump(KERN_INFO, "assoc resp: ", DUMP_PREFIX_OFFSET, 16, 1,
+				       pmlmepriv->assoc_rsp + sizeof(struct rtw_ieee80211_hdr_3addr) + 6,
+				       pmlmepriv->assoc_rsp_len - sizeof(struct rtw_ieee80211_hdr_3addr) - 6,
+				       1);
+
 			rtw_cfg80211_connect_result(pwdev, cur_network->network.MacAddress
 				, pmlmepriv->assoc_req + sizeof(struct rtw_ieee80211_hdr_3addr) + 2
 				, pmlmepriv->assoc_req_len - sizeof(struct rtw_ieee80211_hdr_3addr) - 2

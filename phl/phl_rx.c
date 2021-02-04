@@ -702,6 +702,8 @@ enum rtw_phl_status phl_rx_reorder(struct phl_info_t *phl_info,
 		goto dont_reorder;
 	}
 
+	RTW_INFO("%s NEO force to NOT reorder first\n", __func__);
+	goto dont_reorder;
 
 	/* Use MAC ID from address CAM if this packet is address CAM matched */
 	while (meta->addr_cam_vld) {

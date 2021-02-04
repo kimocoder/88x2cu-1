@@ -654,7 +654,7 @@ u8 rtw_dm_ra_mask_wk_cmd(_adapter *padapter, u8 *psta);
 
 extern u8 rtw_ps_cmd(_adapter *padapter);
 
-#if CONFIG_DFS
+#ifdef CONFIG_DFS
 void rtw_dfs_ch_switch_hdl(struct dvobj_priv *dvobj);
 #endif
 

@@ -67,9 +67,9 @@ int rtw_os_alloc_recvframe(_adapter *padapter, union recv_frame *precvframe, u8 
 		return res;
 	}
 
-	RTW_INFO("%s NEO pdata=%p, len=%d\n", __func__, pdata, pattrib->pkt_len);
-	print_hex_dump(KERN_INFO, "rtw_os_alloc_recvframe: ",
-		       DUMP_PREFIX_OFFSET, 16, 1, pdata, pattrib->pkt_len, 1);
+	//RTW_INFO("%s NEO pdata=%p, len=%d\n", __func__, pdata, pattrib->pkt_len);
+	//print_hex_dump(KERN_INFO, "rtw_os_alloc_recvframe: ",
+	//	       DUMP_PREFIX_OFFSET, 16, 1, pdata, pattrib->pkt_len, 1);
 
 
 	/*	Modified by Albert 20101213 */
@@ -423,7 +423,7 @@ void rtw_os_recv_indicate_pkt(_adapter *padapter, struct sk_buff *pkt,
 	if (pkt) {
 		struct ethhdr *ehdr = (struct ethhdr *)pkt->data;
 
-		print_hex_dump(KERN_INFO, "rtw_os_recv_indicate_pkt: ", DUMP_PREFIX_OFFSET, 16, 1, pkt->data, pkt->len, 1);
+		//print_hex_dump(KERN_INFO, "rtw_os_recv_indicate_pkt: ", DUMP_PREFIX_OFFSET, 16, 1, pkt->data, pkt->len, 1);
 
 		DBG_COUNTER(padapter->rx_logs.os_indicate);
 

@@ -1364,6 +1364,7 @@ struct rtw_phl_rx_pkt *phl_get_single_rx(struct phl_info_t *phl_info,
 							phl_rx);
 
 		if (RTW_HAL_STATUS_SUCCESS != hstatus) {
+			RTW_ERR("%s NEO rtw_hal_handle_rx_buffer failed: %d\n", __func__, hstatus);
 			phl_release_phl_rx(phl_info, phl_rx);
 			phl_rx = NULL;
 			pstatus = RTW_PHL_STATUS_FAILURE;
@@ -1542,6 +1543,9 @@ static enum rtw_phl_status phl_rx_usb(struct phl_info_t *phl_info)
 		}
 		else
 			break;
+
+		//RTW_INFO("%s NEO pipe_idx=%d\n", __func__, rx_buf->pipe_idx);
+		//print_hex_dump(KERN_INFO, "phl_rx_usb: ", DUMP_PREFIX_OFFSET, 16, 1, rx_buf->buffer, rx_buf->transfer_len, 1);
 
 		switch(rx_buf->pipe_idx){
 			case WLAN_IN_MPDU_PIPE_IDX:

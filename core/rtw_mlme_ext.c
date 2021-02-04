@@ -12467,7 +12467,9 @@ void mlmeext_joinbss_event_callback(_adapter *padapter, int join_res)
 	join_type = 2;
 	rtw_hal_set_hwreg(padapter, HW_VAR_MLME_JOIN, (u8 *)(&join_type));
 
+	RTW_INFO("%s NEO : pmlmeinfo->state:0x%x\n", __func__, pmlmeinfo->state);
 	if ((pmlmeinfo->state & 0x03) == WIFI_FW_STATION_STATE) {
+		RTW_INFO("%s NEO : set RCR connected\n", __func__);
 		rtw_hal_rcr_set_chk_bssid(padapter, MLME_STA_CONNECTED);
 
 		/* correcting TSF */
@@ -13933,7 +13935,7 @@ u8 disconnect_hdl(_adapter *padapter, unsigned char *pbuf)
 	u8 val8;
 
 	if (is_client_associated_to_ap(padapter)
-		#if CONFIG_DFS
+		#ifdef CONFIG_DFS
 		&& !IS_RADAR_DETECTED(rfctl) && !rfctl->csa_ch
 		#endif
 	) {
@@ -16448,7 +16450,8 @@ void csa_timer_hdl(void *FunctionContext)
 		RTW_INFO("wait beacons more than 70 seconds\n");
 		return ;
 	}
-	
+
+#ifdef CONFIG_DFS
 	if(rfctl->csa_ch == 0) {
 		RTW_INFO("channel switch done\n");
 		return ;
@@ -16463,11 +16466,12 @@ void csa_timer_hdl(void *FunctionContext)
 			rfctl->csa_ch_freq_seg0 = 0;
 			rfctl->csa_ch_freq_seg1 = 0;
 	}
+#endif
 }
 
 u8 set_csa_hdl(_adapter *adapter, unsigned char *pbuf)
 {
-#if CONFIG_DFS
+#ifdef CONFIG_DFS
 	struct rf_ctl_t *rfctl = adapter_to_rfctl(adapter);
 
 	if (rfctl->csa_ch)

@@ -28,7 +28,7 @@
 #ifndef CONFIG_PHL_TEST_SUITE
 #define CONFIG_PHL_TEST_SUITE
 #endif
-#define CONFIG_DFS 1
+//#define CONFIG_DFS 1
 //#define CONFIG_USB_TX_AGGREGATION
 //#define CONFIG_USB_RX_AGGREGATION
 #define CONFIG_USB_TX_PADDING_CHK
@@ -161,7 +161,7 @@
 #define CONFIG_PHL_USB_RX_AGGREGATION
 #endif
 
-#if CONFIG_DFS
+#ifdef CONFIG_DFS
 #define CONFIG_PHL_DFS
 #endif
 

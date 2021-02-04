@@ -23,7 +23,7 @@ u32 phl_log_components = COMP_PHL_DBG |
 			 COMP_PHL_PSTS |
 			 COMP_PHL_WOW | 0;
 
-//COMP_PHL_RECV |
+//			 COMP_PHL_RECV |
 
 u8 phl_log_level = _PHL_INFO_;
 struct dbg_mem_ctx debug_memory_ctx;

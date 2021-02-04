@@ -759,7 +759,6 @@ union recv_frame *portctrl(_adapter *adapter, union recv_frame *precv_frame)
 
 	psta = rtw_get_stainfo(pstapriv, psta_addr);
 
-	RTW_INFO("%s NEO auth_alg:%d\n", __func__, auth_alg);
 	if (auth_alg == dot11AuthAlgrthm_8021X) {
 		if ((psta != NULL) && (psta->ieee8021x_blocked)) {
 			/* blocked */
@@ -1295,7 +1294,7 @@ int rtw_sta_rx_data_validate_hdr(_adapter *adapter, union recv_frame *rframe, st
 	u8 is_ra_bmc = IS_MCAST(GetAddr1Ptr(whdr)) ? 1 : 0;
 	sint ret = _FAIL;
 
-	RTW_INFO("%s NEO to_fr_ds=%d\n", __func__, rattrib->to_fr_ds);
+	//RTW_INFO("%s NEO to_fr_ds=%d\n", __func__, rattrib->to_fr_ds);
 
 	if (rattrib->to_fr_ds == 0) {
 		_rtw_memcpy(rattrib->ra, GetAddr1Ptr(whdr), ETH_ALEN);
@@ -1412,10 +1411,6 @@ int rtw_sta_rx_data_validate_hdr(_adapter *adapter, union recv_frame *rframe, st
 		goto exit;
 	}
 #endif
-
-	print_hex_dump(KERN_INFO, "dst: ", DUMP_PREFIX_OFFSET, 16, 1, rattrib->dst, ETH_ALEN, 1);
-	print_hex_dump(KERN_INFO, "src: ", DUMP_PREFIX_OFFSET, 16, 1, rattrib->src, ETH_ALEN, 1);
-	print_hex_dump(KERN_INFO, "bssid: ", DUMP_PREFIX_OFFSET, 16, 1, rattrib->bssid, ETH_ALEN, 1);
 
 	ret = _SUCCESS;
 
@@ -2075,9 +2070,9 @@ sint validate_recv_data_frame(_adapter *adapter, union recv_frame *precv_frame)
 	sint ret = _SUCCESS;
 
 
-	RTW_INFO("%s NEO pkt len=%d\n", __func__, precv_frame->u.hdr.len);
-	print_hex_dump(KERN_INFO, "validate_recv_data_frame: ", DUMP_PREFIX_OFFSET, 16, 1,
-		       ptr, precv_frame->u.hdr.len, 1);
+	//RTW_INFO("%s NEO pkt len=%d\n", __func__, precv_frame->u.hdr.len);
+	//print_hex_dump(KERN_INFO, "validate_recv_data_frame: ", DUMP_PREFIX_OFFSET, 16, 1,
+	//	       ptr, precv_frame->u.hdr.len, 1);
 
 	bretry = GetRetry(ptr);
 	a4_shift = (pattrib->to_fr_ds == 3) ? ETH_ALEN : 0;
@@ -2367,7 +2362,7 @@ sint validate_recv_frame(_adapter *adapter, union recv_frame *precv_frame)
 		retval = _FAIL; /* only data frame return _SUCCESS */
 		break;
 	case WIFI_DATA_TYPE: /* data */
-		print_hex_dump(KERN_INFO, "validate_recv_frame: ", DUMP_PREFIX_OFFSET, 16, 1, ptr, precv_frame->u.hdr.len, 1);
+		//print_hex_dump(KERN_INFO, "validate_recv_frame: ", DUMP_PREFIX_OFFSET, 16, 1, ptr, precv_frame->u.hdr.len, 1);
 		DBG_COUNTER(adapter->rx_logs.core_rx_pre_data);
 #ifdef CONFIG_WAPI_SUPPORT
 		if (pattrib->qos)
@@ -5344,8 +5339,8 @@ s32 core_rx_process_msdu(_adapter *adapter, union recv_frame *prframe)
 	enum rtw_rx_llc_hdl llc_hdl = rtw_recv_llc_parse(msdu, msdu_len);
 	int act = RTW_RX_MSDU_ACT_INDICATE;
 
-	RTW_INFO("%s NEO hdrlen:%d, iv_len: %d, mctrl_len:%d\n", __func__, pattrib->hdrlen, pattrib->iv_len, RATTRIB_GET_MCTRL_LEN(pattrib));
-	print_hex_dump(KERN_INFO, "core_rx_process_msdu: ", DUMP_PREFIX_OFFSET, 16, 1, msdu, msdu_len, 1);
+	//RTW_INFO("%s NEO hdrlen:%d, iv_len: %d, mctrl_len:%d\n", __func__, pattrib->hdrlen, pattrib->iv_len, RATTRIB_GET_MCTRL_LEN(pattrib));
+	//print_hex_dump(KERN_INFO, "core_rx_process_msdu: ", DUMP_PREFIX_OFFSET, 16, 1, msdu, msdu_len, 1);
 
 #if defined(CONFIG_AP_MODE)
 aa
@@ -5401,7 +5396,7 @@ aa
 		return CORE_RX_DROP;
 	}
 
-	RTW_INFO("%s NEO return RX DONE\n", __func__);
+	//RTW_INFO("%s NEO return RX DONE\n", __func__);
 	return CORE_RX_DONE;
 }
 
@@ -5418,7 +5413,7 @@ s32 rtw_core_rx_data_post_process(_adapter *adapter, union recv_frame *prframe)
 	  //rtw_recv_indicatepkt_check
 	  //rtw_recv_indicatepkt
 
-	RTW_INFO("%s NEO: amsdu=%d\n", __func__, prframe->u.hdr.attrib.amsdu);
+	//RTW_INFO("%s NEO: amsdu=%d\n", __func__, prframe->u.hdr.attrib.amsdu);
 
 //todo hw amsdu
 	if (prframe->u.hdr.attrib.amsdu) 
@@ -5612,8 +5607,6 @@ u32 rtw_core_rx_process(void *drv_priv)
 		//?? todo power save
 		if(validate_recv_frame(adapter, prframe) != CORE_RX_CONTINUE)
 			goto rx_next;
-
-		RTW_INFO("%s : NEO : process data\n", __func__);
 
 		if(rtw_core_rx_data_pre_process(adapter, prframe) != CORE_RX_CONTINUE) {
 			RTW_ERR("%s rtw_core_rx_data_pre_process failed - drop\n", __func__);

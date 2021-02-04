@@ -449,7 +449,6 @@ static void rtw_usb_write_port_complete(struct urb *purb, struct pt_regs *regs)
 	struct dvobj_priv *pdvobj = adapter_to_dvobj(padapter);
 	struct xmit_priv	*pxmitpriv = &padapter->xmitpriv;
 
-
 	switch (pxmitbuf->flags) {
 	case VO_QUEUE_INX:
 		pxmitpriv->voq_cnt--;
@@ -554,6 +553,8 @@ u32 rtw_usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 len, u8 *wmem)
 	struct lite_data_buf *litexmitbuf = NULL;
 	struct data_urb *xmiturb = NULL;
 
+
+	//RTW_INFO("%s : NEO bulkout_id:%d\n", __func__, pxmitbuf->bulkout_id);
 
 #if 0 // NEO : G6
 	litexmitbuf = rtw_alloc_litedatabuf(&pdvobj->litexmitbuf_q);
@@ -1280,6 +1281,7 @@ exit:
 	else
 		status = RTW_PHL_STATUS_FAILURE;
 
+	//print_hex_dump(KERN_INFO, "USB read: ", DUMP_PREFIX_OFFSET, 16, 1, literecvbuf->pbuf, actual_length, 1);
 	rtw_phl_post_in_complete(dvobj->phl, literecvbuf->phl_buf_ptr, actual_length, status);
 	rtw_free_litedatabuf(rx_data_buf_q, literecvbuf);
 	rtw_free_dataurb(rx_urb_q, recvurb);
