@@ -759,7 +759,7 @@ union recv_frame *portctrl(_adapter *adapter, union recv_frame *precv_frame)
 
 	psta = rtw_get_stainfo(pstapriv, psta_addr);
 
-
+	RTW_INFO("%s NEO auth_alg:%d\n", __func__, auth_alg);
 	if (auth_alg == dot11AuthAlgrthm_8021X) {
 		if ((psta != NULL) && (psta->ieee8021x_blocked)) {
 			/* blocked */
@@ -1295,6 +1295,8 @@ int rtw_sta_rx_data_validate_hdr(_adapter *adapter, union recv_frame *rframe, st
 	u8 is_ra_bmc = IS_MCAST(GetAddr1Ptr(whdr)) ? 1 : 0;
 	sint ret = _FAIL;
 
+	RTW_INFO("%s NEO to_fr_ds=%d\n", __func__, rattrib->to_fr_ds);
+
 	if (rattrib->to_fr_ds == 0) {
 		_rtw_memcpy(rattrib->ra, GetAddr1Ptr(whdr), ETH_ALEN);
 		_rtw_memcpy(rattrib->ta, get_addr2_ptr(whdr), ETH_ALEN);
@@ -1410,6 +1412,10 @@ int rtw_sta_rx_data_validate_hdr(_adapter *adapter, union recv_frame *rframe, st
 		goto exit;
 	}
 #endif
+
+	print_hex_dump(KERN_INFO, "dst: ", DUMP_PREFIX_OFFSET, 16, 1, rattrib->dst, ETH_ALEN, 1);
+	print_hex_dump(KERN_INFO, "src: ", DUMP_PREFIX_OFFSET, 16, 1, rattrib->src, ETH_ALEN, 1);
+	print_hex_dump(KERN_INFO, "bssid: ", DUMP_PREFIX_OFFSET, 16, 1, rattrib->bssid, ETH_ALEN, 1);
 
 	ret = _SUCCESS;
 
@@ -2277,7 +2283,6 @@ sint validate_recv_frame(_adapter *adapter, union recv_frame *precv_frame)
 #endif
 
 
-	print_hex_dump(KERN_INFO, "validate_recv_frame: ", DUMP_PREFIX_OFFSET, 16, 1, ptr, precv_frame->u.hdr.len, 1);
 
 #ifdef CONFIG_FIND_BEST_CHANNEL
 	if (pmlmeext->sitesurvey_res.state == SCAN_PROCESS) {
@@ -2346,7 +2351,6 @@ sint validate_recv_frame(_adapter *adapter, union recv_frame *precv_frame)
 #endif
 	switch (type) {
 	case WIFI_MGT_TYPE: /* mgnt */
-		//RTW_INFO("%s : NEO: mgmt\n", __func__);
 		DBG_COUNTER(adapter->rx_logs.core_rx_pre_mgmt);
 		retval = validate_recv_mgnt_frame(adapter, precv_frame);
 		if (retval == _FAIL) {
@@ -2355,7 +2359,6 @@ sint validate_recv_frame(_adapter *adapter, union recv_frame *precv_frame)
 		retval = _FAIL; /* only data frame return _SUCCESS */
 		break;
 	case WIFI_CTRL_TYPE: /* ctrl */
-		RTW_INFO("%s : NEO: ctrl\n", __func__);
 		DBG_COUNTER(adapter->rx_logs.core_rx_pre_ctrl);
 		retval = validate_recv_ctrl_frame(adapter, precv_frame);
 		if (retval == _FAIL) {
@@ -2364,6 +2367,7 @@ sint validate_recv_frame(_adapter *adapter, union recv_frame *precv_frame)
 		retval = _FAIL; /* only data frame return _SUCCESS */
 		break;
 	case WIFI_DATA_TYPE: /* data */
+		print_hex_dump(KERN_INFO, "validate_recv_frame: ", DUMP_PREFIX_OFFSET, 16, 1, ptr, precv_frame->u.hdr.len, 1);
 		DBG_COUNTER(adapter->rx_logs.core_rx_pre_data);
 #ifdef CONFIG_WAPI_SUPPORT
 		if (pattrib->qos)
@@ -5340,6 +5344,9 @@ s32 core_rx_process_msdu(_adapter *adapter, union recv_frame *prframe)
 	enum rtw_rx_llc_hdl llc_hdl = rtw_recv_llc_parse(msdu, msdu_len);
 	int act = RTW_RX_MSDU_ACT_INDICATE;
 
+	RTW_INFO("%s NEO hdrlen:%d, iv_len: %d, mctrl_len:%d\n", __func__, pattrib->hdrlen, pattrib->iv_len, RATTRIB_GET_MCTRL_LEN(pattrib));
+	print_hex_dump(KERN_INFO, "core_rx_process_msdu: ", DUMP_PREFIX_OFFSET, 16, 1, msdu, msdu_len, 1);
+
 #if defined(CONFIG_AP_MODE)
 aa
 	struct xmit_frame *fwd_frame = NULL;
@@ -5502,8 +5509,8 @@ s32 rtw_core_update_recvframe(struct dvobj_priv *dvobj,
 	prframe->u.hdr.attrib.amsdu = mdata->amsdu;
 
 	if (!is_bmc) {
-		print_hex_dump(KERN_INFO, "rtw_core_update_recvframe: unicast - ",
-		       DUMP_PREFIX_OFFSET, 16, 1, pbuf, prframe->u.hdr.len, 1);
+		//print_hex_dump(KERN_INFO, "rtw_core_update_recvframe: unicast - ",
+		//       DUMP_PREFIX_OFFSET, 16, 1, pbuf, prframe->u.hdr.len, 1);
 
 		pda = get_ra(pbuf);
 		iface = rtw_get_iface_by_macddr(primary_padapter, pda);

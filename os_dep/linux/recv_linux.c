@@ -423,6 +423,8 @@ void rtw_os_recv_indicate_pkt(_adapter *padapter, struct sk_buff *pkt,
 	if (pkt) {
 		struct ethhdr *ehdr = (struct ethhdr *)pkt->data;
 
+		print_hex_dump(KERN_INFO, "rtw_os_recv_indicate_pkt: ", DUMP_PREFIX_OFFSET, 16, 1, pkt->data, pkt->len, 1);
+
 		DBG_COUNTER(padapter->rx_logs.os_indicate);
 
 #ifdef CONFIG_BR_EXT
@@ -634,12 +636,8 @@ inline void rtw_rframe_set_os_pkt(union recv_frame *rframe)
 
 int rtw_recv_indicatepkt(_adapter *padapter, union recv_frame *precv_frame)
 {
-	RTW_INFO("%s NEO pkt=%p\n", __func__, precv_frame->u.hdr.pkt);
-
 	if (precv_frame->u.hdr.pkt == NULL)
 		goto _recv_indicatepkt_drop;
-
-	print_hex_dump(KERN_INFO, "rtw_recv_indicatepkt: ", DUMP_PREFIX_OFFSET, 16, 1, precv_frame->u.hdr.pkt, precv_frame->u.hdr.len, 1);
 
 	rtw_os_recv_indicate_pkt(padapter, precv_frame->u.hdr.pkt, precv_frame);
 
