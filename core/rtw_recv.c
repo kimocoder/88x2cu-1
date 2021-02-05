@@ -1287,7 +1287,6 @@ void count_rx_stats(_adapter *padapter, union recv_frame *prframe, struct sta_in
 int rtw_sta_rx_data_validate_hdr(_adapter *adapter, union recv_frame *rframe, struct sta_info **sta)
 {
 	struct sta_priv *stapriv = &adapter->stapriv;
-	u8 *mybssid  = get_bssid(&adapter->mlmepriv);
 	u8 *myhwaddr = adapter_mac_addr(adapter);
 	struct rx_pkt_attrib *rattrib = &rframe->u.hdr.attrib;
 	u8 *whdr = get_recvframe_data(rframe);
@@ -2014,9 +2013,9 @@ fail:
 }
 #endif /* defined(CONFIG_IEEE80211W) || defined(CONFIG_RTW_MESH) */
 
-union recv_frame *recvframe_chk_defrag(PADAPTER padapter, union recv_frame *precv_frame);
+union recv_frame *recvframe_chk_defrag(_adapter *padapter, union recv_frame *precv_frame);
 
-sint validate_recv_mgnt_frame(PADAPTER padapter, union recv_frame *precv_frame)
+sint validate_recv_mgnt_frame(_adapter *padapter, union recv_frame *precv_frame)
 {
 	struct sta_info *psta = precv_frame->u.hdr.psta
 		= rtw_get_stainfo(&padapter->stapriv, get_addr2_ptr(precv_frame->u.hdr.rx_data));
@@ -2495,7 +2494,7 @@ exiting:
 #ifndef CONFIG_SDIO_RX_COPY
 #ifdef PLATFORM_LINUX
 static void recvframe_expand_pkt(
-	PADAPTER padapter,
+	_adapter *padapter,
 	union recv_frame *prframe)
 {
 	struct recv_frame_hdr *pfhdr;
@@ -2547,13 +2546,12 @@ static void recvframe_expand_pkt(
 	pfhdr->rx_end = skb_end_pointer(ppkt);
 }
 #else /*!= PLATFORM_LINUX*/
-#warning "recvframe_expandstruct sk_buff not implement, defrag may crash system"
+#warning "recvframe_expand_pkt not implement, defrag may crash system"
 #endif
 #endif /*#ifndef CONFIG_SDIO_RX_COPY*/
 #endif
 
 /* perform defrag */
-union recv_frame *recvframe_defrag(_adapter *adapter, _queue *defrag_q);
 union recv_frame *recvframe_defrag(_adapter *adapter, _queue *defrag_q)
 {
 	_list	*plist, *phead;
@@ -2642,7 +2640,7 @@ union recv_frame *recvframe_defrag(_adapter *adapter, _queue *defrag_q)
 }
 
 /* check if need to defrag, if needed queue the frame to defrag_q */
-union recv_frame *recvframe_chk_defrag(PADAPTER padapter, union recv_frame *precv_frame)
+union recv_frame *recvframe_chk_defrag(_adapter *padapter, union recv_frame *precv_frame)
 {
 	u8	ismfrag;
 	u8	fragnum;
@@ -2871,7 +2869,7 @@ static void recv_fwd_pkt_hdl(_adapter *adapter, struct sk_buff *pkt
 		fwd_pkt = rtw_skb_copy(pkt);
 		if (!fwd_pkt) {
 			#ifdef DBG_TX_DROP_FRAME
-			RTW_INFO("DBG_TX_DROP_FRAME %s rtw_os_pkt_copy fail\n", __func__);
+			RTW_INFO("DBG_TX_DROP_FRAME %s rtw_skb_copy fail\n", __func__);
 			#endif
 			recv_free_fwd_resource(adapter, fwd_frame, b2u_list);
 			goto exit;
@@ -3004,13 +3002,13 @@ int amsdu_to_msdu(_adapter *padapter, union recv_frame *prframe)
 		if (sub_pkt == NULL) {
 			if (act & RTW_RX_MSDU_ACT_INDICATE) {
 				#ifdef DBG_RX_DROP_FRAME
-				RTW_INFO("DBG_RX_DROP_FRAME %s rtw_os_alloc_msdustruct sk_buff fail\n", __func__);
+				RTW_INFO("DBG_RX_DROP_FRAME %s rtw_os_alloc_msdu_pkt fail\n", __func__);
 				#endif
 			}
 			#if defined(CONFIG_AP_MODE) || defined(CONFIG_RTW_MESH)
 			if (act & RTW_RX_MSDU_ACT_FORWARD) {
 				#ifdef DBG_TX_DROP_FRAME
-				RTW_INFO("DBG_TX_DROP_FRAME %s rtw_os_alloc_msdustruct sk_buff fail\n", __func__);
+				RTW_INFO("DBG_TX_DROP_FRAME %s rtw_os_alloc_msdu_pkt fail\n", __func__);
 				#endif
 				recv_free_fwd_resource(padapter, fwd_frame, &b2u_list);
 			}
@@ -3178,8 +3176,8 @@ static int recv_process_mpdu(_adapter *padapter, union recv_frame *prframe)
 			#ifdef DBG_RX_DROP_FRAME
 			RTW_INFO("DBG_RX_DROP_FRAME "FUNC_ADPT_FMT" DS:%u SR:%u\n"
 				, FUNC_ADPT_ARG(padapter)
-				, rtw_is_drv_stopped(padapter)
-				, rtw_is_surprise_removed(padapter));
+				, dev_is_drv_stopped(adapter_to_dvobj(padapter))
+				, dev_is_surprise_removed(adapter_to_dvobj(padapter)));
 			#endif
 			ret = _SUCCESS; /* don't count as packet drop */
 			rtw_free_recvframe(prframe);
@@ -3193,7 +3191,7 @@ exit:
 #if defined(CONFIG_80211N_HT) && defined(CONFIG_RECV_REORDERING_CTRL)
 static int check_indicate_seq(struct recv_reorder_ctrl *preorder_ctrl, u16 seq_num)
 {
-	PADAPTER padapter = preorder_ctrl->padapter;
+	_adapter *padapter = preorder_ctrl->padapter;
 	struct recv_priv  *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	u8	wsize = preorder_ctrl->wsize_b;
 	u16	wend;
@@ -3842,8 +3840,8 @@ int mp_recv_frame(_adapter *padapter, union recv_frame *rframe)
 					#ifdef DBG_RX_DROP_FRAME
 					RTW_INFO("DBG_RX_DROP_FRAME "FUNC_ADPT_FMT" bDriverStopped(%s) OR bSurpriseRemoved(%s)\n"
 						, FUNC_ADPT_ARG(padapter)
-						, rtw_is_drv_stopped(padapter) ? "True" : "False"
-						, rtw_is_surprise_removed(padapter) ? "True" : "False");
+						, dev_is_drv_stopped(adapter_to_dvobj(padapter)) ? "True" : "False"
+						, dev_is_surprise_removed(adapter_to_dvobj(padapter)) ? "True" : "False");
 					#endif
 					ret = _FAIL;
 					goto exit;
