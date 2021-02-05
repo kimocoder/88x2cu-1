@@ -2342,7 +2342,7 @@ unsigned int OnBeacon(_adapter *padapter, union recv_frame *precv_frame)
 #endif
 #endif /* CONFIG_TDLS */
 
-				#if CONFIG_DFS
+				#ifdef CONFIG_DFS
 				process_csa_ie(padapter
 					, pframe + WLAN_HDR_A3_LEN + _BEACON_IE_OFFSET_
 					, len - (WLAN_HDR_A3_LEN + _BEACON_IE_OFFSET_));
@@ -3678,7 +3678,7 @@ unsigned int on_action_spct(_adapter *padapter, union recv_frame *precv_frame)
 #ifdef CONFIG_SPCT_CH_SWITCH
 		ret = on_action_spct_ch_switch(padapter, psta
 				, frame_body + 2, frame_len - (frame_body - pframe) - 2);
-#elif CONFIG_DFS
+#elif defined(CONFIG_DFS)
 		if (MLME_IS_STA(padapter) && MLME_IS_ASOC(padapter)) {
 			process_csa_ie(padapter
 				, frame_body + 2, frame_len - (frame_body - pframe) - 2);
@@ -9216,7 +9216,7 @@ void _issue_assocreq(_adapter *padapter, u8 is_reassoc)
 #endif
 #endif /* CONFIG_P2P */
 
-#if CONFIG_DFS
+#ifdef CONFIG_DFS
 	u16	cap;
 #endif
 
@@ -9254,7 +9254,7 @@ void _issue_assocreq(_adapter *padapter, u8 is_reassoc)
 
 	/* caps */
 
-#if CONFIG_DFS
+#ifdef CONFIG_DFS
 	_rtw_memcpy(&cap, rtw_get_capability_from_ie(pmlmeinfo->network.IEs), 2);
 	cap |= cap_SpecMgmt;
 #ifdef CONFIG_RTW_80211K
@@ -9285,7 +9285,7 @@ void _issue_assocreq(_adapter *padapter, u8 is_reassoc)
 	/* SSID */
 	pframe = rtw_set_ie(pframe, _SSID_IE_,  pmlmeinfo->network.Ssid.SsidLength, pmlmeinfo->network.Ssid.Ssid, &(pattrib->pktlen));
 
-#if CONFIG_IEEE80211_BAND_5GHZ && CONFIG_DFS
+#if CONFIG_IEEE80211_BAND_5GHZ && defined(CONFIG_DFS)
 	/* Dot H */
 	if (pmlmeext->cur_channel > 14) {
 		struct rf_ctl_t *rfctl = adapter_to_rfctl(padapter);
@@ -13925,7 +13925,7 @@ u8 join_cmd_hdl(_adapter *padapter, u8 *pbuf)
 
 u8 disconnect_hdl(_adapter *padapter, unsigned char *pbuf)
 {
-#if CONFIG_DFS
+#ifdef CONFIG_DFS
 	struct rf_ctl_t *rfctl = adapter_to_rfctl(padapter);
 #endif
 	struct disconnect_parm *param = (struct disconnect_parm *)pbuf;

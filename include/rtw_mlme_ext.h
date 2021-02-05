@@ -374,7 +374,7 @@ typedef struct _RT_CHANNEL_INFO {
 #ifdef CONFIG_FIND_BEST_CHANNEL
 	u32				rx_count;
 #endif
-#if CONFIG_IEEE80211_BAND_5GHZ && CONFIG_DFS
+#if CONFIG_IEEE80211_BAND_5GHZ && defined(CONFIG_DFS)
 	#ifdef CONFIG_DFS_MASTER
 	systime non_ocp_end_time;
 	#endif

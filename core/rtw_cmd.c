@@ -598,7 +598,7 @@ _next:
 				if (extra_parm && extra_parm->pbuf && extra_parm->size > 0)
 					rtw_mfree(extra_parm->pbuf, extra_parm->size);
 			}
-			#if CONFIG_DFS
+			#ifdef CONFIG_DFS
 			else if (pcmd->cmdcode == CMD_SET_CHANSWITCH)
 				adapter_to_rfctl(padapter)->csa_ch = 0;
 			#endif
@@ -698,7 +698,7 @@ post_process:
 			if (extra_parm->pbuf && extra_parm->size > 0)
 				rtw_mfree(extra_parm->pbuf, extra_parm->size);
 		}
-		#if CONFIG_DFS
+		#ifdef CONFIG_DFS
 		else if (pcmd->cmdcode == CMD_SET_CHANSWITCH)
 			adapter_to_rfctl(padapter)->csa_ch = 0;
 		#endif
@@ -3687,7 +3687,7 @@ exit:
 
 }
 
-#if CONFIG_DFS
+#ifdef CONFIG_DFS
 void rtw_dfs_ch_switch_hdl(struct dvobj_priv *dvobj)
 {
 	struct rf_ctl_t *rfctl = dvobj_to_rfctl(dvobj);
