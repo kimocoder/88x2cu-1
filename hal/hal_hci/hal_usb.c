@@ -24,12 +24,6 @@ int	usb_init_recv_priv(_adapter *padapter, u16 ini_in_buf_sz)
 	int	i, res = _SUCCESS;
 	struct recv_buf *precvbuf;
 
-#ifdef PLATFORM_LINUX
-	tasklet_init(&precvpriv->recv_tasklet,
-		     (void(*)(unsigned long))usb_recv_tasklet,
-		     (unsigned long)padapter);
-#endif /* PLATFORM_LINUX */
-
 #ifdef PLATFORM_FREEBSD
 #ifdef CONFIG_RX_INDICATE_QUEUE
 	TASK_INIT(&precvpriv->rx_indicate_tasklet, 0, rtw_rx_indicate_tasklet, padapter);
@@ -562,7 +556,7 @@ void usb_set_intf_ops(_adapter *padapter, struct _io_ops *pops)
 //	pops->_write_mem = &usb_write_mem;
 	pops->_write_port = &rtw_usb_write_port;
 
-	pops->_read_port_cancel = &usb_read_port_cancel;
+//	pops->_read_port_cancel = &usb_read_port_cancel;
 	pops->_write_port_cancel = &rtw_usb_write_port_cancel;
 
 #ifdef CONFIG_USB_INTERRUPT_IN_PIPE

@@ -40,7 +40,6 @@
 #define usb_bulkout_zero_complete(purb, regs)	usb_bulkout_zero_complete(purb)
 #define usb_write_mem_complete(purb, regs)	usb_write_mem_complete(purb)
 #define usb_write_port_complete(purb, regs)	usb_write_port_complete(purb)
-#define usb_read_port_complete(purb, regs)	usb_read_port_complete(purb)
 #define usb_read_interrupt_complete(purb, regs)	usb_read_interrupt_complete(purb)
 #endif
 
@@ -70,8 +69,6 @@ unsigned int bulkid2pipe(struct dvobj_priv *pdvobj, u32 addr, u8 bulk_out);
 void usb_read_mem(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *rmem);
 //void usb_write_mem(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *wmem);
 
-void usb_read_port_cancel(struct intf_hdl *pintfhdl);
-
 u32 rtw_usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *wmem);
 void rtw_usb_write_port_cancel(struct intf_hdl *pintfhdl);
 
@@ -86,16 +83,7 @@ int _usbctrl_vendorreq_async_write(struct usb_device *udev, u8 request,
 		u16 value, u16 index, void *pdata, u16 len, u8 requesttype);
 #endif /* CONFIG_USB_SUPPORT_ASYNC_VDN_REQ */
 
-#if 0 // NEO if 0
-u8 usb_read8(struct intf_hdl *pintfhdl, u32 addr);
-u16 usb_read16(struct intf_hdl *pintfhdl, u32 addr);
-u32 usb_read32(struct intf_hdl *pintfhdl, u32 addr);
-int usb_write8(struct intf_hdl *pintfhdl, u32 addr, u8 val);
-int usb_write16(struct intf_hdl *pintfhdl, u32 addr, u16 val);
-int usb_write32(struct intf_hdl *pintfhdl, u32 addr, u32 val);
-#endif 
 int usb_writeN(struct intf_hdl *pintfhdl, u32 addr, u32 length, u8 *pdata);
-u32 rtw_usb_read_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *rmem);
 void usb_recv_tasklet(void *priv);
 
 #ifdef CONFIG_USB_INTERRUPT_IN_PIPE
@@ -103,10 +91,10 @@ void usb_read_interrupt_complete(struct urb *purb, struct pt_regs *regs);
 u32 usb_read_interrupt(struct intf_hdl *pintfhdl, u32 addr);
 #endif
 
-u32 rtw_usb_g6_read_port(void *d, void *rxobj,
+u32 rtw_usb_read_port(void *d, void *rxobj,
 	u8 *inbuf, u32 inbuf_len, u8 bulk_id, u8 minlen);
 
-void rtw_usb_g6_read_port_cancel(void *d);
+void rtw_usb_read_port_cancel(void *d);
 
 
 #endif

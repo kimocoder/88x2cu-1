@@ -99,24 +99,6 @@ struct	stainfo_rxcache	{
 	u16	tid_rxseq[16];
 	u8 iv[16][8];
 	u8 last_tid;
-#if 0
-	unsigned short	tid0_rxseq;
-	unsigned short	tid1_rxseq;
-	unsigned short	tid2_rxseq;
-	unsigned short	tid3_rxseq;
-	unsigned short	tid4_rxseq;
-	unsigned short	tid5_rxseq;
-	unsigned short	tid6_rxseq;
-	unsigned short	tid7_rxseq;
-	unsigned short	tid8_rxseq;
-	unsigned short	tid9_rxseq;
-	unsigned short	tid10_rxseq;
-	unsigned short	tid11_rxseq;
-	unsigned short	tid12_rxseq;
-	unsigned short	tid13_rxseq;
-	unsigned short	tid14_rxseq;
-	unsigned short	tid15_rxseq;
-#endif
 };
 
 
@@ -499,7 +481,7 @@ struct recv_priv {
 #endif
 #if defined(PLATFORM_LINUX) || defined(PLATFORM_FREEBSD)
 	_tasklet irq_prepare_beacon_tasklet;
-	_tasklet recv_tasklet;
+	//_tasklet recv_tasklet;
 
 	struct sk_buff_head free_recv_skb_queue;
 	struct sk_buff_head rx_skb_queue;

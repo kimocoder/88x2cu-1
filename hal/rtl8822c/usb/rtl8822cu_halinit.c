@@ -283,7 +283,7 @@ u32 rtl8822cu_inirp_init(PADAPTER padapter)
 	}
 #endif /* CONFIG_FWLPS_IN_IPS */
 
-	_read_port = pintfhdl->io_ops._read_port;
+	//_read_port = pintfhdl->io_ops._read_port;
 
 	status = _SUCCESS;
 
@@ -327,7 +327,7 @@ exit:
 u32 rtl8822cu_inirp_deinit(PADAPTER padapter)
 {
 
-	rtw_read_port_cancel(padapter);
+	//rtw_read_port_cancel(padapter);
 
 
 	return _SUCCESS;

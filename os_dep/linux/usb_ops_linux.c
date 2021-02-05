@@ -284,8 +284,8 @@ exit:
 	/*usb_bulkout_zero_complete(purb)*/
 #define rtw_usb_write_port_complete(purb, regs)\
 	rtw_usb_write_port_complete(purb)
-#define rtw_usb_g6_read_port_complete(purb, regs)\
-	rtw_usb_g6_read_port_complete(purb)
+#define rtw_usb_read_port_complete(purb, regs)\
+	rtw_usb_read_port_complete(purb)
 #define rtw_usb_read_interrupt_complete(purb, regs)\
 	rtw_usb_read_interrupt_complete(purb)
 #endif
@@ -406,31 +406,6 @@ struct zero_bulkout_context {
 void usb_read_mem(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *rmem)
 {
 
-}
-
-
-void usb_read_port_cancel(struct intf_hdl *pintfhdl)
-{
-	int i;
-	struct recv_buf *precvbuf;
-	_adapter	*padapter = pintfhdl->padapter;
-	struct registry_priv *regsty = adapter_to_regsty(padapter);
-	precvbuf = (struct recv_buf *)adapter_to_dvobj(padapter)->recvpriv.precv_buf;
-
-	RTW_INFO("%s\n", __func__);
-
-	for (i = 0; i < regsty->recvbuf_nr ; i++) {
-
-		if (precvbuf->purb)	 {
-			/* RTW_INFO("usb_read_port_cancel : usb_kill_urb\n"); */
-			usb_kill_urb(precvbuf->purb);
-		}
-		precvbuf++;
-	}
-
-#ifdef CONFIG_USB_INTERRUPT_IN_PIPE
-	usb_kill_urb(adapter_to_dvobj(padapter)->recvpriv.int_in_urb);
-#endif
 }
 
 static void rtw_usb_write_port_complete(struct urb *purb, struct pt_regs *regs)
@@ -773,342 +748,6 @@ void usb_init_recvbuf(_adapter *padapter, struct recv_buf *precvbuf)
 
 int recvbuf2recvframe(PADAPTER padapter, void *ptr);
 
-#ifdef CONFIG_USE_USB_BUFFER_ALLOC_RX
-void usb_recv_tasklet(void *priv)
-{
-	struct recv_buf *precvbuf = NULL;
-	_adapter	*padapter = (_adapter *)priv;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
-	struct recv_priv	*precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
-
-	while (NULL != (precvbuf = rtw_dequeue_recvbuf(&precvpriv->recv_buf_pending_queue))) {
-		if (RTW_CANNOT_RUN(dvobj)) {
-			RTW_INFO("recv_tasklet => bDriverStopped(%s) OR bSurpriseRemoved(%s)\n"
-				, dev_is_drv_stopped(dvobj)? "True" : "False"
-				, dev_is_surprise_removed(dvobj)? "True" : "False");
-			break;
-		}
-
-		recvbuf2recvframe(padapter, precvbuf);
-
-		rtw_read_port(padapter, precvpriv->ff_hwaddr, 0, (unsigned char *)precvbuf);
-	}
-}
-
-void usb_read_port_complete(struct urb *purb, struct pt_regs *regs)
-{
-	struct recv_buf	*precvbuf = (struct recv_buf *)purb->context;
-	_adapter			*padapter = (_adapter *)precvbuf->adapter;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
-	struct recv_priv	*precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
-
-	ATOMIC_DEC(&(precvpriv->rx_pending_cnt));
-
-	if (RTW_CANNOT_RX(dvobj)) {
-		RTW_INFO("%s() RX Warning! bDriverStopped(%s) OR bSurpriseRemoved(%s)\n"
-			 , __func__
-			 , dev_is_drv_stopped(dvobj) ? "True" : "False"
-			, dev_is_surprise_removed(dvobj) ? "True" : "False");
-		return;
-	}
-
-	if (purb->status == 0) {
-
-		if ((purb->actual_length > MAX_RECVBUF_SZ) || (purb->actual_length < RXDESC_SIZE)) {
-			RTW_INFO("%s()-%d: urb->actual_length:%u, MAX_RECVBUF_SZ:%u, RXDESC_SIZE:%u\n"
-				, __FUNCTION__, __LINE__, purb->actual_length, MAX_RECVBUF_SZ, RXDESC_SIZE);
-			rtw_read_port(padapter, precvpriv->ff_hwaddr, 0, (unsigned char *)precvbuf);
-		} else {
-			rtw_reset_continual_io_error(adapter_to_dvobj(padapter));
-
-			precvbuf->transfer_len = purb->actual_length;
-
-			rtw_enqueue_recvbuf(precvbuf, &precvpriv->recv_buf_pending_queue);
-
-			tasklet_schedule(&precvpriv->recv_tasklet);
-		}
-	} else {
-
-		RTW_INFO("###=> usb_read_port_complete => urb.status(%d)\n", purb->status);
-
-		if (rtw_inc_and_chk_continual_io_error(adapter_to_dvobj(padapter)) == _TRUE)
-			rtw_set_surprise_removed(padapter);
-
-		switch (purb->status) {
-		case -EINVAL:
-		case -EPIPE:
-		case -ENODEV:
-		case -ESHUTDOWN:
-		case -ENOENT:
-			rtw_set_drv_stopped(padapter);
-			break;
-		case -EPROTO:
-		case -EILSEQ:
-		case -ETIME:
-		case -ECOMM:
-		case -EOVERFLOW:
-			#ifdef DBG_CONFIG_ERROR_DETECT
-			{
-				HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(padapter);
-				pHalData->srestpriv.Wifi_Error_Status = USB_READ_PORT_FAIL;
-			}
-			#endif
-			rtw_read_port(padapter, precvpriv->ff_hwaddr, 0, (unsigned char *)precvbuf);
-			break;
-		case -EINPROGRESS:
-			RTW_INFO("ERROR: URB IS IN PROGRESS!/n");
-			break;
-		default:
-			break;
-		}
-	}
-
-}
-
-u32 rtw_usb_read_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *rmem)
-{
-	int err;
-	unsigned int pipe;
-	u32 ret = _SUCCESS;
-	PURB purb = NULL;
-	struct recv_buf	*precvbuf = (struct recv_buf *)rmem;
-	_adapter		*adapter = pintfhdl->padapter;
-	struct dvobj_priv	*pdvobj = adapter_to_dvobj(adapter);
-	struct pwrctrl_priv *pwrctl = dvobj_to_pwrctl(pdvobj);
-	struct recv_priv	*precvpriv = &adapter_to_dvobj(adapter)->recvpriv;
-	PUSB_DATA 		pusb_data = dvobj_to_usb(pdvobj);
-	struct usb_device 	*pusbd = pusb_data->pusbdev;
-
-
-	if (RTW_CANNOT_RX(pdvobj) || (precvbuf == NULL)) {
-		return _FAIL;
-	}
-
-	usb_init_recvbuf(adapter, precvbuf);
-
-	if (precvbuf->pbuf) {
-		ATOMIC_INC(&(precvpriv->rx_pending_cnt));
-		purb = precvbuf->purb;
-
-		/* translate DMA FIFO addr to pipehandle */
-		pipe = bulkid2pipe(pdvobj, addr, _FALSE);
-
-		usb_fill_bulk_urb(purb, pusbd, pipe,
-			precvbuf->pbuf,
-			MAX_RECVBUF_SZ,
-			usb_read_port_complete,
-			precvbuf);/* context is precvbuf */
-
-		purb->transfer_dma = precvbuf->dma_transfer_addr;
-		purb->transfer_flags |= URB_NO_TRANSFER_DMA_MAP;
-
-		err = usb_submit_urb(purb, GFP_ATOMIC);
-		if ((err) && (err != (-EPERM))) {
-			RTW_INFO("cannot submit rx in-token(err = 0x%08x),urb_status = %d\n", err, purb->status);
-			ret = _FAIL;
-		}
-
-	}
-
-
-	return ret;
-}
-#else	/* CONFIG_USE_USB_BUFFER_ALLOC_RX */
-//NEO
-void usb_recv_tasklet(void *priv)
-{
-	struct sk_buff		*pskb;
-	_adapter		*padapter = (_adapter *)priv;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
-	struct recv_priv	*precvpriv = &dvobj->recvpriv;
-	struct recv_buf	*precvbuf = NULL;
-
-	while (NULL != (pskb = skb_dequeue(&precvpriv->rx_skb_queue))) {
-
-		if (RTW_CANNOT_RUN(dvobj)) {
-			RTW_INFO("recv_tasklet => bDriverStopped(%s) OR bSurpriseRemoved(%s)\n"
-				, dev_is_drv_stopped(dvobj) ? "True" : "False"
-				, dev_is_surprise_removed(dvobj) ? "True" : "False");
-			#ifdef CONFIG_PREALLOC_RX_SKB_BUFFER
-			if (rtw_free_skb_premem(pskb) != 0)
-			#endif /* CONFIG_PREALLOC_RX_SKB_BUFFER */
-				rtw_skb_free(pskb);
-			break;
-		}
-
-		recvbuf2recvframe(padapter, pskb);
-
-		skb_reset_tail_pointer(pskb);
-		pskb->len = 0;
-
-		skb_queue_tail(&precvpriv->free_recv_skb_queue, pskb);
-
-		precvbuf = rtw_dequeue_recvbuf(&precvpriv->recv_buf_pending_queue);
-		if (NULL != precvbuf) {
-			precvbuf->pskb = NULL;
-			rtw_read_port(padapter, precvpriv->ff_hwaddr, 0, (unsigned char *)precvbuf);
-		}
-	}
-}
-
-void usb_read_port_complete(struct urb *purb, struct pt_regs *regs)
-{
-	struct recv_buf	*precvbuf = (struct recv_buf *)purb->context;
-	_adapter			*padapter = (_adapter *)precvbuf->adapter;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
-	struct recv_priv	*precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
-
-	ATOMIC_DEC(&(precvpriv->rx_pending_cnt));
-
-	if (RTW_CANNOT_RX(dvobj)) {
-		RTW_INFO("%s() RX Warning! bDriverStopped(%s) OR bSurpriseRemoved(%s)\n"
-			, __func__
-			, dev_is_drv_stopped(dvobj) ? "True" : "False"
-			, dev_is_surprise_removed(dvobj) ? "True" : "False");
-		goto exit;
-	}
-
-	if (purb->status == 0) {
-
-		if ((purb->actual_length > MAX_RECVBUF_SZ) || (purb->actual_length < RXDESC_SIZE)) {
-			RTW_INFO("%s()-%d: urb->actual_length:%u, MAX_RECVBUF_SZ:%u, RXDESC_SIZE:%u\n"
-				, __FUNCTION__, __LINE__, purb->actual_length, MAX_RECVBUF_SZ, RXDESC_SIZE);
-			rtw_read_port(padapter, precvpriv->ff_hwaddr, 0, (unsigned char *)precvbuf);
-		} else {
-			rtw_reset_continual_io_error(adapter_to_dvobj(padapter));
-
-			precvbuf->transfer_len = purb->actual_length;
-			skb_put(precvbuf->pskb, purb->actual_length);
-			skb_queue_tail(&precvpriv->rx_skb_queue, precvbuf->pskb);
-
-			#ifndef CONFIG_FIX_NR_BULKIN_BUFFER
-			if (skb_queue_len(&precvpriv->rx_skb_queue) <= 1)
-			#endif
-				tasklet_schedule(&precvpriv->recv_tasklet);
-
-			precvbuf->pskb = NULL;
-			rtw_read_port(padapter, precvpriv->ff_hwaddr, 0, (unsigned char *)precvbuf);
-		}
-	} else {
-
-		RTW_INFO("###=> usb_read_port_complete => urb.status(%d)\n", purb->status);
-
-		if (rtw_inc_and_chk_continual_io_error(adapter_to_dvobj(padapter)) == _TRUE)
-			rtw_set_surprise_removed(padapter);
-
-		switch (purb->status) {
-		case -EINVAL:
-		case -EPIPE:
-		case -ENODEV:
-		case -ESHUTDOWN:
-		case -ENOENT:
-			rtw_set_drv_stopped(padapter);
-			break;
-		case -EPROTO:
-		case -EILSEQ:
-		case -ETIME:
-		case -ECOMM:
-		case -EOVERFLOW:
-			#ifdef DBG_CONFIG_ERROR_DETECT
-			{
-				HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(padapter);
-				pHalData->srestpriv.Wifi_Error_Status = USB_READ_PORT_FAIL;
-			}
-			#endif
-			rtw_read_port(padapter, precvpriv->ff_hwaddr, 0, (unsigned char *)precvbuf);
-			break;
-		case -EINPROGRESS:
-			RTW_INFO("ERROR: URB IS IN PROGRESS!/n");
-			break;
-		default:
-			break;
-		}
-	}
-
-exit:
-	return;
-}
-
-u32 rtw_usb_read_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *rmem)
-{
-	int err;
-	unsigned int pipe;
-	u32 ret = _FAIL;
-	PURB purb = NULL;
-	struct recv_buf	*precvbuf = (struct recv_buf *)rmem;
-	_adapter		*adapter = pintfhdl->padapter;
-	struct dvobj_priv	*pdvobj = adapter_to_dvobj(adapter);
-	struct recv_priv	*precvpriv = &adapter_to_dvobj(adapter)->recvpriv;
-	PUSB_DATA 		pusb_data = dvobj_to_usb(pdvobj);
-	struct usb_device 	*pusbd = pusb_data->pusbdev;
-
-
-	if (RTW_CANNOT_RX(pdvobj) || (precvbuf == NULL)) {
-		goto exit;
-	}
-
-	usb_init_recvbuf(adapter, precvbuf);
-
-	if (precvbuf->pskb == NULL) {
-		SIZE_PTR tmpaddr = 0;
-		SIZE_PTR alignment = 0;
-
-		precvbuf->pskb = skb_dequeue(&precvpriv->free_recv_skb_queue);
-		if (NULL != precvbuf->pskb)
-			goto recv_buf_hook;
-
-		#ifndef CONFIG_FIX_NR_BULKIN_BUFFER
-		precvbuf->pskb = rtw_skb_alloc(MAX_RECVBUF_SZ + RECVBUFF_ALIGN_SZ);
-		#endif
-
-		if (precvbuf->pskb == NULL) {
-			if (0)
-				RTW_INFO("usb_read_port() enqueue precvbuf=%p\n", precvbuf);
-			/* enqueue precvbuf and wait for free skb */
-			rtw_enqueue_recvbuf(precvbuf, &precvpriv->recv_buf_pending_queue);
-			goto exit;
-		}
-
-		tmpaddr = (SIZE_PTR)precvbuf->pskb->data;
-		alignment = tmpaddr & (RECVBUFF_ALIGN_SZ - 1);
-		skb_reserve(precvbuf->pskb, (RECVBUFF_ALIGN_SZ - alignment));
-	}
-
-recv_buf_hook:
-	precvbuf->phead = precvbuf->pskb->head;
-	precvbuf->pdata = precvbuf->pskb->data;
-	precvbuf->ptail = skb_tail_pointer(precvbuf->pskb);
-	precvbuf->pend = skb_end_pointer(precvbuf->pskb);
-	precvbuf->pbuf = precvbuf->pskb->data;
-
-	purb = precvbuf->purb;
-
-	/* translate DMA FIFO addr to pipehandle */
-	pipe = bulkid2pipe(pdvobj, addr, _FALSE);
-
-	usb_fill_bulk_urb(purb, pusbd, pipe,
-		precvbuf->pbuf,
-		MAX_RECVBUF_SZ,
-		usb_read_port_complete,
-		precvbuf);
-
-	err = usb_submit_urb(purb, GFP_ATOMIC);
-	if (err && err != (-EPERM)) {
-		RTW_INFO("cannot submit rx in-token(err = 0x%08x),urb_status = %d\n"
-			, err, purb->status);
-		goto exit;
-	}
-
-	ATOMIC_INC(&(precvpriv->rx_pending_cnt));
-	ret = _SUCCESS;
-
-exit:
-
-
-	return ret;
-}
-#endif /* CONFIG_USE_USB_BUFFER_ALLOC_RX */
-
 #ifdef CONFIG_USB_INTERRUPT_IN_PIPE
 void usb_read_interrupt_complete(struct urb *purb, struct pt_regs *regs)
 {
@@ -1191,7 +830,7 @@ u32 usb_read_interrupt(struct intf_hdl *pintfhdl, u32 addr)
 #endif /* CONFIG_USB_INTERRUPT_IN_PIPE */
 
 
-static void rtw_usb_g6_read_port_complete(struct urb *urb, struct pt_regs *regs)
+static void rtw_usb_read_port_complete(struct urb *urb, struct pt_regs *regs)
 {
 	struct lite_data_buf *literecvbuf =
 		(struct lite_data_buf *)urb->context;
@@ -1287,7 +926,7 @@ exit:
 	rtw_free_dataurb(rx_urb_q, recvurb);
 }
 
-u32 rtw_usb_g6_read_port(void *d, void *rxobj,
+u32 rtw_usb_read_port(void *d, void *rxobj,
 	u8 *inbuf, u32 inbuf_len, u8 bulk_id, u8 minlen)
 {
 	int err;
@@ -1348,7 +987,7 @@ u32 rtw_usb_g6_read_port(void *d, void *rxobj,
 		usb_fill_bulk_urb(recvurb->urb, usbd, pipe,
 			literecvbuf->pbuf,
 			inbuf_len,
-			rtw_usb_g6_read_port_complete,
+			rtw_usb_read_port_complete,
 			literecvbuf);
 	} else {
 		#ifdef CONFIG_USB_INTERRUPT_IN_PIPE
@@ -1356,13 +995,13 @@ u32 rtw_usb_g6_read_port(void *d, void *rxobj,
 			usb_fill_bulk_urb(recvurb->urb, usbd, pipe,
 				literecvbuf->pbuf,
 				inbuf_len,
-				rtw_usb_g6_read_port_complete,
+				rtw_usb_read_port_complete,
 				literecvbuf);
 		else
 			usb_fill_int_urb(recvurb->urb, usbd, pipe,
 				literecvbuf->pbuf,
 				inbuf_len,
-				rtw_usb_g6_read_port_complete,
+				rtw_usb_read_port_complete,
 				literecvbuf,
 				1);
 		#endif
@@ -1396,7 +1035,7 @@ exit:
 	return ret;
 }
 
-void rtw_usb_g6_read_port_cancel(void *d)
+void rtw_usb_read_port_cancel(void *d)
 {
 	int i;
 	struct dvobj_priv *dvobj = (struct dvobj_priv *)d;
