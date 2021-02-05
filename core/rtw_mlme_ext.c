@@ -182,9 +182,8 @@ void rtw_txpwr_init_regd(struct rf_ctl_t *rfctl)
 	bool country_txpwr_lmt_override = 0;
 	struct regd_exc_ent *exc;
 	struct txpwr_lmt_ent *ent;
-	_irqL irqL;
 
-	_enter_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+	_rtw_mutex_lock_interruptible(&rfctl->txpwr_lmt_mutex);
 
 	rfctl->txpwr_lmt_name = NULL;
 
@@ -312,7 +311,7 @@ void rtw_txpwr_init_regd(struct rf_ctl_t *rfctl)
 	};
 
 release_lock:
-	_exit_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+	_rtw_mutex_unlock(&rfctl->txpwr_lmt_mutex);
 }
 #endif /* CONFIG_TXPWR_LIMIT */
 
@@ -7902,7 +7901,7 @@ s32 dump_mgntframe_and_wait_ack_timeout(_adapter *padapter, struct xmit_frame *p
 		return -1;
 	}
 
-	_enter_critical_mutex(&pxmitpriv->ack_tx_mutex, NULL);
+	_rtw_mutex_lock_interruptible(&pxmitpriv->ack_tx_mutex);
 	pxmitpriv->ack_tx = _TRUE;
 	pxmitpriv->seq_no = seq_no++;
 	pmgntframe->ack_report = 1;
@@ -7918,7 +7917,7 @@ s32 dump_mgntframe_and_wait_ack_timeout(_adapter *padapter, struct xmit_frame *p
 		ret = rtw_sctx_wait(&(pxmitpriv->ack_tx_ops), __func__);
 
 	pxmitpriv->ack_tx = _FALSE;
-	_exit_critical_mutex(&pxmitpriv->ack_tx_mutex, NULL);
+	_rtw_mutex_unlock(&pxmitpriv->ack_tx_mutex);
 
 	return ret;
 #else /* !CONFIG_XMIT_ACK */
@@ -14645,7 +14644,7 @@ void rtw_leave_opch(_adapter *adapter)
 		return;
 #endif
 
-	_enter_critical_mutex(&rfctl->offch_mutex, NULL);
+	_rtw_mutex_lock_interruptible(&rfctl->offch_mutex);
 
 	if (rfctl->offch_state == OFFCHS_NONE) {
 		/* prepare to leave operating channel */
@@ -14661,7 +14660,7 @@ void rtw_leave_opch(_adapter *adapter)
 		rfctl->offch_state = OFFCHS_LEAVE_OP;
 	}
 
-	_exit_critical_mutex(&rfctl->offch_mutex, NULL);
+	_rtw_mutex_unlock(&rfctl->offch_mutex);
 }
 
 void rtw_back_opch(_adapter *adapter)
@@ -14673,7 +14672,7 @@ void rtw_back_opch(_adapter *adapter)
 		return;
 #endif
 
-	_enter_critical_mutex(&rfctl->offch_mutex, NULL);
+	_rtw_mutex_lock_interruptible(&rfctl->offch_mutex);
 
 	if (rfctl->offch_state != OFFCHS_NONE) {
 		rfctl->offch_state = OFFCHS_BACKING_OP;
@@ -14684,7 +14683,7 @@ void rtw_back_opch(_adapter *adapter)
 		rtw_mi_os_xmit_schedule(adapter);
 	}
 
-	_exit_critical_mutex(&rfctl->offch_mutex, NULL);
+	_rtw_mutex_unlock(&rfctl->offch_mutex);
 }
 
 void sitesurvey_set_igi(_adapter *adapter)
@@ -14773,7 +14772,7 @@ void sitesurvey_set_offch_state(_adapter *adapter, u8 scan_state)
 {
 	struct rf_ctl_t *rfctl = adapter_to_rfctl(adapter);
 
-	_enter_critical_mutex(&rfctl->offch_mutex, NULL);
+	_rtw_mutex_lock_interruptible(&rfctl->offch_mutex);
 
 	switch (scan_state) {
 	case SCAN_DISABLE:
@@ -14796,7 +14795,7 @@ void sitesurvey_set_offch_state(_adapter *adapter, u8 scan_state)
 		break;
 	}
 
-	_exit_critical_mutex(&rfctl->offch_mutex, NULL);
+	_rtw_mutex_unlock(&rfctl->offch_mutex);
 }
 
 #ifdef CONFIG_RTW_ROAM_QUICKSCAN
@@ -15717,10 +15716,10 @@ u8 set_tx_beacon_cmd(_adapter *padapter, u8 flags)
 
 	if (res == _SUCCESS && (flags & RTW_CMDF_WAIT_ACK)) {
 		rtw_sctx_wait(&sctx, __func__);
-		_enter_critical_mutex(&pcmdpriv->sctx_mutex, NULL);
+		_rtw_mutex_lock_interruptible(&pcmdpriv->sctx_mutex);
 		if (sctx.status == RTW_SCTX_SUBMITTED)
 			ph2c->sctx = NULL;
-		_exit_critical_mutex(&pcmdpriv->sctx_mutex, NULL);
+		_rtw_mutex_unlock(&pcmdpriv->sctx_mutex);
 	}
 	
 

@@ -323,7 +323,6 @@ s32 rtw_free_dataurb(struct trx_urb_buf_q *urb_q,
 
 static void rtw_usb_write_port_complete(struct urb *purb, struct pt_regs *regs)
 {
-	_irqL irqL;
 	struct lite_data_buf *litexmitbuf =
 		(struct lite_data_buf *)purb->context;
 	struct xmit_buf *pxmitbuf = litexmitbuf->pxmitbuf;
@@ -395,10 +394,8 @@ static void rtw_usb_write_port_complete(struct urb *purb, struct pt_regs *regs)
 	}
 
 check_completion:
-	_enter_critical(&pxmitpriv->lock_sctx, &irqL);
 	rtw_sctx_done_err(&pxmitbuf->sctx,
 		purb->status ? RTW_SCTX_DONE_WRITE_PORT_ERR : RTW_SCTX_DONE_SUCCESS);
-	_exit_critical(&pxmitpriv->lock_sctx, &irqL);
 
 	rtw_free_litedatabuf(&pdvobj->litexmitbuf_q, litexmitbuf);
 	rtw_free_dataurb(&pdvobj->xmit_urb_q, xmiturb);
