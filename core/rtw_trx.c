@@ -16,6 +16,56 @@
 #include <drv_types.h>		/* struct dvobj_priv and etc. */
 
 
+#ifdef RTW_PHL_TX
+s32 rtw_core_tx_mgmt(_adapter *padapter, struct xmit_frame *pxframe)
+{
+
+	pxframe->xftype = RTW_TX_DRV_MGMT;
+
+#ifdef RTW_PHL_DBG_CMD
+	core_add_record(padapter, REC_TX_MGMT, pxframe);
+#endif
+
+	if(core_tx_prepare_phl(padapter, pxframe) == FAIL)
+		return _FAIL;
+
+	if (core_tx_call_phl(padapter, pxframe, NULL) == FAIL)
+		return _FAIL;
+
+	return _SUCCESS;
+}
+#endif
+
+#ifdef CONFIG_DRV_FAKE_AP
+int rtw_fakeap_tx(struct _ADAPTER*, struct xmit_frame*);
+#endif /* CONFIG_DRV_FAKE_AP */
+/*rtw_hal_mgnt_xmit*/
+s32 rtw_mgnt_xmit(_adapter *adapter, struct xmit_frame *pmgntframe)
+{
+	s32 ret = _FAIL;
+
+	update_mgntframe_attrib_addr(adapter, pmgntframe);
+
+#if defined(CONFIG_IEEE80211W) || defined(CONFIG_RTW_MESH)
+	if ((!MLME_IS_MESH(adapter) && SEC_IS_BIP_KEY_INSTALLED(&adapter->securitypriv) == _TRUE)
+		#ifdef CONFIG_RTW_MESH
+		|| (MLME_IS_MESH(adapter) && adapter->mesh_info.mesh_auth_id)
+		#endif
+	)
+		rtw_mgmt_xmitframe_coalesce(adapter, pmgntframe->pkt, pmgntframe);
+#endif
+
+#ifdef CONFIG_DRV_FAKE_AP
+#ifndef RTW_PHL_TEST_FPGA
+	if (rtw_fakeap_tx(adapter, pmgntframe) == _SUCCESS)
+		return _SUCCESS;
+#endif
+#endif /* CONFIG_DRV_FAKE_AP */
+
+	ret = rtw_core_tx_mgmt(adapter, pmgntframe);
+	return ret;
+}
+
 struct lite_data_buf *rtw_alloc_litedatabuf(struct trx_data_buf_q *data_buf_q)
 {
 	struct lite_data_buf *litedatabuf =  NULL;
