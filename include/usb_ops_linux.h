@@ -66,9 +66,6 @@ int usb_async_write32(struct intf_hdl *pintfhdl, u32 addr, u32 val);
 
 unsigned int bulkid2pipe(struct dvobj_priv *pdvobj, u32 addr, u8 bulk_out);
 
-void usb_read_mem(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *rmem);
-//void usb_write_mem(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *wmem);
-
 u32 rtw_usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *wmem);
 void rtw_usb_write_port_cancel(struct intf_hdl *pintfhdl);
 

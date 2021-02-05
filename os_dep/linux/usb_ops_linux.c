@@ -19,7 +19,6 @@
 #include <rtw_sreset.h>
 
 
-//int usbctrl_vendorreq(struct intf_hdl *pintfhdl, u8 request, u16 value, u16 index, void *pdata, u16 len, u8 requesttype)
 int usbctrl_vendorreq(struct dvobj_priv *dvobj, u8 request, u16 value, u16 index, void *pdata, u16 len, u8 requesttype)
 {
 	struct usb_device *udev = dvobj_to_usb(dvobj)->pusbdev;
@@ -322,18 +321,6 @@ s32 rtw_free_dataurb(struct trx_urb_buf_q *urb_q,
 	return _SUCCESS;
 }
 
-struct zero_bulkout_context {
-	void *pbuf;
-	void *purb;
-	void *pirp;
-	void *padapter;
-};
-
-void usb_read_mem(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *rmem)
-{
-
-}
-
 static void rtw_usb_write_port_complete(struct urb *purb, struct pt_regs *regs)
 {
 	_irqL irqL;
@@ -396,23 +383,16 @@ static void rtw_usb_write_port_complete(struct urb *purb, struct pt_regs *regs)
 			goto check_completion;
 
 		} else if (purb->status == -ESHUTDOWN) {
-			rtw_set_drv_stopped(padapter);
+			dev_set_drv_stopped(pdvobj);
 
 			goto check_completion;
 		} else {
-			rtw_set_surprise_removed(padapter);
+			dev_set_surprise_removed(pdvobj);
 			RTW_INFO("bSurpriseRemoved=TRUE\n");
 
 			goto check_completion;
 		}
 	}
-
-	#ifdef DBG_CONFIG_ERROR_DETECT
-	{
-		HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(padapter);
-		pHalData->srestpriv.last_tx_complete_time = rtw_get_current_time();
-	}
-	#endif
 
 check_completion:
 	_enter_critical(&pxmitpriv->lock_sctx, &irqL);
@@ -466,9 +446,10 @@ u32 rtw_usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 len, u8 *wmem)
 
 	if (RTW_CANNOT_TX(pdvobj)) {
 #ifdef DBG_TX
-		RTW_INFO(" DBG_TX %s:%d bDriverStopped%s, bSurpriseRemoved:%s\n", __func__, __LINE__
-			 , dev_is_drv_stopped(pdvobj) ? "True" : "False"
-			, dev_is_surprise_removed(pdvobj) ? "True" : "False");
+		RTW_INFO(" DBG_TX %s:%d bDriverStopped%s, bSurpriseRemoved:%s\n"
+			 , __func__, __LINE__,
+			 dev_is_drv_stopped(pdvobj) ? "True" : "False"
+			 dev_is_surprise_removed(pdvobj) ? "True" : "False");
 #endif
 		rtw_sctx_done_err(&pxmitbuf->sctx, RTW_SCTX_DONE_TX_DENY);
 		goto exit;
@@ -548,19 +529,13 @@ u32 rtw_usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 len, u8 *wmem)
 
 	status = usb_submit_urb(purb, GFP_ATOMIC);
 	if (!status) {
-		#ifdef DBG_CONFIG_ERROR_DETECT
-		{
-			HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(padapter);
-			pHalData->srestpriv.last_tx_time = rtw_get_current_time();
-		}
-		#endif
 	} else {
 		rtw_sctx_done_err(&pxmitbuf->sctx, RTW_SCTX_DONE_WRITE_PORT_ERR);
-		RTW_INFO("usb_write_port, status=%d\n", status);
+		RTW_INFO("%s, status=%d\n", __func__, status);
 
 		switch (status) {
 		case -ENODEV:
-			rtw_set_drv_stopped(padapter);
+			dev_set_drv_stopped(pdvobj);
 			break;
 		default:
 			break;
@@ -612,106 +587,6 @@ void rtw_usb_write_port_cancel(struct intf_hdl *pintfhdl)
 		xmiturb++;
 	}
 }
-
-void usb_init_recvbuf(_adapter *padapter, struct recv_buf *precvbuf)
-{
-
-	precvbuf->transfer_len = 0;
-
-	precvbuf->len = 0;
-
-	precvbuf->ref_cnt = 0;
-
-	if (precvbuf->pbuf) {
-		precvbuf->pdata = precvbuf->phead = precvbuf->ptail = precvbuf->pbuf;
-		precvbuf->pend = precvbuf->pdata + MAX_RECVBUF_SZ;
-	}
-
-}
-
-int recvbuf2recvframe(PADAPTER padapter, void *ptr);
-
-#ifdef CONFIG_USB_INTERRUPT_IN_PIPE
-void usb_read_interrupt_complete(struct urb *purb, struct pt_regs *regs)
-{
-	int	err;
-	_adapter	*padapter = (_adapter *)purb->context;
-
-	if (RTW_CANNOT_RX(adapter_to_dvobj(padapter))) {
-		RTW_INFO("%s() RX Warning! bDriverStopped(%s) OR bSurpriseRemoved(%s)\n"
-			, __func__
-			, rtw_is_drv_stopped(padapter) ? "True" : "False"
-			, rtw_is_surprise_removed(padapter) ? "True" : "False");
-
-		return;
-	}
-
-	if (purb->status == 0) {/*SUCCESS*/
-		if (purb->actual_length > INTERRUPT_MSG_FORMAT_LEN)
-			RTW_INFO("usb_read_interrupt_complete: purb->actual_length > INTERRUPT_MSG_FORMAT_LEN(%d)\n", INTERRUPT_MSG_FORMAT_LEN);
-
-		rtw_hal_interrupt_handler(padapter, purb->actual_length, purb->transfer_buffer);
-
-		err = usb_submit_urb(purb, GFP_ATOMIC);
-		if ((err) && (err != (-EPERM)))
-			RTW_INFO("cannot submit interrupt in-token(err = 0x%08x),urb_status = %d\n", err, purb->status);
-	} else {
-		RTW_INFO("###=> usb_read_interrupt_complete => urb status(%d)\n", purb->status);
-
-		switch (purb->status) {
-		case -EINVAL:
-		case -EPIPE:
-		case -ENODEV:
-		case -ESHUTDOWN:
-		case -ENOENT:
-			rtw_set_drv_stopped(padapter);
-			break;
-		case -EPROTO:
-			break;
-		case -EINPROGRESS:
-			RTW_INFO("ERROR: URB IS IN PROGRESS!/n");
-			break;
-		default:
-			break;
-		}
-	}
-}
-
-u32 usb_read_interrupt(struct intf_hdl *pintfhdl, u32 addr)
-{
-	int	err;
-	unsigned int pipe;
-	u32	ret = _SUCCESS;
-	_adapter			*adapter = pintfhdl->padapter;
-	struct dvobj_priv	*pdvobj = adapter_to_dvobj(adapter);
-	struct recv_priv	*precvpriv = &adapter_to_dvobj(adapter)->recvpriv;
-	struct usb_device	*pusbd = pdvobj->pusbdev;
-
-
-	if (RTW_CANNOT_RX(pdvobj)) {
-		return _FAIL;
-	}
-
-	/*translate DMA FIFO addr to pipehandle*/
-	pipe = bulkid2pipe(pdvobj, addr, _FALSE);
-
-	usb_fill_int_urb(precvpriv->int_in_urb, pusbd, pipe,
-			precvpriv->int_in_buf,
-			INTERRUPT_MSG_FORMAT_LEN,
-			usb_read_interrupt_complete,
-			adapter,
-			1);
-
-	err = usb_submit_urb(precvpriv->int_in_urb, GFP_ATOMIC);
-	if ((err) && (err != (-EPERM))) {
-		RTW_INFO("cannot submit interrupt in-token(err = 0x%08x), urb_status = %d\n", err, precvpriv->int_in_urb->status);
-		ret = _FAIL;
-	}
-
-	return ret;
-}
-#endif /* CONFIG_USB_INTERRUPT_IN_PIPE */
-
 
 static void rtw_usb_read_port_complete(struct urb *urb, struct pt_regs *regs)
 {
