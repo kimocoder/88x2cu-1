@@ -360,7 +360,7 @@ using spinlock to protect
 
 */
 
-void rtw_free_recvframe_queue(_queue *pframequeue,  _queue *pfree_recv_queue)
+void rtw_free_recvframe_queue(_queue *pframequeue)
 {
 	union	recv_frame	*precvframe;
 	_list	*plist, *phead;
@@ -2577,7 +2577,7 @@ union recv_frame *recvframe_defrag(_adapter *adapter, _queue *defrag_q)
 		/* the first fragment number must be 0 */
 		/* free the whole queue */
 		rtw_free_recvframe(prframe);
-		rtw_free_recvframe_queue(defrag_q, pfree_recv_queue);
+		rtw_free_recvframe_queue(defrag_q);
 
 		return NULL;
 	}
@@ -2607,7 +2607,7 @@ union recv_frame *recvframe_defrag(_adapter *adapter, _queue *defrag_q)
 			/* the fragment number must be increasing  (after decache) */
 			/* release the defrag_q & prframe */
 			rtw_free_recvframe(prframe);
-			rtw_free_recvframe_queue(defrag_q, pfree_recv_queue);
+			rtw_free_recvframe_queue(defrag_q);
 			return NULL;
 		}
 
@@ -2634,7 +2634,7 @@ union recv_frame *recvframe_defrag(_adapter *adapter, _queue *defrag_q)
 	};
 
 	/* free the defrag_q queue and return the prframe */
-	rtw_free_recvframe_queue(defrag_q, pfree_recv_queue);
+	rtw_free_recvframe_queue(defrag_q);
 
 
 
@@ -2690,7 +2690,7 @@ union recv_frame *recvframe_chk_defrag(PADAPTER padapter, union recv_frame *prec
 				/* the first fragment */
 				if (_rtw_queue_empty(pdefrag_q) == _FALSE) {
 					/* free current defrag_q */
-					rtw_free_recvframe_queue(pdefrag_q, pfree_recv_queue);
+					rtw_free_recvframe_queue(pdefrag_q);
 				}
 			}
 
