@@ -152,14 +152,6 @@ u8 rtl8822c_hal_init(PADAPTER adapter)
 	hal->bFWReady = _FALSE;
 	hal->fw_ractrl = _FALSE;
 
-#ifdef CONFIG_NO_FW
-	err = rtw_halmac_init_hal(d);
-	if(!err) {
-		RTW_INFO("%s@%d: no fw test successful\n", __func__, __LINE__);
-		return _TRUE;
-	}
-#endif
-
 #ifdef CONFIG_FILE_FWIMG
 	rtw_get_phy_file_path(adapter, MAC_FILE_FW_NIC);
 	if (rtw_is_file_readable(rtw_phy_para_file_path) == _TRUE) {

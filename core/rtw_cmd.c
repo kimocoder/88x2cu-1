@@ -4491,13 +4491,15 @@ exit:
 #ifdef CONFIG_MP_INCLUDED
 static s32 rtw_mp_cmd_hdl(_adapter *padapter, u8 mp_cmd_id)
 {
+	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
 	HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(padapter);
 	int ret = H2C_SUCCESS;
 	uint status = _SUCCESS;
 
 	if (mp_cmd_id == MP_START) {
 		if (padapter->registrypriv.mp_mode == 0) {
-			rtw_intf_stop(padapter);
+#if 0
+			rtw_hw_stop(dvobj);
 			rtk_hal_deinit(padapter);
 			padapter->registrypriv.mp_mode = 1;
 #ifdef CONFIG_BT_COEXIST
@@ -4519,6 +4521,8 @@ static s32 rtw_mp_cmd_hdl(_adapter *padapter, u8 mp_cmd_id)
 				}
 				rtw_hal_iface_init(padapter);
 			}
+#endif
+			padapter->registrypriv.mp_mode = 1;
 			MPT_InitializeAdapter(padapter, 1);
 		}
 
@@ -4555,8 +4559,8 @@ static s32 rtw_mp_cmd_hdl(_adapter *padapter, u8 mp_cmd_id)
 
 	} else if (mp_cmd_id == MP_STOP) {
 		if (padapter->registrypriv.mp_mode == 1) {
-			MPT_DeInitAdapter(padapter);
-			rtw_intf_stop(padapter);
+#if 0
+			rtw_hw_stop(dvobj);
 			rtk_hal_deinit(padapter);
 			padapter->registrypriv.mp_mode = 0;
 #ifdef CONFIG_BT_COEXIST
@@ -4571,6 +4575,9 @@ static s32 rtw_mp_cmd_hdl(_adapter *padapter, u8 mp_cmd_id)
 				}
 				rtw_hal_iface_init(padapter);
 			}
+#endif
+			MPT_DeInitAdapter(padapter);
+			padapter->registrypriv.mp_mode = 0;
 		}
 
 		if (padapter->mppriv.mode != MP_OFF) {

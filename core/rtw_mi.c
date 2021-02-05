@@ -716,34 +716,6 @@ void rtw_mi_buddy_reset_drv_sw(_adapter *adapter)
 	_rtw_mi_process_without_schk(adapter, _TRUE, NULL, _rtw_mi_reset_drv_sw);
 }
 
-static u8 _rtw_mi_intf_start(_adapter *adapter, void *data)
-{
-	rtw_intf_start(adapter);
-	return _TRUE;
-}
-void rtw_mi_intf_start(_adapter *adapter)
-{
-	_rtw_mi_process(adapter, _FALSE, NULL, _rtw_mi_intf_start);
-}
-void rtw_mi_buddy_intf_start(_adapter *adapter)
-{
-	_rtw_mi_process(adapter, _TRUE, NULL, _rtw_mi_intf_start);
-}
-
-static u8 _rtw_mi_intf_stop(_adapter *adapter, void *data)
-{
-	rtw_intf_stop(adapter);
-	return _TRUE;
-}
-void rtw_mi_intf_stop(_adapter *adapter)
-{
-	_rtw_mi_process(adapter, _FALSE, NULL, _rtw_mi_intf_stop);
-}
-void rtw_mi_buddy_intf_stop(_adapter *adapter)
-{
-	_rtw_mi_process(adapter, _TRUE, NULL, _rtw_mi_intf_stop);
-}
-
 u8 rtw_mi_hal_iface_init(_adapter *padapter)
 {
 	int i;

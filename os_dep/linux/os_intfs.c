@@ -803,6 +803,7 @@ u32 rtw_start_drv_threads(_adapter *padapter)
 #endif /* #ifdef CONFIG_XMIT_THREAD_MODE */
 
 #ifdef CONFIG_RECV_THREAD_MODE
+aa
 	if (is_primary_adapter(padapter)) {
 		if (padapter->recvThread == NULL) {
 			RTW_INFO(FUNC_ADPT_FMT " start RTW_RECV_THREAD\n", FUNC_ADPT_ARG(padapter));
@@ -1341,13 +1342,6 @@ u8 rtw_init_drv_sw(_adapter *padapter)
 
 	ret8 = rtw_init_default_value(padapter);
 
-#if 0 // NEO : move to devobj_trx_resource_init
-	if ((rtw_init_cmd_priv(&padapter->cmdpriv)) == _FAIL) {
-		ret8 = _FAIL;
-		goto exit;
-	}
-#endif // if 0 NEO
-
 	adapter_to_dvobj(padapter)->cmdpriv.padapter = padapter;
 
 	if ((rtw_init_evt_priv(&padapter->evtpriv)) == _FAIL) {
@@ -1613,9 +1607,6 @@ u8 rtw_free_drv_sw(_adapter *padapter)
 	rtw_free_rm_priv(padapter);
 #endif
 
-	// NEO : move to devobj_trx_resource_deinit()
-	//rtw_free_cmd_priv(&padapter->cmdpriv);
-
 	rtw_free_evt_priv(&padapter->evtpriv);
 
 	rtw_free_mlme_priv(&padapter->mlmepriv);
@@ -1646,18 +1637,6 @@ u8 rtw_free_drv_sw(_adapter *padapter)
 
 	return _SUCCESS;
 
-}
-void rtw_intf_start(_adapter *adapter)
-{
-	if (adapter->intf_start)
-		adapter->intf_start(adapter);
-	GET_HAL_DATA(adapter)->intf_start = 1;
-}
-void rtw_intf_stop(_adapter *adapter)
-{
-	if (adapter->intf_stop)
-		adapter->intf_stop(adapter);
-	GET_HAL_DATA(adapter)->intf_start = 0;
 }
 
 #ifdef CONFIG_CONCURRENT_MODE
@@ -1839,7 +1818,6 @@ void rtw_drv_stop_vir_if(_adapter *padapter)
 			rtw_ack_tx_done(&padapter->xmitpriv, RTW_SCTX_DONE_DRV_STOP);
 		#endif
 
-		rtw_intf_stop(padapter);
 		padapter->bup = _FALSE;
 	}
 	rtw_stop_drv_threads(padapter);
@@ -2390,7 +2368,6 @@ void rtw_ips_dev_unload(_adapter *padapter)
 #endif /* defined(CONFIG_SWLPS_IN_IPS) || defined(CONFIG_FWLPS_IN_IPS) */
 	{
 		rtw_hal_set_hwreg(padapter, HW_VAR_FIFO_CLEARN_UP, 0);
-		rtw_intf_stop(padapter);
 	}
 
 	if (!rtw_is_surprise_removed(padapter))
@@ -2932,9 +2909,6 @@ void rtw_dev_unload(PADAPTER padapter)
 		if (padapter->xmitpriv.ack_tx)
 			rtw_ack_tx_done(&padapter->xmitpriv, RTW_SCTX_DONE_DRV_STOP);
 #endif
-		// NEO
-		//rtw_intf_stop(padapter);
-		
 		rtw_stop_drv_threads(padapter);
 
 		if (ATOMIC_READ(&(pcmdpriv->cmdthd_running)) == _TRUE) {
@@ -3066,14 +3040,6 @@ int rtw_suspend_wow(_adapter *padapter)
 	/* 0. Power off LED */
 	rtw_led_control(padapter, LED_CTL_POWER_OFF);
 
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-	/* 2.only for SDIO disable interrupt */
-	rtw_intf_stop(padapter);
-
-	/* 2.1 clean interrupt */
-	rtw_hal_clear_interrupt(padapter);
-#endif /* CONFIG_SDIO_HCI */
-
 	/* enable ac lifetime during scan to avoid txfifo not empty. */
 	dvobj->lifetime_en = rtw_read8(padapter, 0x426);
 	dvobj->pkt_lifetime = rtw_read32(padapter, 0x4c0);
@@ -3199,13 +3165,6 @@ int rtw_suspend_ap_wow(_adapter *padapter)
 
 	/* 0. Power off LED */
 	rtw_led_control(padapter, LED_CTL_POWER_OFF);
-#ifdef CONFIG_SDIO_HCI
-	/* 2.only for SDIO disable interrupt*/
-	rtw_intf_stop(padapter);
-
-	/* 2.1 clean interrupt */
-	rtw_hal_clear_interrupt(padapter);
-#endif /* CONFIG_SDIO_HCI */
 
 	/* 1. stop thread */
 	rtw_set_drv_stopped(padapter);	/*for stop thread*/

@@ -4841,15 +4841,6 @@ static u8 rtw_hal_pause_rx_dma(_adapter *adapter)
 		    (rtw_read32(adapter, REG_RXPKT_NUM) | RW_RELEASE_EN));
 	do {
 		if ((rtw_read32(adapter, REG_RXPKT_NUM) & RXDMA_IDLE)) {
-#ifdef CONFIG_USB_HCI
-			/* stop interface before leave */
-			if (_TRUE == hal->usb_intf_start) {
-				rtw_intf_stop(adapter);
-				RTW_ENABLE_FUNC(adapter_to_dvobj(adapter), DF_RX_BIT);
-				RTW_ENABLE_FUNC(adapter_to_dvobj(adapter), DF_TX_BIT);
-			}
-#endif /* CONFIG_USB_HCI */
-
 			RTW_PRINT("RX_DMA_IDLE is true\n");
 			ret = _SUCCESS;
 			break;
@@ -4861,13 +4852,6 @@ static u8 rtw_hal_pause_rx_dma(_adapter *adapter)
 		}
 #endif /* CONFIG_SDIO_HCI || CONFIG_GSPI_HCI */
 
-#ifdef CONFIG_USB_HCI
-		else {
-			/* to avoid interface start repeatedly  */
-			if (_FALSE == hal->usb_intf_start)
-				rtw_intf_start(adapter);
-		}
-#endif /* CONFIG_USB_HCI */
 	} while (trycnt--);
 
 	if (trycnt < 0) {

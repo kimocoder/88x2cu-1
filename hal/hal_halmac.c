@@ -3528,7 +3528,7 @@ static int _drv_enable_trx(struct dvobj_priv *d)
 		}
 	}
 
-	rtw_intf_start(adapter);
+	//rtw_intf_start(adapter);
 
 	return 0;
 }
