@@ -337,17 +337,12 @@ void usb_read_mem(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *rmem)
 static void rtw_usb_write_port_complete(struct urb *purb, struct pt_regs *regs)
 {
 	_irqL irqL;
-#if 0 // NEO : G6
 	struct lite_data_buf *litexmitbuf =
 		(struct lite_data_buf *)purb->context;
 	struct xmit_buf *pxmitbuf = litexmitbuf->pxmitbuf;
 	struct data_urb *xmiturb = litexmitbuf->dataurb;
 	struct dvobj_priv *pdvobj = litexmitbuf->dvobj;
-#else // NEO : rtk_wifi_driver
-	struct xmit_buf *pxmitbuf = (struct xmit_buf *)purb->context;
-#endif // NEO
 	_adapter	*padapter = pxmitbuf->padapter;
-	struct dvobj_priv *pdvobj = adapter_to_dvobj(padapter);
 	struct xmit_priv	*pxmitpriv = &padapter->xmitpriv;
 
 	switch (pxmitbuf->flags) {
@@ -369,7 +364,8 @@ static void rtw_usb_write_port_complete(struct urb *purb, struct pt_regs *regs)
 
 
 	if (RTW_CANNOT_TX(pdvobj)) {
-		RTW_INFO("%s(): TX Warning! bDriverStopped(%s) OR bSurpriseRemoved(%s) pxmitbuf->buf_tag(%x)\n"
+		RTW_INFO(
+			"%s(): TX Warning! bDriverStopped(%s) OR bSurpriseRemoved(%s) pxmitbuf->buf_tag(%x)\n"
 			 , __func__
 			 , dev_is_drv_stopped(pdvobj) ? "True" : "False"
 			 , dev_is_surprise_removed(pdvobj) ? "True" : "False"
@@ -382,11 +378,12 @@ static void rtw_usb_write_port_complete(struct urb *purb, struct pt_regs *regs)
 	if (purb->status == 0) {
 
 	} else {
-		RTW_INFO("###=> urb_write_port_complete status(%d)\n", purb->status);
+		RTW_INFO("###=> urb_write_port_complete status(%d)\n",
+			 purb->status);
 		if ((purb->status == -EPIPE) || (purb->status == -EPROTO)) {
 			/* usb_clear_halt(pusbdev, purb->pipe);	 */
 			/* msleep(10); */
-			sreset_set_wifi_error_status(padapter, USB_WRITE_PORT_FAIL);
+			/*sreset_set_wifi_error_status(padapter, USB_WRITE_PORT_FAIL);*/
 		} else if (purb->status == -EINPROGRESS) {
 			goto check_completion;
 
@@ -423,17 +420,13 @@ check_completion:
 		purb->status ? RTW_SCTX_DONE_WRITE_PORT_ERR : RTW_SCTX_DONE_SUCCESS);
 	_exit_critical(&pxmitpriv->lock_sctx, &irqL);
 
-#if 0 // NEO : G6
 	rtw_free_litedatabuf(&pdvobj->litexmitbuf_q, litexmitbuf);
 	rtw_free_dataurb(&pdvobj->xmit_urb_q, xmiturb);
-#endif // NEO
 	rtw_free_xmitbuf(pxmitpriv, pxmitbuf);
 
 	{
 		tasklet_hi_schedule(&pxmitpriv->xmit_tasklet);
 	}
-
-
 }
 
 u32 rtw_usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 len, u8 *wmem)
@@ -457,20 +450,19 @@ u32 rtw_usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 len, u8 *wmem)
 
 	//RTW_INFO("%s : NEO bulkout_id:%d\n", __func__, pxmitbuf->bulkout_id);
 
-#if 0 // NEO : G6
 	litexmitbuf = rtw_alloc_litedatabuf(&pdvobj->litexmitbuf_q);
 	if (litexmitbuf == NULL) {
 		RTW_INFO("%s,%d Can't alloc lite xmit buf\n",
 			__func__, __LINE__);
 		goto exit;
 	}
+
 	xmiturb = rtw_alloc_dataurb(&pdvobj->xmit_urb_q);
 	if (xmiturb == NULL) {
 		RTW_INFO("%s,%d Can't alloc lite xmit urb\n",
 			__func__, __LINE__);
 		goto exit;
 	}
-#endif
 
 	if (RTW_CANNOT_TX(pdvobj)) {
 #ifdef DBG_TX
@@ -511,11 +503,7 @@ u32 rtw_usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 len, u8 *wmem)
 
 	_exit_critical(&pxmitpriv->lock, &irqL);
 
-#if 0 // NEO : G6
 	purb = xmiturb->urb;
-#else // NEO : rtk_wifi_driver
-	purb = pxmitbuf->pxmit_urb[0];
-#endif // NEO
 
 	/* translate DMA FIFO addr to pipehandle */
 	pipe = bulkid2pipe(pdvobj, pxmitbuf->bulkout_id, _TRUE);
@@ -530,7 +518,6 @@ u32 rtw_usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 len, u8 *wmem)
 	}
 #endif
 
-#if 0 // NEO : G6
 	litexmitbuf->dvobj = pdvobj;
 	litexmitbuf->pbuf = pxmitframe->buf_addr;
 	litexmitbuf->dataurb = xmiturb;
@@ -541,13 +528,6 @@ u32 rtw_usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 len, u8 *wmem)
 			  len,
 			  rtw_usb_write_port_complete,
 			  litexmitbuf);
-#else // NEO : rtk_wifi_driver
-	usb_fill_bulk_urb(purb, pusbd, pipe,
-			  pxmitframe->buf_addr,
-			  len,
-			  rtw_usb_write_port_complete,
-			  pxmitbuf);
-#endif
 
 #ifdef CONFIG_USE_USB_BUFFER_ALLOC_TX
 	purb->transfer_dma = pxmitbuf->dma_transfer_addr;
@@ -602,7 +582,7 @@ u32 rtw_usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 len, u8 *wmem)
 
 exit:
 	if (ret != _SUCCESS) {
-		//rtw_free_litedatabuf(&pdvobj->litexmitbuf_q, litexmitbuf);
+		rtw_free_litedatabuf(&pdvobj->litexmitbuf_q, litexmitbuf);
 		rtw_free_xmitbuf(pxmitpriv, pxmitbuf);
 	}
 	return ret;
@@ -615,7 +595,6 @@ void rtw_usb_write_port_cancel(struct intf_hdl *pintfhdl)
 	_adapter	*padapter = pintfhdl->padapter;
 	struct xmit_buf *pxmitbuf = (struct xmit_buf *)padapter->xmitpriv.pxmitbuf;
 
-#if 0 // NEO : G6
 	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
 	struct data_urb *xmiturb = (struct data_urb *)dvobj->xmit_urb_q.urb_buf;
 	u32 xmiturb_nr = RTW_XMITURB_NR;
@@ -632,28 +611,6 @@ void rtw_usb_write_port_cancel(struct intf_hdl *pintfhdl)
 		usb_kill_urb(xmiturb->urb);
 		xmiturb++;
 	}
-
-#else // NEO : rtk_wifi_driver
-
-	RTW_INFO("%s\n", __func__);
-
-	for (i = 0; i < NR_XMITBUFF; i++) {
-		for (j = 0; j < 8; j++) {
-			if (pxmitbuf->pxmit_urb[j])
-				usb_kill_urb(pxmitbuf->pxmit_urb[j]);
-		}
-		pxmitbuf++;
-	}
-
-	pxmitbuf = (struct xmit_buf *)padapter->xmitpriv.pxmit_extbuf;
-	for (i = 0; i < NR_XMIT_EXTBUFF ; i++) {
-		for (j = 0; j < 8; j++) {
-			if (pxmitbuf->pxmit_urb[j])
-				usb_kill_urb(pxmitbuf->pxmit_urb[j]);
-		}
-		pxmitbuf++;
-	}
-#endif
 }
 
 void usb_init_recvbuf(_adapter *padapter, struct recv_buf *precvbuf)
