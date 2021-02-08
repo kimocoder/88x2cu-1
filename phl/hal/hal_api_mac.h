@@ -167,8 +167,7 @@ enum rtw_hal_status rtw_hal_mac_set_wowlan(struct hal_info_t *hal, u8 enter);
 #endif /* CONFIG_WOWLAN */
 
 enum rtw_hal_status
-rtw_hal_mac_ax_fill_txdesc(void *mac, struct rtw_xmit_req *treq,
-					u8 *wd_buf, u32 *wd_len);
+rtw_hal_mac_fill_txdesc(void *mac, struct rtw_xmit_req *treq, u8 *wd_buf, u32 *wd_len);
 
 enum rtw_hal_status
 rtw_hal_mac_enable_cpu(struct hal_info_t *hal_info, u8 reason, u8 dlfw);

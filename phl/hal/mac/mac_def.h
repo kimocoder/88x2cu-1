@@ -957,23 +957,27 @@ enum mac_ax_qta_mode {
 	MAC_AX_QTA_INVALID = MAC_AX_QTA_LAST,
 };
 
-enum mac_ax_pkt_t {
-	MAC_AX_PKT_DATA,
-	MAC_AX_PKT_MGNT,
-	MAC_AX_PKT_CTRL,
-	MAC_AX_PKT_8023,
-	MAC_AX_PKT_H2C,
-	MAC_AX_PKT_FWDL,
-	MAC_AX_PKT_C2H,
-	MAC_AX_PKT_PPDU,
-	MAC_AX_PKT_CH_INFO,
-	MAC_AX_PKT_DFS,
+#endif // if 0 NEO
+
+enum mac_pkt_t {
+	MAC_PKT_DATA,
+	MAC_PKT_MGNT,
+	MAC_PKT_CTRL,
+	MAC_PKT_8023,
+	MAC_PKT_H2C,
+	MAC_PKT_FWDL,
+	MAC_PKT_C2H,
+	MAC_PKT_PPDU,
+	MAC_PKT_CH_INFO,
+	MAC_PKT_DFS,
 
 	/* keep last */
-	MAC_AX_PKT_LAST,
-	MAC_AX_PKT_MAX = MAC_AX_PKT_LAST,
-	MAC_AX_PKT_INVALID = MAC_AX_PKT_LAST,
+	MAC_PKT_LAST,
+	MAC_PKT_MAX = MAC_PKT_LAST,
+	MAC_PKT_INVALID = MAC_PKT_LAST,
 };
+
+#if 0 // NEO
 
 enum mac_ax_amsdu_pkt_num {
 	MAC_AX_AMSDU_AGG_NUM_1 = 0,
@@ -2286,8 +2290,10 @@ struct mac_ax_la_buf_param {
 	u8 la_buf_sel; /*0: 64KB; 1: 128KB; 2: 192KB; 3: 256KB; 4: 320KB*/
 };
 
+#endif // if 0 NEO
+
 /*--------------------Define TRX PKT INFO/RPT---------------------------------*/
-struct mac_ax_pkt_data {
+struct mac_pkt_data {
 	u16 wifi_seq;
 	u8 hw_ssn_sel;
 	u8 hw_seq_mode;
@@ -2351,7 +2357,7 @@ struct mac_ax_pkt_data {
 	u8 sw_define;
 };
 
-struct mac_ax_pkt_mgnt {
+struct mac_pkt_mgnt {
 	u16 wifi_seq;
 	u8 hw_ssn_sel;
 	u8 hw_seq_mode;
@@ -2412,19 +2418,21 @@ struct mac_ax_pkt_mgnt {
 	u8 no_ack;
 };
 
-struct mac_ax_rpkt_data {
+struct mac_rpkt_data {
 	u8 crc_err;
 	u8 icv_err;
 };
 
-struct mac_ax_txpkt_info {
-	enum mac_ax_pkt_t type;
+struct mac_txpkt_info {
+	enum mac_pkt_t type;
 	u32 pktsize;
 	union {
-		struct mac_ax_pkt_data data;
-		struct mac_ax_pkt_mgnt mgnt;
+		struct mac_pkt_data data;
+		struct mac_pkt_mgnt mgnt;
 	} u;
 };
+
+#if 0 // NEO
 
 struct mac_ax_bcn_cnt {
 	u8 port;
@@ -4585,494 +4593,498 @@ struct mac_ops {
 
 #if 0 // NEO
 	/*System level*/
-	u32 (*hal_init)(struct mac_ax_adapter *adapter,
+	u32 (*hal_init)(struct mac_adapter *adapter,
 			struct mac_ax_trx_info *trx_info,
 			struct mac_ax_fwdl_info *fwdl_info,
 			struct mac_ax_intf_info *intf_info);
-	u32 (*hal_fast_init)(struct mac_ax_adapter *adapter,
+	u32 (*hal_fast_init)(struct mac_adapter *adapter,
 			     struct mac_ax_trx_info *trx_info,
 			     struct mac_ax_fwdl_info *fwdl_info,
 			     struct mac_ax_intf_info *intf_info);
-	u32 (*hal_deinit)(struct mac_ax_adapter *adapter);
-	u32 (*add_role)(struct mac_ax_adapter *adapter,
+	u32 (*hal_deinit)(struct mac_adapter *adapter);
+	u32 (*add_role)(struct mac_adapter *adapter,
 			struct mac_ax_role_info *info);
-	u32 (*remove_role)(struct mac_ax_adapter *adapter, u8 macid);
-	u32 (*change_role)(struct mac_ax_adapter *adapter,
+	u32 (*remove_role)(struct mac_adapter *adapter, u8 macid);
+	u32 (*change_role)(struct mac_adapter *adapter,
 			   struct mac_ax_role_info *info);
-	u32 (*pwr_switch)(struct mac_ax_adapter *adapter, u8 on);
-	u32 (*sys_init)(struct mac_ax_adapter *adapter);
-	u32 (*trx_init)(struct mac_ax_adapter *adapter,
+	u32 (*pwr_switch)(struct mac_adapter *adapter, u8 on);
+	u32 (*sys_init)(struct mac_adapter *adapter);
+	u32 (*trx_init)(struct mac_adapter *adapter,
 			struct mac_ax_trx_info *info);
-	u32 (*romdl)(struct mac_ax_adapter *adapter, u8 *rom, u32 romaddr,
+	u32 (*romdl)(struct mac_adapter *adapter, u8 *rom, u32 romaddr,
 		     u32 len);
-	u32 (*enable_cpu)(struct mac_ax_adapter *adapter,
+	u32 (*enable_cpu)(struct mac_adapter *adapter,
 			  u8 boot_reason, u8 dlfw);
-	u32 (*disable_cpu)(struct mac_ax_adapter *adapter);
-	u32 (*fwredl)(struct mac_ax_adapter *adapter, u8 *fw, u32 len);
-	u32 (*fwdl)(struct mac_ax_adapter *adapter, u8 *fw, u32 len);
-	u32 (*enable_fw)(struct mac_ax_adapter *adapter,
+	u32 (*disable_cpu)(struct mac_adapter *adapter);
+	u32 (*fwredl)(struct mac_adapter *adapter, u8 *fw, u32 len);
+	u32 (*fwdl)(struct mac_adapter *adapter, u8 *fw, u32 len);
+	u32 (*enable_fw)(struct mac_adapter *adapter,
 			 enum rtw_fw_type cat);
-	u32 (*lv1_rcvy)(struct mac_ax_adapter *adapter,
+	u32 (*lv1_rcvy)(struct mac_adapter *adapter,
 			enum mac_ax_lv1_rcvy_step step);
-	u32 (*get_macaddr)(struct mac_ax_adapter *adapter,
+	u32 (*get_macaddr)(struct mac_adapter *adapter,
 			   struct mac_ax_macaddr *macaddr,
 			   u8 role_idx);
-	u32 (*build_txdesc)(struct mac_ax_adapter *adapter,
-			    struct mac_ax_txpkt_info *info, u8 *buf, u32 len);
-	u32 (*refill_txdesc)(struct mac_ax_adapter *adapter,
+#endif // if 0 NEO
+	u32 (*build_txdesc)(struct mac_adapter *adapter,
+			    struct mac_txpkt_info *info, u8 *buf, u32 len);
+#if 0 // NEO
+	u32 (*refill_txdesc)(struct mac_adapter *adapter,
 			     struct mac_ax_txpkt_info *txpkt_info,
 			     struct mac_ax_refill_info *mask,
 			     struct mac_ax_refill_info *info);
-	u32 (*parse_rxdesc)(struct mac_ax_adapter *adapter,
+	u32 (*parse_rxdesc)(struct mac_adapter *adapter,
 			    struct mac_ax_rxpkt_info *info, u8 *buf, u32 len);
 	/*FW offload related*/
-	u32 (*reset_fwofld_state)(struct mac_ax_adapter *adapter, u8 op);
-	u32 (*check_fwofld_done)(struct mac_ax_adapter *adapter, u8 op);
-	u32 (*read_pkt_ofld)(struct mac_ax_adapter *adapter, u8 id);
-	u32 (*del_pkt_ofld)(struct mac_ax_adapter *adapter, u8 id);
-	u32 (*add_pkt_ofld)(struct mac_ax_adapter *adapter, u8 *pkt,
+	u32 (*reset_fwofld_state)(struct mac_adapter *adapter, u8 op);
+	u32 (*check_fwofld_done)(struct mac_adapter *adapter, u8 op);
+	u32 (*read_pkt_ofld)(struct mac_adapter *adapter, u8 id);
+	u32 (*del_pkt_ofld)(struct mac_adapter *adapter, u8 id);
+	u32 (*add_pkt_ofld)(struct mac_adapter *adapter, u8 *pkt,
 			    u16 len, u8 *id);
-	u32 (*pkt_ofld_packet)(struct mac_ax_adapter *adapter,
+	u32 (*pkt_ofld_packet)(struct mac_adapter *adapter,
 			       u8 **pkt_buf, u16 *pkt_len, u8 *pkt_id);
-	u32 (*dump_efuse_ofld)(struct mac_ax_adapter *adapter, u32 efuse_size,
+	u32 (*dump_efuse_ofld)(struct mac_adapter *adapter, u32 efuse_size,
 			       bool is_hidden);
-	u32 (*efuse_ofld_map)(struct mac_ax_adapter *adapter, u8 *efuse_map,
+	u32 (*efuse_ofld_map)(struct mac_adapter *adapter, u8 *efuse_map,
 			      u32 efuse_size);
-	u32 (*upd_dctl_info)(struct mac_ax_adapter *adapter,
+	u32 (*upd_dctl_info)(struct mac_adapter *adapter,
 			     struct mac_ax_dctl_info *info,
 			     struct mac_ax_dctl_info *mask, u8 macid,
 			     u8 operation);
-	u32 (*upd_cctl_info)(struct mac_ax_adapter *adapter,
+	u32 (*upd_cctl_info)(struct mac_adapter *adapter,
 			     struct mac_ax_cctl_info *info,
 			     struct mac_ax_cctl_info *mask, u8 macid,
 			     u8 operation);
-	u32 (*ie_cam_upd)(struct mac_ax_adapter *adapter,
+	u32 (*ie_cam_upd)(struct mac_adapter *adapter,
 			  struct mac_ax_ie_cam_cmd_info *info);
-	u32 (*twt_info_upd_h2c)(struct mac_ax_adapter *adapter,
+	u32 (*twt_info_upd_h2c)(struct mac_adapter *adapter,
 				struct mac_ax_twt_para *info);
-	u32 (*twt_act_h2c)(struct mac_ax_adapter *adapter,
+	u32 (*twt_act_h2c)(struct mac_adapter *adapter,
 			   struct mac_ax_twtact_para *info);
-	u32 (*twt_anno_h2c)(struct mac_ax_adapter *adapter,
+	u32 (*twt_anno_h2c)(struct mac_adapter *adapter,
 			    struct mac_ax_twtanno_para *info);
-	void (*twt_wait_anno)(struct mac_ax_adapter *adapter,
+	void (*twt_wait_anno)(struct mac_adapter *adapter,
 			      u8 *c2h_content, u8 *upd_addr);
-	u32 (*mac_host_getpkt_h2c)(struct mac_ax_adapter *adapter,
+	u32 (*mac_host_getpkt_h2c)(struct mac_adapter *adapter,
 				   u8 macid, u8 pkttype);
-	u32 (*p2p_act_h2c)(struct mac_ax_adapter *adapter,
+	u32 (*p2p_act_h2c)(struct mac_adapter *adapter,
 			   struct mac_ax_p2p_act_info *info);
-	u32 (*get_p2p_stat)(struct mac_ax_adapter *adapter);
+	u32 (*get_p2p_stat)(struct mac_adapter *adapter);
 	/*Association, de-association related*/
-	u32 (*sta_add_key)(struct mac_ax_adapter *adapter,
+	u32 (*sta_add_key)(struct mac_adapter *adapter,
 			   struct mac_ax_sec_cam_info *sec_cam_content,
 			   u8 mac_id, u8 key_id, u8 key_type);
-	u32 (*sta_del_key)(struct mac_ax_adapter *adapter,
+	u32 (*sta_del_key)(struct mac_adapter *adapter,
 			   u8 mac_id, u8 key_id, u8 key_type);
-	u32 (*sta_search_key_idx)(struct mac_ax_adapter *adapter,
+	u32 (*sta_search_key_idx)(struct mac_adapter *adapter,
 				  u8 mac_id, u8 key_id, u8 key_type);
-	u32 (*sta_hw_security_support)(struct mac_ax_adapter *adapter,
+	u32 (*sta_hw_security_support)(struct mac_adapter *adapter,
 				       u8 hw_security_support_type, u8 enable);
-	u32 (*set_mu_table)(struct mac_ax_adapter *adapter,
+	u32 (*set_mu_table)(struct mac_adapter *adapter,
 			    struct mac_mu_table *mu_table);
-	u32 (*ss_dl_grp_upd)(struct mac_ax_adapter *adapter,
+	u32 (*ss_dl_grp_upd)(struct mac_adapter *adapter,
 			     struct mac_ax_ss_dl_grp_upd *info);
-	u32 (*ss_ul_grp_upd)(struct mac_ax_adapter *adapter,
+	u32 (*ss_ul_grp_upd)(struct mac_adapter *adapter,
 			     struct mac_ax_ss_ul_grp_upd *info);
-	u32 (*ss_ul_sta_upd)(struct mac_ax_adapter *adapter,
+	u32 (*ss_ul_sta_upd)(struct mac_adapter *adapter,
 			     struct mac_ax_ss_ul_sta_upd *info);
-	u32 (*bacam_info)(struct mac_ax_adapter *adapter,
+	u32 (*bacam_info)(struct mac_adapter *adapter,
 			  struct mac_ax_bacam_info *info);
+#endif // if 0 NEO
 	/*TRX related*/
-	u32 (*txdesc_len)(struct mac_ax_adapter *adapter,
-			  struct mac_ax_txpkt_info *info);
-	u32 (*upd_shcut_mhdr)(struct mac_ax_adapter *adapter,
+	u32 (*txdesc_len)(struct mac_adapter *adapter,
+			  struct mac_txpkt_info *info);
+#if 0 // NEO
+	u32 (*upd_shcut_mhdr)(struct mac_adapter *adapter,
 			      struct mac_ax_shcut_mhdr *info, u8 macid);
-	u32 (*enable_hwmasdu)(struct mac_ax_adapter *adapter,
+	u32 (*enable_hwmasdu)(struct mac_adapter *adapter,
 			      u8 enable,
 			      enum mac_ax_amsdu_pkt_num max_num,
 			      u8 en_single_amsdu,
 			      u8 en_last_amsdu_padding);
-	u32 (*enable_cut_hwamsdu)(struct mac_ax_adapter *adapter,
+	u32 (*enable_cut_hwamsdu)(struct mac_adapter *adapter,
 				  u8 enable,
 				  u8 low_th,
 				  u16 high_th,
 				  enum mac_ax_ex_shift aligned);
-	u32 (*hdr_conv)(struct mac_ax_adapter *adapter,
+	u32 (*hdr_conv)(struct mac_adapter *adapter,
 			u8 en_hdr_conv);
-	u32 (*set_hwseq_reg)(struct mac_ax_adapter *adapter,
+	u32 (*set_hwseq_reg)(struct mac_adapter *adapter,
 			     u8 reg_seq_idx,
 			     u16 reg_seq_val);
 #endif // if 0 NEO
 	u32 (*process_c2h)(struct mac_adapter *adapter, u8 *buf, u32 len,
 			   u8 *ret);
 #if 0 // NEO
-	u32 (*parse_dfs)(struct mac_ax_adapter *adapter,
+	u32 (*parse_dfs)(struct mac_adapter *adapter,
 			 u8 *buf, u32 dfs_len, struct mac_ax_dfs_rpt *rpt);
-	u32 (*parse_ppdu)(struct mac_ax_adapter *adapter,
+	u32 (*parse_ppdu)(struct mac_adapter *adapter,
 			  u8 *buf, u32 ppdu_len, u8 mac_info,
 			  struct mac_ax_ppdu_rpt *rpt);
-	u32 (*cfg_phy_rpt)(struct mac_ax_adapter *adapter,
+	u32 (*cfg_phy_rpt)(struct mac_adapter *adapter,
 			   struct mac_ax_phy_rpt_cfg *cfg);
-	u32 (*set_rx_forwarding)(struct mac_ax_adapter *adapter,
+	u32 (*set_rx_forwarding)(struct mac_adapter *adapter,
 				 struct mac_ax_rx_fwd_ctrl_t *rf_ctrl_p);
-	u32 (*get_rx_fltr_opt)(struct mac_ax_adapter *adapter,
+	u32 (*get_rx_fltr_opt)(struct mac_adapter *adapter,
 			       struct mac_ax_rx_fltr_ctrl_t *opt,
 			       u8 band);
-	u32 (*set_rx_fltr_opt)(struct mac_ax_adapter *adapter,
+	u32 (*set_rx_fltr_opt)(struct mac_adapter *adapter,
 			       struct mac_ax_rx_fltr_ctrl_t *opt,
 			       struct mac_ax_rx_fltr_ctrl_t *opt_msk,
 			       u8 band);
-	u32 (*set_rx_fltr_typ_opt)(struct mac_ax_adapter *adapter,
+	u32 (*set_rx_fltr_typ_opt)(struct mac_adapter *adapter,
 				   enum mac_ax_pkt_t type,
 				   enum mac_ax_fwd_target fwd_target,
 				   u8 band);
-	u32 (*set_rx_fltr_typstyp_opt)(struct mac_ax_adapter *adapter,
+	u32 (*set_rx_fltr_typstyp_opt)(struct mac_adapter *adapter,
 				       enum mac_ax_pkt_t type,
 				       u8 subtype,
 				       enum mac_ax_fwd_target fwd_target,
 				       u8 band);
-	u32 (*sr_update)(struct mac_ax_adapter *adapter,
+	u32 (*sr_update)(struct mac_adapter *adapter,
 			 struct mac_ax_sr_info *sr_info, u8 band);
-	u32 (*two_nav_cfg)(struct mac_ax_adapter *adapter,
+	u32 (*two_nav_cfg)(struct mac_adapter *adapter,
 			   struct mac_ax_2nav_info *info);
-	u32 (*pkt_drop)(struct mac_ax_adapter *adapter,
+	u32 (*pkt_drop)(struct mac_adapter *adapter,
 			struct mac_ax_pkt_drop_info *info);
-	u32 (*send_bcn_h2c)(struct mac_ax_adapter *adapter,
+	u32 (*send_bcn_h2c)(struct mac_adapter *adapter,
 			    struct mac_ax_bcn_info *info);
-	u32 (*tx_mode_sel)(struct mac_ax_adapter *adapter,
+	u32 (*tx_mode_sel)(struct mac_adapter *adapter,
 			   struct mac_ax_mac_tx_mode_sel *mode_sel);
-	u32 (*tcpip_chksum_ofd)(struct mac_ax_adapter *adapter,
+	u32 (*tcpip_chksum_ofd)(struct mac_adapter *adapter,
 				u8 en_tx_chksum_ofd,
 				u8 en_rx_chksum_ofd);
-	u32 (*chk_rx_tcpip_chksum_ofd)(struct mac_ax_adapter *adapter,
+	u32 (*chk_rx_tcpip_chksum_ofd)(struct mac_adapter *adapter,
 				       u8 chksum_status);
-	u32 (*chk_allq_empty)(struct mac_ax_adapter *adapter, u8 *empty);
-	u32 (*is_txq_empty)(struct mac_ax_adapter *adapter,
+	u32 (*chk_allq_empty)(struct mac_adapter *adapter, u8 *empty);
+	u32 (*is_txq_empty)(struct mac_adapter *adapter,
 			    struct mac_ax_tx_queue_empty *val);
-	u32 (*is_rxq_empty)(struct mac_ax_adapter *adapter,
+	u32 (*is_rxq_empty)(struct mac_adapter *adapter,
 			    struct mac_ax_rx_queue_empty *val);
-	u32 (*parse_bcn_stats_c2h)(struct mac_ax_adapter *adapter,
+	u32 (*parse_bcn_stats_c2h)(struct mac_adapter *adapter,
 				   u8 *content,
 				   struct mac_ax_bcn_cnt *val);
 	/*frame exchange related*/
-	u32 (*upd_mudecision_para)(struct mac_ax_adapter *adapter,
+	u32 (*upd_mudecision_para)(struct mac_adapter *adapter,
 				   struct mac_ax_mudecision_para *info);
-	u32 (*mu_sta_upd)(struct mac_ax_adapter *adapter,
+	u32 (*mu_sta_upd)(struct mac_adapter *adapter,
 			  struct mac_ax_mu_sta_upd *info);
-	u32 (*upd_ul_fixinfo)(struct mac_ax_adapter *adapter,
+	u32 (*upd_ul_fixinfo)(struct mac_adapter *adapter,
 			      struct mac_ax_ul_fixinfo *info);
-	u32 (*f2p_test_cmd)(struct mac_ax_adapter *adapter,
+	u32 (*f2p_test_cmd)(struct mac_adapter *adapter,
 			    struct mac_ax_f2p_test_para *info,
 			    struct mac_ax_f2p_wd *f2pwd,
 			    struct mac_ax_f2p_tx_cmd *ptxcmd,
 			    u8 *psigb_addr);
-	u32 (*snd_test_cmd)(struct mac_ax_adapter *adapter,
+	u32 (*snd_test_cmd)(struct mac_adapter *adapter,
 			    u8 *cmd_buf);
-	u32 (*set_fw_fixmode)(struct mac_ax_adapter *adapter,
+	u32 (*set_fw_fixmode)(struct mac_adapter *adapter,
 			      struct mac_ax_fixmode_para *info);
-	u32 (*mac_dumpwlanc)(struct mac_ax_adapter *adapter,
+	u32 (*mac_dumpwlanc)(struct mac_adapter *adapter,
 			     struct mac_ax_dumpwlanc *para);
-	u32 (*mac_dumpwlans)(struct mac_ax_adapter *adapter,
+	u32 (*mac_dumpwlans)(struct mac_adapter *adapter,
 			     struct mac_ax_dumpwlans *para);
-	u32 (*mac_dumpwland)(struct mac_ax_adapter *adapter,
+	u32 (*mac_dumpwland)(struct mac_adapter *adapter,
 			     struct mac_ax_dumpwland *para);
 	/*outsrcing related */
-	u32 (*outsrc_h2c_common)(struct mac_ax_adapter *adapter,
+	u32 (*outsrc_h2c_common)(struct mac_adapter *adapter,
 				 struct rtw_g6_h2c_hdr *hdr,
 				 u32 *pvalue);
-	u32 (*read_pwr_reg)(struct mac_ax_adapter *adapter, u8 band,
+	u32 (*read_pwr_reg)(struct mac_adapter *adapter, u8 band,
 			    const u32 offset, u32 *val);
-	u32 (*write_pwr_reg)(struct mac_ax_adapter *adapter, u8 band,
+	u32 (*write_pwr_reg)(struct mac_adapter *adapter, u8 band,
 			     const u32 offset, u32 val);
-	u32 (*write_pwr_ofst_mode)(struct mac_ax_adapter *adapter,
+	u32 (*write_pwr_ofst_mode)(struct mac_adapter *adapter,
 				   u8 band, struct rtw_tpu_info *tpu);
-	u32 (*write_pwr_ofst_bw)(struct mac_ax_adapter *adapter,
+	u32 (*write_pwr_ofst_bw)(struct mac_adapter *adapter,
 				 u8 band, struct rtw_tpu_info *tpu);
-	u32 (*write_pwr_ref_reg)(struct mac_ax_adapter *adapter,
+	u32 (*write_pwr_ref_reg)(struct mac_adapter *adapter,
 				 u8 band, struct rtw_tpu_info *tpu);
-	u32 (*write_pwr_limit_en)(struct mac_ax_adapter *adapter,
+	u32 (*write_pwr_limit_en)(struct mac_adapter *adapter,
 				  u8 band, struct rtw_tpu_info *tpu);
-	u32 (*write_pwr_limit_rua_reg)(struct mac_ax_adapter *adapter,
+	u32 (*write_pwr_limit_rua_reg)(struct mac_adapter *adapter,
 				       u8 band, struct rtw_tpu_info *tpu);
-	u32 (*write_pwr_limit_reg)(struct mac_ax_adapter *adapter,
+	u32 (*write_pwr_limit_reg)(struct mac_adapter *adapter,
 				   u8 band, struct rtw_tpu_pwr_imt_info *tpu);
-	u32 (*write_pwr_by_rate_reg)(struct mac_ax_adapter *adapter,
+	u32 (*write_pwr_by_rate_reg)(struct mac_adapter *adapter,
 				     u8 band,
 				     struct rtw_tpu_pwr_by_rate_info *tpu);
-	u32 (*lamode_cfg)(struct mac_ax_adapter *adapter,
+	u32 (*lamode_cfg)(struct mac_adapter *adapter,
 			  struct mac_ax_la_cfg *cfg);
-	u32 (*lamode_trigger)(struct mac_ax_adapter *adapter, u8 tgr);
-	u32 (*lamode_buf_cfg)(struct mac_ax_adapter *adapter,
+	u32 (*lamode_trigger)(struct mac_adapter *adapter, u8 tgr);
+	u32 (*lamode_buf_cfg)(struct mac_adapter *adapter,
 			      struct mac_ax_la_buf_param *param);
 	struct mac_ax_la_status (*get_lamode_st)
-				 (struct mac_ax_adapter *adapter);
-	u32 (*read_xcap_reg)(struct mac_ax_adapter *adapter, u8 sc_xo,
+				 (struct mac_adapter *adapter);
+	u32 (*read_xcap_reg)(struct mac_adapter *adapter, u8 sc_xo,
 			     u32 *val);
-	u32 (*write_xcap_reg)(struct mac_ax_adapter *adapter, u8 sc_xo,
+	u32 (*write_xcap_reg)(struct mac_adapter *adapter, u8 sc_xo,
 			      u32 val);
-	u32 (*write_bbrst_reg)(struct mac_ax_adapter *adapter, u8 val);
+	u32 (*write_bbrst_reg)(struct mac_adapter *adapter, u8 val);
 	/*sounding related*/
-	u32 (*get_csi_buffer_index)(struct mac_ax_adapter *adapter, u8 band,
+	u32 (*get_csi_buffer_index)(struct mac_adapter *adapter, u8 band,
 				    u8 csi_buffer_id);
-	u32 (*set_csi_buffer_index)(struct mac_ax_adapter *adapter, u8 band,
+	u32 (*set_csi_buffer_index)(struct mac_adapter *adapter, u8 band,
 				    u8 macid, u16 csi_buffer_id,
 				    u16 buffer_idx);
-	u32 (*get_snd_sts_index)(struct mac_ax_adapter *adapter, u8 band,
+	u32 (*get_snd_sts_index)(struct mac_adapter *adapter, u8 band,
 				 u8 index);
-	u32 (*set_snd_sts_index)(struct mac_ax_adapter *adapter, u8 band,
+	u32 (*set_snd_sts_index)(struct mac_adapter *adapter, u8 band,
 				 u8 macid, u8 index);
-	u32 (*init_snd_mer)(struct mac_ax_adapter *adapter, u8 band);
-	u32 (*init_snd_mee)(struct mac_ax_adapter *adapter, u8 band);
-	u32 (*csi_force_rate)(struct mac_ax_adapter *adapter, u8 band,
+	u32 (*init_snd_mer)(struct mac_adapter *adapter, u8 band);
+	u32 (*init_snd_mee)(struct mac_adapter *adapter, u8 band);
+	u32 (*csi_force_rate)(struct mac_adapter *adapter, u8 band,
 			      u8 ht_rate, u8 vht_rate, u8 he_rate);
-	u32 (*csi_rrsc)(struct mac_ax_adapter *adapter, u8 band, u32 rrsc);
-	u32 (*set_snd_para)(struct mac_ax_adapter *adapter,
+	u32 (*csi_rrsc)(struct mac_adapter *adapter, u8 band, u32 rrsc);
+	u32 (*set_snd_para)(struct mac_adapter *adapter,
 			    struct mac_ax_fwcmd_snd *snd_info);
-	u32 (*set_csi_para_reg)(struct mac_ax_adapter *adapter,
+	u32 (*set_csi_para_reg)(struct mac_adapter *adapter,
 				struct mac_reg_csi_para *csi_para);
-	u32 (*set_csi_para_cctl)(struct mac_ax_adapter *adapter,
+	u32 (*set_csi_para_cctl)(struct mac_adapter *adapter,
 				 struct mac_cctl_csi_para *csi_para);
-	u32 (*hw_snd_pause_release)(struct mac_ax_adapter *adapter,
+	u32 (*hw_snd_pause_release)(struct mac_adapter *adapter,
 				    u8 band, u8 pr);
-	u32 (*bypass_snd_sts)(struct mac_ax_adapter *adapter);
-	u32 (*deinit_mee)(struct mac_ax_adapter *adapter, u8 band);
+	u32 (*bypass_snd_sts)(struct mac_adapter *adapter);
+	u32 (*deinit_mee)(struct mac_adapter *adapter, u8 band);
 	/*lps related*/
-	u32 (*cfg_lps)(struct mac_ax_adapter *adapter,
+	u32 (*cfg_lps)(struct mac_adapter *adapter,
 		       u8 macid,
 		       enum mac_ax_ps_mode ps_mode,
 		       void *lps_info);
-	u32 (*lps_pwr_state)(struct mac_ax_adapter *adapter,
+	u32 (*lps_pwr_state)(struct mac_adapter *adapter,
 			     enum mac_ax_pwr_state_action action,
 			     enum mac_ax_rpwm_req_pwr_state req_pwr_state);
-	u32 (*chk_leave_lps)(struct mac_ax_adapter *adapter, u8 macid);
-	u32 (*lps_chk_access)(struct mac_ax_adapter *adapter, u32 offset);
+	u32 (*chk_leave_lps)(struct mac_adapter *adapter, u8 macid);
+	u32 (*lps_chk_access)(struct mac_adapter *adapter, u32 offset);
 	/*Wowlan related*/
-	u32 (*cfg_wow_wake)(struct mac_ax_adapter *adapter,
+	u32 (*cfg_wow_wake)(struct mac_adapter *adapter,
 			    u8 macid,
 			    struct mac_ax_wow_wake_info *info,
 			    struct mac_ax_remotectrl_info_parm_ *content);
-	u32 (*cfg_disconnect_det)(struct mac_ax_adapter *adapter,
+	u32 (*cfg_disconnect_det)(struct mac_adapter *adapter,
 				  u8 macid,
 				  struct mac_ax_disconnect_det_info *info);
-	u32 (*cfg_keepalive)(struct mac_ax_adapter *adapter,
+	u32 (*cfg_keepalive)(struct mac_adapter *adapter,
 			     u8 macid,
 			     struct mac_ax_keep_alive_info *info);
-	u32 (*cfg_gtk_ofld)(struct mac_ax_adapter *adapter,
+	u32 (*cfg_gtk_ofld)(struct mac_adapter *adapter,
 			    u8 macid,
 			    struct mac_ax_gtk_ofld_info *info,
 			    struct mac_ax_gtk_info_parm_ *content);
-	u32 (*cfg_arp_ofld)(struct mac_ax_adapter *adapter,
+	u32 (*cfg_arp_ofld)(struct mac_adapter *adapter,
 			    u8 macid,
 			    struct mac_ax_arp_ofld_info *info,
 			    void *parp_info_content);
-	u32 (*cfg_ndp_ofld)(struct mac_ax_adapter *adapter,
+	u32 (*cfg_ndp_ofld)(struct mac_adapter *adapter,
 			    u8 macid,
 			    struct mac_ax_ndp_ofld_info *info,
 			    struct mac_ax_ndp_info_parm_ *content);
-	u32 (*cfg_realwow)(struct mac_ax_adapter *adapter,
+	u32 (*cfg_realwow)(struct mac_adapter *adapter,
 			   u8 macid,
 			   struct mac_ax_realwow_info *info,
 			   struct mac_ax_realwowv2_info_parm_ *content);
-	u32 (*cfg_nlo)(struct mac_ax_adapter *adapter,
+	u32 (*cfg_nlo)(struct mac_adapter *adapter,
 		       u8 macid,
 		       struct mac_ax_nlo_info *info,
 		       struct mac_ax_nlo_networklist_parm_ *content);
-	u32 (*cfg_dev2hst_gpio)(struct mac_ax_adapter *adapter,
+	u32 (*cfg_dev2hst_gpio)(struct mac_adapter *adapter,
 				struct mac_ax_dev2hst_gpio_info *info);
-	u32 (*cfg_uphy_ctrl)(struct mac_ax_adapter *adapter,
+	u32 (*cfg_uphy_ctrl)(struct mac_adapter *adapter,
 			     struct mac_ax_uphy_ctrl_info *info);
-	u32 (*cfg_wowcam_upd)(struct mac_ax_adapter *adapter,
+	u32 (*cfg_wowcam_upd)(struct mac_adapter *adapter,
 			      struct mac_ax_wowcam_upd_info *info);
-	u32 (*cfg_wow_sleep)(struct mac_ax_adapter *adapter,
+	u32 (*cfg_wow_sleep)(struct mac_adapter *adapter,
 			     u8 sleep);
-	u32 (*get_wow_fw_status)(struct mac_ax_adapter *adapter,
+	u32 (*get_wow_fw_status)(struct mac_adapter *adapter,
 				 u8 *status);
-	u32 (*request_aoac_report)(struct mac_ax_adapter *adapter,
+	u32 (*request_aoac_report)(struct mac_adapter *adapter,
 				   u8 rx_ready);
-	u32 (*read_aoac_report)(struct mac_ax_adapter *adapter,
+	u32 (*read_aoac_report)(struct mac_adapter *adapter,
 				struct mac_ax_aoac_report *rpt_buf, u8 rx_ready);
 	/*system related*/
-	u32 (*dbcc_enable)(struct mac_ax_adapter *adapter,
+	u32 (*dbcc_enable)(struct mac_adapter *adapter,
 			   struct mac_ax_trx_info *info, u8 dbcc_en);
-	u32 (*port_cfg)(struct mac_ax_adapter *adapter,
+	u32 (*port_cfg)(struct mac_adapter *adapter,
 			enum mac_ax_port_cfg_type type,
 			struct mac_ax_port_cfg_para *para);
-	u32 (*port_init)(struct mac_ax_adapter *adapter,
+	u32 (*port_init)(struct mac_adapter *adapter,
 			 struct mac_ax_port_init_para *para);
-	u32 (*enable_imr)(struct mac_ax_adapter *adapter, u8 band,
+	u32 (*enable_imr)(struct mac_adapter *adapter, u8 band,
 			  enum mac_ax_hwmod_sel sel);
-	u32 (*dump_efuse_map_wl)(struct mac_ax_adapter *adapter,
+	u32 (*dump_efuse_map_wl)(struct mac_adapter *adapter,
 				 enum mac_ax_efuse_read_cfg cfg,
 				 u8 *efuse_map);
-	u32 (*dump_efuse_map_bt)(struct mac_ax_adapter *adapter,
+	u32 (*dump_efuse_map_bt)(struct mac_adapter *adapter,
 				 enum mac_ax_efuse_read_cfg cfg,
 				 u8 *efuse_map);
-	u32 (*write_efuse)(struct mac_ax_adapter *adapter, u32 addr, u8 val,
+	u32 (*write_efuse)(struct mac_adapter *adapter, u32 addr, u8 val,
 			   enum mac_ax_efuse_bank bank);
-	u32 (*read_efuse)(struct mac_ax_adapter *adapter, u32 addr, u32 size,
+	u32 (*read_efuse)(struct mac_adapter *adapter, u32 addr, u32 size,
 			  u8 *val, enum mac_ax_efuse_bank bank);
-	u32 (*get_efuse_avl_size)(struct mac_ax_adapter *adapter, u32 *size);
-	u32 (*get_efuse_avl_size_bt)(struct mac_ax_adapter *adapter, u32 *size);
-	u32 (*dump_log_efuse)(struct mac_ax_adapter *adapter,
+	u32 (*get_efuse_avl_size)(struct mac_adapter *adapter, u32 *size);
+	u32 (*get_efuse_avl_size_bt)(struct mac_adapter *adapter, u32 *size);
+	u32 (*dump_log_efuse)(struct mac_adapter *adapter,
 			      enum mac_ax_efuse_parser_cfg parser_cfg,
 			      enum mac_ax_efuse_read_cfg cfg,
 			      u8 *efuse_map, bool is_limit);
-	u32 (*read_log_efuse)(struct mac_ax_adapter *adapter, u32 addr,
+	u32 (*read_log_efuse)(struct mac_adapter *adapter, u32 addr,
 			      u32 size, u8 *val);
-	u32 (*write_log_efuse)(struct mac_ax_adapter *adapter, u32 addr,
+	u32 (*write_log_efuse)(struct mac_adapter *adapter, u32 addr,
 			       u8 val);
-	u32 (*dump_log_efuse_bt)(struct mac_ax_adapter *adapter,
+	u32 (*dump_log_efuse_bt)(struct mac_adapter *adapter,
 				 enum mac_ax_efuse_parser_cfg parser_cfg,
 				 enum mac_ax_efuse_read_cfg cfg,
 				 u8 *efuse_map);
-	u32 (*read_log_efuse_bt)(struct mac_ax_adapter *adapter, u32 addr,
+	u32 (*read_log_efuse_bt)(struct mac_adapter *adapter, u32 addr,
 				 u32 size, u8 *val);
-	u32 (*write_log_efuse_bt)(struct mac_ax_adapter *adapter, u32 addr,
+	u32 (*write_log_efuse_bt)(struct mac_adapter *adapter, u32 addr,
 				  u8 val);
-	u32 (*pg_efuse_by_map)(struct mac_ax_adapter *adapter,
+	u32 (*pg_efuse_by_map)(struct mac_adapter *adapter,
 			       struct mac_ax_pg_efuse_info *info,
 			       enum mac_ax_efuse_read_cfg cfg,
 			       bool part, bool is_limit);
-	u32 (*pg_efuse_by_map_bt)(struct mac_ax_adapter *adapter,
+	u32 (*pg_efuse_by_map_bt)(struct mac_adapter *adapter,
 				  struct mac_ax_pg_efuse_info *info,
 				  enum mac_ax_efuse_read_cfg cfg);
-	u32 (*mask_log_efuse)(struct mac_ax_adapter *adapter,
+	u32 (*mask_log_efuse)(struct mac_adapter *adapter,
 			      struct mac_ax_pg_efuse_info *info);
-	u32 (*pg_sec_data_by_map)(struct mac_ax_adapter *adapter,
+	u32 (*pg_sec_data_by_map)(struct mac_adapter *adapter,
 				  struct mac_ax_pg_efuse_info *info);
-	u32 (*cmp_sec_data_by_map)(struct mac_ax_adapter *adapter,
+	u32 (*cmp_sec_data_by_map)(struct mac_adapter *adapter,
 				   struct mac_ax_pg_efuse_info *info);
-	u32 (*get_efuse_info)(struct mac_ax_adapter *adapter, u8 *efuse_map,
+	u32 (*get_efuse_info)(struct mac_adapter *adapter, u8 *efuse_map,
 			      enum rtw_efuse_info id, void *value,
 			      u32 length, u8 *autoload_status);
-	u32 (*set_efuse_info)(struct mac_ax_adapter *adapter, u8 *efuse_map,
+	u32 (*set_efuse_info)(struct mac_adapter *adapter, u8 *efuse_map,
 			      enum rtw_efuse_info id, void *value, u32 length);
-	u32 (*read_hidden_rpt)(struct mac_ax_adapter *adapter,
+	u32 (*read_hidden_rpt)(struct mac_adapter *adapter,
 			       struct mac_defeature_value *rpt);
-	u32 (*check_efuse_autoload)(struct mac_ax_adapter *adapter,
+	u32 (*check_efuse_autoload)(struct mac_adapter *adapter,
 				    u8 *autoload_status);
-	u32 (*pg_simulator)(struct mac_ax_adapter *adapter,
+	u32 (*pg_simulator)(struct mac_adapter *adapter,
 			    struct mac_ax_pg_efuse_info *info, u8 *phy_map);
-	u32 (*checksum_update)(struct mac_ax_adapter *adapter);
-	u32 (*checksum_rpt)(struct mac_ax_adapter *adapter, u16 *chksum);
-	u32 (*set_efuse_ctrl)(struct mac_ax_adapter *adapter, bool is_secure);
-	u32 (*otp_test)(struct mac_ax_adapter *adapter, bool is_OTP_test);
-	u32 (*get_mac_ft_status)(struct mac_ax_adapter *adapter,
+	u32 (*checksum_update)(struct mac_adapter *adapter);
+	u32 (*checksum_rpt)(struct mac_adapter *adapter, u16 *chksum);
+	u32 (*set_efuse_ctrl)(struct mac_adapter *adapter, bool is_secure);
+	u32 (*otp_test)(struct mac_adapter *adapter, bool is_OTP_test);
+	u32 (*get_mac_ft_status)(struct mac_adapter *adapter,
 				 enum mac_ax_feature mac_ft,
 				 enum mac_ax_status *stat, u8 *buf,
 				 const u32 size, u32 *ret_size);
-	u32 (*fw_log_cfg)(struct mac_ax_adapter *adapter,
+	u32 (*fw_log_cfg)(struct mac_adapter *adapter,
 			  struct mac_ax_fw_log *log_cfg);
-	u32 (*pinmux_set_func)(struct mac_ax_adapter *adapter,
+	u32 (*pinmux_set_func)(struct mac_adapter *adapter,
 			       enum mac_ax_gpio_func func);
-	u32 (*pinmux_free_func)(struct mac_ax_adapter *adapter,
+	u32 (*pinmux_free_func)(struct mac_adapter *adapter,
 				enum mac_ax_gpio_func func);
-	u32 (*sel_uart_tx_pin)(struct mac_ax_adapter *adapter,
+	u32 (*sel_uart_tx_pin)(struct mac_adapter *adapter,
 			       enum mac_ax_uart_tx_pin uart_pin);
-	u32 (*sel_uart_rx_pin)(struct mac_ax_adapter *adapter,
+	u32 (*sel_uart_rx_pin)(struct mac_adapter *adapter,
 			       enum mac_ax_uart_rx_pin uart_pin);
-	u32 (*set_gpio_func)(struct mac_ax_adapter *adapter,
+	u32 (*set_gpio_func)(struct mac_adapter *adapter,
 			     enum mac_ax_gfunc func, s8 gpio);
-	struct mac_ax_hw_info* (*get_hw_info)(struct mac_ax_adapter *adapter);
-	u32 (*set_hw_value)(struct mac_ax_adapter *adapter,
+	struct mac_ax_hw_info* (*get_hw_info)(struct mac_adapter *adapter);
+	u32 (*set_hw_value)(struct mac_adapter *adapter,
 			    enum mac_ax_hw_id hw_id, void *value);
-	u32 (*get_hw_value)(struct mac_ax_adapter *adapter,
+	u32 (*get_hw_value)(struct mac_adapter *adapter,
 			    enum mac_ax_hw_id hw_id, void *value);
-	u32 (*get_err_status)(struct mac_ax_adapter *adapter,
+	u32 (*get_err_status)(struct mac_adapter *adapter,
 			      enum mac_ax_err_info *err);
-	u32 (*set_err_status)(struct mac_ax_adapter *adapter,
+	u32 (*set_err_status)(struct mac_adapter *adapter,
 			      enum mac_ax_err_info err);
-	u32 (*general_pkt_ids)(struct mac_ax_adapter *adapter,
+	u32 (*general_pkt_ids)(struct mac_adapter *adapter,
 			       struct mac_ax_general_pkt_ids *ids);
-	u32 (*coex_init)(struct mac_ax_adapter *adapter,
+	u32 (*coex_init)(struct mac_adapter *adapter,
 			 struct mac_ax_coex *coex);
-	u32 (*coex_read)(struct mac_ax_adapter *adapter,
+	u32 (*coex_read)(struct mac_adapter *adapter,
 			 const u32 offset, u32 *val);
-	u32 (*coex_write)(struct mac_ax_adapter *adapter,
+	u32 (*coex_write)(struct mac_adapter *adapter,
 			  const u32 offset, const u32 val);
-	u32 (*trigger_cmac_err)(struct mac_ax_adapter *adapter);
-	u32 (*trigger_cmac1_err)(struct mac_ax_adapter *adapter);
-	u32 (*trigger_dmac_err)(struct mac_ax_adapter *adapter);
-	u32 (*tsf_sync)(struct mac_ax_adapter *adapter, u8 from_port,
+	u32 (*trigger_cmac_err)(struct mac_adapter *adapter);
+	u32 (*trigger_cmac1_err)(struct mac_adapter *adapter);
+	u32 (*trigger_dmac_err)(struct mac_adapter *adapter);
+	u32 (*tsf_sync)(struct mac_adapter *adapter, u8 from_port,
 			u8 to_port, s32 sync_offset,
 			enum mac_ax_tsf_sync_act action);
 	/* mcc */
-	u32 (*reset_mcc_group)(struct mac_ax_adapter *adapter, u8 group);
-	u32 (*reset_mcc_request)(struct mac_ax_adapter *adapter, u8 group);
-	u32 (*add_mcc)(struct mac_ax_adapter *adapter,
+	u32 (*reset_mcc_group)(struct mac_adapter *adapter, u8 group);
+	u32 (*reset_mcc_request)(struct mac_adapter *adapter, u8 group);
+	u32 (*add_mcc)(struct mac_adapter *adapter,
 		       struct mac_ax_mcc_role *info);
-	u32 (*start_mcc)(struct mac_ax_adapter *adapter,
+	u32 (*start_mcc)(struct mac_adapter *adapter,
 			 u8 group, u8 macid, u32 tsf_high, u32 tsf_low);
-	u32 (*stop_mcc)(struct mac_ax_adapter *adapter, u8 group, u8 macid);
-	u32 (*del_mcc_group)(struct mac_ax_adapter *adapter, u8 group);
-	u32 (*mcc_request_tsf)(struct mac_ax_adapter *adapter, u8 group,
+	u32 (*stop_mcc)(struct mac_adapter *adapter, u8 group, u8 macid);
+	u32 (*del_mcc_group)(struct mac_adapter *adapter, u8 group);
+	u32 (*mcc_request_tsf)(struct mac_adapter *adapter, u8 group,
 			       u8 macid_x, u8 macid_y);
-	u32 (*mcc_macid_bitmap)(struct mac_ax_adapter *adapter, u8 group,
+	u32 (*mcc_macid_bitmap)(struct mac_adapter *adapter, u8 group,
 				u8 macid, u8 *bitmap, u8 len);
-	u32 (*mcc_sync_enable)(struct mac_ax_adapter *adapter, u8 group,
+	u32 (*mcc_sync_enable)(struct mac_adapter *adapter, u8 group,
 			       u8 source, u8 target, u8 offset);
-	u32 (*mcc_set_duration)(struct mac_ax_adapter *adapter,
+	u32 (*mcc_set_duration)(struct mac_adapter *adapter,
 				struct mac_ax_mcc_duration_info *info);
-	u32 (*get_mcc_tsf_rpt)(struct mac_ax_adapter *adapter, u8 group,
+	u32 (*get_mcc_tsf_rpt)(struct mac_adapter *adapter, u8 group,
 			       u32 *tsf_x_high, u32 *tsf_x_low,
 			       u32 *tsf_y_high, u32 *tsf_y_low);
-	u32 (*get_mcc_status_rpt)(struct mac_ax_adapter *adapter, u8 group,
+	u32 (*get_mcc_status_rpt)(struct mac_adapter *adapter, u8 group,
 				  u8 *status, u32 *tsf_high, u32 *tsf_low);
-	u32 (*check_add_mcc_done)(struct mac_ax_adapter *adapter, u8 group);
-	u32 (*check_start_mcc_done)(struct mac_ax_adapter *adapter, u8 group);
-	u32 (*check_stop_mcc_done)(struct mac_ax_adapter *adapter, u8 group);
-	u32 (*check_del_mcc_group_done)(struct mac_ax_adapter *adapter,
+	u32 (*check_add_mcc_done)(struct mac_adapter *adapter, u8 group);
+	u32 (*check_start_mcc_done)(struct mac_adapter *adapter, u8 group);
+	u32 (*check_stop_mcc_done)(struct mac_adapter *adapter, u8 group);
+	u32 (*check_del_mcc_group_done)(struct mac_adapter *adapter,
 					u8 group);
-	u32 (*check_mcc_request_tsf_done)(struct mac_ax_adapter *adapter,
+	u32 (*check_mcc_request_tsf_done)(struct mac_adapter *adapter,
 					  u8 group);
-	u32 (*check_mcc_macid_bitmap_done)(struct mac_ax_adapter *adapter,
+	u32 (*check_mcc_macid_bitmap_done)(struct mac_adapter *adapter,
 					   u8 group);
-	u32 (*check_mcc_sync_enable_done)(struct mac_ax_adapter *adapter,
+	u32 (*check_mcc_sync_enable_done)(struct mac_adapter *adapter,
 					  u8 group);
-	u32 (*check_mcc_set_duration_done)(struct mac_ax_adapter *adapter,
+	u32 (*check_mcc_set_duration_done)(struct mac_adapter *adapter,
 					   u8 group);
 	/* not mcc */
-	u32 (*check_access)(struct mac_ax_adapter *adapter, u32 offset);
-	u32 (*set_led_mode)(struct mac_ax_adapter *adapter,
+	u32 (*check_access)(struct mac_adapter *adapter, u32 offset);
+	u32 (*set_led_mode)(struct mac_adapter *adapter,
 			    enum mac_ax_led_mode mode, u8 led_id);
-	u32 (*led_ctrl)(struct mac_ax_adapter *adapter, u8 high, u8 led_id);
-	u32 (*set_sw_gpio_mode)(struct mac_ax_adapter *adapter,
+	u32 (*led_ctrl)(struct mac_adapter *adapter, u8 high, u8 led_id);
+	u32 (*set_sw_gpio_mode)(struct mac_adapter *adapter,
 				enum mac_ax_sw_io_mode mode, u8 gpio);
-	u32 (*sw_gpio_ctrl)(struct mac_ax_adapter *adapter, u8 high, u8 gpio);
+	u32 (*sw_gpio_ctrl)(struct mac_adapter *adapter, u8 high, u8 gpio);
 #if MAC_AX_FEATURE_DBGPKG
-	u32 (*fwcmd_lb)(struct mac_ax_adapter *adapter, u32 len, u8 burst);
-	u32 (*mem_dump)(struct mac_ax_adapter *adapter, enum mac_ax_mem_sel sel,
+	u32 (*fwcmd_lb)(struct mac_adapter *adapter, u32 len, u8 burst);
+	u32 (*mem_dump)(struct mac_adapter *adapter, enum mac_ax_mem_sel sel,
 			u32 strt_addr, u8 *data, u32 size, u32 dbg_path);
-	u32 (*get_mem_size)(struct mac_ax_adapter *adapter,
+	u32 (*get_mem_size)(struct mac_adapter *adapter,
 			    enum mac_ax_mem_sel sel);
-	void (*dbg_status_dump)(struct mac_ax_adapter *adapter,
+	void (*dbg_status_dump)(struct mac_adapter *adapter,
 				struct mac_ax_dbgpkg *val,
 				struct mac_ax_dbgpkg_en *en);
-	u32 (*reg_dump)(struct mac_ax_adapter *adapter,
+	u32 (*reg_dump)(struct mac_adapter *adapter,
 			enum mac_ax_reg_sel sel);
-	u32 (*rx_cnt)(struct mac_ax_adapter *adapter,
+	u32 (*rx_cnt)(struct mac_adapter *adapter,
 		      struct mac_ax_rx_cnt *rxcnt);
-	u32 (*dump_fw_rsvd_ple)(struct mac_ax_adapter *adapter, u8 **buf);
-	u32 (*fw_dbg_dump)(struct mac_ax_adapter *adapter,
+	u32 (*dump_fw_rsvd_ple)(struct mac_adapter *adapter, u8 **buf);
+	u32 (*fw_dbg_dump)(struct mac_adapter *adapter,
 			   u8 **buf,
 			   struct mac_ax_fwdbg_en *en);
 #endif
 #if MAC_AX_FEATURE_HV
-	u32 (*ram_boot)(struct mac_ax_adapter *adapter, u8 *fw, u32 len);
+	u32 (*ram_boot)(struct mac_adapter *adapter, u8 *fw, u32 len);
 	/*fw offload related*/
-	u32 (*clear_write_request)(struct mac_ax_adapter *adapter);
-	u32 (*add_write_request)(struct mac_ax_adapter *adapter,
+	u32 (*clear_write_request)(struct mac_adapter *adapter);
+	u32 (*add_write_request)(struct mac_adapter *adapter,
 				 struct mac_ax_write_req *req,
 				 u8 *value, u8 *mask);
-	u32 (*write_ofld)(struct mac_ax_adapter *adapter);
-	u32 (*clear_conf_request)(struct mac_ax_adapter *adapter);
-	u32 (*add_conf_request)(struct mac_ax_adapter *adapter,
+	u32 (*write_ofld)(struct mac_adapter *adapter);
+	u32 (*clear_conf_request)(struct mac_adapter *adapter);
+	u32 (*add_conf_request)(struct mac_adapter *adapter,
 				struct mac_ax_conf_ofld_req *req);
-	u32 (*conf_ofld)(struct mac_ax_adapter *adapter);
-	u32 (*clear_read_request)(struct mac_ax_adapter *adapter);
-	u32 (*add_read_request)(struct mac_ax_adapter *adapter,
+	u32 (*conf_ofld)(struct mac_adapter *adapter);
+	u32 (*clear_read_request)(struct mac_adapter *adapter);
+	u32 (*add_read_request)(struct mac_adapter *adapter,
 				struct mac_ax_read_req *req);
-	u32 (*read_ofld)(struct mac_ax_adapter *adapter);
-	u32 (*read_ofld_value)(struct mac_ax_adapter *adapter,
+	u32 (*read_ofld)(struct mac_adapter *adapter);
+	u32 (*read_ofld_value)(struct mac_adapter *adapter,
 			       u8 **val_buf, u16 *val_len);
 #endif
 

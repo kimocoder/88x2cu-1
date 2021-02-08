@@ -36,7 +36,8 @@ halmac-y +=		$(path_hm_ac)/../mac.o
 
 #halmac-y += $(path_hm_d1)/fwcmd.o
 halmac-y += $(path_hm_ac)/fwcmd.o \
-		$(path_hm_ac)/init.o
+		$(path_hm_ac)/init.o \
+		$(path_hm_ac)/trx_desc.o
 
 #halmac-y +=		$(path_hm_d1)/addr_cam.o \
 			$(path_hm_d1)/cmac_tx.o \

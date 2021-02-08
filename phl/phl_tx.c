@@ -1299,8 +1299,6 @@ enum rtw_phl_status rtw_phl_add_tx_req(void *phl,
 	u16 ring_res = 0, rptr = 0;
 
 	drv_priv = phl_to_drvpriv(phl_info);
-	pr_info("%s : NEO : drv_priv = %p\n", __func__, drv_priv);
-	return RTW_PHL_STATUS_RESOURCE;
 
 	_os_spinlock(drv_priv, &phl_info->t_ring_list_lock, _bh, NULL);
 

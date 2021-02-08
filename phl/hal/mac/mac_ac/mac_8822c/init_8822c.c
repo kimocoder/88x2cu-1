@@ -25,10 +25,10 @@
 #include "pwr_seq_8852a.h"
 #include "../hw.h"
 #include "../security_cam.h"
-#include "../trx_desc.h"
 #include "../../feature_cfg.h"
 #endif // if 0 NEO
 
+#include "../trx_desc.h"
 #include "../fwcmd.h"
 
 
@@ -151,7 +151,6 @@ static struct mac_ax_intf_ops mac8852a_pcie_ops = {
 };
 #endif
 
-
 static struct mac_ops mac8822c_ops = {
 	NULL, /* intf_ops */
 #if 0 // NEO
@@ -173,7 +172,9 @@ static struct mac_ops mac8822c_ops = {
 	NULL, /* mac_enable_fw, */ /* enable_fw */
 	NULL, /* mac_lv1_rcvy, */ /* lv1_rcvy */
 	NULL, /* mac_get_macaddr, */
+#endif // NEO if 0
 	NULL, /* mac_build_txdesc, */ /* build_txdesc */
+#if 0 // NEO
 	NULL, /* mac_refill_txdesc, */ /* refill_txdesc */
 	NULL, /* mac_parse_rxdesc, */ /* parse_rxdesc */
 	/*FW offload related*/
@@ -205,8 +206,10 @@ static struct mac_ops mac8822c_ops = {
 	NULL, /* mac_ss_ul_grp_upd, */ /* update SS ul group info*/
 	NULL, /* mac_ss_ul_sta_upd, */ /* add sta into SS ul link*/
 	NULL, /* mac_bacam_info, */ /*update BA CAM info*/
+#endif // NEO if 0
 	/*TRX related*/
-	NULL, /* mac_txdesc_len, */ /* txdesc_len */
+	mac_txdesc_len, /* txdesc_len */
+#if 0 // NEO
 	NULL, /* mac_upd_shcut_mhdr, */ /*update short cut mac header*/
 	NULL, /* mac_enable_hwmasdu, */ /* enable_hwmasdu */
 	NULL, /* mac_enable_cut_hwamsdu, */ /* enable_cut_hwamsdu */

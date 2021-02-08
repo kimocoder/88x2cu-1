@@ -25,16 +25,16 @@
 
 u16 hal_mac_get_macid_num(struct hal_info_t *hal)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 
 	return mac->hw_info->macid_num;
 }
 void hal_mac_get_hwinfo(struct hal_info_t *hal, struct hal_spec_t *hal_spec)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_hw_info *mac_info = mac->hw_info;
 	struct mac_ax_ops *ops = mac->ops;
-	/*struct mac_ax_hw_info* (*get_hw_info)(struct mac_ax_adapter *adapter);*/
+	/*struct mac_ax_hw_info* (*get_hw_info)(struct mac_adapter *adapter);*/
 
 	mac_info = ops->get_hw_info(mac);
 
@@ -65,7 +65,7 @@ void hal_mac_get_hwinfo(struct hal_info_t *hal, struct hal_spec_t *hal_spec)
 enum rtw_hal_status rtw_hal_mac_set_pcicfg(struct hal_info_t *hal_info,
 					struct mac_ax_pcie_cfgspc_param *pci_cfgspc)
 {
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal_info->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 	u32 ret = 0;
 
 	ret = mac->ops->set_hw_value(mac, MAC_AX_HW_PCIE_CFGSPC_SET, pci_cfgspc);
@@ -74,7 +74,7 @@ enum rtw_hal_status rtw_hal_mac_set_pcicfg(struct hal_info_t *hal_info,
 
 enum rtw_hal_status rtw_hal_mac_ltr_sw_trigger(struct hal_info_t *hal_info, enum rtw_pcie_ltr_state state)
 {
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal_info->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 	enum mac_ax_pcie_ltr_sw_ctrl ctrl;
 	enum rtw_hal_status hstats = RTW_HAL_STATUS_FAILURE;
 	u32 ret = 0;
@@ -109,7 +109,7 @@ enum rtw_hal_status rtw_hal_mac_ltr_sw_trigger(struct hal_info_t *hal_info, enum
 enum rtw_hal_status rtw_hal_mac_ltr_set_pcie(struct hal_info_t *hal_info,
 						u8 idle_ctrl, u32 idle_val, u8 act_ctrl, u32 act_val)
 {
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal_info->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 	struct mac_ax_pcie_ltr_param param;
 	u32 ret = 0;
 
@@ -150,7 +150,7 @@ enum rtw_hal_status rtw_hal_mac_ltr_set_pcie(struct hal_info_t *hal_info,
 
 enum rtw_hal_status hal_mac_set_l2_leave(struct hal_info_t *hal_info)
 {
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal_info->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 	u32 ret = 0;
 	u8 set = true;
 
@@ -158,19 +158,22 @@ enum rtw_hal_status hal_mac_set_l2_leave(struct hal_info_t *hal_info)
 	return (ret == MACSUCCESS) ? (RTW_HAL_STATUS_SUCCESS): (RTW_HAL_STATUS_FAILURE);
 }
 
-#endif
+#endif // CONFIG_PCI_HCI
+
+#endif // if 0 NEO
 
 #ifdef CONFIG_USB_HCI
 u8 hal_mac_get_bulkout_id(struct hal_info_t *hal, u8 dma_ch, u8 mode)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 
 	return mac->ops->intf_ops->get_bulkout_id(mac, dma_ch, mode);
 }
 
+#if 0 // NEO
 u32 hal_mac_usb_tx_agg_cfg(struct hal_info_t *hal, u8* wd_buf, u8 agg_num)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_usb_tx_agg_cfg agg;
 
 	agg.pkt = wd_buf;
@@ -182,7 +185,7 @@ u32 hal_mac_usb_tx_agg_cfg(struct hal_info_t *hal, u8* wd_buf, u8 agg_num)
 u32 hal_mac_usb_rx_agg_cfg(struct hal_info_t *hal, u8 agg_mode,
 	u8 drv_define, u8 timeout, u8 size, u8 pkt_num)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_rx_agg_cfg cfg;
 
 	cfg.mode = agg_mode;
@@ -196,7 +199,7 @@ u32 hal_mac_usb_rx_agg_cfg(struct hal_info_t *hal, u8 agg_mode,
 
 enum rtw_hal_status hal_mac_force_usb_switch(struct hal_info_t *hal)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 
 	if(mac->ops->intf_ops->u2u3_switch(mac) == MACSUCCESS) {
 		PHL_INFO("%s,success!\n", __func__);
@@ -210,31 +213,34 @@ enum rtw_hal_status hal_mac_force_usb_switch(struct hal_info_t *hal)
 
 u32 hal_mac_get_cur_usb_mode(struct hal_info_t *hal)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	return mac->ops->intf_ops->get_usb_mode(mac);
 }
 u32 hal_mac_get_usb_support_ability(struct hal_info_t *hal)
 
 {
 
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 
 	return mac->ops->intf_ops->get_usb_support_ability(mac);
 
 }
 u8 hal_mac_usb_get_max_bulkout_wd_num(struct hal_info_t *hal)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 
 	return mac->usb_info.max_bulkout_wd_num;
 }
-#endif
+#endif // if 0 NEO
+#endif // CONFIG_USB_HCI
+
+#if 0 // NEO
 
 #ifdef CONFIG_SDIO_HCI
 u8 hal_mac_sdio_read8(struct rtw_hal_com_t *hal, u32 addr)
 {
 	struct hal_info_t *hal_info = hal->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *mac_api = mac->ops;
 	struct mac_intf_ops *mac_intf_ops = mac_api->intf_ops;
 
@@ -244,7 +250,7 @@ u8 hal_mac_sdio_read8(struct rtw_hal_com_t *hal, u32 addr)
 u16 hal_mac_sdio_read16(struct rtw_hal_com_t *hal, u32 addr)
 {
 	struct hal_info_t *hal_info = hal->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *mac_api = mac->ops;
 	struct mac_intf_ops *mac_intf_ops = mac_api->intf_ops;
 
@@ -254,7 +260,7 @@ u16 hal_mac_sdio_read16(struct rtw_hal_com_t *hal, u32 addr)
 u32 hal_mac_sdio_read32(struct rtw_hal_com_t *hal, u32 addr)
 {
 	struct hal_info_t *hal_info = hal->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *mac_api = mac->ops;
 	struct mac_intf_ops *mac_intf_ops = mac_api->intf_ops;
 
@@ -264,7 +270,7 @@ u32 hal_mac_sdio_read32(struct rtw_hal_com_t *hal, u32 addr)
 int hal_mac_sdio_write8(struct rtw_hal_com_t *hal, u32 addr, u8 value)
 {
 	struct hal_info_t *hal_info = hal->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *mac_api = mac->ops;
 	struct mac_intf_ops *mac_intf_ops = mac_api->intf_ops;
 
@@ -275,7 +281,7 @@ int hal_mac_sdio_write8(struct rtw_hal_com_t *hal, u32 addr, u8 value)
 int hal_mac_sdio_write16(struct rtw_hal_com_t *hal, u32 addr, u16 value)
 {
 	struct hal_info_t *hal_info = hal->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *mac_api = mac->ops;
 	struct mac_intf_ops *mac_intf_ops = mac_api->intf_ops;
 
@@ -286,7 +292,7 @@ int hal_mac_sdio_write16(struct rtw_hal_com_t *hal, u32 addr, u16 value)
 int hal_mac_sdio_write32(struct rtw_hal_com_t *hal, u32 addr, u32 value)
 {
 	struct hal_info_t *hal_info = hal->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *mac_api = mac->ops;
 	struct mac_intf_ops *mac_intf_ops = mac_api->intf_ops;
 
@@ -341,7 +347,7 @@ static void _read_register(struct rtw_hal_com_t *hal, u32 addr, u32 cnt, u8 *buf
 static int _sdio_read_local(struct rtw_hal_com_t *hal, u32 addr, u32 cnt, u8 *buf)
 {
 	/*struct hal_info_t *hal_info = hal->hal_priv;*/
-	/*struct mac_ax_adapter *mac = hal_to_mac(hal_info);*/
+	/*struct mac_adapter *mac = hal_to_mac(hal_info);*/
 	/*struct mac_ax_ops *mac_api = mac->ops;*/
 	/*struct mac_intf_ops *mac_intf_ops = mac_api->intf_ops;*/
 
@@ -374,7 +380,7 @@ void hal_mac_sdio_read_mem(struct rtw_hal_com_t *hal, u32 addr, u32 cnt, u8 *pme
 u8 hal_mac_sdio_iread8(struct rtw_hal_com_t *hal, u32 addr)
 {
 	struct hal_info_t *hal_info = hal->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *mac_api = mac->ops;
 	struct mac_intf_ops *mac_intf_ops = mac_api->intf_ops;
 
@@ -384,7 +390,7 @@ u8 hal_mac_sdio_iread8(struct rtw_hal_com_t *hal, u32 addr)
 u16 hal_mac_sdio_iread16(struct rtw_hal_com_t *hal, u32 addr)
 {
 	struct hal_info_t *hal_info = hal->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *mac_api = mac->ops;
 	struct mac_intf_ops *mac_intf_ops = mac_api->intf_ops;
 
@@ -394,7 +400,7 @@ u16 hal_mac_sdio_iread16(struct rtw_hal_com_t *hal, u32 addr)
 u32 hal_mac_sdio_iread32(struct rtw_hal_com_t *hal, u32 addr)
 {
 	struct hal_info_t *hal_info = hal->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *mac_api = mac->ops;
 	struct mac_intf_ops *mac_intf_ops = mac_api->intf_ops;
 
@@ -838,7 +844,7 @@ void rtw_hal_mac_get_fw_ver(struct hal_info_t *hal_info, char *ver_str, u16 len)
 {
 	RTW_INFO("%s TODO NEO mac_ax_adapter\n", __func__);
 #if 0 // NEO
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	_os_snprintf(ver_str, len, "V%u.%u.%u.%u",
 		     mac->fw_info.major_ver,mac->fw_info.minor_ver,
@@ -973,7 +979,7 @@ void rtw_hal_mac_sdio_cfg(struct rtw_phl_com_t *phl_com,
 			  struct hal_info_t *hal_info,
 			  struct rtw_ic_info *ic_info)
 {
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal_info->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 	struct mac_ax_sdio_info info;
 
 	_os_mem_set(hal_to_drvpriv(hal_info), &info, 0, sizeof(info));
@@ -1011,7 +1017,7 @@ void rtw_hal_mac_sdio_cfg(struct rtw_phl_com_t *phl_com,
 void rtw_hal_mac_sdio_tx_cfg(struct rtw_hal_com_t *hal)
 {
 	struct hal_info_t *hal_info = hal->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	enum mac_ax_sdio_tx_mode mode = MAC_AX_SDIO_TX_MODE_DUMMY_AUTO;
 	u32 err;
 
@@ -1038,7 +1044,7 @@ void rtw_hal_mac_sdio_rx_agg_cfg(struct rtw_hal_com_t *hal, bool enable,
 				 u8 drv_define, u8 timeout, u8 size, u8 pkt_num)
 {
 	struct hal_info_t *hal_info = hal->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_rx_agg_cfg cfg = {MAC_AX_RX_AGG_MODE_NONE};
 
 
@@ -1089,7 +1095,7 @@ bool rtw_hal_mac_sdio_check_tx_allow(struct rtw_hal_com_t *hal, u8 dma_ch,
 				     u32 *txlen)
 {
 	struct hal_info_t *hal_info = hal->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_sdio_tx_info info = {0};
 	int i;
 	u32 err;
@@ -1441,7 +1447,7 @@ int rtw_hal_mac_sdio_parse_rx(struct rtw_hal_com_t *hal,
 			      struct rtw_rx_buf *rxbuf)
 {
 	struct hal_info_t *hal_info = hal->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_rxpkt_info info;
 	struct sdio_rx_pkt *pkt;
 	u8 *ptr;
@@ -1527,7 +1533,7 @@ int rtw_hal_mac_sdio_rx(struct rtw_hal_com_t *hal, struct rtw_rx_buf *rxbuf)
 
 enum rtw_hal_status rtw_hal_mac_get_pwr_state(struct hal_info_t *hal_info, u8 *pwr_state)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *hal_mac_ops = mac->ops;
 
 	/* pwr_state : 1 (mac power on), 0 (mac power off) */
@@ -1545,7 +1551,7 @@ rtw_hal_mac_power_switch(struct rtw_phl_com_t *phl_com,
 			 struct hal_info_t *hal_info,
 			 u8 on_off)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	//u8 pwr_state = 0;
 
 	/*pwr_state = hal_mac_get_pwr_state(mac);
@@ -1563,7 +1569,7 @@ rtw_hal_mac_power_switch(struct rtw_phl_com_t *phl_com,
 bool rtw_hal_mac_reg_chk(struct rtw_hal_com_t *hal_com, u32 addr)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	bool rst = true;
 	u32 mac_rst;
 
@@ -1589,7 +1595,7 @@ enum rtw_hal_status rtw_hal_mac_dbcc_pre_cfg(struct hal_info_t *hal_info, u8 dbc
 {
 	RTW_INFO("%s NEO TODO\n", __func__);
 #if 0 // NEO
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_trx_info trx_info = { 0 };
 	struct mac_ax_pkt_drop_info drop_info = { 0 };
 
@@ -1616,7 +1622,7 @@ enum rtw_hal_status rtw_hal_mac_dbcc_cfg(struct hal_info_t *hal_info, u8 dbcc_en
 {
 	RTW_INFO("%s NEO TODO\n", __func__);
 #if 0 // NEO
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_trx_info trx_info = { 0 };
 
 	if (dbcc_en) {
@@ -1635,7 +1641,7 @@ enum rtw_hal_status rtw_hal_mac_dbcc_cfg(struct hal_info_t *hal_info, u8 dbcc_en
 u32 rtw_hal_mac_coex_init(struct rtw_hal_com_t *hal_com, u8 pta_mode, u8 direction)
 {
 	struct hal_info_t *hal = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_ops *ops = mac->ops;
 	struct mac_ax_coex pta_para;
 
@@ -1648,7 +1654,7 @@ u32 rtw_hal_mac_coex_init(struct rtw_hal_com_t *hal_com, u8 pta_mode, u8 directi
 u32 rtw_hal_mac_coex_reg_read(struct rtw_hal_com_t *hal_com, u32 offset, u32 *value)
 {
 	struct hal_info_t *hal = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_ops *ops = mac->ops;
 
 	/* valid offset -> 0xda00~0xdaff  */
@@ -1660,7 +1666,7 @@ u32 rtw_hal_mac_coex_reg_read(struct rtw_hal_com_t *hal_com, u32 offset, u32 *va
 u32 rtw_hal_mac_set_scoreboard(struct rtw_hal_com_t *hal_com, u32 *value)
 {
 	struct hal_info_t *hal = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_ops *ops = mac->ops;
 
 	return (ops->set_hw_value(mac, MAC_AX_HW_SET_SCOREBOARD, value));
@@ -1669,7 +1675,7 @@ u32 rtw_hal_mac_set_scoreboard(struct rtw_hal_com_t *hal_com, u32 *value)
 u32 rtw_hal_mac_get_scoreboard(struct rtw_hal_com_t *hal_com, u32 *value)
 {
 	struct hal_info_t *hal = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_ops *ops = mac->ops;
 
 	return (ops->get_hw_value(mac, MAC_AX_HW_GET_SCOREBOARD, value));
@@ -1678,7 +1684,7 @@ u32 rtw_hal_mac_get_scoreboard(struct rtw_hal_com_t *hal_com, u32 *value)
 u32 rtw_hal_mac_set_grant(struct rtw_hal_com_t *hal_com, u8 *value)
 {
 	struct hal_info_t *hal = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_ops *ops = mac->ops;
 	struct mac_ax_coex_gnt gnt_val;
 
@@ -1698,7 +1704,7 @@ u32 rtw_hal_mac_set_grant(struct rtw_hal_com_t *hal_com, u8 *value)
 u32 rtw_hal_mac_get_grant(struct rtw_hal_com_t *hal_com, u8 *value)
 {
 	struct hal_info_t *hal = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_ops *ops = mac->ops;
 
 	return (ops->get_hw_value(mac, MAC_AX_HW_GET_COEX_GNT, value));
@@ -1707,7 +1713,7 @@ u32 rtw_hal_mac_get_grant(struct rtw_hal_com_t *hal_com, u8 *value)
 u32 rtw_hal_mac_set_polluted(struct rtw_hal_com_t *hal_com, u8 band, u8 tx_val, u8 rx_val)
 {
 	struct hal_info_t *hal = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_ops *ops = mac->ops;
 	struct mac_ax_plt plt_val;
 
@@ -1721,7 +1727,7 @@ u32 rtw_hal_mac_set_polluted(struct rtw_hal_com_t *hal_com, u8 band, u8 tx_val, 
 u32 rtw_hal_mac_set_tx_time(struct rtw_hal_com_t *hal_com, u8 is_btc, u8 is_resume, u8 macid, u32 tx_time)
 {
 	struct hal_info_t *hal = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_ops *ops = mac->ops;
 	struct mac_ax_max_tx_time max_tx_time;
 	u32 result = 0xffffffff;
@@ -1749,7 +1755,7 @@ u32 rtw_hal_mac_set_tx_time(struct rtw_hal_com_t *hal_com, u8 is_btc, u8 is_resu
 u32 rtw_hal_mac_get_tx_time(struct rtw_hal_com_t *hal_com, u8 macid, u32 *tx_time)
 {
 	struct hal_info_t *hal = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_ops *ops = mac->ops;
 	struct mac_ax_max_tx_time max_tx_time;
 	u32 result;
@@ -1767,7 +1773,7 @@ u32 rtw_hal_mac_get_tx_time(struct rtw_hal_com_t *hal_com, u8 macid, u32 *tx_tim
 u32 rtw_hal_mac_set_tx_retry_limit(struct rtw_hal_com_t *hal_com, u8 is_btc, u8 is_resume, u8 macid, u8 tx_retry)
 {
 	struct hal_info_t *hal = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_ops *ops = mac->ops;
 	struct mac_ax_cctl_rty_lmt_cfg tx_retry_limit;
 	u32 result = 0xffffffff;
@@ -1797,7 +1803,7 @@ u32 rtw_hal_mac_set_tx_retry_limit(struct rtw_hal_com_t *hal_com, u8 is_btc, u8 
 u32 rtw_hal_mac_get_tx_retry_limit(struct rtw_hal_com_t *hal_com, u8 macid, u8 *tx_retry)
 {
 	struct hal_info_t *hal = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_ops *ops = mac->ops;
 	struct mac_ax_rty_lmt tx_retry_limit;
 	u32 result;
@@ -1813,7 +1819,7 @@ u32 rtw_hal_mac_get_tx_retry_limit(struct rtw_hal_com_t *hal_com, u8 macid, u8 *
 u32 rtw_hal_mac_get_bt_polt_cnt(struct rtw_hal_com_t *hal_com, u8 band, u16 *cnt)
 {
 	struct hal_info_t *hal = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_ops *ops = mac->ops;
 	struct mac_ax_bt_polt_cnt polt;
 	u32 result;
@@ -1832,7 +1838,7 @@ u32 rtw_hal_mac_set_coex_ctrl(struct rtw_hal_com_t *hal_com, u32 val)
 	RTW_INFO("%s TODO NEO - set_hw_value\n", __func__);
 #if 0 // NEO
 	struct hal_info_t *hal = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_ops *ops = mac->ops;
 
 	return (ops->set_hw_value(mac, MAC_AX_HW_SET_COEX_CTRL, &val));
@@ -1846,7 +1852,7 @@ u32 rtw_hal_mac_get_coex_ctrl(struct rtw_hal_com_t *hal_com, u32* val)
 	RTW_INFO("%s TODO NEO - get_hw_value\n", __func__);
 #if 0 // NEO
 	struct hal_info_t *hal = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_ops *ops = mac->ops;
 
 	return (ops->get_hw_value(mac, MAC_AX_HW_GET_COEX_CTRL, val));
@@ -1859,7 +1865,7 @@ u32 rtw_hal_mac_get_coex_ctrl(struct rtw_hal_com_t *hal_com, u32* val)
 u32 rtw_hal_mac_coex_reg_write(struct rtw_hal_com_t *hal_com, u32 offset, u32 value)
 {
 	struct hal_info_t *hal = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_ops *ops = mac->ops;
 
 	/* valid offset -> 0xda00~0xdaff  */
@@ -1873,7 +1879,7 @@ u32 rtw_hal_mac_send_h2c(struct rtw_hal_com_t *hal_com,
 	struct rtw_g6_h2c_hdr *hdr, u32 *pvalue)
 {
 	struct hal_info_t *hal = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_ops *ops = mac->ops;
 	u32 h2c_state = 0;
 
@@ -1927,7 +1933,7 @@ enum rtw_hal_status
 rtw_hal_mac_port_init(struct hal_info_t *hal_info,
 					struct rtw_wifi_role_t *wifi_role)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_port_init_para ppara = {0};
 	struct rtw_phl_stainfo_t *phl_sta;
 
@@ -1973,7 +1979,7 @@ rtw_hal_mac_port_cfg(struct hal_info_t *hal_info,
 			struct rtw_wifi_role_t *wifi_role,
 			enum pcfg_type type, void *param)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	enum mac_ax_port_cfg_type ptype = MAC_AX_PCFG_FUNC_SW;
 	struct mac_ax_port_cfg_para ppara = {0};
 
@@ -2182,7 +2188,7 @@ enum rtw_hal_status
 rtw_hal_mac_addr_cam_add_entry(struct hal_info_t *hal_info,
 					struct rtw_phl_stainfo_t *sta)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_role_info mac_rinfo = {0};
 	u32 rst = 0;
 
@@ -2204,7 +2210,7 @@ rtw_hal_mac_addr_cam_change_entry(struct hal_info_t *hal_info,
 					enum phl_upd_mode mode,
 					bool is_connect)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_role_info mac_rinfo = {0};
 
 //NEO : TODO : mark off first
@@ -2221,7 +2227,7 @@ enum rtw_hal_status
 rtw_hal_mac_addr_cam_del_entry(struct hal_info_t *hal_info,
 					struct rtw_phl_stainfo_t *sta)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	if (mac->ops->remove_role(mac, (u8)sta->macid) == MACSUCCESS)
 		return RTW_HAL_STATUS_SUCCESS;
@@ -2232,7 +2238,7 @@ enum rtw_hal_status
 rtw_hal_mac_add_key(struct hal_info_t *hal_info, u8 macid, u8 type, u8 ext_key,
 					u8 spp,	u8 keyid, u8 keytype, u8 *keybuf)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	void *drv = hal_to_drvpriv(hal_info);
 	struct mac_ax_sec_cam_info sec_cam;
 	u32 mac_err;
@@ -2280,7 +2286,7 @@ enum rtw_hal_status
 rtw_hal_mac_delete_key(struct hal_info_t *hal_info, u8 macid, u8 type,
 						u8 ext_key, u8 spp, u8 keyid, u8 keytype)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	u32 mac_err;
 
 	mac_err = mac->ops->sta_del_key(mac, macid, keyid, keytype);
@@ -2298,7 +2304,7 @@ rtw_hal_mac_search_key_idx(struct hal_info_t *hal_info, u8 macid,
 						u8 keyid, u8 keytype)
 {
 	u32 sec_cam_idx;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	sec_cam_idx = mac->ops->sta_search_key_idx(mac, macid, keyid, keytype);
 
@@ -2310,7 +2316,7 @@ rtw_hal_mac_ser_get_error_status(struct hal_info_t *hal_info)
 {
 	enum mac_ax_err_info err = 0;
 
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	mac->ops->get_err_status(mac, &err);
 
 	return err;
@@ -2320,7 +2326,7 @@ u32
 rtw_hal_mac_ser_set_error_status(struct hal_info_t *hal_info, enum RTW_PHL_SER_RCVY_STEP err)
 {
 	u32 mac_err;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	u32 errtohal = 0;
 
 	if(err == RTW_PHL_SER_L1_DISABLE_EN) {
@@ -2345,7 +2351,7 @@ u32
 rtw_hal_mac_lv1_rcvy(struct hal_info_t *hal_info, enum RTW_PHL_SER_LV1_RCVY_STEP step)
 {
 	u32 mac_err;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	mac_err = mac->ops->lv1_rcvy(mac, step);
 
@@ -2375,7 +2381,7 @@ enum rtw_hal_status
 rtw_hal_mac_dbg_dump_fw_rsvd_ple(struct hal_info_t *hal_info)
 {
 /* #if MAC_AX_FEATURE_DBGPKG */
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	u8 *buffer = NULL;
 	u16 bufSize = FW_PLE_SIZE;
 	if(mac->ops->dump_fw_rsvd_ple(mac, &buffer) != 0) {
@@ -2408,7 +2414,7 @@ rtw_hal_mac_dbg_dump_fw_rsvd_ple(struct hal_info_t *hal_info)
 enum rtw_hal_status
 rtw_hal_mac_init_mac(void *mac,struct hal_init_info_t *init_info)
 {
-	struct mac_ax_adapter *mac_info = (struct mac_ax_adapter *)mac;
+	struct mac_adapter *mac_info = (struct mac_adapter *)mac;
 	struct mac_ax_ops *hal_mac_ops = mac_info->ops;
 	struct mac_trx_info trx_info;
 
@@ -2427,7 +2433,7 @@ rtw_hal_mac_init_mac(void *mac,struct hal_init_info_t *init_info)
 enum rtw_hal_status
 rtw_hal_mac_trx_init(void *mac, struct hal_init_info_t *init_info)
 {
-	struct mac_ax_adapter *mac_info = (struct mac_ax_adapter *)mac;
+	struct mac_adapter *mac_info = (struct mac_adapter *)mac;
 	struct mac_ax_ops *hal_mac_ops = mac_info->ops;
 	struct mac_trx_info trx_info;
 
@@ -2446,7 +2452,7 @@ rtw_hal_mac_hal_init(struct rtw_phl_com_t *phl_com,
 		     struct hal_init_info_t *init_info)
 {
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct rtw_fw_info_t *fw_info = &phl_com->fw_info;
 	struct hal_ops_t *hal_ops = hal_get_ops(hal_info);
 	struct mac_ax_fwdl_info fwdl_info;
@@ -2504,7 +2510,7 @@ rtw_hal_mac_hal_fast_init(struct rtw_phl_com_t *phl_com,
 			  struct hal_init_info_t *init_info)
 {
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct rtw_fw_info_t *fw_info = &phl_com->fw_info;
 	struct hal_ops_t *hal_ops = hal_get_ops(hal_info);
 	struct mac_ax_fwdl_info fwdl_info;
@@ -2559,7 +2565,7 @@ enum rtw_hal_status
 rtw_hal_mac_hal_deinit(struct rtw_phl_com_t *phl_com, struct hal_info_t *hal_info)
 {
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	u32 mac_status = 0;
 
 	mac_status = mac->ops->hal_deinit(mac);
@@ -2577,7 +2583,7 @@ rtw_hal_mac_hal_deinit(struct rtw_phl_com_t *phl_com, struct hal_info_t *hal_inf
 enum rtw_hal_status
 rtw_hal_mac_chk_allq_empty(void *mac, u8 *empty)
 {
-	struct mac_ax_adapter *mac_info = (struct mac_ax_adapter *)mac;
+	struct mac_adapter *mac_info = (struct mac_adapter *)mac;
 	struct mac_ax_ops *hal_mac_ops = mac_info->ops;
 
 	return hal_mac_ops->chk_allq_empty(mac_info, empty);
@@ -2587,7 +2593,7 @@ rtw_hal_mac_chk_allq_empty(void *mac, u8 *empty)
 enum rtw_hal_status
 rtw_hal_mac_cfg_wow_sleep(struct hal_info_t *hal_info, u8 sleep)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *hal_mac_ops = mac->ops;
 
 	if (hal_mac_ops->cfg_wow_sleep(mac,sleep))
@@ -2599,7 +2605,7 @@ rtw_hal_mac_cfg_wow_sleep(struct hal_info_t *hal_info, u8 sleep)
 enum rtw_hal_status
 rtw_hal_mac_get_wow_fw_status(struct hal_info_t *hal_info, u8 *status)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *hal_mac_ops = mac->ops;
 
 	if (hal_mac_ops->get_wow_fw_status(mac,status))
@@ -2612,7 +2618,7 @@ enum rtw_hal_status
 rtw_hal_mac_cfg_keep_alive(struct hal_info_t *hal_info, u16 macid, u8 en,
 								struct rtw_keep_alive_info *cfg)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *hal_mac_ops = mac->ops;
 	struct mac_ax_keep_alive_info info = {0};
 
@@ -2636,7 +2642,7 @@ rtw_hal_mac_cfg_keep_alive(struct hal_info_t *hal_info, u16 macid, u8 en,
 enum rtw_hal_status
 rtw_hal_mac_cfg_disc_dec(struct hal_info_t *hal_info, u16 macid, u8 en, struct rtw_disc_det_info *cfg)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *hal_mac_ops = mac->ops;
 	struct mac_ax_disconnect_det_info info = {0};
 
@@ -2663,7 +2669,7 @@ rtw_hal_mac_cfg_disc_dec(struct hal_info_t *hal_info, u16 macid, u8 en, struct r
 enum rtw_hal_status
 rtw_hal_mac_cfg_wow_wake(struct hal_info_t *hal_info, u16 macid, u8 en, struct rtw_wow_wake_info *cfg)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *hal_mac_ops = mac->ops;
 	struct mac_ax_wow_wake_info info = {0};
 	struct mac_ax_remotectrl_info_parm_ *content = NULL;
@@ -2716,7 +2722,7 @@ rtw_hal_mac_cfg_wow_wake(struct hal_info_t *hal_info, u16 macid, u8 en, struct r
 enum rtw_hal_status
 rtw_hal_mac_get_wake_rsn(struct hal_info_t *hal_info, u8 *wake_rsn)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *hal_mac_ops = mac->ops;
 
 	if (hal_mac_ops->get_hw_value(mac, MAC_AX_HW_GET_WAKE_REASON, wake_rsn) != MACSUCCESS)
@@ -2728,7 +2734,7 @@ rtw_hal_mac_get_wake_rsn(struct hal_info_t *hal_info, u8 *wake_rsn)
 enum rtw_hal_status
 rtw_hal_mac_cfg_ndp_ofld(struct hal_info_t *hal_info, u16 macid, u8 en, struct rtw_ndp_ofld_info *cfg)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *hal_mac_ops = mac->ops;
 	struct mac_ax_ndp_ofld_info info = {0};
 	struct mac_ax_ndp_info_parm_ content[2];
@@ -2768,7 +2774,7 @@ rtw_hal_mac_cfg_arp_ofld(struct hal_info_t *hal_info, u16 macid, u8 en,
 								struct rtw_arp_ofld_info *cfg)
 {
 
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *hal_mac_ops = mac->ops;
 	struct mac_ax_arp_ofld_info info = {0};
 
@@ -2791,7 +2797,7 @@ enum rtw_hal_status
 rtw_hal_mac_cfg_wow_cam(struct hal_info_t *hal_info, u16 macid, u8 en,
 							struct rtw_pattern_match_info *cfg)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *hal_mac_ops = mac->ops;
 	struct rtw_wowcam_upd_info *wowcam_info = NULL;
 	struct mac_ax_wowcam_upd_info info;
@@ -2847,7 +2853,7 @@ rtw_hal_mac_cfg_wow_cam(struct hal_info_t *hal_info, u16 macid, u8 en,
 	return RTW_HAL_STATUS_SUCCESS;
 }
 
-static u32 _hal_mac_recv_aoac_report(struct mac_ax_adapter *mac, struct mac_ax_aoac_report *buf, u8 rx_rdy)
+static u32 _hal_mac_recv_aoac_report(struct mac_adapter *mac, struct mac_ax_aoac_report *buf, u8 rx_rdy)
 {
 	struct mac_ax_ops *hal_mac_ops = mac->ops;
 	u32 mac_status = 0;
@@ -3043,7 +3049,7 @@ rtw_hal_mac_get_aoac_rpt(struct hal_info_t *hal_info, struct rtw_aoac_report *ao
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
 #ifndef RTW_WKARD_WOW_SKIP_AOAC_RPT
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 #endif
 	struct mac_ax_aoac_report aoac_rpt_buf;
 	void* drv_priv = hal_to_drvpriv(hal_info);
@@ -3078,7 +3084,7 @@ enum rtw_hal_status
 rtw_hal_mac_cfg_gtk_ofld(struct hal_info_t *hal_info, u16 macid, u8 en,
 								struct rtw_gtk_ofld_info *cfg)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *hal_mac_ops = mac->ops;
 	struct mac_ax_gtk_ofld_info  info;
 	struct mac_ax_gtk_info_parm_ param;
@@ -3134,7 +3140,7 @@ rtw_hal_mac_cfg_gtk_ofld(struct hal_info_t *hal_info, u16 macid, u8 en,
 enum rtw_hal_status rtw_hal_mac_set_wowlan(struct hal_info_t *hal, u8 enter)
 {
 	u32 mac_err = 0;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	enum mac_ax_wow_ctrl ctrl = (enter == 1) ? MAC_AX_WOW_ENTER : MAC_AX_WOW_LEAVE;
 
 	mac_err = mac->ops->intf_ops->set_wowlan(mac, ctrl);
@@ -3148,7 +3154,7 @@ enum rtw_hal_status rtw_hal_mac_set_wowlan(struct hal_info_t *hal, u8 enter)
 #endif /* CONFIG_WOWLAN */
 
 static enum rtw_hal_status
-hal_mac_read_efuse(struct mac_ax_adapter *mac, u32 addr, u32 size,
+hal_mac_read_efuse(struct mac_adapter *mac, u32 addr, u32 size,
 						u8 *val, enum mac_ax_efuse_bank bank)
 {
 	if (mac->ops->read_efuse(mac, addr, size, val, bank) != MACSUCCESS)
@@ -3157,7 +3163,7 @@ hal_mac_read_efuse(struct mac_ax_adapter *mac, u32 addr, u32 size,
 }
 
 static enum rtw_hal_status
-hal_mac_write_efuse(struct mac_ax_adapter *mac, u32 addr, u8 val,
+hal_mac_write_efuse(struct mac_adapter *mac, u32 addr, u8 val,
 						enum mac_ax_efuse_bank bank)
 {
 	if (mac->ops->write_efuse(mac, addr, val, bank) != MACSUCCESS)
@@ -3168,7 +3174,7 @@ hal_mac_write_efuse(struct mac_ax_adapter *mac, u32 addr, u8 val,
 enum rtw_hal_status
 rtw_hal_mac_enable_cpu(struct hal_info_t *hal_info, u8 reason, u8 dlfw)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	if (mac->ops->enable_cpu(mac, reason, dlfw) != MACSUCCESS)
 		return RTW_HAL_STATUS_FAILURE;
@@ -3178,7 +3184,7 @@ rtw_hal_mac_enable_cpu(struct hal_info_t *hal_info, u8 reason, u8 dlfw)
 enum rtw_hal_status
 rtw_hal_mac_disable_cpu(struct hal_info_t *hal_info)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	if (mac->ops->disable_cpu(mac) != MACSUCCESS)
 		return RTW_HAL_STATUS_FAILURE;
@@ -3188,7 +3194,7 @@ rtw_hal_mac_disable_cpu(struct hal_info_t *hal_info)
 enum rtw_hal_status
 rtw_hal_mac_romdl(struct hal_info_t *hal_info, u8 *rom_buf, u32 rom_size)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	u32 rom_addr = 0x18900000;
 
 	if (mac->ops->romdl(mac, rom_buf, rom_addr, rom_size) != MACSUCCESS)
@@ -3199,7 +3205,7 @@ rtw_hal_mac_romdl(struct hal_info_t *hal_info, u8 *rom_buf, u32 rom_size)
 enum rtw_hal_status
 rtw_hal_mac_fwdl(struct hal_info_t *hal_info, u8 *fw_buf, u32 fw_size)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	u32 mac_err;
 
 	mac_err = mac->ops->fwdl(mac, fw_buf, fw_size);
@@ -3216,7 +3222,7 @@ rtw_hal_mac_fwdl(struct hal_info_t *hal_info, u8 *fw_buf, u32 fw_size)
 enum rtw_hal_status
 rtw_hal_mac_enable_fw(struct hal_info_t *hal_info, u8 fw_type)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	u32 mac_err;
 
 	mac_err = mac->ops->enable_fw(mac, fw_type);
@@ -3227,22 +3233,23 @@ rtw_hal_mac_enable_fw(struct hal_info_t *hal_info, u8 fw_type)
 	return RTW_HAL_STATUS_SUCCESS;
 }
 
+#endif // if 0 NEO
 
-void hal_mac_ax_fill_txpkt_info(struct rtw_xmit_req *treq,
-				struct mac_ax_txpkt_info *txpkt_info)
+void hal_mac_fill_txpkt_info(struct rtw_xmit_req *treq,
+				struct mac_txpkt_info *txpkt_info)
 {
 	do {
 		txpkt_info->pktsize = treq->mdata.pktlen;
 
 		switch (treq->mdata.type) {
 		case RTW_PHL_PKT_TYPE_H2C:
-			txpkt_info->type = MAC_AX_PKT_H2C;
+			txpkt_info->type = MAC_PKT_H2C;
 			break;
 		case RTW_PHL_PKT_TYPE_MGNT:
-			txpkt_info->type = MAC_AX_PKT_MGNT;
+			txpkt_info->type = MAC_PKT_MGNT;
 			break;
 		case RTW_PHL_PKT_TYPE_DATA:
-			txpkt_info->type = MAC_AX_PKT_DATA;
+			txpkt_info->type = MAC_PKT_DATA;
 			break;
 		default:
 			PHL_WARN("Unknown packet type\n");
@@ -3251,7 +3258,7 @@ void hal_mac_ax_fill_txpkt_info(struct rtw_xmit_req *treq,
 		PHL_DBG("txpkt_info->type:0x%x \n",
 			txpkt_info->type);
 
-		if (txpkt_info->type == MAC_AX_PKT_H2C) {
+		if (txpkt_info->type == MAC_PKT_H2C) {
 			/* H2C doesn't need txpkt info->u.data */
 			break;
 		} else {
@@ -3360,10 +3367,9 @@ void hal_mac_ax_fill_txpkt_info(struct rtw_xmit_req *treq,
 
 }
 
-
 /*   */
 /**
- * rtw_hal_mac_ax_fill_txdesc
+ * rtw_hal_mac_fill_txdesc
  * @mac: see struct mac_ax_adapter
  * @treq: the xmit request for this tx descriptor
  * @wd_buf: the wd buffer to fill
@@ -3372,17 +3378,17 @@ void hal_mac_ax_fill_txpkt_info(struct rtw_xmit_req *treq,
  * Note,halmac API for hal and proto type is at hal_api_mac.h
  */
 enum rtw_hal_status
-rtw_hal_mac_ax_fill_txdesc(void *mac, struct rtw_xmit_req *treq,
+rtw_hal_mac_fill_txdesc(void *mac, struct rtw_xmit_req *treq,
 				u8 *wd_buf, u32 *wd_len)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac_info = (struct mac_ax_adapter *)mac;
+	struct mac_adapter *mac_info = (struct mac_adapter *)mac;
 	struct rtw_hal_com_t *hal_com = (struct rtw_hal_com_t *)mac_info->drv_adapter;
-	struct mac_ax_txpkt_info txpkt_info;
+	struct mac_txpkt_info txpkt_info;
 
 	_os_mem_set(hal_com->drv_priv, &txpkt_info, 0, sizeof(txpkt_info));
 
-	hal_mac_ax_fill_txpkt_info(treq, &txpkt_info);
+	hal_mac_fill_txpkt_info(treq, &txpkt_info);
 
 	*wd_len = mac_info->ops->txdesc_len(
 		mac_info,
@@ -3397,8 +3403,10 @@ rtw_hal_mac_ax_fill_txdesc(void *mac, struct rtw_xmit_req *treq,
 	return hal_status;
 }
 
+#if 0 // NEO
+
 /**
- * rtw_hal_mac_ax_fill_txdesc
+ * rtw_hal_mac_set_hw_ampdu_cfg
  * @hal_info: see struct hal_info_t
  * @band: target band this AMPDU going to send
  * @max_agg_num: AMPDU maximum aggregation number
@@ -3413,7 +3421,7 @@ enum rtw_hal_status
 rtw_hal_mac_set_hw_ampdu_cfg(struct hal_info_t *hal_info, u8 band,
 								  u16 max_agg_num, u8 max_agg_time)
 {
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal_info->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 	struct mac_ax_ampdu_cfg info;
 	u32 mac_err;
 
@@ -3449,7 +3457,7 @@ enum rtw_hal_status rtw_hal_dmc_tbl_cfg(struct hal_info_t *hal_info,
 					u16 macid)
 {
 	enum rtw_hal_status sts = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal_info->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 	struct mac_ax_dctl_info dctl_info_mask;
 	u32 ret = 0;
 
@@ -3485,7 +3493,7 @@ enum rtw_hal_status rtw_hal_cmc_tbl_cfg(struct hal_info_t *hal_info,
 					u16 macid)
 {
 	enum rtw_hal_status sts = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal_info->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 	u32 ret = 0;
 	cctl_info_mask->addr_cam_index = 0;
 
@@ -3514,7 +3522,7 @@ enum rtw_hal_status rtw_hal_bacam_cfg(struct hal_info_t *hal_info,
 				      struct mac_ax_bacam_info *ba_cam)
 {
 	enum rtw_hal_status sts = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal_info->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 	u32 ret = 0;
 
 	ret = mac->ops->bacam_info(mac, ba_cam);
@@ -3549,7 +3557,7 @@ enum rtw_hal_status rtw_hal_mac_set_bw(struct hal_info_t *hal_info,
 			u8 band_idx, u8 pri_ch,	u8 central_ch_seg0,
 			u8 central_ch_seg1,	enum channel_width bw)
 {
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal_info->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 	struct mac_ax_cfg_bw mac_bw = {0};
 	u32 ret = 0;
 
@@ -3572,7 +3580,7 @@ rtw_hal_mac_ax_init_bf_role(struct rtw_hal_com_t *hal_com, u8 bf_role, u8 band)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac_info = hal_to_mac(hal_info);
+	struct mac_adapter *mac_info = hal_to_mac(hal_info);
 
 	if (bf_role == HAL_BF_ROLE_BFEE) {
 		hal_status = mac_info->ops->init_snd_mee(
@@ -3593,10 +3601,10 @@ enum rtw_hal_status
 rtw_hal_mac_ax_deinit_bfee(struct rtw_hal_com_t *hal_com, u8 band)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
 
-	struct mac_ax_adapter *mac_info = (struct mac_ax_adapter *)mac;
+	struct mac_adapter *mac_info = (struct mac_adapter *)mac;
 	PHL_TRACE(COMP_PHL_DBG, _PHL_INFO_, "--> %s : Warning BFee is going to deinit\n", __func__);
 
 	hal_status = mac_info->ops->deinit_mee(mac_info, band);
@@ -3615,7 +3623,7 @@ enum rtw_hal_status
 rtw_hal_mac_ax_bfee_para_reg(void *mac, struct rtw_phl_stainfo_t *sta)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac_info = (struct mac_ax_adapter *)mac;
+	struct mac_adapter *mac_info = (struct mac_adapter *)mac;
 	struct rtw_hal_com_t *hal_com = (struct rtw_hal_com_t *)mac_info->drv_adapter;
 	struct mac_reg_csi_para csi_para;
 
@@ -3674,7 +3682,7 @@ enum rtw_hal_status
 rtw_hal_mac_ax_bfee_para_cctl(void *mac, struct rtw_phl_stainfo_t *sta)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac_info = (struct mac_ax_adapter *)mac;
+	struct mac_adapter *mac_info = (struct mac_adapter *)mac;
 	struct rtw_hal_com_t *hal_com =
 		(struct rtw_hal_com_t *)mac_info->drv_adapter;
 	struct mac_cctl_csi_para csi_para;
@@ -3731,7 +3739,7 @@ rtw_hal_mac_ax_bfee_set_csi_rrsc(void *mac, u8 band, u32 rrsc)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
 
-	struct mac_ax_adapter *mac_info = (struct mac_ax_adapter *)mac;
+	struct mac_adapter *mac_info = (struct mac_adapter *)mac;
 
 	hal_status = mac_info->ops->csi_rrsc(mac_info, band, rrsc);
 
@@ -3741,7 +3749,7 @@ rtw_hal_mac_ax_bfee_set_csi_rrsc(void *mac, u8 band, u32 rrsc)
 /**
  * rtw_hal_mac_ax_bfee_forced_csi_rate
  * 	set bf report frame rate
- * @mac:(struct mac_ax_adapter *)
+ * @mac:(struct mac_adapter *)
  * @ht_rate:
  * @vht_rate:
  * @he_rate:
@@ -3752,7 +3760,7 @@ rtw_hal_mac_ax_bfee_forced_csi_rate(void *mac, struct rtw_phl_stainfo_t *sta,
 	u8 ht_rate, u8 vht_rate, u8 he_rate)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac_info = (struct mac_ax_adapter *)mac;
+	struct mac_adapter *mac_info = (struct mac_adapter *)mac;
 
 	hal_status = mac_info->ops->csi_force_rate(mac_info,
 		sta->wrole->hw_band, ht_rate, vht_rate, he_rate);
@@ -3775,7 +3783,7 @@ rtw_hal_mac_ax_set_bf_entry(void *mac, u8 band,
 		u8 macid, u8 bfee_idx, u16 txbf_idx, u16 buffer_idx)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac_info = (struct mac_ax_adapter *)mac;
+	struct mac_adapter *mac_info = (struct mac_adapter *)mac;
 	/* 1. CSI Buffer Idx */
 	PHL_TRACE(COMP_PHL_SOUND, _PHL_INFO_, "set_csi_buffer_index : band 0x%x macid 0x%x txbf_idx 0x%x buffer_idx 0x%x\n",
 				       band, macid, txbf_idx, buffer_idx);
@@ -3809,7 +3817,7 @@ enum rtw_hal_status
 rtw_hal_mac_ax_get_snd_sts(void *mac, u8 band, u8 bfee_idx)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac_info = (struct mac_ax_adapter *)mac;
+	struct mac_adapter *mac_info = (struct mac_adapter *)mac;
 	u32 sts = 0;
 
 	PHL_TRACE(COMP_PHL_SOUND, _PHL_INFO_, "get_snd_sts_index: band 0x%x bf_idx 0x%x\n", band, bfee_idx);
@@ -3834,7 +3842,7 @@ rtw_hal_mac_ax_hw_snd_control(
 	u8 hw_snd_ctrl)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac_info = (struct mac_ax_adapter *)mac;
+	struct mac_adapter *mac_info = (struct mac_adapter *)mac;
 	PHL_TRACE(COMP_PHL_SOUND, _PHL_INFO_,
 		  "mac_hw_snd_pause_release: band 0x%x hw_snd_ctrl 0x%x\n",
 		  band, hw_snd_ctrl);
@@ -3850,7 +3858,7 @@ rtw_hal_mac_ax_hw_snd_control(
 /* Tx Frame Exchange Related : MU */
 /**
  * rtw_hal_mac_ax_mu_sta_upd
- * @mac:  (struct mac_ax_adapter *)
+ * @mac:  (struct mac_adapter *)
  * @macid: sta macid for configuration
  * @bfmu_idx: 0~5, MU STA Index
  * @prot_type: RTS/CTS type for the group : enum rtw_hal_protection_type
@@ -3863,7 +3871,7 @@ rtw_hal_mac_ax_mu_sta_upd(void *mac, u8 macid, u8 bfmu_idx,
 			enum rtw_hal_ack_resp_type resp_type, u8 mugrp_bm)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac_info = (struct mac_ax_adapter *)mac;
+	struct mac_adapter *mac_info = (struct mac_adapter *)mac;
 	struct rtw_hal_com_t *hal_com =
 		(struct rtw_hal_com_t *)mac_info->drv_adapter;
 	struct mac_ax_mu_sta_upd sta_info;
@@ -3898,7 +3906,7 @@ rtw_hal_mac_ax_mu_sta_upd(void *mac, u8 macid, u8 bfmu_idx,
 
 /**
  * rtw_hal_mac_ax_mu_decision_para
- * @mac:  (struct mac_ax_adapter *)
+ * @mac:  (struct mac_adapter *)
  * @mu_thold:  MU MIMO pkt Threshold
  * @bypass_thold: by pass mu_thold
  * @bypass_tp: by pass MU TP > SU TP check.
@@ -3908,7 +3916,7 @@ rtw_hal_mac_ax_mu_decision_para(void *mac, u32 mu_thold,
 				bool bypass_thold, bool bypass_tp)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac_info = (struct mac_ax_adapter *)mac;
+	struct mac_adapter *mac_info = (struct mac_adapter *)mac;
 	struct rtw_hal_com_t *hal_com =
 		(struct rtw_hal_com_t *)mac_info->drv_adapter;
 	struct mac_ax_mudecision_para mu_d_para;
@@ -3926,7 +3934,7 @@ rtw_hal_mac_ax_mu_decision_para(void *mac, u32 mu_thold,
 
 /**
  * rtw_hal_mac_ax_set_mu_fix_mode
- * @mac:  (struct mac_ax_adapter *)
+ * @mac:  (struct mac_adapter *)
  * @gid:  GID for STA X + STAY
  * @prot_type: RTS/CTS type for the group : enum rtw_hal_protection_type
  * @resp_type: Ack Policy for the group : enum rtw_hal_ack_resp_type
@@ -3942,7 +3950,7 @@ rtw_hal_mac_ax_set_mu_fix_mode(
 	bool fix_mu, bool he, bool fix_resp, bool fix_prot)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac_info = (struct mac_ax_adapter *)mac;
+	struct mac_adapter *mac_info = (struct mac_adapter *)mac;
 	struct rtw_hal_com_t *hal_com =
 		(struct rtw_hal_com_t *)mac_info->drv_adapter;
 	struct mac_ax_fixmode_para fix_info;
@@ -3994,14 +4002,14 @@ _hal_mac_fill_mu_sc_tbl_row(u32 *mac_score, void *hal_score)
 }
 /**
  * rtw_hal_mac_ax_set_mu_table_whole
-* @mac:  (struct mac_ax_adapter *)
+* @mac:  (struct mac_adapter *)
  *@hal_score_tbl:  struct hal_mu_score_tbl *
  */
 enum rtw_hal_status
 rtw_hal_mac_ax_set_mu_table_whole(void *mac, void *hal_score_tbl)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac_info = (struct mac_ax_adapter *)mac;
+	struct mac_adapter *mac_info = (struct mac_adapter *)mac;
 	struct rtw_hal_com_t *hal_com =
 		(struct rtw_hal_com_t *)mac_info->drv_adapter;
 	struct mac_mu_table mu_table;
@@ -4111,7 +4119,7 @@ rtw_hal_mac_ax_parse_ppdu_sts(void *hal, u8 mac_valid, u8 *buf, u16 buf_l,
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_SUCCESS;
 	struct hal_info_t *hal_info = (struct hal_info_t *)hal;
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal_info->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 	struct mac_ax_ppdu_rpt ppdu_rpt = {0};
 
 	PHL_DBG("%s\n", __FUNCTION__);
@@ -4140,7 +4148,7 @@ enum rtw_hal_status rtw_hal_hdr_conv_cfg(struct hal_info_t *hal_info,
 				      u8 en_hdr_conv)
 {
 	enum rtw_hal_status sts = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal_info->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 	u32 ret = 0;
 
 	ret = mac->ops->hdr_conv(mac, en_hdr_conv);
@@ -4161,7 +4169,7 @@ enum rtw_hal_status rtw_hal_hdr_conv_cfg(struct hal_info_t *hal_info,
 enum rtw_hal_status
 hal_mac_ax_config_beacon(struct hal_info_t *hal, struct rtw_bcn_entry *bcn_entry)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct rtw_bcn_info_cmn *bcn_cmn = bcn_entry->bcn_cmn;
 	struct rtw_bcn_info_hw *bcn_hw = &bcn_entry->bcn_hw;
 	enum mac_ax_port_cfg_type ptype;
@@ -4188,7 +4196,7 @@ enum rtw_hal_status
 hal_mac_ax_send_beacon(struct hal_info_t *hal, struct rtw_bcn_entry *bcn_entry)
 {
 
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct rtw_bcn_info_cmn *bcn_cmn = bcn_entry->bcn_cmn;
 	struct rtw_bcn_info_hw *bcn_hw = &bcn_entry->bcn_hw;
 	struct mac_ax_bcn_info info = {0};
@@ -4233,7 +4241,7 @@ rtw_hal_mac_ppdu_stat_cfg(struct hal_info_t *hal_info,
 					u8 appen_info,
 					u8 filter)
 {
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal_info->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 	struct mac_ax_phy_rpt_cfg cfg = {0};
 
 	cfg.en = ppdu_stat_en;
@@ -4267,7 +4275,7 @@ rtw_hal_mac_ppdu_stat_cfg(struct hal_info_t *hal_info,
 
 enum rtw_hal_status rtw_hal_mac_config_hw_mgnt_sec(struct hal_info_t *hal_info, u8 en)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *hal_mac_ops = mac->ops;
 
 	hal_mac_ops->sta_hw_security_support(mac, SEC_UC_MGNT_ENC, en);
@@ -4282,7 +4290,7 @@ rtw_hal_mac_chan_info_cfg(struct hal_info_t *hal_info,
 				bool chinfo_en, u8 macid,
 				u8 mode, u8 filter, u8 sg_size)
 {
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal_info->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 	struct mac_ax_phy_rpt_cfg cfg = {0};
 
 	cfg.en = chinfo_en;
@@ -4311,7 +4319,7 @@ enum rtw_hal_status
 rtw_hal_dbg_status_dump(struct hal_info_t *hal, u32 *val, u8 *en)
 {
 #if MAC_AX_FEATURE_DBGPKG
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 
 	mac->ops->dbg_status_dump(mac, (struct mac_ax_dbgpkg *)val, (struct mac_ax_dbgpkg_en *)en);
 #endif
@@ -4324,7 +4332,7 @@ enum rtw_hal_status
 rtw_hal_mac_dfs_rpt_cfg(struct hal_info_t *hal_info,
 				bool rpt_en, u8 rpt_num, u8 rpt_to)
 {
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal_info->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 	struct mac_ax_phy_rpt_cfg cfg = {0};
 
 	cfg.en = rpt_en;
@@ -4347,7 +4355,7 @@ enum rtw_hal_status
 rtw_hal_mac_parse_dfs(struct hal_info_t *hal_info,
 			u8 *buf, u32 buf_len, struct mac_ax_dfs_rpt *dfs_rpt)
 {
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal_info->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 
 	if (mac->ops->parse_dfs(mac, buf, buf_len, dfs_rpt) != MACSUCCESS) {
 		PHL_ERR("%s fault\n", __func__);
@@ -4364,7 +4372,7 @@ enum rtw_hal_status
 _hal_mac_get_pkt_ofld(struct hal_info_t *hal_info, u8 *id)
 {
 	struct rtw_hal_com_t *hal_com = hal_info->hal_com;
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal_info->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 	u8 *pkt_buf = NULL;
 	u16 pkt_len;
 
@@ -4384,7 +4392,7 @@ _hal_mac_get_pkt_ofld(struct hal_info_t *hal_info, u8 *id)
 enum rtw_hal_status
 _hal_mac_chk_pkt_ofld(struct hal_info_t *hal_info)
 {
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal_info->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 	void *d = hal_to_drvpriv(hal_info);
 	u16 loop_cnt = 0;
 
@@ -4413,7 +4421,7 @@ _hal_mac_chk_pkt_ofld(struct hal_info_t *hal_info)
 enum rtw_hal_status
 _hal_mac_add_pkt_ofld(struct hal_info_t *hal_info, u8 *pkt, u16 len, u8 *id)
 {
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal_info->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 	u32 status;
 
 	if(mac == NULL)
@@ -4435,7 +4443,7 @@ _hal_mac_add_pkt_ofld(struct hal_info_t *hal_info, u8 *pkt, u16 len, u8 *id)
 enum rtw_hal_status
 _hal_mac_del_pkt_ofld(struct hal_info_t *hal_info, u8 *id)
 {
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal_info->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 	u32 status;
 
 	if(mac == NULL)
@@ -4456,7 +4464,7 @@ _hal_mac_del_pkt_ofld(struct hal_info_t *hal_info, u8 *id)
 enum rtw_hal_status
 _hal_mac_read_pkt_ofld(struct hal_info_t *hal_info, u8 *id)
 {
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal_info->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 	u32 status;
 
 	if(mac == NULL)
@@ -4509,7 +4517,7 @@ enum rtw_hal_status rtw_hal_mac_pkt_ofld(struct hal_info_t *hal, u8 *id, u8 op,
 enum rtw_hal_status rtw_hal_mac_pkt_update_ids(struct hal_info_t *hal,
 						struct pkt_ofld_entry *entry)
 {
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal->mac;
 	struct mac_ax_general_pkt_ids mac_ids = {0};
 	u32 status;
 
@@ -4538,7 +4546,7 @@ enum rtw_hal_status rtw_hal_mac_pkt_update_ids(struct hal_info_t *hal,
 enum rtw_hal_status
 rtw_hal_mac_reset_pkt_ofld_state(struct hal_info_t *hal_info)
 {
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal_info->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 
 	if (mac == NULL)
 		return RTW_HAL_STATUS_MAC_INIT_FAILURE;
@@ -4746,7 +4754,7 @@ rtw_hal_mac_get_log_efuse_size(struct rtw_hal_com_t *hal_com, u32 *val,
 							   bool is_limited)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	if(is_limited == true) {
 		if(mac->ops->get_hw_value(mac,
 				MAC_AX_HW_GET_LIMIT_LOG_EFUSE_SIZE, val) != MACSUCCESS){
@@ -4772,7 +4780,7 @@ rtw_hal_mac_read_log_efuse_map(struct rtw_hal_com_t *hal_com, u8 *map,
 							   bool is_limited)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	if (mac->ops->dump_log_efuse(mac,
 			MAC_AX_EFUSE_PARSER_MAP,
@@ -4809,7 +4817,7 @@ rtw_hal_mac_write_log_efuse_map(struct rtw_hal_com_t *hal_com,
 								bool is_limited)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_pg_efuse_info info;
 	enum rtw_hal_status status = RTW_HAL_STATUS_EFUSE_PG_FAIL;
 	u8 *tmp_map = NULL;
@@ -4881,7 +4889,7 @@ rtw_hal_mac_read_hidden_rpt(struct rtw_hal_com_t *hal_com)
 {
 
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_defeature_value rpt;
 	u32 err;
 
@@ -4917,7 +4925,7 @@ enum rtw_hal_status
 rtw_hal_mac_check_efuse_autoload(struct rtw_hal_com_t *hal_com, u8 *autoload)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	if (mac->ops->check_efuse_autoload(mac, autoload) != MACSUCCESS)
 		return RTW_HAL_STATUS_FAILURE;
@@ -4934,7 +4942,7 @@ enum rtw_hal_status
 rtw_hal_mac_get_efuse_avl(struct rtw_hal_com_t *hal_com, u32 *val)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	if (mac->ops->get_efuse_avl_size(mac, val) != MACSUCCESS)
 		return RTW_HAL_STATUS_FAILURE;
@@ -4947,7 +4955,7 @@ enum rtw_hal_status
 rtw_hal_mac_get_efuse_size(struct rtw_hal_com_t *hal_com, u32 *val)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	if (mac->ops->get_hw_value(mac,
 		MAC_AX_HW_GET_EFUSE_SIZE, val) != MACSUCCESS){
@@ -4964,7 +4972,7 @@ rtw_hal_mac_get_efuse_mask_size(struct rtw_hal_com_t *hal_com, u32 *val,
 								bool is_limited)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	if(is_limited == true) {
 		if(mac->ops->get_hw_value(mac,
@@ -4987,7 +4995,7 @@ rtw_hal_mac_get_efuse_info(struct rtw_hal_com_t *hal_com,
 	u8 size, u8 map_valid)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	PHL_INFO("%s\n", __FUNCTION__);
 
@@ -5002,7 +5010,7 @@ rtw_hal_mac_read_phy_efuse(struct rtw_hal_com_t *hal_com,
 	u32 addr, u32 size, u8 *value)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	PHL_INFO("%s\n", __FUNCTION__);
 
@@ -5015,7 +5023,7 @@ rtw_hal_mac_read_phy_efuse(struct rtw_hal_com_t *hal_com,
 u32 rtw_hal_mac_set_pwr_reg(struct rtw_hal_com_t *hal_com, u8 band, u32 offset, u32 val){
 
 	struct hal_info_t *hal = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_ops *ops = mac->ops;
 	u32 result = 0;
 
@@ -5029,7 +5037,7 @@ u32 rtw_hal_mac_set_pwr_reg(struct rtw_hal_com_t *hal_com, u8 band, u32 offset, 
 
 u32 rtw_hal_mac_get_pwr_reg(struct rtw_hal_com_t *hal_com, u8 band, u32 offset, u32 *val){
 	struct hal_info_t *hal = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_ops *ops = mac->ops;
 	u32 result = 0;
 
@@ -5044,7 +5052,7 @@ u32 rtw_hal_mac_get_pwr_reg(struct rtw_hal_com_t *hal_com, u8 band, u32 offset, 
 enum rtw_hal_status
 rtw_hal_mac_get_xcap(struct rtw_hal_com_t *hal_com, u8 sc_xo, u32 *value){
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *ops = mac->ops;
 	enum rtw_hal_status ret = RTW_HAL_STATUS_SUCCESS;
 
@@ -5059,7 +5067,7 @@ rtw_hal_mac_get_xcap(struct rtw_hal_com_t *hal_com, u8 sc_xo, u32 *value){
 enum rtw_hal_status
 rtw_hal_mac_set_xcap(struct rtw_hal_com_t *hal_com, u8 sc_xo, u32 value){
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *ops = mac->ops;
 	enum rtw_hal_status ret = RTW_HAL_STATUS_SUCCESS;
 
@@ -5074,7 +5082,7 @@ rtw_hal_mac_set_xcap(struct rtw_hal_com_t *hal_com, u8 sc_xo, u32 value){
 enum rtw_hal_status
 rtw_hal_mac_fw_dbg_dump(struct hal_info_t *hal_info, u8 is_low_power)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	u8 *buffer = NULL;
 	u16 bufSize = FW_PLE_SIZE;
 	struct mac_ax_fwdbg_en en;
@@ -5108,7 +5116,7 @@ rtw_hal_mac_fw_dbg_dump(struct hal_info_t *hal_info, u8 is_low_power)
 enum rtw_hal_status
 rtw_hal_mac_req_pwr_state(struct hal_info_t *hal_info, u8 pwr_lvl)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	if(mac->ops->lps_pwr_state(mac, MAC_AX_PWR_STATE_ACT_REQ, pwr_lvl)
 			== MACSUCCESS)
@@ -5120,7 +5128,7 @@ rtw_hal_mac_req_pwr_state(struct hal_info_t *hal_info, u8 pwr_lvl)
 enum rtw_hal_status
 rtw_hal_mac_chk_pwr_state(struct hal_info_t *hal_info, u8 pwr_lvl)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	if(mac->ops->lps_pwr_state(mac, MAC_AX_PWR_STATE_ACT_CHK, pwr_lvl)
 			== MACSUCCESS)
@@ -5133,7 +5141,7 @@ enum rtw_hal_status
 rtw_hal_mac_lps_cfg(struct hal_info_t *hal_info,
 			struct rtw_hal_lps_info *lps_info)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	enum mac_ax_ps_mode ax_ps_mode;
 	struct mac_ax_lps_info ax_lps_info;
 
@@ -5157,7 +5165,7 @@ rtw_hal_mac_lps_cfg(struct hal_info_t *hal_info,
 enum rtw_hal_status
 rtw_hal_mac_lps_chk_leave(struct hal_info_t *hal_info, u8 macid)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	if(mac->ops->chk_leave_lps(mac, macid) == MACSUCCESS)
 		return RTW_HAL_STATUS_SUCCESS;
@@ -5168,7 +5176,7 @@ rtw_hal_mac_lps_chk_leave(struct hal_info_t *hal_info, u8 macid)
 enum rtw_hal_status
 rtw_hal_mac_lps_chk_access(struct hal_info_t *hal_info, u32 offset)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	if(mac->ops->lps_chk_access(mac, offset) == MACSUCCESS)
 		return RTW_HAL_STATUS_SUCCESS;
@@ -5178,7 +5186,7 @@ rtw_hal_mac_lps_chk_access(struct hal_info_t *hal_info, u32 offset)
 
 enum rtw_hal_status
 rtw_hal_mac_get_rx_cnt(struct hal_info_t *hal_info, u8 cur_phy_idx, u8 type_idx, u32 *ret_value){
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *ops = mac->ops;
 	enum rtw_hal_status ret = RTW_HAL_STATUS_SUCCESS;
 
@@ -5211,7 +5219,7 @@ rtw_hal_mac_get_rx_cnt(struct hal_info_t *hal_info, u8 cur_phy_idx, u8 type_idx,
 enum rtw_hal_status
 rtw_hal_mac_set_reset_rx_cnt(struct hal_info_t *hal_info, u8 cur_phy_idx)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_ops *ops = mac->ops;
 	enum rtw_hal_status ret = RTW_HAL_STATUS_SUCCESS;
 
@@ -5258,7 +5266,7 @@ rtw_hal_mac_set_sch_tx_en(struct rtw_hal_com_t *hal_com, u8 band_idx,
 						u16 tx_en, u16 tx_en_mask)
 {
 	struct hal_info_t *hal = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_ops *ops = mac->ops;
 	struct mac_ax_sch_tx_en_cfg cfg;
 	enum rtw_hal_status ret;
@@ -5315,7 +5323,7 @@ enum rtw_hal_status
 rtw_hal_mac_get_sch_tx_en(struct rtw_hal_com_t *hal_com, u8 band_idx, u16 *tx_en)
 {
 	struct hal_info_t *hal = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_ops *ops = mac->ops;
 	struct mac_ax_sch_tx_en_cfg cfg;
 	enum rtw_hal_status ret;
@@ -5408,7 +5416,7 @@ _error:
 bool rtw_hal_is_macid_pause(struct rtw_hal_com_t *hal_com, u16 macid)
 {
 	struct hal_info_t *hal = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_ops *ops = mac->ops;
 	struct mac_ax_macid_pause_cfg cfg = {0};
 
@@ -5425,7 +5433,7 @@ rtw_hal_set_macid_pause(struct rtw_hal_com_t *hal_com,
 					u16 macid, bool pause)
 {
 	struct hal_info_t *hal = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_ops *ops = mac->ops;
 	struct mac_ax_macid_pause_cfg cfg = {0};
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_SUCCESS;
@@ -5446,7 +5454,7 @@ rtw_hal_mac_fw_log_cfg(struct rtw_hal_com_t *hal_com,
 			struct rtw_hal_fw_log_cfg *fl_cfg)
 {
 	struct hal_info_t *hal = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_fw_log log_cfg = {0};
 	u32 status;
 
@@ -5485,7 +5493,7 @@ u32
 rtw_hal_mac_lamode_trig(struct rtw_hal_com_t *hal_com, u8 trig)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	u32 rpt = 0;
 
 	rpt = mac->ops->lamode_trigger(mac, trig);
@@ -5498,7 +5506,7 @@ rtw_hal_mac_lamode_cfg_buf(struct rtw_hal_com_t *hal_com, u8 buf_sel,
 			   u32 *addr_start, u32 *addr_end)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_la_buf_param param;
 
 	param.la_buf_sel = buf_sel;
@@ -5517,7 +5525,7 @@ rtw_hal_mac_lamode_cfg(struct rtw_hal_com_t *hal_com, u8 func_en,
 		       u8 data_loss_imr, u8 la_tgr_tu_sel, u8 tgr_time_val)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_la_cfg cfg;
 
 	cfg.la_func_en = func_en;
@@ -5539,7 +5547,7 @@ rtw_hal_mac_get_lamode_st(struct rtw_hal_com_t *hal_com, u8 *la_state,
 			  bool *la_loss_data)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_la_status info;
 
 	info = mac->ops->get_lamode_st(mac);
@@ -5606,7 +5614,7 @@ rtw_hal_mac_set_rxfltr_by_mode(struct rtw_hal_com_t *hal_com,
 			       u8 band, enum rtw_rx_fltr_mode mode)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_rx_fltr_ctrl_t ctrl = {0};
 	struct mac_ax_rx_fltr_ctrl_t mask = {0};
 	u32 err;
@@ -5837,7 +5845,7 @@ enum rtw_hal_status rtw_hal_mac_set_rxfltr_acpt_crc_err(
 		struct rtw_hal_com_t *hal_com, u8 band, u8 enable)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_rx_fltr_ctrl_t ctrl = {0};
 	struct mac_ax_rx_fltr_ctrl_t mask = {0};
 	u32 err;
@@ -5870,7 +5878,7 @@ enum rtw_hal_status rtw_hal_mac_set_rxfltr_mpdu_size(
 		struct rtw_hal_com_t *hal_com, u8 band, u16 size)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_rx_fltr_ctrl_t ctrl = {0};
 	struct mac_ax_rx_fltr_ctrl_t mask = {0};
 	u32 err;
@@ -5904,7 +5912,7 @@ enum rtw_hal_status rtw_hal_mac_set_rxfltr_by_type(
 		struct rtw_hal_com_t *hal_com, u8 band, u8 type, u8 target)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	enum mac_ax_pkt_t ftype;
 	enum mac_ax_fwd_target fwd;
 	u32 err;
@@ -5953,7 +5961,7 @@ enum rtw_hal_status rtw_hal_mac_set_rxfltr_by_subtype(
 				u8 type, u8 subtype, u8 target)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	enum mac_ax_pkt_t ftype;
 	enum mac_ax_fwd_target fwd;
 	u32 err;
@@ -5989,7 +5997,7 @@ enum rtw_hal_status rtw_hal_mac_set_rxfltr_by_subtype(
 enum rtw_hal_status
 rtw_hal_mac_enable_bb_rf(struct hal_info_t *hal_info, u8 enable)
 {
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal_info->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 
 	mac->ops->set_hw_value(mac, MAC_AX_HW_EN_BB_RF, &enable);
 	return RTW_HAL_STATUS_SUCCESS;
@@ -6002,7 +6010,7 @@ rtw_hal_mac_get_buffer_data(struct rtw_hal_com_t *hal_com, u32 strt_addr,
 			    u8 *buf, u32 len, u32 dbg_path)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	mac_mem_dump(mac, MAC_AX_MEM_SHARED_BUF, strt_addr, buf, len, dbg_path);
 }
@@ -6014,7 +6022,7 @@ void
 rtw_hal_mac_dbg_dump(struct rtw_hal_com_t *hal_com)
 {
 	struct hal_info_t *hal = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_ops *ops = mac->ops;
 	struct mac_ax_dbgpkg ss_dbg = {0};
 	struct mac_ax_dbgpkg_en dbg_msk = {0};
@@ -6040,7 +6048,7 @@ rtl_hal_dump_sec_cam_tbl(struct rtw_hal_com_t *hal_com)
 	u32 i = 0;
 	u32 sec_cam_tbl_sz = 128;
 	struct hal_info_t *hal = hal_com->hal_priv;
-	struct mac_ax_adapter *mac =  hal_to_mac(hal);
+	struct mac_adapter *mac =  hal_to_mac(hal);
 	struct sec_cam_table_t *sec_cam_table = mac->hw_info->sec_cam_table;
 	struct sec_cam_entry_t *entry = NULL;
 
@@ -6186,7 +6194,7 @@ rtw_hal_mac_set_edca(struct rtw_hal_com_t *hal_com, u8 band, u8 wmm, u8 ac,
 		     u32 param)
 {
 	struct hal_info_t *hal_info = (struct hal_info_t *)hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_edca_param edca = {0};
 	u32 err = 0;
 
@@ -6217,7 +6225,7 @@ rtw_hal_mac_set_rty_lmt(struct rtw_hal_com_t *hal_com, u8 macid,
 	u8 rts_lmt_sel, u8 rts_lmt_val, u8 data_lmt_sel, u8 data_lmt_val)
 {
 	struct hal_info_t *hal_info = (struct hal_info_t *)hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_cctl_rty_lmt_cfg cfg = {0};
 	u32 err = 0;
 
@@ -6246,7 +6254,7 @@ rtw_hal_mac_set_rty_lmt(struct rtw_hal_com_t *hal_com, u8 macid,
 enum rtw_hal_status
 rtw_hal_mac_is_tx_mgnt_empty(struct hal_info_t *hal_info, u8 band, u8 *st)
 {
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal_info->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 	struct mac_ax_tx_queue_empty q_st = {{0}};
 	u32 err;
 
@@ -6591,7 +6599,7 @@ hal_mac_ax_send_fw_snd(struct hal_info_t *hal_info,
 		       struct hal_ax_fwcmd_snd *hal_cmd)
 {
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal_info->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 	struct mac_ax_fwcmd_snd snd_cmd = {0};
 	u8 i = 0, he = 0, sta_nr = 0;
 
@@ -6669,7 +6677,7 @@ hal_mac_ax_send_fw_snd(struct hal_info_t *hal_info,
 enum rtw_hal_status
 rtw_hal_mac_tx_mode_sel(struct hal_info_t *hal_info, u8 fw_tx, u8 txop_wmm_en_bm)
 {
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal_info->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 
 	struct mac_ax_mac_tx_mode_sel mode_sel = {0};
 
@@ -6702,7 +6710,7 @@ u32 rtw_hal_mac_process_c2h(void *hal, u8 cls, u8 func, u16 len, u8 *buf)
 {
 	#if 0
 	struct hal_info_t *hal_info = (struct hal_info_t *)hal;
-	struct mac_ax_adapter *mac = (struct mac_ax_adapter *)hal_info->mac;
+	struct mac_adapter *mac = (struct mac_adapter *)hal_info->mac;
 
 	hal_status = mac->ops->process_c2h(mac, buf, buf_len, (u8 *)c2h);
 	#endif
@@ -6722,7 +6730,7 @@ rtw_hal_mac_f2p_test_cmd(struct hal_info_t *hal_info,
 						struct mp_mac_ax_f2p_tx_cmd *ptxcmd,
 						u8 *psigb_addr)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	u32 ret = RTW_HAL_STATUS_FAILURE;
 
 	if (mac->ops->f2p_test_cmd(mac, (void*)info, (void*)f2pwd, (void*)ptxcmd, psigb_addr) == MACSUCCESS)
@@ -6736,7 +6744,7 @@ rtw_hal_mac_write_pwr_ofst_mode(struct rtw_hal_com_t *hal_com, u8 band)
 {
 
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct rtw_tpu_info *tpu = &hal_com->rtw_tpu_i;
 
 	if (tpu->normal_mode_lock_en)
@@ -6751,7 +6759,7 @@ enum rtw_hal_status
 rtw_hal_mac_write_pwr_ofst_bw(struct rtw_hal_com_t *hal_com, u8 band)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct rtw_tpu_info *tpu = &hal_com->rtw_tpu_i;
 
 	if (tpu->normal_mode_lock_en)
@@ -6766,7 +6774,7 @@ enum rtw_hal_status
 rtw_hal_mac_write_pwr_ref_reg(struct rtw_hal_com_t *hal_com, u8 band)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct rtw_tpu_info *tpu = &hal_com->rtw_tpu_i;
 
 	if (tpu->normal_mode_lock_en)
@@ -6781,7 +6789,7 @@ enum rtw_hal_status
 rtw_hal_mac_write_pwr_limit_en(struct rtw_hal_com_t *hal_com, u8 band)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct rtw_tpu_info *tpu = &hal_com->rtw_tpu_i;
 
 	if (tpu->normal_mode_lock_en)
@@ -6820,7 +6828,7 @@ enum rtw_hal_status
 rtw_hal_mac_write_pwr_limit_rua_reg(struct rtw_hal_com_t *hal_com, u8 band)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct rtw_tpu_info *tpu = &hal_com->rtw_tpu_i;
 
 	if (tpu->normal_mode_lock_en)
@@ -6835,7 +6843,7 @@ enum rtw_hal_status
 rtw_hal_mac_write_pwr_limit_reg(struct rtw_hal_com_t *hal_com, u8 band)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct rtw_tpu_info *tpu = &hal_com->rtw_tpu_i;
 	struct rtw_tpu_pwr_imt_info *lmt = &tpu->rtw_tpu_pwr_imt_i;
 
@@ -6851,7 +6859,7 @@ enum rtw_hal_status
 rtw_hal_mac_write_pwr_by_rate_reg(struct rtw_hal_com_t *hal_com, u8 band)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct rtw_tpu_info *tpu = &hal_com->rtw_tpu_i;
 	struct rtw_tpu_pwr_by_rate_info *by_rate = &tpu->rtw_tpu_pwr_by_rate_i;
 
@@ -6867,7 +6875,7 @@ enum rtw_hal_status
 rtw_hal_mac_get_log_efuse_bt_size(struct rtw_hal_com_t *hal_com, u32 *val)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	if (mac->ops->get_hw_value(mac,
 		MAC_AX_HW_GET_BT_LOGICAL_EFUSE_SIZE, val) != MACSUCCESS){
@@ -6883,7 +6891,7 @@ enum rtw_hal_status
 rtw_hal_mac_get_efuse_bt_mask_size(struct rtw_hal_com_t *hal_com, u32 *val)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	if(mac->ops->get_hw_value(mac,
 	MAC_AX_HW_GET_BT_EFUSE_MASK_SIZE, val) != MACSUCCESS)
@@ -6901,7 +6909,7 @@ rtw_hal_mac_write_log_efuse_bt_map(struct rtw_hal_com_t *hal_com,
 							u32 mask_size)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_pg_efuse_info info;
 	enum rtw_hal_status status = RTW_HAL_STATUS_EFUSE_PG_FAIL;
 	u8 *tmp_map = NULL;
@@ -6961,7 +6969,7 @@ enum rtw_hal_status
 rtw_hal_mac_read_log_efuse_bt_map(struct rtw_hal_com_t *hal_com, u8 *map)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	if (mac->ops->dump_log_efuse_bt(mac,
 			MAC_AX_EFUSE_PARSER_MAP,
@@ -6984,7 +6992,7 @@ enum rtw_hal_status
 rtw_hal_mac_get_efuse_bt_avl(struct rtw_hal_com_t *hal_com, u32 *val)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	if (mac->ops->get_efuse_avl_size_bt(mac, val) != MACSUCCESS)
 		return RTW_HAL_STATUS_FAILURE;
@@ -6997,7 +7005,7 @@ enum rtw_hal_status
 rtw_hal_mac_get_efuse_bt_size(struct rtw_hal_com_t *hal_com, u32 *val)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	if (mac->ops->get_hw_value(mac,
 		MAC_AX_HW_GET_BT_EFUSE_SIZE, val) != MACSUCCESS){
@@ -7014,7 +7022,7 @@ rtw_hal_mac_set_mu_edca(struct rtw_hal_com_t *hal_com, u8 band, u8 ac,
 	u16 timer, u8 cw_min, u8 cw_max, u8 aifs)
 {
 	struct hal_info_t *hal_info = (struct hal_info_t *)hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_muedca_param edca = {0};
 	u32 err = 0;
 
@@ -7036,7 +7044,7 @@ rtw_hal_mac_set_mu_edca_ctrl(struct rtw_hal_com_t *hal_com,
 	u8 band, u8 wmm, u8 set)
 {
 	struct hal_info_t *hal_info = (struct hal_info_t *)hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct mac_ax_muedca_cfg cfg = {0};
 	u32 err = 0;
 
@@ -7055,7 +7063,7 @@ enum rtw_hal_status rtw_hal_mac_led_set_ctrl_mode(struct hal_info_t *hal_info,
 						  enum mac_ax_led_mode mode,
 						  u8 led_id)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	if (mac->ops->set_led_mode(mac, mode, led_id) != MACSUCCESS)
 		return RTW_HAL_STATUS_FAILURE;
@@ -7066,7 +7074,7 @@ enum rtw_hal_status rtw_hal_mac_led_set_ctrl_mode(struct hal_info_t *hal_info,
 enum rtw_hal_status rtw_hal_mac_led_ctrl(struct hal_info_t *hal_info, u8 high,
 					 u8 led_id)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	if (mac->ops->led_ctrl(mac, high, led_id) != MACSUCCESS)
 		return RTW_HAL_STATUS_FAILURE;
@@ -7078,7 +7086,7 @@ enum rtw_hal_status
 rtw_hal_mac_pcie_trx_mit(struct hal_info_t *hal_info,
 			 struct mac_ax_pcie_trx_mitigation *mit_info)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	if (MACSUCCESS !=
 	    mac->ops->set_hw_value(mac, MAX_AX_HW_PCIE_MIT, mit_info))
@@ -7091,7 +7099,7 @@ enum rtw_hal_status
 rtw_hal_mac_read_efuse_bt_hidden(struct rtw_hal_com_t *hal_com, u32 addr, u32 size, u8 *val)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	if (mac->ops->read_efuse(mac, addr, size, val, MAC_AX_EFUSE_BANK_BT) != MACSUCCESS)
 		return RTW_HAL_STATUS_FAILURE;
@@ -7104,7 +7112,7 @@ enum rtw_hal_status
 rtw_hal_mac_write_efuse_bt_hidden(struct rtw_hal_com_t *hal_com, u32 addr, u8 val)
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	u8 tmp_value;
 
@@ -7132,7 +7140,7 @@ rtw_hal_mac_tsf_sync(struct hal_info_t *hal_info,
 						u8 from_port, u8 to_port, enum phl_band_idx band,
 						s32 sync_offset_tu, enum hal_tsf_sync_act action)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	enum mac_ax_tsf_sync_act mac_action = MAC_AX_TSF_SYNC_NOW_ONCE;
 	s32 sync_offset_unit = 0;/* for halmac API use, unit is 32us  */
 
@@ -7178,7 +7186,7 @@ rtw_hal_mac_get_sec_cam(struct hal_info_t *hal_info, u16 num, u8 *buf, u16 size)
 {
 // NEO : TODO : mark off first
 #if 0
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	int i = 0;
 	/* ToDO: fix the magic number later */
 	u8 sec_cam_offset_sz = 0x20;
@@ -7223,7 +7231,7 @@ rtw_hal_mac_get_addr_cam(struct hal_info_t *hal_info, u16 num, u8 *buf, u16 size
 {
 // NEO : TODO : mark off first
 #if 0
-	struct mac_ax_adapter *mac = hal_to_mac(hal_info);
+	struct mac_adapter *mac = hal_to_mac(hal_info);
 	int i = 0;
 	/* ToDO: fix the magic number later */
 	u8 addr_cam_offset_sz = 0x40;
@@ -7255,7 +7263,7 @@ rtw_hal_mac_get_addr_cam(struct hal_info_t *hal_info, u16 num, u8 *buf, u16 size
 enum rtw_hal_status rtw_hal_mac_get_tsf(struct hal_info_t *hal, u8 *port,
 					u32 *tsf_h, u32 *tsf_l)
 {
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_ops *hal_mac_ops = mac->ops;
 	struct mac_ax_port_tsf val = {0};
 
@@ -7318,7 +7326,7 @@ enum rtw_hal_status rtw_hal_mac_add_mcc(struct hal_info_t *hal,
 					struct rtw_phl_mcc_role *mcc_role)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	u32 mac_status;
 	u16 loop_cnt = 0;
 	struct mac_ax_mcc_role info = {0};
@@ -7355,7 +7363,7 @@ enum rtw_hal_status rtw_hal_mac_start_mcc(struct hal_info_t *hal,
 				u8 group, u8 macid, u32 tsf_high, u32 tsf_low)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	u32 mac_status = MACSUCCESS;
 	u16 loop_cnt = 0;
 
@@ -7391,7 +7399,7 @@ enum rtw_hal_status rtw_hal_mac_stop_mcc(struct hal_info_t *hal, u8 group,
 					u8 macid)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	u32 mac_status;
 	u16 loop_cnt = 0;
 
@@ -7426,7 +7434,7 @@ exit:
 enum rtw_hal_status rtw_hal_mac_del_mcc_group(struct hal_info_t *hal, u8 group)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	u32 mac_status;
 	u16 loop_cnt = 0;
 
@@ -7463,7 +7471,7 @@ enum rtw_hal_status rtw_hal_mac_mcc_request_tsf(struct hal_info_t *hal,
 					u8 group, u8 macid_x, u8 macid_y)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	u32 mac_status;
 	u16 loop_cnt = 0;
 
@@ -7500,7 +7508,7 @@ enum rtw_hal_status rtw_hal_mac_mcc_macid_bitmap(struct hal_info_t *hal,
 					u8 group, u8 macid, u8 *bitmap, u8 len)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	u32 mac_status;
 	u16 loop_cnt = 0;
 
@@ -7537,7 +7545,7 @@ enum rtw_hal_status rtw_hal_mac_mcc_sync_enable(struct hal_info_t *hal,
 				u8 group, u8 source, u8 target, u8 offset)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	u32 mac_status;
 	u16 loop_cnt = 0;
 
@@ -7573,7 +7581,7 @@ enum rtw_hal_status rtw_hal_mac_set_duration(struct hal_info_t *hal,
 					struct rtw_phl_mcc_en_info *en_info)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	struct mac_ax_mcc_duration_info info = {0};
 	u32 mac_status;
 	u16 loop_cnt = 0;
@@ -7610,7 +7618,7 @@ enum rtw_hal_status rtw_hal_mac_get_mcc_tsf_rpt(struct hal_info_t *hal,
 					u32 *tsf_y_h, u32 *tsf_y_l)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	u32 mac_status;
 
 	if (mac == NULL)
@@ -7631,7 +7639,7 @@ enum rtw_hal_status rtw_hal_mac_get_mcc_status_rpt(struct hal_info_t *hal,
 				u8 group, u8 *status, u32 *tsf_h, u32 *tsf_l)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
-	struct mac_ax_adapter *mac = hal_to_mac(hal);
+	struct mac_adapter *mac = hal_to_mac(hal);
 	u32 mac_status;
 
 	if (mac == NULL)

@@ -25,10 +25,10 @@ _HAL_FILES :=	$(phl_path)$(HAL)/hal_api_mac.o \
 			$(phl_path)$(HAL)/hal_rx.o \
 			$(phl_path)$(HAL)/hal_ser.o \
 			$(phl_path)$(HAL)/hal_sound.o \
-			$(phl_path)$(HAL)/hal_sta.o
+			$(phl_path)$(HAL)/hal_sta.o \
+			$(phl_path)$(HAL)/hal_tx.o
 
 #_HAL_FILES :=	$(phl_path)$(HAL)/hal_api_mac.o \
-			$(phl_path)$(HAL)/hal_tx.o \
 			$(phl_path)$(HAL)/hal_str_proc.o \
 			$(phl_path)$(HAL)/hal_fw.o \
 			$(phl_path)$(HAL)/hal_ps.o \

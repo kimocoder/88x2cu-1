@@ -519,7 +519,7 @@ fail:
 #endif
 
 
-#if 1 // NEO : previous rtk_wifi_driver
+#if 0 // NEO : previous rtk_wifi_driver
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 32))
 netdev_tx_t rtw_xmit_entry(struct sk_buff *pkt, _nic_hdl pnetdev)

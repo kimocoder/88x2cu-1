@@ -566,7 +566,6 @@ enum rtw_phl_status
 _phl_prepare_tx_usb(struct phl_info_t *phl_info, struct rtw_xmit_req *tx_req,
 	u8 *tx_buf_data, u32 *packet_len)
 {
-#if 0 // NEO TDOO mark off for rtw_hal_fill_wd()
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_FAILURE;
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_FAILURE;
 /*	struct hci_info_t *hci_info = (struct hci_info_t *)phl_info->hci; */
@@ -630,10 +629,6 @@ _phl_prepare_tx_usb(struct phl_info_t *phl_info, struct rtw_xmit_req *tx_req,
 
 	} while (false);
 	return pstatus;
-#else
-	RTW_ERR("TODO NEO : %s\n", __func__);
-	return RTW_PHL_STATUS_FAILURE;
-#endif
 }
 
 static enum rtw_phl_status phl_tx_usb(struct phl_info_t *phl_info)

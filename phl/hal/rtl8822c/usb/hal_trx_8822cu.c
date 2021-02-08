@@ -264,9 +264,8 @@ static enum rtw_hal_status hal_query_info_8822cu(struct hal_info_t *hal, u8 info
 	return hstatus;
 }
 
-#if 0 // NEO mark off first
 
-static enum rtw_hal_status hal_pltfm_tx_8852au(void *hal,
+static enum rtw_hal_status hal_pltfm_tx_8822cu(void *hal,
 							struct rtw_h2c_pkt *pkt)
 {
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_FAILURE;
@@ -274,15 +273,18 @@ static enum rtw_hal_status hal_pltfm_tx_8852au(void *hal,
 	return hstatus;
 }
 
-u8 hal_get_bulkout_id_8852au(struct hal_info_t *hal, u8 dma_ch, u8 mode)
+u8 hal_get_bulkout_id_8822cu(struct hal_info_t *hal, u8 dma_ch, u8 mode)
 {
 	return hal_mac_get_bulkout_id(hal, dma_ch, mode);
 }
 
+#if 0 // NEO mark off first
 u8 hal_get_max_bulkout_wd_num_8852au(struct hal_info_t *hal)
 {
 	return hal_mac_usb_get_max_bulkout_wd_num(hal);
 }
+
+#endif // NEO if 0
 
 /**
  * the function update wd page, including wd info, wd body, seq info
@@ -290,11 +292,13 @@ u8 hal_get_max_bulkout_wd_num_8852au(struct hal_info_t *hal)
  * @phl_pkt_req: see struct rtw_phl_pkt_req
  */
 enum rtw_hal_status
-hal_fill_wd_8852au(struct hal_info_t *hal, struct rtw_xmit_req *tx_req,
+hal_fill_wd_8822cu(struct hal_info_t *hal, struct rtw_xmit_req *tx_req,
 			u8 *wd_buf, u32 *wd_len)
 {
-	return rtw_hal_mac_ax_fill_txdesc(hal->mac, tx_req, wd_buf, wd_len);
+	return rtw_hal_mac_fill_txdesc(hal->mac, tx_req, wd_buf, wd_len);
 }
+
+#if 0 // NEO mark off first
 
 enum rtw_hal_status
 hal_usb_tx_agg_cfg_8852au(struct hal_info_t *hal, u8* wd_buf, u8 agg_num)
@@ -383,9 +387,9 @@ static struct hal_trx_ops ops= {
 	.init = hal_trx_init_8852au,
 	.deinit = hal_trx_deinit_8852au,
 	.map_hw_tx_chnl = hal_mapping_hw_tx_chnl_8852au,
-	.get_bulkout_id = hal_get_bulkout_id_8852au,
-	.hal_fill_wd = hal_fill_wd_8852au,
 #endif 
+	.get_bulkout_id = hal_get_bulkout_id_8822cu,
+	.hal_fill_wd = hal_fill_wd_8822cu,
 	.handle_rx_buffer = hal_handle_rx_buffer_8822c,
 	.query_hal_info = hal_query_info_8822cu,
 #if 0 // NEO

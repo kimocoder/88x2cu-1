@@ -7219,10 +7219,6 @@ s32 core_tx_call_phl(_adapter *padapter, struct xmit_frame *pxframe, void *txsc_
 	txreq_cnt = pxframe->txreq_cnt;
 #endif
 
-	pr_info("%s : NEO : txreq = %p, txreq_cnt = %d, stop here first\n",
-		__func__, txreq, txreq_cnt);
-	return FAIL;
-
 	for (idx = 0; idx < txreq_cnt; idx++) {
 
 #ifdef RTW_PHL_TEST_FPGA
@@ -7381,10 +7377,6 @@ core_txsc:
 
 	if (txsc_apply_sc_cached_entry(padapter, &txsc_pkt) == _FAIL)
 		goto abort_core_tx;
-
-	//NEO
-	pr_info("%s: NEO stop before core_tx_call_phl \n", __func__);
-	goto abort_core_tx;
 
 	if (core_tx_call_phl(padapter, pxframe, &txsc_pkt) == FAIL)
 		goto abort_core_tx;
