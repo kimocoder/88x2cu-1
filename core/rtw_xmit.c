@@ -6595,8 +6595,6 @@ static enum rtw_data_rate _rate_drv2phl(struct sta_info *sta, u8 rate)
 
 void fill_txreq_mdata(_adapter *padapter, struct xmit_frame *pxframe)
 {
-// NEO : TODO : mark off first
-#if 0
 	struct rtw_xmit_req *txreq = pxframe->phl_txreq;
 	struct sta_info *psta = pxframe->attrib.psta;
 	struct rtw_t_meta_data *mdata = &(txreq->mdata);
@@ -6628,6 +6626,10 @@ void fill_txreq_mdata(_adapter *padapter, struct xmit_frame *pxframe)
 	mdata->hw_aes_iv = 0;
 	mdata->nav_use_hdr = 0;
 
+	// NEO : 8822cu
+	mdata->q_sel = pxframe->attrib.priority;
+	mdata->bw = 0; // 20MHz
+
 	/* packet security */
 	if (pxframe->attrib.encrypt == _NO_PRIVACY_ || pxframe->attrib.bswenc == _TRUE) {
 		mdata->sec_hw_enc = _FALSE;
@@ -6635,7 +6637,8 @@ void fill_txreq_mdata(_adapter *padapter, struct xmit_frame *pxframe)
 	} else {
 		mdata->sec_hw_enc = _TRUE;
 		mdata->sec_type = rtw_sec_algo_drv2phl(pxframe->attrib.encrypt);
-		mdata->sec_cam_idx = get_security_cam_id(padapter, pxframe, pxframe->attrib.key_idx);
+		// NEO
+		//mdata->sec_cam_idx = get_security_cam_id(padapter, pxframe, pxframe->attrib.key_idx);
 	}
 	/* Currently dump secrity settings for dbg */
 	RTW_DBG("sec_type= %d sec_hw_enc= %d sec_cam_idx= %d \n",
@@ -6690,6 +6693,16 @@ void fill_txreq_mdata(_adapter *padapter, struct xmit_frame *pxframe)
 	mdata->userate_sel = 0;
 #endif
 
+#if 1 // NEO for 8822cu
+	if (IS_CCK_RATE(padapter->mlmeextpriv.tx_rate)) {
+		mdata->f_rate = RTW_DATA_RATE_CCK1;
+		mdata->rate_id = 8;
+	} else {
+		mdata->f_rate = RTW_DATA_RATE_OFDM6;
+		mdata->rate_id = 7;
+	}
+
+#else // 0 NEO
 	if (pxframe->xftype == RTW_TX_DRV_MGMT) {
 		mdata->userate_sel = 1;
 		mdata->f_rate = _rate_mrate2phl(pxframe->attrib.rate);
@@ -6720,6 +6733,8 @@ void fill_txreq_mdata(_adapter *padapter, struct xmit_frame *pxframe)
 				mdata->f_bw = padapter->fix_bw;
 		}
 	}
+#endif // if 0 NEO
+
 	mdata->f_er = 0;
 	mdata->f_dcm = 0;
 	mdata->f_stbc = 0;
@@ -6732,37 +6747,6 @@ void fill_txreq_mdata(_adapter *padapter, struct xmit_frame *pxframe)
 	mdata->pktlen = txreq->total_len;
 #endif
 
-#ifdef RTW_PHL_TEST_FPGA
-	mdata->type = F_TX_TYPE;
-	mdata->macid = F_TX_MACID;
-	mdata->tid = F_TX_TID;
-	mdata->dma_ch = F_TX_DMACH;
-	//mdata->band = cap->band;
-	mdata->f_rate = F_TX_RATE;
-	mdata->f_bw = F_TX_BW;
-	mdata->f_gi_ltf = 0;
-	mdata->f_stbc = 0;
-	mdata->f_ldpc = 0;
-
-	mdata->userate_sel = 1;
-	mdata->dis_data_rate_fb = 1;
-	mdata->dis_rts_rate_fb = 1;
-#endif
-
-#ifdef RTW_PHL_DBG_CMD
-	if (pxframe->xftype != RTW_TX_DRV_MGMT) {
-		if (padapter->txForce_enable) {
-			if (padapter->txForce_rate != INV_TXFORCE_VAL)
-				mdata->f_rate = padapter->txForce_rate;
-			if (padapter->txForce_agg != INV_TXFORCE_VAL)
-				mdata->ampdu_en = padapter->txForce_agg;
-			if (padapter->txForce_aggnum != INV_TXFORCE_VAL)
-				mdata->max_agg_num = padapter->txForce_aggnum;
-			if (padapter->txForce_gi != INV_TXFORCE_VAL)
-				mdata->f_gi_ltf = padapter->txForce_gi;
-		}
-	}
-#endif
 
 #ifdef CONFIG_CORE_TXSC
 	_print_txreq_mdata(mdata, __func__);
@@ -6780,7 +6764,6 @@ void fill_txreq_mdata(_adapter *padapter, struct xmit_frame *pxframe)
 			txreq++;
 		}
 	}
-#endif // if 0 NEO
 }
 
 void fill_txreq_others(_adapter *padapter, struct xmit_frame *pxframe)

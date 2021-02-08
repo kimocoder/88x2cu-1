@@ -118,6 +118,11 @@ struct rtw_t_meta_data {
 	u8 band;
 	u8 type;
 
+	u8 offset;		// NEO 8822cu
+	u8 pkt_offset;		// NEO 8822cu
+	u8 q_sel;		/* DW2 [17:22] */
+	u8 bw;			// NEO 8822cu
+
 	u8 hw_seq_mode;		/* DW0 [0:1] */
 	u8 hw_ssn_sel;		/* DW0 [2:3] */
 	u8 smh_en;		/* DW0 [4:4] */
@@ -138,7 +143,6 @@ struct rtw_t_meta_data {
 	u8 usb_txagg_num;	/* DW1 [8:15] */
 
 	u16 pktlen;		/* DW2 [0:13] MAC header length + frame body length */
-	u8 q_sel;		/* DW2 [17:22] */
 	u8 tid;			/* DW2 [23:23] */
 	u16 macid;		/* DW2 [24:30] */
 
@@ -156,6 +160,7 @@ struct rtw_t_meta_data {
 	u8 f_dcm;		/* DW6 [14:14] valid if userate_sel = 1 */
 	u8 f_er;		/* DW6 [15:15] valid if userate_sel = 1 */
 	u16 f_rate;		/* DW6 [16:24] valid if userate_sel = 1 */
+	u8 rate_id;		// NEO : 8822cu
 	u8 f_gi_ltf;		/* DW6 [25:27] valid if userate_sel = 1 */
 	u8 f_bw;		/* DW6 [28:29] valid if userate_sel = 1 */
 	u8 userate_sel;		/* DW6 [30:30] */

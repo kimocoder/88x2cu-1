@@ -979,7 +979,6 @@ void rtw_hw_iface_deinit(_adapter *adapter)
 	}
 }
 
-#if 0 // NEO
 
 /*
  * _sec_algo_drv2phl() - Convert security algorithm to PHL's definition
@@ -996,6 +995,27 @@ static void _sec_algo_drv2phl(enum security_type drv_algo,
 	u8 phl_algo = RTW_ENC_NONE;
 	u8 phl_key_len = 0;
 
+#if 1 // NEO : 8822cu
+	switch(drv_algo) {
+	case _WEP40_:
+	case _WEP104_:
+	case _TKIP_:
+		phl_algo = 0x01;
+		phl_key_len = 16;
+		break;
+	case _AES_:
+		phl_algo = 0x03;
+		phl_key_len = 16;
+		break;
+	default:
+		RTW_ERR("%s: No rule to covert drv algo(0x%x) to phl!!\n",
+			__func__, drv_algo);
+		phl_algo = RTW_ENC_MAX;
+		phl_key_len = 0;
+		break;
+	}
+
+#else // NEO : G6
 	switch(drv_algo) {
 	case _NO_PRIVACY_:
 		phl_algo = RTW_ENC_NONE;
@@ -1047,11 +1067,13 @@ static void _sec_algo_drv2phl(enum security_type drv_algo,
 		phl_key_len = 0;
 		break;
 	}
+#endif // if NEO
 
 	if(algo)
 		*algo = phl_algo;
 	if(key_len)
 		*key_len = phl_key_len;
+
 }
 
 u8 rtw_sec_algo_drv2phl(enum security_type drv_algo)
@@ -1061,6 +1083,8 @@ u8 rtw_sec_algo_drv2phl(enum security_type drv_algo)
 	_sec_algo_drv2phl(drv_algo, &algo, NULL);
 	return algo;
 }
+
+#if 0 // NEO
 
 static int rtw_hw_chk_sec_mode(struct _ADAPTER *a, struct sta_info *sta)
 {

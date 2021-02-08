@@ -3239,8 +3239,10 @@ void hal_mac_fill_txpkt_info(struct rtw_xmit_req *treq,
 				struct mac_txpkt_info *txpkt_info)
 {
 	do {
+		RTW_INFO("%s NEO pktsize=%d\n", __func__, treq->mdata.pktlen);
 		txpkt_info->pktsize = treq->mdata.pktlen;
 
+		RTW_INFO("%s NEO type=%d\n", __func__, treq->mdata.type);
 		switch (treq->mdata.type) {
 		case RTW_PHL_PKT_TYPE_H2C:
 			txpkt_info->type = MAC_PKT_H2C;
@@ -3257,11 +3259,22 @@ void hal_mac_fill_txpkt_info(struct rtw_xmit_req *treq,
 		}
 		PHL_DBG("txpkt_info->type:0x%x \n",
 			txpkt_info->type);
+		break;
 
 		if (txpkt_info->type == MAC_PKT_H2C) {
 			/* H2C doesn't need txpkt info->u.data */
 			break;
 		} else {
+			txpkt_info->u.data.offset = (u8)treq->mdata.offset;
+			txpkt_info->u.data.pkt_offset = (u8)treq->mdata.pkt_offset;
+			txpkt_info->u.data.macid = (u8)treq->mdata.macid;
+			txpkt_info->u.data.rate_id = treq->mdata.rate_id;
+			txpkt_info->u.data.data_rate = treq->mdata.f_rate;
+			txpkt_info->u.data.bmc = (treq->mdata.bc | treq->mdata.mc) ? 1 : 0;
+			txpkt_info->u.data.tid = (treq->mdata.tid & 7); // tid 0 ~ 7
+			txpkt_info->u.data.wifi_seq = treq->mdata.sw_seq;
+			txpkt_info->u.data.qsel = treq->mdata.q_sel;
+			#if 0 // NEO
 			txpkt_info->u.data.wdinfo_en = treq->mdata.wdinfo_en;
 			txpkt_info->u.data.wd_page = treq->mdata.wd_page_size;
 			txpkt_info->u.data.wp_offset = treq->mdata.wp_offset;
@@ -3274,7 +3287,6 @@ void hal_mac_fill_txpkt_info(struct rtw_xmit_req *treq,
 			txpkt_info->u.data.shcut_camid = treq->mdata.shcut_camid;
 			txpkt_info->u.data.smh_en = treq->mdata.smh_en;
 			txpkt_info->u.data.hw_aes_iv = treq->mdata.hw_aes_iv;
-			txpkt_info->u.data.bmc = (treq->mdata.bc | treq->mdata.mc) ? 1 : 0;
 			txpkt_info->u.data.ndpa = treq->mdata.ndpa;
 			txpkt_info->u.data.snd_pkt_sel = treq->mdata.snd_pkt_sel;
 			txpkt_info->u.data.sifs_tx = treq->mdata.sifs_tx;
@@ -3296,16 +3308,12 @@ void hal_mac_fill_txpkt_info(struct rtw_xmit_req *treq,
 			txpkt_info->u.data.ht_data_snd = treq->mdata.ht_data_snd;
 			txpkt_info->u.data.no_ack = treq->mdata.no_ack;
 			txpkt_info->u.data.ch = treq->mdata.dma_ch;
-			txpkt_info->u.data.macid = (u8)treq->mdata.macid;
-			txpkt_info->u.data.tid = (treq->mdata.tid & 7); // tid 0 ~ 7
-			txpkt_info->u.data.wifi_seq = treq->mdata.sw_seq;
 			txpkt_info->u.data.agg_en = treq->mdata.ampdu_en;
 			txpkt_info->u.data.bk = treq->mdata.bk;
 			txpkt_info->u.data.max_agg_num = treq->mdata.max_agg_num;
 			txpkt_info->u.data.lifetime_sel = treq->mdata.life_time_sel;
 			txpkt_info->u.data.ampdu_density = treq->mdata.ampdu_density;
 			txpkt_info->u.data.userate = treq->mdata.userate_sel;
-			txpkt_info->u.data.data_rate = treq->mdata.f_rate;
 			txpkt_info->u.data.data_bw = treq->mdata.f_bw; // TO DO
 			txpkt_info->u.data.data_gi_ltf = treq->mdata.f_gi_ltf; // TO DO
 			txpkt_info->u.data.data_er = treq->mdata.f_er;// TO DO
@@ -3362,6 +3370,7 @@ void hal_mac_fill_txpkt_info(struct rtw_xmit_req *treq,
 				PHL_DBG("txpkt_info->u.data.sec_type=0x%x\n",
 							txpkt_info->u.data.sec_type);
 			}
+			#endif // if 0 NEO
 		}
 	} while(false);
 
@@ -3389,6 +3398,8 @@ rtw_hal_mac_fill_txdesc(void *mac, struct rtw_xmit_req *treq,
 	_os_mem_set(hal_com->drv_priv, &txpkt_info, 0, sizeof(txpkt_info));
 
 	hal_mac_fill_txpkt_info(treq, &txpkt_info);
+	// NEO
+	return RTW_HAL_STATUS_FAILURE;
 
 	*wd_len = mac_info->ops->txdesc_len(
 		mac_info,

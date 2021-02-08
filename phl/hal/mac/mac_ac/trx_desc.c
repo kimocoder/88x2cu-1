@@ -69,7 +69,11 @@ static u8 tid_ind[TID_MAX_NUM] = {
 u32 mac_txdesc_len(struct mac_adapter *adapter,
 		   struct mac_txpkt_info *info)
 {
-	return 48;
+	u32 len = 48;
+	struct mac_pkt_data *data = &info->u.data;
+
+	data->offset = len;
+	return len;
 }
 
 #if 0 // NEO
@@ -386,12 +390,92 @@ static struct txd_proc_type txdes_proc_mac[] = {
 
 #endif // if 0 NEO
 
+
+#include <linux/bitfield.h>
+
+#define SET_TX_DESC_TXPKTSIZE(txdesc, value)                                   \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x00, value, GENMASK(15, 0))
+#define SET_TX_DESC_OFFSET(txdesc, value)                                      \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x00, value, GENMASK(23, 16))
+#define SET_TX_DESC_PKT_OFFSET(txdesc, value)                                  \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x01, value, GENMASK(28, 24))
+#define SET_TX_DESC_QSEL(txdesc, value)                                        \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x01, value, GENMASK(12, 8))
+#define SET_TX_DESC_BMC(txdesc, value)                                         \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x00, value, BIT(24))
+#define SET_TX_DESC_RATE_ID(txdesc, value)                                     \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x01, value, GENMASK(20, 16))
+#define SET_TX_DESC_DATARATE(txdesc, value)                                    \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x04, value, GENMASK(6, 0))
+#define SET_TX_DESC_DISDATAFB(txdesc, value)                                   \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x03, value, BIT(10))
+#define SET_TX_DESC_USE_RATE(txdesc, value)                                    \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x03, value, BIT(8))
+#define SET_TX_DESC_SEC_TYPE(txdesc, value)                                    \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x01, value, GENMASK(23, 22))
+#define SET_TX_DESC_DATA_BW(txdesc, value)                                     \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x05, value, GENMASK(6, 5))
+#define SET_TX_DESC_SW_SEQ(txdesc, value)                                      \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x09, value, GENMASK(23, 12))
+#define SET_TX_DESC_MAX_AGG_NUM(txdesc, value)                                 \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x03, value, GENMASK(21, 17))
+#define SET_TX_DESC_USE_RTS(tx_desc, value)                                    \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x03, value, BIT(12))
+#define SET_TX_DESC_AMPDU_DENSITY(txdesc, value)                               \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x02, value, GENMASK(22, 20))
+#define SET_TX_DESC_DATA_STBC(txdesc, value)                                   \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x05, value, GENMASK(9, 8))
+#define SET_TX_DESC_DATA_LDPC(txdesc, value)                                   \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x05, value, BIT(7))
+#define SET_TX_DESC_AGG_EN(txdesc, value)                                      \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x02, value, BIT(12))
+#define SET_TX_DESC_LS(txdesc, value)                                          \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x00, value, BIT(26))
+#define SET_TX_DESC_DATA_SHORT(txdesc, value)				       \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x05, value, BIT(4))
+#define SET_TX_DESC_SPE_RPT(tx_desc, value)                                    \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x02, value, BIT(19))
+#define SET_TX_DESC_SW_DEFINE(tx_desc, value)                                  \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x06, value, GENMASK(11, 0))
+#define SET_TX_DESC_TXDESC_CHECKSUM(txdesc, value)                             \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x07, value, GENMASK(15, 0))
+#define SET_TX_DESC_DMA_TXAGG_NUM(txdesc, value)                             \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x07, value, GENMASK(31, 24))
+#define GET_TX_DESC_PKT_OFFSET(txdesc) \
+	le32_get_bits(*((__le32 *)(txdesc) + 0x01), GENMASK(28, 24))
+#define GET_TX_DESC_QSEL(txdesc) \
+	le32_get_bits(*((__le32 *)(txdesc) + 0x01), GENMASK(12, 8))
+
 u32 mac_build_txdesc(struct mac_adapter *adapter,
 		     struct mac_txpkt_info *info, u8 *buf, u32 len)
 {
 #if 1 // NEO
-	RTW_INFO("%s NEO TODO\n", __func__);
-	return MACNOITEM;
+	struct mac_pkt_data *pkt_info = &info->u.data;
+	__le32 *txdesc = (__le32 *)buf;
+
+	SET_TX_DESC_TXPKTSIZE(txdesc,  info->pktsize);
+	SET_TX_DESC_OFFSET(txdesc, pkt_info->offset);
+	SET_TX_DESC_PKT_OFFSET(txdesc, pkt_info->pkt_offset);
+	SET_TX_DESC_QSEL(txdesc, pkt_info->qsel);
+	SET_TX_DESC_BMC(txdesc, pkt_info->bmc);
+	SET_TX_DESC_RATE_ID(txdesc, pkt_info->rate_id);
+	SET_TX_DESC_DATARATE(txdesc, pkt_info->data_rate);
+	SET_TX_DESC_DISDATAFB(txdesc, pkt_info->dis_rate_fallback);
+	SET_TX_DESC_USE_RATE(txdesc, pkt_info->use_rate);
+	SET_TX_DESC_SEC_TYPE(txdesc, pkt_info->sec_type);
+	SET_TX_DESC_DATA_BW(txdesc, pkt_info->bw);
+	SET_TX_DESC_SW_SEQ(txdesc, pkt_info->wifi_seq);
+	SET_TX_DESC_MAX_AGG_NUM(txdesc, pkt_info->ampdu_factor);
+	SET_TX_DESC_AMPDU_DENSITY(txdesc, pkt_info->ampdu_density);
+	SET_TX_DESC_DATA_STBC(txdesc, pkt_info->stbc);
+	SET_TX_DESC_DATA_LDPC(txdesc, pkt_info->ldpc);
+	SET_TX_DESC_AGG_EN(txdesc, pkt_info->ampdu_en);
+	SET_TX_DESC_LS(txdesc, pkt_info->ls);
+	SET_TX_DESC_DATA_SHORT(txdesc, pkt_info->short_gi);
+	SET_TX_DESC_SPE_RPT(txdesc, pkt_info->report);
+	SET_TX_DESC_SW_DEFINE(txdesc, pkt_info->sn);
+	SET_TX_DESC_USE_RTS(txdesc, pkt_info->rts);
+	return MACSUCCESS;
 #else
 	struct txd_proc_type *proc = txdes_proc_mac;
 	enum mac_ax_pkt_t pkt_type = info->type;

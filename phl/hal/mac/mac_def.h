@@ -2294,6 +2294,34 @@ struct mac_ax_la_buf_param {
 
 /*--------------------Define TRX PKT INFO/RPT---------------------------------*/
 struct mac_pkt_data {
+
+#if 1 // NEO : ac
+	u8 offset;
+	u8 pkt_offset;
+	u8 macid;
+	u8 rate_id;
+	u8 data_rate;
+	u8 qsel;
+	u8 bw;
+	u8 sec_type;
+	u8 sn;
+	bool ampdu_en;
+	u8 ampdu_factor;
+	u8 ampdu_density;
+	u16 wifi_seq;
+	bool stbc;
+	bool ldpc;
+	bool dis_rate_fallback;
+	bool bmc;
+	bool use_rate;
+	bool ls;
+	bool fs;
+	bool short_gi;
+	bool report;
+	bool rts;
+
+	u8 tid;
+#else // NEO : ax
 	u16 wifi_seq;
 	u8 hw_ssn_sel;
 	u8 hw_seq_mode;
@@ -2308,7 +2336,6 @@ struct mac_pkt_data {
 	u8 hw_aes_iv;
 	u8 hdr_len;
 	u8 ch;
-	u8 macid;
 	u8 agg_en;
 	u8 bk;
 	u8 max_agg_num;
@@ -2329,7 +2356,6 @@ struct mac_pkt_data {
 	u8 sec_type;
 	u8 dis_data_fb;
 	u8 dis_rts_fb;
-	u8 tid;
 	u8 rts_en;
 	u8 cts2self;
 	u8 cca_rts;
@@ -2355,6 +2381,7 @@ struct mac_pkt_data {
 	u8 ht_data_snd;
 	u8 no_ack;
 	u8 sw_define;
+#endif
 };
 
 struct mac_pkt_mgnt {
