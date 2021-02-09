@@ -207,6 +207,8 @@ exit:
 	/*_usbctrl_vendorreq_async_callback(urb)*/
 /*#define usb_bulkout_zero_complete(purb, regs)\*/
 	/*usb_bulkout_zero_complete(purb)*/
+#define rtw_usb_g6_write_port_complete(purb, regs)\
+	rtw_usb_g6_write_port_complete(purb)
 #define rtw_usb_write_port_complete(purb, regs)\
 	rtw_usb_write_port_complete(purb)
 #define rtw_usb_read_port_complete(purb, regs)\
@@ -557,6 +559,160 @@ exit:
 		rtw_free_litedatabuf(&pdvobj->litexmitbuf_q, litexmitbuf);
 		rtw_free_xmitbuf(pxmitpriv, pxmitbuf);
 	}
+	return ret;
+
+}
+
+
+static void rtw_usb_g6_write_port_complete(struct urb *purb, struct pt_regs *regs)
+{
+
+	struct lite_data_buf *litexmitbuf =
+		(struct lite_data_buf *)purb->context;
+	struct data_urb *xmiturb =  litexmitbuf->dataurb;
+	struct dvobj_priv *pdvobj = litexmitbuf->dvobj;
+	unsigned long sp_flags;
+
+	if (RTW_CANNOT_TX(pdvobj)) {
+		RTW_INFO(
+			"%s(): TX Warning! bDriverStopped(%s) OR bSurpriseRemoved(%s)\n"
+			 , __func__
+			 , dev_is_drv_stopped(pdvobj) ? "True" : "False"
+			 , dev_is_surprise_removed(pdvobj) ? "True" : "False");
+
+		goto check_completion;
+	}
+
+
+	if (purb->status == 0) {
+
+	} else {
+		RTW_INFO("###=> urb_write_port_complete status(%d)\n",
+			purb->status);
+		if ((purb->status == -EPIPE) || (purb->status == -EPROTO)) {
+			/* usb_clear_halt(pusbdev, purb->pipe);	 */
+			/* msleep(10); */
+			/*sreset_set_wifi_error_status(padapter,*/
+				/*USB_WRITE_PORT_FAIL);*/
+		} else if (purb->status == -EINPROGRESS) {
+			goto check_completion;
+
+		} else if (purb->status == -ENOENT) {
+			RTW_INFO("%s: -ENOENT\n", __func__);
+			goto check_completion;
+
+		} else if (purb->status == -ECONNRESET) {
+			RTW_INFO("%s: -ECONNRESET\n", __func__);
+			goto check_completion;
+
+		} else if (purb->status == -ESHUTDOWN) {
+			dev_set_drv_stopped(pdvobj);
+
+			goto check_completion;
+		} else {
+			dev_set_surprise_removed(pdvobj);
+			RTW_INFO("bSurpriseRemoved=TRUE\n");
+
+			goto check_completion;
+		}
+	}
+
+
+check_completion:
+
+
+	rtw_sctx_done_err(&litexmitbuf->sctx,
+	purb->status ? RTW_SCTX_DONE_WRITE_PORT_ERR : RTW_SCTX_DONE_SUCCESS);
+
+	rtw_phl_recycle_tx_buf(pdvobj->phl, litexmitbuf->phl_buf_ptr);
+	rtw_free_litedatabuf(&pdvobj->litexmitbuf_q, litexmitbuf);
+	rtw_free_dataurb(&pdvobj->xmit_urb_q, xmiturb);
+	rtw_phl_tx_req_notify(pdvobj->phl);
+
+}
+
+
+u32 rtw_usb_g6_write_port(void *d, u8 *phl_tx_buf_ptr,
+	u8  bulk_id, u32 len, u8 *pkt_data_buf)
+{
+
+	int status;
+	unsigned int pipe;
+	u32 ret = _FAIL;
+	struct dvobj_priv *pdvobj = (struct dvobj_priv *)d;
+	struct usb_device *pusbd = dvobj_to_usb(pdvobj)->pusbdev;
+	struct lite_data_buf *litexmitbuf = NULL;
+	struct data_urb *xmiturb = NULL;
+
+
+	litexmitbuf = rtw_alloc_litedatabuf(&pdvobj->litexmitbuf_q);
+	if (litexmitbuf == NULL) {
+		RTW_INFO("%s,%d Can't alloc lite xmit buf\n",
+			__func__, __LINE__);
+		goto exit;
+	}
+	xmiturb = rtw_alloc_dataurb(&pdvobj->xmit_urb_q);
+	if (xmiturb == NULL) {
+		RTW_INFO("%s,%d Can't alloc lite xmit urb\n",
+			__func__, __LINE__);
+		goto exit;
+	}
+
+	if (RTW_CANNOT_TX(pdvobj)) {
+#ifdef DBG_TX
+		RTW_INFO(" DBG_TX %s:%d bDriverStopped:%s, bSurpriseRemoved:%s\n"
+			,__func__, __LINE__,
+			dev_is_drv_stopped(pdvobj) ? "True" : "False",
+			dev_is_surprise_removed(pdvobj) ? "True" : "False");
+#endif
+		rtw_sctx_done_err(&litexmitbuf->sctx, RTW_SCTX_DONE_TX_DENY);
+		goto exit;
+	}
+
+	litexmitbuf->dvobj = pdvobj;
+	litexmitbuf->pbuf = pkt_data_buf;
+	litexmitbuf->dataurb = xmiturb;
+	litexmitbuf->phl_buf_ptr = phl_tx_buf_ptr;
+
+	pipe = bulkid2pipe(pdvobj, bulk_id, _TRUE);
+
+	usb_fill_bulk_urb(xmiturb->urb, pusbd, pipe,
+			  litexmitbuf->pbuf,
+			  len,
+			  rtw_usb_g6_write_port_complete,
+			  litexmitbuf);
+	xmiturb->urb->transfer_flags |= URB_ZERO_PACKET;
+	status = usb_submit_urb(xmiturb->urb, GFP_ATOMIC);
+	if (!status) {
+
+	} else {
+		rtw_sctx_done_err(&litexmitbuf->sctx,
+			RTW_SCTX_DONE_WRITE_PORT_ERR);
+		RTW_INFO("%s, status=%d\n", __func__, status);
+
+		switch (status) {
+		case -ENODEV:
+			dev_set_drv_stopped(pdvobj);
+			break;
+		default:
+			break;
+		}
+		goto exit;
+	}
+
+	ret = _SUCCESS;
+
+exit:
+	if (ret != _SUCCESS) {
+		rtw_free_litedatabuf(&pdvobj->litexmitbuf_q, litexmitbuf);
+		rtw_free_dataurb(&pdvobj->xmit_urb_q, xmiturb);
+	}
+
+	if (ret == _SUCCESS)
+		ret = RTW_PHL_STATUS_SUCCESS;
+	else
+		ret = RTW_PHL_STATUS_FAILURE;
+
 	return ret;
 
 }
