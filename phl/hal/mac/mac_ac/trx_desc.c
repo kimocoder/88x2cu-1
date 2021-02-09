@@ -456,12 +456,27 @@ static struct txd_proc_type txdes_proc_mac[] = {
 #define GET_TX_DESC_QSEL(txdesc) \
 	le32_get_bits(*((__le32 *)(txdesc) + 0x01), GENMASK(12, 8))
 
+static inline
+void fill_txdesc_checksum_common(u8 *txdesc, size_t words)
+{
+	__le16 chksum = 0;
+	__le16 *data = (__le16 *)(txdesc);
+
+	SET_TX_DESC_TXDESC_CHECKSUM(txdesc, 0x0000);
+
+	while (words--)
+		chksum ^= *data++;
+
+	SET_TX_DESC_TXDESC_CHECKSUM(txdesc, __le16_to_cpu(chksum));
+}
+
 u32 mac_build_txdesc(struct mac_adapter *adapter,
 		     struct mac_txpkt_info *info, u8 *buf, u32 len)
 {
 #if 1 // NEO
 	struct mac_pkt_data *pkt_info = &info->u.data;
 	__le32 *txdesc = (__le32 *)buf;
+	size_t words;
 
 	SET_TX_DESC_TXPKTSIZE(txdesc,  info->pktsize);
 	SET_TX_DESC_OFFSET(txdesc, pkt_info->offset);
@@ -487,6 +502,9 @@ u32 mac_build_txdesc(struct mac_adapter *adapter,
 	SET_TX_DESC_EN_HWSEQ(txdesc, pkt_info->en_hwseq);
 	SET_TX_DESC_HW_SSN_SEL(txdesc, pkt_info->hw_ssn_sel);
 	SET_TX_DESC_NAVUSEHDR(txdesc, pkt_info->nav_use_hdr);
+
+	words = (pkt_info->pkt_offset * 8 + 48) / 2;
+	fill_txdesc_checksum_common((u8 *)txdesc, words);
 	return MACSUCCESS;
 #else
 	struct txd_proc_type *proc = txdes_proc_mac;

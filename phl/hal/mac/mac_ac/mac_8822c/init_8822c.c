@@ -173,7 +173,7 @@ static struct mac_ops mac8822c_ops = {
 	NULL, /* mac_lv1_rcvy, */ /* lv1_rcvy */
 	NULL, /* mac_get_macaddr, */
 #endif // NEO if 0
-	NULL, /* mac_build_txdesc, */ /* build_txdesc */
+	mac_build_txdesc, /* build_txdesc */
 #if 0 // NEO
 	NULL, /* mac_refill_txdesc, */ /* refill_txdesc */
 	NULL, /* mac_parse_rxdesc, */ /* parse_rxdesc */

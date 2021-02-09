@@ -3402,8 +3402,6 @@ rtw_hal_mac_fill_txdesc(void *mac, struct rtw_xmit_req *treq,
 	_os_mem_set(hal_com->drv_priv, &txpkt_info, 0, sizeof(txpkt_info));
 
 	hal_mac_fill_txpkt_info(treq, &txpkt_info);
-	// NEO
-	return RTW_HAL_STATUS_FAILURE;
 
 	*wd_len = mac_info->ops->txdesc_len(
 		mac_info,
