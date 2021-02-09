@@ -953,10 +953,10 @@ static enum rtw_phl_status _phl_handle_xmit_ring_usb(struct phl_info_t *phl_info
 		packet_len = 0;
 		pstatus = _phl_prepare_tx_usb(phl_info, tx_req,
 			tx_buf_data, &packet_len);
-		PHL_INFO("%s, packet_len = %d\n", __func__, packet_len);
+		/*PHL_INFO("%s, packet_len = %d\n", __func__, packet_len);*/
 
 		tx_len = tx_len + packet_len;
-		PHL_INFO("%s, tx_len = %d\n", __func__, tx_len);
+		/*PHL_INFO("%s, tx_len = %d\n", __func__, tx_len);*/
 
 		if (RTW_PHL_STATUS_SUCCESS == pstatus) {
 			ring_sts->req_busy--;
@@ -1021,9 +1021,7 @@ aa
 		if (agg_en && type == RTW_PHL_PKT_TYPE_DATA && agg_cnt > 1)
 			rtw_hal_usb_tx_agg_cfg(phl_info->hal, tx_buf_data, agg_cnt);
 #endif
-		bulk_id = rtw_hal_get_bulkout_id(phl_info->hal,
-			dma_ch, 0);
-		RTW_INFO("%s NEO bulk_id = %d\n", __func__, bulk_id);
+		bulk_id = rtw_hal_get_bulkout_id(phl_info->hal, tx_req->mdata.q_sel, 0);
 		pstatus = os_usb_tx(phl_to_drvpriv(phl_info),
 			(u8 *)tx_buf, bulk_id, tx_len, tx_buf_data);
 	}

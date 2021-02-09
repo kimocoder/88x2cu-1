@@ -6626,7 +6626,7 @@ void fill_txreq_mdata(_adapter *padapter, struct xmit_frame *pxframe)
 	mdata->nav_use_hdr = 0;
 
 	// NEO : 8822cu
-	mdata->q_sel = pxframe->attrib.priority;
+	mdata->q_sel = pxframe->os_qid;
 	mdata->f_bw = 0; // 20MHz
 	if (!pxframe->attrib.qos_en) {
 		mdata->dis_qselseq = true;
@@ -7193,9 +7193,6 @@ s32 core_tx_call_phl(_adapter *padapter, struct xmit_frame *pxframe, void *txsc_
 	struct rtw_xmit_req *ptxsc_txreq = NULL;
 	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
 #endif
-
-	pr_info("%s : NEO : pxframe=%p, txsc_pkt=%p\n",
-		__func__, pxframe, txsc_pkt);
 
 #ifdef CONFIG_CORE_TXSC
 	struct txsc_pkt_entry *ptxsc_pkt = (struct txsc_pkt_entry *)txsc_pkt;

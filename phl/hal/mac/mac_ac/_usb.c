@@ -47,12 +47,88 @@ void reg_write32_usb(struct mac_adapter *adapter, u32 addr, u32 val)
 	PLTFM_REG_W32(addr, val);
 }
 
+
+enum rtw_tx_desc_queue_select {
+	TX_DESC_QSEL_TID0	= 0,
+	TX_DESC_QSEL_TID1	= 1,
+	TX_DESC_QSEL_TID2	= 2,
+	TX_DESC_QSEL_TID3	= 3,
+	TX_DESC_QSEL_TID4	= 4,
+	TX_DESC_QSEL_TID5	= 5,
+	TX_DESC_QSEL_TID6	= 6,
+	TX_DESC_QSEL_TID7	= 7,
+	TX_DESC_QSEL_TID8	= 8,
+	TX_DESC_QSEL_TID9	= 9,
+	TX_DESC_QSEL_TID10	= 10,
+	TX_DESC_QSEL_TID11	= 11,
+	TX_DESC_QSEL_TID12	= 12,
+	TX_DESC_QSEL_TID13	= 13,
+	TX_DESC_QSEL_TID14	= 14,
+	TX_DESC_QSEL_TID15	= 15,
+	TX_DESC_QSEL_BEACON	= 16,
+	TX_DESC_QSEL_HIGH	= 17,
+	TX_DESC_QSEL_MGMT	= 18,
+	TX_DESC_QSEL_H2C	= 19,
+};
+
+enum rtw_tx_queue_type {
+	/* the order of AC queues matters */
+	RTW_TX_QUEUE_BK = 0x0,
+	RTW_TX_QUEUE_BE = 0x1,
+	RTW_TX_QUEUE_VI = 0x2,
+	RTW_TX_QUEUE_VO = 0x3,
+
+	RTW_TX_QUEUE_BCN = 0x4,
+	RTW_TX_QUEUE_MGMT = 0x5,
+	RTW_TX_QUEUE_HI0 = 0x6,
+	RTW_TX_QUEUE_H2C = 0x7,
+	/* keep it last */
+	RTK_MAX_TX_QUEUE_NUM
+};
+
 u8 get_bulkout_id(struct mac_adapter *adapter, u8 ch_dma, u8 mode)
 {
 	u8 bulkout_id = 0;
 
-	RTW_INFO("%s TODO NEO\n", __func__);
-#if 0 // NEO
+#if 1 // NEO : 8822cu
+
+	switch (ch_dma) { // qsel
+	case TX_DESC_QSEL_BEACON:
+		bulkout_id = RTW_TX_QUEUE_BCN;
+		break;
+	case TX_DESC_QSEL_H2C:
+		bulkout_id = RTW_TX_QUEUE_H2C;
+		break;
+	case TX_DESC_QSEL_MGMT:
+		bulkout_id = RTW_TX_QUEUE_MGMT;
+		break;
+	case TX_DESC_QSEL_HIGH:
+		bulkout_id = RTW_TX_QUEUE_HI0;
+		break;
+	case TX_DESC_QSEL_TID6:
+	case TX_DESC_QSEL_TID7:
+		bulkout_id = RTW_TX_QUEUE_VO;
+		break;
+	case TX_DESC_QSEL_TID4:
+	case TX_DESC_QSEL_TID5:
+		bulkout_id = RTW_TX_QUEUE_VI;
+		break;
+	case TX_DESC_QSEL_TID0:
+	case TX_DESC_QSEL_TID3:
+		bulkout_id = RTW_TX_QUEUE_BE;
+		break;
+	case TX_DESC_QSEL_TID1:
+	case TX_DESC_QSEL_TID2:
+		bulkout_id = RTW_TX_QUEUE_BK;
+		break;
+	default:
+		RTW_ERR("%s NEO qsel=%d unknown\n", __func__, ch_dma);
+		bulkout_id = RTW_TX_QUEUE_BCN;
+		break;
+	}
+
+#else // NEO : G6
+
 	if (mode == 0 && adapter->usb_info.ep5 && adapter->usb_info.ep6 &&
 	    adapter->usb_info.ep12) {
 		if (is_chip_id(adapter, MAC_AX_CHIP_ID_8852A) &&

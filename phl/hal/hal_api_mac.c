@@ -3239,10 +3239,8 @@ void hal_mac_fill_txpkt_info(struct rtw_xmit_req *treq,
 				struct mac_txpkt_info *txpkt_info)
 {
 	do {
-		RTW_INFO("%s NEO pktsize=%d\n", __func__, treq->mdata.pktlen);
 		txpkt_info->pktsize = treq->mdata.pktlen;
 
-		RTW_INFO("%s NEO type=%d\n", __func__, treq->mdata.type);
 		switch (treq->mdata.type) {
 		case RTW_PHL_PKT_TYPE_H2C:
 			txpkt_info->type = MAC_PKT_H2C;

@@ -678,7 +678,7 @@ typedef struct rtw_if_operations {
 
 #if 1
 #define	PHLTX_ENTER	//printk("eric-tx [%s][%d] ++\n", __FUNCTION__, __LINE__)
-#define	PHLTX_LOG 	printk("NEO [%s][%d]\n", __FUNCTION__, __LINE__)
+#define	PHLTX_LOG 	//printk("eric-tx [%s][%d]\n", __FUNCTION__, __LINE__)
 #define	PHLTX_EXIT 	//printk("eric-tx [%s][%d] --\n", __FUNCTION__, __LINE__)
 #define	PHLTX_ERR 	//printk("PHLTX_ERR [%s][%d]\n", __FUNCTION__, __LINE__)
 #else
