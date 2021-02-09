@@ -118,13 +118,39 @@ struct rtw_t_meta_data {
 	u8 band;
 	u8 type;
 
+// NEO : 8822cu
 	u8 offset;		// NEO 8822cu
 	u8 pkt_offset;		// NEO 8822cu
+	u8 rate_id;		// NEO : 8822cu
+	u16 f_rate;		/* DW6 [16:24] valid if userate_sel = 1 */
 	u8 q_sel;		/* DW2 [17:22] */
-	u8 bw;			// NEO 8822cu
+	u8 f_bw;		/* DW6 [28:29] valid if userate_sel = 1 */
+	u8 sec_type;		/* DW8 [9:12] */
+	// sn
+	u8 ampdu_en;		/* DW3 [12:12] */
+	u8 max_agg_num;		/* DW7 [0:7] */ /* ampdu_factor */
+	u8 ampdu_density;	/* DW8 [18:20] */
+	u16 sw_seq;		/* DW3 [0:11] */
 
-	u8 hw_seq_mode;		/* DW0 [0:1] */
+	u8 f_stbc;		/* DW6 [12:13] valid if userate_sel = 1 */
+	u8 f_ldpc;		/* DW6 [11:11] valid if userate_sel = 1 */
+	u8 dis_data_rate_fb;	/* DW6 [10:10] */
+	u8 dis_rts_rate_fb;	/* DW6 [9:9] */
+
+	u8 bc;			/* DW7 [11:11] */
+	u8 mc;			/* DW7 [11:11] */
+	u8 userate_sel;		/* DW6 [30:30] */
+	u8 ls;			// NEO : 8822cu
+	u8 fs;			// NEO : 8822cu
+	u8 short_gi;		// NEO : 8822cu
+	u8 report;		// NEO : 8822cu
+	u8 dis_qselseq;		// NEO : 8822cu
+	u8 en_hwseq;		// NEO : 8822cu
 	u8 hw_ssn_sel;		/* DW0 [2:3] */
+	u8 nav_use_hdr;		/* DW7 [10:10] */
+
+// NEO : G6
+	u8 hw_seq_mode;		/* DW0 [0:1] */
 	u8 smh_en;		/* DW0 [4:4] */
 	u8 hw_amsdu;		/* DW0 [5:5] */
 	u8 hw_aes_iv;		/* DW0 [6:6] */
@@ -146,31 +172,17 @@ struct rtw_t_meta_data {
 	u8 tid;			/* DW2 [23:23] */
 	u16 macid;		/* DW2 [24:30] */
 
-	u16 sw_seq;		/* DW3 [0:11] */
-	u8 ampdu_en;		/* DW3 [12:12] */
 	u8 bk;			/* DW3 [13:13] */
 
 	u8 mbssid;		/* DW6 [0:3] */
 	u8 hal_port;		/* DW6 [4:6] */
 	u8 data_bw_er;		/* DW6 [8:8] */
-	u8 dis_rts_rate_fb;	/* DW6 [9:9] */
-	u8 dis_data_rate_fb;	/* DW6 [10:10] */
-	u8 f_ldpc;		/* DW6 [11:11] valid if userate_sel = 1 */
-	u8 f_stbc;		/* DW6 [12:13] valid if userate_sel = 1 */
 	u8 f_dcm;		/* DW6 [14:14] valid if userate_sel = 1 */
 	u8 f_er;		/* DW6 [15:15] valid if userate_sel = 1 */
-	u16 f_rate;		/* DW6 [16:24] valid if userate_sel = 1 */
-	u8 rate_id;		// NEO : 8822cu
 	u8 f_gi_ltf;		/* DW6 [25:27] valid if userate_sel = 1 */
-	u8 f_bw;		/* DW6 [28:29] valid if userate_sel = 1 */
-	u8 userate_sel;		/* DW6 [30:30] */
 	u8 ack_ch_info;		/* DW6 [31:31] */
 
-	u8 max_agg_num;		/* DW7 [0:7] */
 	u8 bcn_srch_seq;	/* DW7 [8:9] */
-	u8 nav_use_hdr;		/* DW7 [10:10] */
-	u8 bc;			/* DW7 [11:11] */
-	u8 mc;			/* DW7 [11:11] */
 	u8 a_ctrl_bqr;		/* DW7 [12:12] */
 	u8 a_ctrl_uph;		/* DW7 [13:13] */
 	u8 a_ctrl_bsr;		/* DW7 [14:14] */
@@ -181,10 +193,8 @@ struct rtw_t_meta_data {
 
 	u8 sec_cam_idx;		/* DW8 [0:7] */
 	u8 sec_hw_enc;		/* DW8 [8:8] */
-	u8 sec_type;		/* DW8 [9:12] */
 	u8 life_time_sel;	/* DW8 [13:15] */
 	u8 force_txop;		/* DW8 [17:17] */
-	u8 ampdu_density;	/* DW8 [18:20] */
 	u8 lsig_txop_en;	/* DW8 [21:21] */
 	u8 txpwr_ofset_type;	/* DW8 [22:24] */
 	u8 no_ack;				/* DW8 [25:25] */
@@ -197,7 +207,6 @@ struct rtw_t_meta_data {
 	u8 ht_data_snd;		/* DW9 [7:7] */
 	u8 rtt_en;		/* DW9 [9:9] */
 	u8 spe_rpt;		/* DW9 [10:10] */
-	u8 bt_null;		/* DW9 [11:11] */
 	u8 wmm_tri_frame;	/* DW9 [12:12] */
 	u8 null_1;		/* DW9 [13:13] */
 	u8 null_0;		/* DW9 [14:14] */

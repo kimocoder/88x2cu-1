@@ -6622,13 +6622,19 @@ void fill_txreq_mdata(_adapter *padapter, struct xmit_frame *pxframe)
 	/* packet content */
 	mdata->hdr_len = pxframe->attrib.hdrlen;
 	mdata->hw_seq_mode = 0;
-	mdata->sw_seq = pxframe->attrib.seqnum;
 	mdata->hw_aes_iv = 0;
 	mdata->nav_use_hdr = 0;
 
 	// NEO : 8822cu
 	mdata->q_sel = pxframe->attrib.priority;
-	mdata->bw = 0; // 20MHz
+	mdata->f_bw = 0; // 20MHz
+	if (!pxframe->attrib.qos_en) {
+		mdata->dis_qselseq = true;
+		mdata->en_hwseq =  true;
+		mdata->hw_ssn_sel = pxframe->attrib.hw_ssn_sel;
+	} else {
+		mdata->sw_seq = pxframe->attrib.seqnum;
+	}
 
 	/* packet security */
 	if (pxframe->attrib.encrypt == _NO_PRIVACY_ || pxframe->attrib.bswenc == _TRUE) {
@@ -6688,11 +6694,6 @@ void fill_txreq_mdata(_adapter *padapter, struct xmit_frame *pxframe)
                mdata->tid = pxframe->attrib.priority;
        }
 
-#ifdef CONFIG_CORE_TXSC
-	mdata->ampdu_density = 0;
-	mdata->userate_sel = 0;
-#endif
-
 #if 1 // NEO for 8822cu
 	if (IS_CCK_RATE(padapter->mlmeextpriv.tx_rate)) {
 		mdata->f_rate = RTW_DATA_RATE_CCK1;
@@ -6742,6 +6743,12 @@ void fill_txreq_mdata(_adapter *padapter, struct xmit_frame *pxframe)
 
 	mdata->band = 0;
 	mdata->dma_ch = 0;
+
+// NEO
+	mdata->ls = true;
+	mdata->short_gi = true;
+	mdata->report = true;
+	mdata->userate_sel = 0;
 
 #ifdef CONFIG_CORE_TXSC
 	mdata->pktlen = txreq->total_len;
@@ -8410,7 +8417,7 @@ bool rtw_xmit_ac_blocked(_adapter *adapter)
 #endif/* #ifdef DBG_CONFIG_ERROR_DETECT */
 
 	if (rfctl->offch_state != OFFCHS_NONE
-		#if CONFIG_DFS
+		#ifdef CONFIG_DFS
 		|| IS_RADAR_DETECTED(rfctl) || rfctl->csa_ch
 		#endif
 	) {

@@ -437,6 +437,16 @@ static struct txd_proc_type txdes_proc_mac[] = {
 	le32p_replace_bits((__le32 *)(txdesc) + 0x02, value, BIT(19))
 #define SET_TX_DESC_SW_DEFINE(tx_desc, value)                                  \
 	le32p_replace_bits((__le32 *)(txdesc) + 0x06, value, GENMASK(11, 0))
+#define SET_TX_DESC_DISQSELSEQ(txdesc, value)                                 \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x00, value, BIT(31))
+#define SET_TX_DESC_EN_HWSEQ(txdesc, value)                                   \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x08, value, BIT(15))
+#define SET_TX_DESC_HW_SSN_SEL(txdesc, value)                                 \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x03, value, GENMASK(7, 6))
+#define SET_TX_DESC_NAVUSEHDR(txdesc, value)				       \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x03, value, BIT(15))
+#define SET_TX_DESC_BT_NULL(txdesc, value)				       \
+	le32p_replace_bits((__le32 *)(txdesc) + 0x02, value, BIT(23))
 #define SET_TX_DESC_TXDESC_CHECKSUM(txdesc, value)                             \
 	le32p_replace_bits((__le32 *)(txdesc) + 0x07, value, GENMASK(15, 0))
 #define SET_TX_DESC_DMA_TXAGG_NUM(txdesc, value)                             \
@@ -456,25 +466,27 @@ u32 mac_build_txdesc(struct mac_adapter *adapter,
 	SET_TX_DESC_TXPKTSIZE(txdesc,  info->pktsize);
 	SET_TX_DESC_OFFSET(txdesc, pkt_info->offset);
 	SET_TX_DESC_PKT_OFFSET(txdesc, pkt_info->pkt_offset);
-	SET_TX_DESC_QSEL(txdesc, pkt_info->qsel);
-	SET_TX_DESC_BMC(txdesc, pkt_info->bmc);
 	SET_TX_DESC_RATE_ID(txdesc, pkt_info->rate_id);
 	SET_TX_DESC_DATARATE(txdesc, pkt_info->data_rate);
-	SET_TX_DESC_DISDATAFB(txdesc, pkt_info->dis_rate_fallback);
-	SET_TX_DESC_USE_RATE(txdesc, pkt_info->use_rate);
+	SET_TX_DESC_QSEL(txdesc, pkt_info->qsel);
+	SET_TX_DESC_DATA_BW(txdesc, pkt_info->data_bw);
 	SET_TX_DESC_SEC_TYPE(txdesc, pkt_info->sec_type);
-	SET_TX_DESC_DATA_BW(txdesc, pkt_info->bw);
-	SET_TX_DESC_SW_SEQ(txdesc, pkt_info->wifi_seq);
-	SET_TX_DESC_MAX_AGG_NUM(txdesc, pkt_info->ampdu_factor);
+	SET_TX_DESC_AGG_EN(txdesc, pkt_info->agg_en);
+	SET_TX_DESC_MAX_AGG_NUM(txdesc, pkt_info->max_agg_num);
 	SET_TX_DESC_AMPDU_DENSITY(txdesc, pkt_info->ampdu_density);
-	SET_TX_DESC_DATA_STBC(txdesc, pkt_info->stbc);
-	SET_TX_DESC_DATA_LDPC(txdesc, pkt_info->ldpc);
-	SET_TX_DESC_AGG_EN(txdesc, pkt_info->ampdu_en);
+	SET_TX_DESC_SW_SEQ(txdesc, pkt_info->wifi_seq);
+	SET_TX_DESC_DATA_STBC(txdesc, pkt_info->data_stbc);
+	SET_TX_DESC_DATA_LDPC(txdesc, pkt_info->data_ldpc);
+	SET_TX_DESC_DISDATAFB(txdesc, pkt_info->dis_data_fb);
+	SET_TX_DESC_BMC(txdesc, pkt_info->bmc);
+	SET_TX_DESC_USE_RATE(txdesc, pkt_info->userate);
 	SET_TX_DESC_LS(txdesc, pkt_info->ls);
 	SET_TX_DESC_DATA_SHORT(txdesc, pkt_info->short_gi);
 	SET_TX_DESC_SPE_RPT(txdesc, pkt_info->report);
-	SET_TX_DESC_SW_DEFINE(txdesc, pkt_info->sn);
-	SET_TX_DESC_USE_RTS(txdesc, pkt_info->rts);
+	SET_TX_DESC_DISQSELSEQ(txdesc, pkt_info->dis_qselseq);
+	SET_TX_DESC_EN_HWSEQ(txdesc, pkt_info->en_hwseq);
+	SET_TX_DESC_HW_SSN_SEL(txdesc, pkt_info->hw_ssn_sel);
+	SET_TX_DESC_NAVUSEHDR(txdesc, pkt_info->nav_use_hdr);
 	return MACSUCCESS;
 #else
 	struct txd_proc_type *proc = txdes_proc_mac;

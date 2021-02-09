@@ -236,7 +236,7 @@ inline u8 rtw_hw_get_band_type(struct dvobj_priv *dvobj)
 		band_type |= BAND_CAP_5G;
 #endif
 
-#if CONFIG_IEEE80211_BAND_6GHZ
+#ifdef CONFIG_IEEE80211_BAND_6GHZ
 	if(band_cap & BAND_CAP_6G)
 		band_type |= BAND_CAP_6G;
 #endif

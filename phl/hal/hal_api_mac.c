@@ -3259,7 +3259,6 @@ void hal_mac_fill_txpkt_info(struct rtw_xmit_req *treq,
 		}
 		PHL_DBG("txpkt_info->type:0x%x \n",
 			txpkt_info->type);
-		break;
 
 		if (txpkt_info->type == MAC_PKT_H2C) {
 			/* H2C doesn't need txpkt info->u.data */
@@ -3270,17 +3269,32 @@ void hal_mac_fill_txpkt_info(struct rtw_xmit_req *treq,
 			txpkt_info->u.data.macid = (u8)treq->mdata.macid;
 			txpkt_info->u.data.rate_id = treq->mdata.rate_id;
 			txpkt_info->u.data.data_rate = treq->mdata.f_rate;
-			txpkt_info->u.data.bmc = (treq->mdata.bc | treq->mdata.mc) ? 1 : 0;
-			txpkt_info->u.data.tid = (treq->mdata.tid & 7); // tid 0 ~ 7
-			txpkt_info->u.data.wifi_seq = treq->mdata.sw_seq;
 			txpkt_info->u.data.qsel = treq->mdata.q_sel;
+			txpkt_info->u.data.data_bw = treq->mdata.f_bw;
+			txpkt_info->u.data.sec_type = treq->mdata.sec_type;
+			txpkt_info->u.data.agg_en = treq->mdata.ampdu_en;
+			txpkt_info->u.data.max_agg_num = treq->mdata.max_agg_num;
+			txpkt_info->u.data.ampdu_density = treq->mdata.ampdu_density;
+			txpkt_info->u.data.wifi_seq = treq->mdata.sw_seq;
+			txpkt_info->u.data.data_stbc = treq->mdata.f_stbc;
+			txpkt_info->u.data.data_ldpc = treq->mdata.f_ldpc;
+			txpkt_info->u.data.dis_data_fb = treq->mdata.dis_data_rate_fb;
+			txpkt_info->u.data.bmc = (treq->mdata.bc | treq->mdata.mc) ? 1 : 0;
+			txpkt_info->u.data.userate = treq->mdata.userate_sel;
+			txpkt_info->u.data.ls = treq->mdata.ls;
+			txpkt_info->u.data.short_gi = treq->mdata.short_gi;
+			txpkt_info->u.data.report = treq->mdata.report;
+			txpkt_info->u.data.dis_qselseq = treq->mdata.dis_qselseq;
+			txpkt_info->u.data.en_hwseq = treq->mdata.en_hwseq;
+			txpkt_info->u.data.hw_ssn_sel = treq->mdata.hw_ssn_sel;
+			txpkt_info->u.data.nav_use_hdr = treq->mdata.nav_use_hdr;
 			#if 0 // NEO
+			txpkt_info->u.data.tid = (treq->mdata.tid & 7); // tid 0 ~ 7
 			txpkt_info->u.data.wdinfo_en = treq->mdata.wdinfo_en;
 			txpkt_info->u.data.wd_page = treq->mdata.wd_page_size;
 			txpkt_info->u.data.wp_offset = treq->mdata.wp_offset;
 			txpkt_info->u.data.hdr_len = treq->mdata.hdr_len; /* for mgnt frame */
 			txpkt_info->u.data.headerwllc_len = treq->mdata.hdr_len; /* for data frame */
-			txpkt_info->u.data.hw_ssn_sel = treq->mdata.hw_ssn_sel;
 			txpkt_info->u.data.hw_seq_mode = treq->mdata.hw_seq_mode;
 			txpkt_info->u.data.chk_en = treq->mdata.chk_en;
 			txpkt_info->u.data.hw_amsdu = treq->mdata.hw_amsdu;
@@ -3299,7 +3313,6 @@ void hal_mac_fill_txpkt_info(struct rtw_xmit_req *treq,
 				txpkt_info->u.data.tx_cnt_lmt = treq->mdata.data_tx_cnt_lmt;
 			}
 			txpkt_info->u.data.ndpa_dur = treq->mdata.ndpa_dur;
-			txpkt_info->u.data.nav_use_hdr = treq->mdata.nav_use_hdr;
 			txpkt_info->u.data.mbssid = treq->mdata.mbssid;
 			txpkt_info->u.data.tri_frame = treq->mdata.wmm_tri_frame;
 			txpkt_info->u.data.ack_ch_info = treq->mdata.ack_ch_info;
@@ -3308,18 +3321,11 @@ void hal_mac_fill_txpkt_info(struct rtw_xmit_req *treq,
 			txpkt_info->u.data.ht_data_snd = treq->mdata.ht_data_snd;
 			txpkt_info->u.data.no_ack = treq->mdata.no_ack;
 			txpkt_info->u.data.ch = treq->mdata.dma_ch;
-			txpkt_info->u.data.agg_en = treq->mdata.ampdu_en;
 			txpkt_info->u.data.bk = treq->mdata.bk;
-			txpkt_info->u.data.max_agg_num = treq->mdata.max_agg_num;
 			txpkt_info->u.data.lifetime_sel = treq->mdata.life_time_sel;
-			txpkt_info->u.data.ampdu_density = treq->mdata.ampdu_density;
-			txpkt_info->u.data.userate = treq->mdata.userate_sel;
-			txpkt_info->u.data.data_bw = treq->mdata.f_bw; // TO DO
 			txpkt_info->u.data.data_gi_ltf = treq->mdata.f_gi_ltf; // TO DO
 			txpkt_info->u.data.data_er = treq->mdata.f_er;// TO DO
 			txpkt_info->u.data.data_dcm = treq->mdata.f_dcm;// TO DO
-			txpkt_info->u.data.data_stbc = treq->mdata.f_stbc;
-			txpkt_info->u.data.data_ldpc = treq->mdata.f_ldpc;
 
 			txpkt_info->u.data.er_bw = treq->mdata.data_bw_er; // TO DO
 
@@ -3329,7 +3335,6 @@ void hal_mac_fill_txpkt_info(struct rtw_xmit_req *treq,
 			txpkt_info->u.data.pkt_offset = treq->mdata.usb_pkt_ofst;
 
 			/* rate fallback */
-			txpkt_info->u.data.dis_data_fb = treq->mdata.dis_data_rate_fb;
 			txpkt_info->u.data.dis_rts_fb = treq->mdata.dis_rts_rate_fb;
 
 			/* protection */
@@ -3341,7 +3346,6 @@ void hal_mac_fill_txpkt_info(struct rtw_xmit_req *treq,
 			/* encryption */
 			txpkt_info->u.data.hw_sec_en = treq->mdata.sec_hw_enc;
 			txpkt_info->u.data.sec_cam_idx = treq->mdata.sec_cam_idx;
-			txpkt_info->u.data.sec_type = treq->mdata.sec_type;
 
 			PHL_DBG("txpkt_info->u.data.ch:0x%x \n",
 				 txpkt_info->u.data.ch);
