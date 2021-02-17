@@ -302,11 +302,6 @@ extern void unregister_intf_hdl(struct intf_hdl *pintfhdl);
 extern void _rtw_attrib_read(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
 extern void _rtw_attrib_write(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
 
-extern void _rtw_read_mem(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
-extern void _rtw_read_port(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
-extern void _rtw_read_port_cancel(_adapter *adapter);
-
-
 extern int _rtw_write8(_adapter *adapter, u32 addr, u8 val);
 extern int _rtw_write16(_adapter *adapter, u32 addr, u16 val);
 extern int _rtw_write32(_adapter *adapter, u32 addr, u32 val);
