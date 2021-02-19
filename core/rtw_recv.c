@@ -1284,158 +1284,6 @@ void count_rx_stats(_adapter *padapter, union recv_frame *prframe, struct sta_in
 
 }
 
-int rtw_sta_rx_data_validate_hdr(_adapter *adapter, union recv_frame *rframe, struct sta_info **sta)
-{
-	struct sta_priv *stapriv = &adapter->stapriv;
-	u8 *myhwaddr = adapter_mac_addr(adapter);
-	struct rx_pkt_attrib *rattrib = &rframe->u.hdr.attrib;
-	u8 *whdr = get_recvframe_data(rframe);
-	u8 is_ra_bmc = IS_MCAST(GetAddr1Ptr(whdr)) ? 1 : 0;
-	sint ret = _FAIL;
-
-	//RTW_INFO("%s NEO to_fr_ds=%d\n", __func__, rattrib->to_fr_ds);
-
-	if (rattrib->to_fr_ds == 0) {
-		_rtw_memcpy(rattrib->ra, GetAddr1Ptr(whdr), ETH_ALEN);
-		_rtw_memcpy(rattrib->ta, get_addr2_ptr(whdr), ETH_ALEN);
-		_rtw_memcpy(rattrib->dst, GetAddr1Ptr(whdr), ETH_ALEN);
-		_rtw_memcpy(rattrib->src, get_addr2_ptr(whdr), ETH_ALEN);
-		_rtw_memcpy(rattrib->bssid, GetAddr3Ptr(whdr), ETH_ALEN);
-
-		#ifdef CONFIG_TDLS
-		if (adapter->tdlsinfo.link_established == _TRUE)
-			ret = rtw_tdls_rx_data_validate_hdr(adapter, rframe, sta);
-		else
-		#endif
-		{
-			/* For Station mode, sa and bssid should always be BSSID, and DA is my mac-address */
-			if (!_rtw_memcmp(rattrib->bssid, rattrib->src, ETH_ALEN))
-				goto exit;
-
-			*sta = rtw_get_stainfo(stapriv, get_addr2_ptr(whdr));
-			if (*sta)
-				ret = _SUCCESS;
-		}
-		goto exit;
-	}
-
-	if (!(MLME_STATE(adapter) & (WIFI_ASOC_STATE | WIFI_UNDER_LINKING))) {
-		if (!is_ra_bmc) {
-			/* for AP multicast issue , modify by yiwei */
-			static systime send_issue_deauth_time = 0;
-
-			/* RTW_INFO("After send deauth , %u ms has elapsed.\n", rtw_get_passing_time_ms(send_issue_deauth_time)); */
-			if (rtw_get_passing_time_ms(send_issue_deauth_time) > 10000 || send_issue_deauth_time == 0) {
-				send_issue_deauth_time = rtw_get_current_time();
-				RTW_INFO(FUNC_ADPT_FMT" issue_deauth to "MAC_FMT" with reason(7), mlme_state:0x%x\n"
-					, FUNC_ADPT_ARG(adapter), MAC_ARG(get_addr2_ptr(whdr)), MLME_STATE(adapter));
-				issue_deauth(adapter, get_addr2_ptr(whdr), WLAN_REASON_CLASS3_FRAME_FROM_NONASSOC_STA);
-			}
-		}
-		#ifdef DBG_RX_DROP_FRAME
-		RTW_INFO("DBG_RX_DROP_FRAME "FUNC_ADPT_FMT" fw_state:0x%x\n"
-			, FUNC_ADPT_ARG(adapter), MLME_STATE(adapter));
-		#endif
-		goto exit;
-	}
-
-	_rtw_memcpy(rattrib->ra, GetAddr1Ptr(whdr), ETH_ALEN);
-	_rtw_memcpy(rattrib->ta, get_addr2_ptr(whdr), ETH_ALEN);
-
-	switch (rattrib->to_fr_ds) {
-	case 2:
-		_rtw_memcpy(rattrib->dst, GetAddr1Ptr(whdr), ETH_ALEN);
-		_rtw_memcpy(rattrib->src, GetAddr3Ptr(whdr), ETH_ALEN); /* may change after checking AMSDU subframe header */
-		_rtw_memcpy(rattrib->bssid, get_addr2_ptr(whdr), ETH_ALEN);
-		break;
-	case 3:
-		_rtw_memcpy(rattrib->dst, GetAddr3Ptr(whdr), ETH_ALEN); /* may change after checking AMSDU subframe header */
-		_rtw_memcpy(rattrib->src, GetAddr4Ptr(whdr), ETH_ALEN); /* may change after checking AMSDU subframe header */
-		_rtw_memcpy(rattrib->bssid, get_addr2_ptr(whdr), ETH_ALEN);
-		break;
-	default:
-		ret = RTW_RX_HANDLED; /* don't count for drop */
-		goto exit;
-	}
-
-	/* filter packets that SA is myself */
-	if (!rattrib->amsdu && _rtw_memcmp(myhwaddr, rattrib->src, ETH_ALEN)) {
-		#ifdef DBG_RX_DROP_FRAME
-		RTW_INFO("DBG_RX_DROP_FRAME "FUNC_ADPT_FMT" SA="MAC_FMT", myhwaddr="MAC_FMT"\n"
-			, FUNC_ADPT_ARG(adapter), MAC_ARG(rattrib->src), MAC_ARG(myhwaddr));
-		#endif
-		goto exit;
-	}
-
-	*sta = rtw_get_stainfo(stapriv, rattrib->ta);
-	if (*sta == NULL) {
-		#ifndef CONFIG_CUSTOMER_ALIBABA_GENERAL
-		if (!is_ra_bmc && !IS_RADAR_DETECTED(adapter_to_rfctl(adapter))) {
-			RTW_INFO(FUNC_ADPT_FMT" issue_deauth to "MAC_FMT" with reason(7), unknown TA\n"
-				, FUNC_ADPT_ARG(adapter), MAC_ARG(rattrib->ta));
-			issue_deauth(adapter, rattrib->ta, WLAN_REASON_CLASS3_FRAME_FROM_NONASSOC_STA);
-		}
-		#endif
-		#ifdef DBG_RX_DROP_FRAME
-		RTW_INFO("DBG_RX_DROP_FRAME "FUNC_ADPT_FMT" can't get psta under STATION_MODE ; drop pkt\n"
-			, FUNC_ADPT_ARG(adapter));
-		#endif
-		goto exit;
-	}
-
-#ifdef CONFIG_RTW_WDS_AUTO_EN
-	if (rattrib->to_fr_ds == 3 && !(sta->flags & WLAN_STA_WDS))
-		sta->flags |= WLAN_STA_WDS;
-#endif
-
-	/*if ((get_frame_sub_type(whdr) & WIFI_QOS_DATA_TYPE) == WIFI_QOS_DATA_TYPE) {
-	}
-	*/
-
-	if (get_frame_sub_type(whdr) & BIT(6)) {
-		/* No data, will not indicate to upper layer, temporily count it here */
-		count_rx_stats(adapter, rframe, *sta);
-		ret = RTW_RX_HANDLED;
-		goto exit;
-	}
-
-#ifdef CONFIG_RTW_WDS
-	if (adapter_use_wds(adapter)
-		&& !rattrib->amsdu && IS_MCAST(rattrib->dst)
-		&& rtw_rx_wds_gptr_check(adapter, rattrib->src)
-	) {
-		/* will not indicate to upper layer, temporily count it here */
-		count_rx_stats(adapter, rframe, *sta);
-		ret = RTW_RX_HANDLED;
-		goto exit;
-	}
-#endif
-
-	ret = _SUCCESS;
-
-exit:
-	return ret;
-}
-
-int rtw_sta_rx_amsdu_act_check(union recv_frame *rframe
-	, const u8 *da, const u8 *sa)
-{
-	int act = RTW_RX_MSDU_ACT_INDICATE;
-
-#ifdef CONFIG_RTW_WDS
-	_adapter *adapter = rframe->u.hdr.adapter;
-
-	if (adapter_use_wds(adapter)
-		&& IS_MCAST(da)
-		&& rtw_rx_wds_gptr_check(adapter, sa)
-	) {
-		act = 0;
-	}
-#endif
-
-	return act;
-}
-
 sint sta2sta_data_frame(
 	_adapter *adapter,
 	union recv_frame *precv_frame,
@@ -1619,7 +1467,159 @@ exit:
 
 }
 
-sint validate_recv_ctrl_frame(_adapter *padapter, union recv_frame *precv_frame);
+int rtw_sta_rx_data_validate_hdr(_adapter *adapter, union recv_frame *rframe, struct sta_info **sta)
+{
+	struct sta_priv *stapriv = &adapter->stapriv;
+	u8 *myhwaddr = adapter_mac_addr(adapter);
+	struct rx_pkt_attrib *rattrib = &rframe->u.hdr.attrib;
+	u8 *whdr = get_recvframe_data(rframe);
+	u8 is_ra_bmc = IS_MCAST(GetAddr1Ptr(whdr)) ? 1 : 0;
+	sint ret = _FAIL;
+
+	//RTW_INFO("%s NEO to_fr_ds=%d\n", __func__, rattrib->to_fr_ds);
+
+	if (rattrib->to_fr_ds == 0) {
+		_rtw_memcpy(rattrib->ra, GetAddr1Ptr(whdr), ETH_ALEN);
+		_rtw_memcpy(rattrib->ta, get_addr2_ptr(whdr), ETH_ALEN);
+		_rtw_memcpy(rattrib->dst, GetAddr1Ptr(whdr), ETH_ALEN);
+		_rtw_memcpy(rattrib->src, get_addr2_ptr(whdr), ETH_ALEN);
+		_rtw_memcpy(rattrib->bssid, GetAddr3Ptr(whdr), ETH_ALEN);
+
+		#ifdef CONFIG_TDLS
+		if (adapter->tdlsinfo.link_established == _TRUE)
+			ret = rtw_tdls_rx_data_validate_hdr(adapter, rframe, sta);
+		else
+		#endif
+		{
+			/* For Station mode, sa and bssid should always be BSSID, and DA is my mac-address */
+			if (!_rtw_memcmp(rattrib->bssid, rattrib->src, ETH_ALEN))
+				goto exit;
+
+			*sta = rtw_get_stainfo(stapriv, get_addr2_ptr(whdr));
+			if (*sta)
+				ret = _SUCCESS;
+		}
+		goto exit;
+	}
+
+	if (!(MLME_STATE(adapter) & (WIFI_ASOC_STATE | WIFI_UNDER_LINKING))) {
+		if (!is_ra_bmc) {
+			/* for AP multicast issue , modify by yiwei */
+			static systime send_issue_deauth_time = 0;
+
+			/* RTW_INFO("After send deauth , %u ms has elapsed.\n", rtw_get_passing_time_ms(send_issue_deauth_time)); */
+			if (rtw_get_passing_time_ms(send_issue_deauth_time) > 10000 || send_issue_deauth_time == 0) {
+				send_issue_deauth_time = rtw_get_current_time();
+				RTW_INFO(FUNC_ADPT_FMT" issue_deauth to "MAC_FMT" with reason(7), mlme_state:0x%x\n"
+					, FUNC_ADPT_ARG(adapter), MAC_ARG(get_addr2_ptr(whdr)), MLME_STATE(adapter));
+				issue_deauth(adapter, get_addr2_ptr(whdr), WLAN_REASON_CLASS3_FRAME_FROM_NONASSOC_STA);
+			}
+		}
+		#ifdef DBG_RX_DROP_FRAME
+		RTW_INFO("DBG_RX_DROP_FRAME "FUNC_ADPT_FMT" fw_state:0x%x\n"
+			, FUNC_ADPT_ARG(adapter), MLME_STATE(adapter));
+		#endif
+		goto exit;
+	}
+
+	_rtw_memcpy(rattrib->ra, GetAddr1Ptr(whdr), ETH_ALEN);
+	_rtw_memcpy(rattrib->ta, get_addr2_ptr(whdr), ETH_ALEN);
+
+	switch (rattrib->to_fr_ds) {
+	case 2:
+		_rtw_memcpy(rattrib->dst, GetAddr1Ptr(whdr), ETH_ALEN);
+		_rtw_memcpy(rattrib->src, GetAddr3Ptr(whdr), ETH_ALEN); /* may change after checking AMSDU subframe header */
+		_rtw_memcpy(rattrib->bssid, get_addr2_ptr(whdr), ETH_ALEN);
+		break;
+	case 3:
+		_rtw_memcpy(rattrib->dst, GetAddr3Ptr(whdr), ETH_ALEN); /* may change after checking AMSDU subframe header */
+		_rtw_memcpy(rattrib->src, GetAddr4Ptr(whdr), ETH_ALEN); /* may change after checking AMSDU subframe header */
+		_rtw_memcpy(rattrib->bssid, get_addr2_ptr(whdr), ETH_ALEN);
+		break;
+	default:
+		ret = RTW_RX_HANDLED; /* don't count for drop */
+		goto exit;
+	}
+
+	/* filter packets that SA is myself */
+	if (!rattrib->amsdu && _rtw_memcmp(myhwaddr, rattrib->src, ETH_ALEN)) {
+		#ifdef DBG_RX_DROP_FRAME
+		RTW_INFO("DBG_RX_DROP_FRAME "FUNC_ADPT_FMT" SA="MAC_FMT", myhwaddr="MAC_FMT"\n"
+			, FUNC_ADPT_ARG(adapter), MAC_ARG(rattrib->src), MAC_ARG(myhwaddr));
+		#endif
+		goto exit;
+	}
+
+	*sta = rtw_get_stainfo(stapriv, rattrib->ta);
+	if (*sta == NULL) {
+		#ifndef CONFIG_CUSTOMER_ALIBABA_GENERAL
+		if (!is_ra_bmc && !IS_RADAR_DETECTED(adapter_to_rfctl(adapter))) {
+			RTW_INFO(FUNC_ADPT_FMT" issue_deauth to "MAC_FMT" with reason(7), unknown TA\n"
+				, FUNC_ADPT_ARG(adapter), MAC_ARG(rattrib->ta));
+			issue_deauth(adapter, rattrib->ta, WLAN_REASON_CLASS3_FRAME_FROM_NONASSOC_STA);
+		}
+		#endif
+		#ifdef DBG_RX_DROP_FRAME
+		RTW_INFO("DBG_RX_DROP_FRAME "FUNC_ADPT_FMT" can't get psta under STATION_MODE ; drop pkt\n"
+			, FUNC_ADPT_ARG(adapter));
+		#endif
+		goto exit;
+	}
+
+#ifdef CONFIG_RTW_WDS_AUTO_EN
+	if (rattrib->to_fr_ds == 3 && !(sta->flags & WLAN_STA_WDS))
+		sta->flags |= WLAN_STA_WDS;
+#endif
+
+	/*if ((get_frame_sub_type(whdr) & WIFI_QOS_DATA_TYPE) == WIFI_QOS_DATA_TYPE) {
+	}
+	*/
+
+	if (get_frame_sub_type(whdr) & BIT(6)) {
+		/* No data, will not indicate to upper layer, temporily count it here */
+		count_rx_stats(adapter, rframe, *sta);
+		ret = RTW_RX_HANDLED;
+		goto exit;
+	}
+
+#ifdef CONFIG_RTW_WDS
+	if (adapter_use_wds(adapter)
+		&& !rattrib->amsdu && IS_MCAST(rattrib->dst)
+		&& rtw_rx_wds_gptr_check(adapter, rattrib->src)
+	) {
+		/* will not indicate to upper layer, temporily count it here */
+		count_rx_stats(adapter, rframe, *sta);
+		ret = RTW_RX_HANDLED;
+		goto exit;
+	}
+#endif
+
+	ret = _SUCCESS;
+
+exit:
+	return ret;
+}
+
+int rtw_sta_rx_amsdu_act_check(union recv_frame *rframe
+	, const u8 *da, const u8 *sa)
+{
+	int act = RTW_RX_MSDU_ACT_INDICATE;
+
+#ifdef CONFIG_RTW_WDS
+	_adapter *adapter = rframe->u.hdr.adapter;
+
+	if (adapter_use_wds(adapter)
+		&& IS_MCAST(da)
+		&& rtw_rx_wds_gptr_check(adapter, sa)
+	) {
+		act = 0;
+	}
+#endif
+
+	return act;
+}
+
+
 sint validate_recv_ctrl_frame(_adapter *padapter, union recv_frame *precv_frame)
 {
 	struct rx_pkt_attrib *pattrib = &precv_frame->u.hdr.attrib;
@@ -2068,21 +2068,14 @@ sint validate_recv_data_frame(_adapter *adapter, union recv_frame *precv_frame)
 	struct security_priv	*psecuritypriv = &adapter->securitypriv;
 	sint ret = _SUCCESS;
 
-
-	//RTW_INFO("%s NEO pkt len=%d\n", __func__, precv_frame->u.hdr.len);
-	//print_hex_dump(KERN_INFO, "validate_recv_data_frame: ", DUMP_PREFIX_OFFSET, 16, 1,
-	//	       ptr, precv_frame->u.hdr.len, 1);
-
 	bretry = GetRetry(ptr);
 	a4_shift = (pattrib->to_fr_ds == 3) ? ETH_ALEN : 0;
 
-#if 0 // NEO : from mdata
 	/* some address fields are different when using AMSDU */
 	if (pattrib->qos)
 		pattrib->amsdu = GetAMsdu(ptr + WLAN_HDR_A3_LEN + a4_shift);
 	else
 		pattrib->amsdu = 0;
-#endif // if 0 NEO
 
 #ifdef CONFIG_RTW_MESH
 	if (MLME_IS_MESH(adapter)) {
