@@ -2244,7 +2244,6 @@ static inline void dump_rx_packet(u8 *ptr)
 	RTW_INFO("#############################\n");
 }
 
-sint validate_recv_frame(_adapter *adapter, union recv_frame *precv_frame);
 sint validate_recv_frame(_adapter *adapter, union recv_frame *precv_frame)
 {
 	/* shall check frame subtype, to / from ds, da, bssid */
@@ -2271,7 +2270,7 @@ sint validate_recv_frame(_adapter *adapter, union recv_frame *precv_frame)
 #ifdef CONFIG_WAPI_SUPPORT
 	PRT_WAPI_T	pWapiInfo = &adapter->wapiInfo;
 	struct recv_frame_hdr *phdr = &precv_frame->u.hdr;
-	u8 waistruct sk_buff = 0;
+	u8 wai_pkt = 0;
 	u16 sc;
 	u8	external_len = 0;
 #endif
@@ -2307,7 +2306,6 @@ sint validate_recv_frame(_adapter *adapter, union recv_frame *precv_frame)
 
 	/* add version chk */
 	if (ver != 0) {
-		RTW_ERR("%s NEO ver:%d failed\n", __func__, ver);
 		retval = _FAIL;
 		DBG_COUNTER(adapter->rx_logs.core_rx_pre_ver_err);
 		goto exit;
@@ -2369,11 +2367,11 @@ sint validate_recv_frame(_adapter *adapter, union recv_frame *precv_frame)
 		else
 			external_len = 0;
 
-		waistruct sk_buff = rtw_wapi_is_wai_packet(adapter, ptr);
+		wai_pkt = rtw_wapi_is_wai_packet(adapter, ptr);
 
 		phdr->bIsWaiPacket = wai_pkt;
 
-		if (waistruct sk_buff != 0) {
+		if (wai_pkt != 0) {
 			if (sc != adapter->wapiInfo.wapiSeqnumAndFragNum)
 				adapter->wapiInfo.wapiSeqnumAndFragNum = sc;
 			else {
