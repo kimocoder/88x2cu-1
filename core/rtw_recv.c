@@ -2843,7 +2843,7 @@ static void recv_free_fwd_resource(_adapter *adapter, struct xmit_frame *fwd_fra
 	struct xmit_priv *xmitpriv = &adapter->xmitpriv;
 
 	if (fwd_frame)
-		rtw_free_xmitframe(xmitpriv, fwd_frame);
+		core_tx_free_xmitframe(adapter, fwd_frame);
 
 #if CONFIG_RTW_DATA_BMC_TO_UC
 	if (!rtw_is_list_empty(b2u_list)) {
@@ -2855,7 +2855,7 @@ static void recv_free_fwd_resource(_adapter *adapter, struct xmit_frame *fwd_fra
 			b2uframe = LIST_CONTAINOR(list, struct xmit_frame, list);
 			list = get_next(list);
 			rtw_list_delete(&b2uframe->list);
-			rtw_free_xmitframe(xmitpriv, b2uframe);
+			core_tx_free_xmitframe(adapter, b2uframe);
 		}
 	}
 #endif
@@ -2893,11 +2893,11 @@ static void recv_fwd_pkt_hdl(_adapter *adapter, struct sk_buff *pkt
 			else
 				b2uframe->pkt = rtw_skb_copy(fwd_pkt);
 			if (!b2uframe->pkt) {
-				rtw_free_xmitframe(xmitpriv, b2uframe);
+				core_tx_free_xmitframe(adapter, b2uframe);
 				continue;
 			}
 
-			rtw_xmit_posthandle(adapter, b2uframe, b2uframe->pkt);
+			core_tx_per_packet(adapter, b2uframe, &b2uframe->pkt, NULL);
 		}
 	}
 #endif

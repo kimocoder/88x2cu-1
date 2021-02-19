@@ -17,6 +17,65 @@
 #include <drv_types.h>
 
 
+static inline s32 rtw_intf_init_xmit_priv(_adapter *adapter)
+{
+	return adapter_to_dvobj(adapter)->intf_ops->init_xmit_priv(adapter);
+}
+
+static inline void rtw_intf_free_xmit_priv(_adapter *adapter)
+{
+
+	adapter_to_dvobj(adapter)->intf_ops->free_xmit_priv(adapter);
+}
+static inline s32 rtw_intf_data_xmit(_adapter *adapter,
+					struct xmit_frame *pxmitframe)
+{
+	return adapter_to_dvobj(adapter)->intf_ops->data_xmit(adapter, pxmitframe);
+}
+
+static inline s32 rtw_intf_xmitframe_enqueue(_adapter *adapter,
+						struct xmit_frame *pxmitframe)
+{
+	u32 rtn;
+
+	/* enqueue is not necessary, casuse phl use sw queue to save xmitframe */
+	rtn = core_tx_call_phl(adapter, pxmitframe, NULL);
+
+	if (rtn == FAIL)
+		core_tx_free_xmitframe(adapter, pxmitframe);
+
+	return rtn;
+}
+
+static inline u8 rtw_intf_start_xmit_frame_thread(_adapter *adapter)
+{
+	u8 rst = _SUCCESS;
+#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
+#ifndef CONFIG_SDIO_TX_TASKLET
+	if (adapter_to_dvobj(adapter)->intf_ops->start_xmit_frame_thread)
+		rst = adapter_to_dvobj(adapter)->intf_ops->start_xmit_frame_thread(adapter);
+#endif
+#endif
+	return rst;
+}
+static inline void rtw_intf_cancel_xmit_frame_thread(_adapter *adapter)
+{
+#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
+#ifndef CONFIG_SDIO_TX_TASKLET
+	if (adapter_to_dvobj(adapter)->intf_ops->cancel_xmit_frame_thread)
+		adapter_to_dvobj(adapter)->intf_ops->cancel_xmit_frame_thread(adapter);
+#endif
+#endif
+}
+
+#if 0 /*def CONFIG_XMIT_THREAD_MODE*/
+static inline s32 rtw_intf_xmit_buf_handler(_adapter *adapter)
+{
+	return adapter_to_dvobj(adapter)->intf_ops->xmit_buf_handler(adapter);
+}
+#endif
+
+
 /************************ recv *******************/
 static inline s32 rtw_intf_init_recv_priv(struct dvobj_priv *dvobj)
 {

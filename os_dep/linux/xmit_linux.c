@@ -677,3 +677,85 @@ exit:
 }
 #endif
 
+#ifdef CONFIG_TX_AMSDU_SW_MODE
+static void ieee8023_header_to_rfc1042(struct sk_buff *skb, int pads)
+{
+	void *data;
+	int pad;
+	__be16 len;
+	const int headroom = SNAP_SIZE + 2 + pads;
+
+	if (!skb)
+		return;
+
+	if (skb_headroom(skb) < headroom) {
+		RTW_WARN("%s: headroom=%d isn't enough\n", __func__, skb_headroom(skb));
+		if (pskb_expand_head(skb, headroom, 0, GFP_ATOMIC)) {
+			RTW_ERR("%s: no headroom=%d for skb\n",
+				__func__, headroom);
+			return;
+		}
+	}
+
+	data = skb_push(skb, headroom);
+	memset(data, 0, pads);
+	data += pads;
+	memmove(data, data + SNAP_SIZE + 2, 2 * ETH_ALEN);
+	data += 2 * ETH_ALEN;
+	len = cpu_to_be16(skb->len - pads - 2 * ETH_ALEN - 2);
+	memcpy(data, &len, 2);
+	memcpy(data + 2, rtw_rfc1042_header, SNAP_SIZE);
+}
+
+void rtw_coalesce_tx_amsdu(_adapter *padapter, struct xmit_frame *pxframes[],
+			   int xf_nr, bool amsdu, u32 *pktlen)
+{
+	struct xmit_frame *head_xframe;
+	struct xmit_frame *pxframe;
+	struct sk_buff *skb;
+	struct sk_buff *head_skb;
+	struct sk_buff **frag_tail;
+	int pads;
+	int i;
+
+	/* prepare head xmitframe */
+	head_xframe = pxframes[0];
+	head_skb = head_xframe->pkt;
+
+	ieee8023_header_to_rfc1042(head_skb, 0);
+
+	frag_tail = &skb_shinfo(head_skb)->frag_list;
+	while (*frag_tail)
+		frag_tail = &(*frag_tail)->next;
+
+	for (i = 1; i < xf_nr; i++) {
+		pxframe = pxframes[i];
+		skb = pxframe->pkt;
+
+		if (head_skb->len & 0x03)
+			pads = 4 - (head_skb->len & 0x03);
+		else
+			pads = 0;
+
+		ieee8023_header_to_rfc1042(skb, pads);
+
+		/* free sk accounting to have TP like doing skb_linearize() */
+		if (skb->destructor)
+			skb_orphan(skb);
+
+		/* add this skb to head_skb */
+		head_skb->len += skb->len;
+		head_skb->data_len += skb->len;
+		*frag_tail = skb;
+		while (*frag_tail)
+			frag_tail = &(*frag_tail)->next;
+
+		/* free this xframe */
+		pxframe->pkt = NULL; /* head xframe own */
+		core_tx_free_xmitframe(padapter, pxframe);
+	}
+
+	/* total skb length (includes all fragments) */
+	*pktlen = head_skb->len;
+}
+#endif /* CONFIG_TX_AMSDU_SW_MODE */
