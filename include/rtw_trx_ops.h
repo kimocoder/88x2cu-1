@@ -68,14 +68,6 @@ static inline void rtw_intf_cancel_xmit_frame_thread(_adapter *adapter)
 #endif
 }
 
-#if 0 /*def CONFIG_XMIT_THREAD_MODE*/
-static inline s32 rtw_intf_xmit_buf_handler(_adapter *adapter)
-{
-	return adapter_to_dvobj(adapter)->intf_ops->xmit_buf_handler(adapter);
-}
-#endif
-
-
 /************************ recv *******************/
 static inline s32 rtw_intf_init_recv_priv(struct dvobj_priv *dvobj)
 {

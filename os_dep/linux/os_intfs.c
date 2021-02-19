@@ -786,22 +786,6 @@ u32 rtw_start_drv_threads(_adapter *padapter)
 
 	RTW_INFO(FUNC_ADPT_FMT" enter\n", FUNC_ADPT_ARG(padapter));
 
-#ifdef CONFIG_XMIT_THREAD_MODE
-#if defined(CONFIG_SDIO_HCI)
-	if (is_primary_adapter(padapter))
-#endif
-	{
-		if (padapter->xmitThread == NULL) {
-			RTW_INFO(FUNC_ADPT_FMT " start RTW_XMIT_THREAD\n", FUNC_ADPT_ARG(padapter));
-			padapter->xmitThread = kthread_run(rtw_xmit_thread, padapter, "RTW_XMIT_THREAD");
-			if (IS_ERR(padapter->xmitThread)) {
-				padapter->xmitThread = NULL;
-				_status = _FAIL;
-			}
-		}
-	}
-#endif /* #ifdef CONFIG_XMIT_THREAD_MODE */
-
 #ifdef CONFIG_RECV_THREAD_MODE
 aa
 	if (is_primary_adapter(padapter)) {
@@ -857,21 +841,6 @@ void rtw_stop_drv_threads(_adapter *padapter)
 		_rtw_up_sema(&padapter->evtpriv.evt_notify);
 		rtw_thread_stop(padapter->evtThread);
 		padapter->evtThread = NULL;
-	}
-#endif
-
-#ifdef CONFIG_XMIT_THREAD_MODE
-	/* Below is to termindate tx_thread... */
-#if defined(CONFIG_SDIO_HCI)
-	/* Only wake-up primary adapter */
-	if (is_primary_adapter(padapter))
-#endif  /*SDIO_HCI */
-	{
-		if (padapter->xmitThread) {
-			_rtw_up_sema(&padapter->xmitpriv.xmit_sema);
-			rtw_thread_stop(padapter->xmitThread);
-			padapter->xmitThread = NULL;
-		}
 	}
 #endif
 

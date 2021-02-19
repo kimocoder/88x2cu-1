@@ -1171,15 +1171,6 @@ u8 query_ra_short_GI(struct sta_info *psta, u8 bw);
 
 u8	qos_acm(u8 acm_mask, u8 priority);
 
-#ifdef CONFIG_XMIT_THREAD_MODE
-void	enqueue_pending_xmitbuf(struct xmit_priv *pxmitpriv, struct xmit_buf *pxmitbuf);
-void enqueue_pending_xmitbuf_to_head(struct xmit_priv *pxmitpriv, struct xmit_buf *pxmitbuf);
-struct xmit_buf	*dequeue_pending_xmitbuf(struct xmit_priv *pxmitpriv);
-struct xmit_buf	*select_and_dequeue_pending_xmitbuf(_adapter *padapter);
-sint	check_pending_xmitbuf(struct xmit_priv *pxmitpriv);
-thread_return	rtw_xmit_thread(thread_context context);
-#endif
-
 #ifdef CONFIG_TX_AMSDU
 extern void rtw_amsdu_vo_timeout_handler(void *FunctionContext);
 extern void rtw_amsdu_vi_timeout_handler(void *FunctionContext);

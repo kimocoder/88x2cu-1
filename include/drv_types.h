@@ -1863,9 +1863,6 @@ aa
 #ifdef CONFIG_EVENT_THREAD_MODE
 	_thread_hdl_ evtThread;
 #endif
-#ifdef CONFIG_XMIT_THREAD_MODE
-	_thread_hdl_ xmitThread;
-#endif
 #ifdef CONFIG_RECV_THREAD_MODE
 	_thread_hdl_ recvThread;
 #endif

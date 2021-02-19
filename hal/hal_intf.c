@@ -1120,13 +1120,6 @@ int rtw_hal_iol_cmd(ADAPTER *adapter, struct xmit_frame *xmit_frame, u32 max_wai
 }
 #endif
 
-#ifdef CONFIG_XMIT_THREAD_MODE
-s32 rtw_hal_xmit_thread_handler(_adapter *padapter)
-{
-	return padapter->hal_func.xmit_thread_handler(padapter);
-}
-#endif
-
 #ifdef CONFIG_RECV_THREAD_MODE
 s32 rtw_hal_recv_hdl(_adapter *adapter)
 {
@@ -1988,24 +1981,6 @@ u8 rtw_hal_ops_check(_adapter *padapter)
 		rtw_hal_error_msg("mgnt_xmit");
 		ret = _FAIL;
 	}
-#ifdef CONFIG_XMIT_THREAD_MODE
-	if (NULL == padapter->hal_func.xmit_thread_handler) {
-		rtw_hal_error_msg("xmit_thread_handler");
-		ret = _FAIL;
-	}
-#endif
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-#ifndef CONFIG_SDIO_TX_TASKLET
-	if (NULL == padapter->hal_func.run_thread) {
-		rtw_hal_error_msg("run_thread");
-		ret = _FAIL;
-	}
-	if (NULL == padapter->hal_func.cancel_thread) {
-		rtw_hal_error_msg("cancel_thread");
-		ret = _FAIL;
-	}
-#endif
-#endif
 
 	/*** recv section ***/
 	if (NULL == padapter->hal_func.init_recv_priv) {

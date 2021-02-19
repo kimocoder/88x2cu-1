@@ -330,9 +330,6 @@ void rtl8822cu_set_hal_ops(PADAPTER padapter)
 	ops->hostap_mgnt_xmit_entry = rtl8822cu_hostap_mgnt_xmit_entry;
 #endif
 	ops->interface_ps_func = rtl8822cu_ps_func;
-#ifdef CONFIG_XMIT_THREAD_MODE
-	ops->xmit_thread_handler = rtl8822cu_xmit_buf_handler;
-#endif
 #ifdef CONFIG_SUPPORT_USB_INT
 	ops->interrupt_handler = rtl8822cu_interrupt_handler;
 #endif

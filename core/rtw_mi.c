@@ -974,52 +974,6 @@ u8 rtw_mi_check_miracast_enabled(_adapter *padapter)
 	return _rtw_mi_process(padapter, _FALSE, NULL, _rtw_mi_check_miracast_enabled);
 }
 
-#ifdef CONFIG_XMIT_THREAD_MODE
-static u8 _rtw_mi_check_pending_xmitbuf(_adapter *padapter , void *data)
-{
-	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
-
-	return check_pending_xmitbuf(pxmitpriv);
-}
-u8 rtw_mi_check_pending_xmitbuf(_adapter *padapter)
-{
-	return _rtw_mi_process(padapter, _FALSE, NULL, _rtw_mi_check_pending_xmitbuf);
-}
-u8 rtw_mi_buddy_check_pending_xmitbuf(_adapter *padapter)
-{
-	return _rtw_mi_process(padapter, _TRUE, NULL, _rtw_mi_check_pending_xmitbuf);
-}
-#endif
-
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-static u8 _rtw_mi_dequeue_writeport(_adapter *padapter , bool exclude_self)
-{
-	int i;
-	u8	queue_empty = _TRUE;
-	_adapter *iface;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
-
-	for (i = 0; i < dvobj->iface_nums; i++) {
-		iface = dvobj->padapters[i];
-		if ((iface) && rtw_is_adapter_up(iface)) {
-
-			if ((exclude_self) && (iface == padapter))
-				continue;
-
-			queue_empty &= _dequeue_writeport(iface);
-		}
-	}
-	return queue_empty;
-}
-u8 rtw_mi_dequeue_writeport(_adapter *padapter)
-{
-	return _rtw_mi_dequeue_writeport(padapter, _FALSE);
-}
-u8 rtw_mi_buddy_dequeue_writeport(_adapter *padapter)
-{
-	return _rtw_mi_dequeue_writeport(padapter, _TRUE);
-}
-#endif
 static void _rtw_mi_adapter_reset(_adapter *padapter , u8 exclude_self)
 {
 	int i;

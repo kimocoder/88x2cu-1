@@ -53,9 +53,6 @@ s32 rtl8822cu_hal_xmit(PADAPTER, struct xmit_frame *);
 s32 rtl8822cu_hal_mgmt_xmitframe_enqueue(PADAPTER, struct xmit_frame *);
 #endif
 s32 rtl8822cu_hostap_mgnt_xmit_entry(PADAPTER, struct sk_buff *);
-#ifdef CONFIG_XMIT_THREAD_MODE
-s32 rtl8822cu_xmit_buf_handler(PADAPTER);
-#endif /* CONFIG_XMIT_THREAD_MODE */
 
 /* rtl8822cu_recv.c */
 int rtl8822cu_init_recv_priv(PADAPTER);

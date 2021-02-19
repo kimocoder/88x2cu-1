@@ -301,73 +301,6 @@ static s32 update_txdesc(struct xmit_frame *pxmitframe, u8 *pmem, s32 sz, u8 bag
 	return pull;
 }
 
-
-
-#ifdef CONFIG_XMIT_THREAD_MODE
-/*
- * Description
- *	Transmit xmitbuf to hardware tx fifo
- *
- * Return
- *	_SUCCESS	ok
- *	_FAIL		something error
- */
-s32 rtl8822cu_xmit_buf_handler(PADAPTER padapter)
-{
-	PHAL_DATA_TYPE phal;
-	struct xmit_priv *pxmitpriv;
-	struct xmit_buf *pxmitbuf;
-	struct xmit_frame *pxmitframe;
-	struct dvobj_priv *dvobj;
-	s32 ret;
-
-
-	phal = GET_HAL_DATA(padapter);
-	pxmitpriv = &padapter->xmitpriv;
-	dvobj = adapter_to_dvobj(padapter);
-
-	ret = _rtw_down_sema(&pxmitpriv->xmit_sema);
-	if (_FAIL == ret)
-		return _FAIL;
-
-	if (RTW_CANNOT_RUN(dvobj)) {
-		RTW_DBG(FUNC_ADPT_FMT "- bDriverStopped(%s) bSurpriseRemoved(%s)\n",
-			FUNC_ADPT_ARG(padapter),
-			dev_is_drv_stopped(dvobj) ? "True" : "False",
-			dev_is_surprise_removed(dvobj) ? "True" : "False");
-		return _FAIL;
-	}
-
-	if (check_pending_xmitbuf(pxmitpriv) == _FALSE)
-		return _SUCCESS;
-
-#ifdef CONFIG_LPS_LCLK
-	ret = rtw_register_tx_alive(padapter);
-	if (ret != _SUCCESS) {
-		return _SUCCESS;
-	}
-#endif /* CONFIG_LPS_LCLK */
-
-	do {
-		pxmitbuf = dequeue_pending_xmitbuf(pxmitpriv);
-		if (pxmitbuf == NULL)
-			break;
-
-		pxmitframe = (struct xmit_frame *) pxmitbuf->priv_data;
-		/* only XMITBUF_DATA & XMITBUF_MGNT */
-		rtw_write_port_and_wait(padapter, pxmitbuf->ff_hwaddr, pxmitbuf->len, (unsigned char *)pxmitbuf, 500);
-		rtw_free_xmitframe(pxmitpriv, pxmitframe);
-	} while (1);
-
-#ifdef CONFIG_LPS_LCLK
-	rtw_unregister_tx_alive(padapter);
-#endif /*CONFIG_LPS_LCLK */
-
-	return _SUCCESS;
-}
-#endif /* CONFIG_XMIT_THREAD_MODE */
-
-
 /* for non-agg data frame or  management frame */
 static s32 rtw_dump_xframe(PADAPTER padapter, struct xmit_frame *pxmitframe)
 {
@@ -426,18 +359,7 @@ static s32 rtw_dump_xframe(PADAPTER padapter, struct xmit_frame *pxmitframe)
 		pxmitbuf->bulkout_id = rtw_halmac_usb_get_bulkout_id(pdvobj, mem_addr, w_sz);
 		ff_hwaddr = rtw_get_ff_hwaddr(pxmitframe);
 
-#ifdef CONFIG_XMIT_THREAD_MODE
-		pxmitbuf->len = w_sz;
-		pxmitbuf->ff_hwaddr = ff_hwaddr;
-
-		if ((pattrib->qsel == QSLT_BEACON) || (pattrib->qsel == QSLT_CMD))
-			/* download rsvd page or fw */
-			inner_ret = rtw_write_port(padapter, ff_hwaddr, w_sz, (unsigned char *)pxmitbuf);
-		else
-			enqueue_pending_xmitbuf(pxmitpriv, pxmitbuf);		
-#else
 		inner_ret = rtw_write_port(padapter, ff_hwaddr, w_sz, (unsigned char *)pxmitbuf);
-#endif
 		rtw_count_tx_stats(padapter, pxmitframe, sz);
 
 		/* RTW_INFO("rtw_write_port, w_sz=%d, sz=%d, txdesc_sz=%d, tid=%d\n", w_sz, sz, w_sz-sz, pattrib->priority);*/
@@ -448,9 +370,6 @@ static s32 rtw_dump_xframe(PADAPTER padapter, struct xmit_frame *pxmitframe)
 
 	}
 
-#ifdef CONFIG_XMIT_THREAD_MODE
-	if ((pattrib->qsel == QSLT_BEACON) || (pattrib->qsel == QSLT_CMD))
-#endif
 	rtw_free_xmitframe(pxmitpriv, pxmitframe);
 
 	if (ret != _SUCCESS)
@@ -740,19 +659,7 @@ agg_end:
 	pxmitbuf->bulkout_id = rtw_halmac_usb_get_bulkout_id(pdvobj, pfirstframe->buf_addr, pfirstframe->attrib.last_txcmdsz);
 	ff_hwaddr = rtw_get_ff_hwaddr(pfirstframe);
 
-#ifdef CONFIG_XMIT_THREAD_MODE
-	pxmitbuf->len = pbuf_tail;
-	pxmitbuf->ff_hwaddr = ff_hwaddr;
-
-	if (pfirstframe->attrib.qsel == QSLT_BEACON)
-		/* download rsvd page or fw */
-		rtw_write_port(padapter, ff_hwaddr, pbuf_tail, (u8 *)pxmitbuf);
-	else
-		enqueue_pending_xmitbuf(pxmitpriv, pxmitbuf);		
-#else
 	rtw_write_port(padapter, ff_hwaddr, pbuf_tail, (u8 *)pxmitbuf);
-#endif
-
 
 	/* 5. update statisitc */
 	pbuf_tail -= (pfirstframe->agg_num * TXDESC_SIZE);
@@ -760,10 +667,6 @@ agg_end:
 
 
 	rtw_count_tx_stats(padapter, pfirstframe, pbuf_tail);
-
-#ifdef CONFIG_XMIT_THREAD_MODE
-	if (pfirstframe->attrib.qsel == QSLT_BEACON)
-#endif
 	rtw_free_xmitframe(pxmitpriv, pfirstframe);
 
 	return _TRUE;

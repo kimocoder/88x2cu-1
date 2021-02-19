@@ -348,10 +348,6 @@ s32 rtl8812ae_hal_mgmt_xmitframe_enqueue(_adapter *padapter, struct xmit_frame *
 s32	rtl8812ae_hal_xmitframe_enqueue(_adapter *padapter, struct xmit_frame *pxmitframe);
 void rtl8812ae_xmit_tasklet(void *priv);
 
-#ifdef CONFIG_XMIT_THREAD_MODE
-s32 rtl8812ae_xmit_buf_handler(_adapter *padapter);
-#endif
-
 #endif
 
 #ifdef CONFIG_TX_EARLY_MODE

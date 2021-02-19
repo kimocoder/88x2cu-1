@@ -309,9 +309,6 @@ struct hal_ops {
 	#if defined (CONFIG_CONCURRENT_MODE)  && defined (CONFIG_TSF_SYNC)
 	void(*tsf_sync)(_adapter *Adapter);
 	#endif
-#ifdef CONFIG_XMIT_THREAD_MODE
-	s32(*xmit_thread_handler)(_adapter *padapter);
-#endif
 	void	(*run_thread)(_adapter *padapter);
 	void	(*cancel_thread)(_adapter *padapter);
 
@@ -818,10 +815,6 @@ bool rtw_hal_sreset_inprogress(_adapter *padapter);
 
 #ifdef CONFIG_IOL
 int rtw_hal_iol_cmd(ADAPTER *adapter, struct xmit_frame *xmit_frame, u32 max_wating_ms, u32 bndy_cnt);
-#endif
-
-#ifdef CONFIG_XMIT_THREAD_MODE
-s32 rtw_hal_xmit_thread_handler(_adapter *padapter);
 #endif
 
 #ifdef CONFIG_RECV_THREAD_MODE

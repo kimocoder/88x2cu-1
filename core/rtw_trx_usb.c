@@ -60,21 +60,6 @@ void g6_usb_free_xmit_priv(_adapter *adapter)
 {
 }
 
-#if 0 /*def CONFIG_XMIT_THREAD_MODE*/
-/*
- * Description
- *	Transmit xmitbuf to hardware tx fifo
- *
- * Return
- *	_SUCCESS	ok
- *	_FAIL		something error
- */
-s32 usb_xmit_buf_handler(_adapter *adapter)
-{
-	return _SUCCESS;
-}
-#endif /* CONFIG_XMIT_THREAD_MODE */
-
 s32 g6_usb_xmitframe_enqueue(_adapter *adapter, struct xmit_frame *pxmitframe)
 {
 	return _SUCCESS;
@@ -105,9 +90,6 @@ struct rtw_intf_ops usb_ops = {
 	.init_xmit_priv = g6_usb_init_xmit_priv,
 	.free_xmit_priv = g6_usb_free_xmit_priv,
 	.xmitframe_enqueue = g6_usb_xmitframe_enqueue,
-	#if 0 /*def CONFIG_XMIT_THREAD_MODE*/
-	.xmit_buf_handler = usb_xmit_buf_handler,
-	#endif
 
 	.init_recv_priv = g6_usb_init_recv_priv,
 	.free_recv_priv = g6_usb_free_recv_priv,

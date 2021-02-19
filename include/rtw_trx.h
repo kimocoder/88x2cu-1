@@ -31,9 +31,6 @@ struct rtw_intf_ops {
 	s32(*data_xmit)(_adapter *adapter, struct xmit_frame *pxmitframe);
 	s32(*xmitframe_enqueue)(_adapter *adapter, struct xmit_frame *pxmitframe);
 
-	#if 0 /*def CONFIG_XMIT_THREAD_MODE*/
-	s32(*xmit_buf_handler)(_adapter *adapter);
-	#endif
 	#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
 	#ifndef CONFIG_SDIO_TX_TASKLET
 	u8(*start_xmit_frame_thread)(_adapter *adapter);
