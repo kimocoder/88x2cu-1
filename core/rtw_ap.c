@@ -2939,7 +2939,7 @@ u8 rtw_ap_bmc_frames_hdl(_adapter *padapter)
 			if (xmitframe_hiq_filter(pxmitframe) == _TRUE)
 				pxmitframe->attrib.qsel = QSLT_HIGH;/*HIQ*/
 
-			rtw_hal_xmitframe_enqueue(padapter, pxmitframe);
+			rtw_intf_xmitframe_enqueue(padapter, pxmitframe);
 
 			if (tx_counts == HIQ_XMIT_COUNTS)
 				break;

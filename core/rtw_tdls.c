@@ -2501,7 +2501,7 @@ int On_TDLS_Peer_Traffic_Rsp(_adapter *padapter, union recv_frame *precv_frame, 
 				}
 				pxmitframe->attrib.triggered = 1;
 
-				rtw_hal_xmitframe_enqueue(padapter, pxmitframe);
+				rtw_intf_xmitframe_enqueue(padapter, pxmitframe);
 			}
 
 			if (ptdls_sta->sleepq_len == 0)

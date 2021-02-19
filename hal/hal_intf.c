@@ -781,11 +781,6 @@ s32	rtw_hal_mgmt_xmitframe_enqueue(_adapter *padapter, struct xmit_frame *pxmitf
 }
 #endif
 
-s32	rtw_hal_xmitframe_enqueue(_adapter *padapter, struct xmit_frame *pxmitframe)
-{
-	return padapter->hal_func.hal_xmitframe_enqueue(padapter, pxmitframe);
-}
-
 s32	rtw_hal_xmit(_adapter *padapter, struct xmit_frame *pxmitframe)
 {
 	return padapter->hal_func.hal_xmit(padapter, pxmitframe);

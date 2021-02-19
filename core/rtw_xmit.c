@@ -7988,7 +7988,7 @@ void wakeup_sta_to_xmit(_adapter *padapter, struct sta_info *psta)
 
 		pxmitframe->attrib.triggered = 1;
 
-		rtw_hal_xmitframe_enqueue(padapter, pxmitframe);
+		rtw_intf_xmitframe_enqueue(padapter, pxmitframe);
 
 
 	}
@@ -8053,7 +8053,7 @@ void wakeup_sta_to_xmit(_adapter *padapter, struct sta_info *psta)
 
 
 			pxmitframe->attrib.triggered = 1;
-			rtw_hal_xmitframe_enqueue(padapter, pxmitframe);
+			rtw_intf_xmitframe_enqueue(padapter, pxmitframe);
 
 		}
 
@@ -8143,7 +8143,7 @@ void xmit_delivery_enabled_frames(_adapter *padapter, struct sta_info *psta)
 		}
 
 		pxmitframe->attrib.triggered = 1;
-		rtw_hal_xmitframe_enqueue(padapter, pxmitframe);
+		rtw_intf_xmitframe_enqueue(padapter, pxmitframe);
 
 		if ((psta->sleepq_ac_len == 0) && (!psta->has_legacy_ac) && (wmmps_ac)) {
 #ifdef CONFIG_TDLS

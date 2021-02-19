@@ -15818,7 +15818,7 @@ u8 chk_bmc_sleepq_hdl(_adapter *padapter, unsigned char *pbuf)
 			if (xmitframe_hiq_filter(pxmitframe) == _TRUE)
 				pxmitframe->attrib.qsel = QSLT_HIGH;/* HIQ */
 
-			rtw_hal_xmitframe_enqueue(padapter, pxmitframe);
+			rtw_intf_xmitframe_enqueue(padapter, pxmitframe);
 		}
 
 		_rtw_spinunlock_bh(&pxmitpriv->lock);
