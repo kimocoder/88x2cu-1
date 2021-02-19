@@ -1994,10 +1994,6 @@ u8 rtw_hal_ops_check(_adapter *padapter)
 		ret = _FAIL;
 	}
 #endif
-	if (NULL == padapter->hal_func.hal_xmitframe_enqueue) {
-		rtw_hal_error_msg("hal_xmitframe_enqueue");
-		ret = _FAIL;
-	}
 #if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
 #ifndef CONFIG_SDIO_TX_TASKLET
 	if (NULL == padapter->hal_func.run_thread) {

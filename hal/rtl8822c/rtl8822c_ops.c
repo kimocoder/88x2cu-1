@@ -4124,16 +4124,6 @@ void rtl8822c_set_hal_ops(PADAPTER adapter)
 	ops->dm_deinit = rtl8822c_phy_deinit_dm_priv;
 
 	/*** xmit section ***/
-/*
-	ops->init_xmit_priv = NULL;
-	ops->free_xmit_priv = NULL;
-	ops->hal_xmit = NULL;
-	ops->mgnt_xmit = NULL;
-	ops->hal_xmitframe_enqueue = NULL;
-#ifdef CONFIG_XMIT_THREAD_MODE
-	ops->xmit_thread_handler = NULL;
-#endif
-*/
 	ops->run_thread = rtl8822c_run_thread;
 	ops->cancel_thread = rtl8822c_cancel_thread;
 

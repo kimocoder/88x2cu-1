@@ -325,7 +325,6 @@ void rtl8822cu_set_hal_ops(PADAPTER padapter)
 #ifdef CONFIG_RTW_MGMT_QUEUE
 	ops->hal_mgmt_xmitframe_enqueue = rtl8822cu_hal_mgmt_xmitframe_enqueue;
 #endif
-	ops->hal_xmitframe_enqueue = rtl8822cu_hal_xmitframe_enqueue;
 
 #ifdef CONFIG_HOSTAPD_MLME
 	ops->hostap_mgnt_xmit_entry = rtl8822cu_hostap_mgnt_xmit_entry;

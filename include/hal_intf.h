@@ -306,7 +306,6 @@ struct hal_ops {
 #ifdef CONFIG_RTW_MGMT_QUEUE
 	s32(*hal_mgmt_xmitframe_enqueue)(_adapter *padapter, struct xmit_frame *pxmitframe);
 #endif
-	s32(*hal_xmitframe_enqueue)(_adapter *padapter, struct xmit_frame *pxmitframe);
 	#if defined (CONFIG_CONCURRENT_MODE)  && defined (CONFIG_TSF_SYNC)
 	void(*tsf_sync)(_adapter *Adapter);
 	#endif
