@@ -991,25 +991,6 @@ s32 rtl8822cu_hal_mgmt_xmitframe_enqueue(PADAPTER padapter, struct xmit_frame *p
 }
 #endif
 
-s32 rtl8822cu_hal_xmitframe_enqueue(PADAPTER padapter, struct xmit_frame *pxmitframe)
-{
-	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
-	s32 err;
-
-	err = rtw_xmitframe_enqueue(padapter, pxmitframe);
-	if (err != _SUCCESS) {
-		rtw_free_xmitframe(pxmitpriv, pxmitframe);
-		pxmitpriv->tx_drop++;
-	} else {
-#ifdef PLATFORM_LINUX
-		tasklet_hi_schedule(&pxmitpriv->xmit_tasklet);
-#endif
-	}
-
-	return err;
-
-}
-
 #ifdef CONFIG_HOSTAPD_MLME
 
 static void rtl8822cu_hostap_mgnt_xmit_cb(struct urb *urb)
