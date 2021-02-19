@@ -1619,6 +1619,118 @@ int rtw_sta_rx_amsdu_act_check(union recv_frame *rframe
 	return act;
 }
 
+#ifdef CONFIG_AP_MODE
+sint rtw_proccess_pspoll(_adapter *adapter, union recv_frame *precv_frame, struct sta_info *psta)
+{
+	u8 *pframe = precv_frame->u.hdr.rx_data;
+	struct rx_pkt_attrib *pattrib = &precv_frame->u.hdr.attrib;
+	struct sta_priv *pstapriv = &adapter->stapriv;
+	u16 aid;
+	u8 wmmps_ac = 0;
+
+	aid = GetAid(pframe);
+	if (psta->phl_sta->aid != aid)
+		return _FAIL;
+
+	switch (pattrib->priority) {
+	case 1:
+	case 2:
+		wmmps_ac = psta->uapsd_bk & BIT(0);
+		break;
+	case 4:
+	case 5:
+		wmmps_ac = psta->uapsd_vi & BIT(0);
+		break;
+	case 6:
+	case 7:
+		wmmps_ac = psta->uapsd_vo & BIT(0);
+		break;
+	case 0:
+	case 3:
+	default:
+		wmmps_ac = psta->uapsd_be & BIT(0);
+		break;
+	}
+
+	if (wmmps_ac)
+		return _FAIL;
+
+	if (psta->state & WIFI_STA_ALIVE_CHK_STATE) {
+		RTW_INFO("%s alive check-rx ps-poll\n", __func__);
+		psta->expire_to = pstapriv->expire_to;
+		psta->state ^= WIFI_STA_ALIVE_CHK_STATE;
+	}
+
+	if ((psta->state & WIFI_SLEEP_STATE) && (rtw_tim_map_is_set(adapter, pstapriv->sta_dz_bitmap, psta->phl_sta->aid))) {
+		_list	*xmitframe_plist, *xmitframe_phead;
+		struct xmit_frame *pxmitframe = NULL;
+		struct xmit_priv *pxmitpriv = &adapter->xmitpriv;
+		/* _rtw_spinlock_bh(&psta->sleep_q.lock); */
+		_rtw_spinlock_bh(&pxmitpriv->lock);
+
+		xmitframe_phead = get_list_head(&psta->sleep_q);
+		xmitframe_plist = get_next(xmitframe_phead);
+
+		if ((rtw_end_of_queue_search(xmitframe_phead, xmitframe_plist)) == _FALSE) {
+			pxmitframe = LIST_CONTAINOR(xmitframe_plist, struct xmit_frame, list);
+
+			xmitframe_plist = get_next(xmitframe_plist);
+			rtw_list_delete(&pxmitframe->list);
+
+			psta->sleepq_len--;
+
+			if (psta->sleepq_len > 0)
+				pxmitframe->attrib.mdata = 1;
+			else
+				pxmitframe->attrib.mdata = 0;
+
+			pxmitframe->attrib.triggered = 1;
+
+			/* RTW_INFO("handling ps-poll, q_len=%d\n", psta->sleepq_len); */
+			/* RTW_INFO_DUMP("handling, tim=", pstapriv->tim_bitmap, pstapriv->aid_bmp_len); */
+#if 0
+			_rtw_spinunlock_bh(&psta->sleep_q.lock);
+			if (rtw_hal_xmit(padapter, pxmitframe) == _TRUE)
+				rtw_os_xmit_complete(padapter, pxmitframe);
+			_rtw_spinlock_bh(&psta->sleep_q.lock);
+#endif
+			rtw_intf_xmitframe_enqueue(adapter, pxmitframe);
+
+			if (psta->sleepq_len == 0) {
+				rtw_tim_map_clear(adapter, pstapriv->tim_bitmap, psta->phl_sta->aid);
+				/* RTW_INFO("after handling ps-poll\n"); */
+				/* RTW_INFO_DUMP("after handling, tim=", pstapriv->tim_bitmap, pstapriv->aid_bmp_len); */
+
+				/* upate BCN for TIM IE */
+				/* update_BCNTIM(padapter);		 */
+				update_beacon(adapter, _TIM_IE_, NULL, _TRUE, 0);
+			}
+			/* _rtw_spinunlock_bh(&psta->sleep_q.lock); */
+			_rtw_spinunlock_bh(&pxmitpriv->lock);
+		} else {
+			/* _rtw_spinunlock_bh(&psta->sleep_q.lock); */
+			_rtw_spinunlock_bh(&pxmitpriv->lock);
+			/* RTW_INFO("no buffered packets to xmit\n"); */
+			if (rtw_tim_map_is_set(adapter, pstapriv->tim_bitmap, psta->phl_sta->aid)) {
+				if (psta->sleepq_len == 0) {
+					RTW_INFO("no buffered packets to xmit\n");
+					/* issue nulldata with More data bit = 0 to indicate we have no buffered packets */
+					issue_nulldata(adapter, psta->phl_sta->mac_addr, 0, 0, 0);
+				} else {
+					RTW_INFO("error!psta->sleepq_len=%d\n", psta->sleepq_len);
+					psta->sleepq_len = 0;
+				}
+				rtw_tim_map_clear(adapter, pstapriv->tim_bitmap, psta->phl_sta->aid);
+
+				/* upate BCN for TIM IE */
+				/* update_BCNTIM(padapter); */
+				update_beacon(adapter, _TIM_IE_, NULL, _TRUE, 0);
+			}
+		}
+	}
+	return _SUCCESS;
+}
+#endif /*CONFIG_AP_MODE*/
 
 sint validate_recv_ctrl_frame(_adapter *padapter, union recv_frame *precv_frame)
 {
