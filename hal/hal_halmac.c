@@ -4818,48 +4818,6 @@ int rtw_halmac_iqk(struct dvobj_priv *d, u8 clear, u8 segment)
 	return 0;
 }
 
-/**
- * rtw_halmac_dpk() - Run DP Calibration
- * @d:		struct dvobj_priv*
- * @buf:	buffer for store return value
- * @bufsz:	size of buffer
- *
- * Process DP Calibration(DPK).
- *
- * Return 0 for OK, otherwise fail.
- */
-int rtw_halmac_dpk(struct dvobj_priv *d, u8 *buf, u32 bufsz)
-{
-	struct halmac_adapter *mac;
-	struct halmac_api *api;
-	enum halmac_ret_status status;
-	enum halmac_feature_id id;
-	int ret;
-
-
-	mac = dvobj_to_halmac(d);
-	api = HALMAC_GET_API(mac);
-	id = HALMAC_FEATURE_DPK;
-
-	ret = init_halmac_event(d, id, buf, bufsz);
-	if (ret)
-		return -1;
-
-	status = api->halmac_start_dpk(mac);
-	if (status != HALMAC_RET_SUCCESS) {
-		free_halmac_event(d, id);
-		RTW_ERR("%s: Fail to start DPK (0x%x)!\n",
-			__FUNCTION__, status);
-		return -1;
-	}
-
-	ret = wait_halmac_event(d, id);
-	if (ret)
-		return -1;
-
-	return 0;
-}
-
 static inline u32 _phy_parameter_val_drv2halmac(u32 val, u8 msk_en, u32 msk)
 {
 	if (!msk_en)
