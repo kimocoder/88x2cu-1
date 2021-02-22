@@ -7853,6 +7853,7 @@ void dump_mgntframe(_adapter *padapter, struct xmit_frame *pmgntframe)
 	}
 
 	rtw_hal_mgnt_xmit(padapter, pmgntframe);
+	/*rtw_mgnt_xmit(padapter, pmgntframe);*/
 }
 
 s32 dump_mgntframe_and_wait(_adapter *padapter, struct xmit_frame *pmgntframe, int timeout_ms)
