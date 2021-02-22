@@ -146,10 +146,6 @@ static enum halmac_ret_status
 gen_cfg_param_h2c_88xx(struct halmac_adapter *adapter, u8 *buff);
 
 static enum halmac_ret_status
-send_h2c_update_packet_88xx(struct halmac_adapter *adapter,
-			    enum halmac_packet_id pkt_id, u8 *pkt, u32 size);
-
-static enum halmac_ret_status
 send_h2c_send_scan_packet_88xx(struct halmac_adapter *adapter,
 			       u8 index, u8 *pkt, u32 size);
 
@@ -1657,50 +1653,6 @@ malloc_cfg_param_buf_88xx(struct halmac_adapter *adapter, u8 full_fifo)
 	}
 
 	return HALMAC_RET_SUCCESS;
-}
-
-static enum halmac_ret_status
-send_h2c_update_packet_88xx(struct halmac_adapter *adapter,
-			    enum halmac_packet_id pkt_id, u8 *pkt, u32 size)
-{
-	u8 h2c_buf[H2C_PKT_SIZE_88XX] = { 0 };
-	u16 seq_num = 0;
-	u16 pg_addr = adapter->txff_alloc.rsvd_h2c_info_addr;
-	u16 pg_offset;
-	struct halmac_h2c_header_info hdr_info;
-	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
-	enum halmac_packet_id real_pkt_id;
-
-	status = dl_rsvd_page_88xx(adapter, pg_addr, pkt, size);
-	if (status != HALMAC_RET_SUCCESS) {
-		PLTFM_MSG_ERR("[ERR]dl rsvd pg!!\n");
-		return status;
-	}
-
-	real_pkt_id = get_real_pkt_id_88xx(adapter, pkt_id);
-	pg_offset = pg_addr - adapter->txff_alloc.rsvd_boundary;
-	UPDATE_PKT_SET_SIZE(h2c_buf, size + adapter->hw_cfg_info.txdesc_size);
-	UPDATE_PKT_SET_ID(h2c_buf, real_pkt_id);
-	UPDATE_PKT_SET_LOC(h2c_buf, pg_offset);
-
-	hdr_info.sub_cmd_id = SUB_CMD_ID_UPDATE_PKT;
-	hdr_info.content_size = 4;
-	if (packet_in_nlo_88xx(adapter, pkt_id))
-		hdr_info.ack = 0;
-	else
-		hdr_info.ack = 1;
-	set_h2c_pkt_hdr_88xx(adapter, h2c_buf, &hdr_info, &seq_num);
-	adapter->halmac_state.update_pkt_state.seq_num = seq_num;
-
-	status = send_h2c_pkt_88xx(adapter, h2c_buf);
-
-	if (status != HALMAC_RET_SUCCESS) {
-		PLTFM_MSG_ERR("[ERR]send h2c!!\n");
-		reset_ofld_feature_88xx(adapter, HALMAC_FEATURE_UPDATE_PACKET);
-		return status;
-	}
-
-	return status;
 }
 
 enum halmac_ret_status
