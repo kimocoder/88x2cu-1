@@ -804,62 +804,6 @@ static s32 xmitframe_direct(PADAPTER padapter, struct xmit_frame *pxmitframe)
 	return res;
 }
 
-/*
- * Return
- *	_TRUE	dump packet directly
- *	_FALSE	enqueue packet
- */
-static s32 pre_xmitframe(PADAPTER padapter, struct xmit_frame *pxmitframe)
-{
-	_irqL irqL;
-	s32 res;
-	struct xmit_buf *pxmitbuf = NULL;
-	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
-	struct pkt_attrib *pattrib = &pxmitframe->attrib;
-	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
-
-	_rtw_spinlock_bh(&pxmitpriv->lock);
-
-	if (rtw_txframes_sta_ac_pending(padapter, pattrib) > 0)
-		goto enqueue;
-
-	if (rtw_xmit_ac_blocked(padapter) == _TRUE)
-		goto enqueue;
-
-	if (DEV_STA_LG_NUM(padapter->dvobj))
-		goto enqueue;
-
-	pxmitbuf = rtw_alloc_xmitbuf(pxmitpriv);
-	if (pxmitbuf == NULL)
-		goto enqueue;
-
-	_rtw_spinunlock_bh(&pxmitpriv->lock);
-
-	pxmitframe->pxmitbuf = pxmitbuf;
-	pxmitframe->buf_addr = pxmitbuf->pbuf;
-	pxmitbuf->priv_data = pxmitframe;
-
-	if (xmitframe_direct(padapter, pxmitframe) != _SUCCESS) {
-		rtw_free_xmitbuf(pxmitpriv, pxmitbuf);
-		rtw_free_xmitframe(pxmitpriv, pxmitframe);
-	}
-
-	return _TRUE;
-
-enqueue:
-	res = rtw_xmitframe_enqueue(padapter, pxmitframe);
-	_rtw_spinunlock_bh(&pxmitpriv->lock);
-
-	if (res != _SUCCESS) {
-		rtw_free_xmitframe(pxmitpriv, pxmitframe);
-
-		pxmitpriv->tx_drop++;
-		return _TRUE;
-	}
-
-	return _FALSE;
-}
-
 s32 rtl8822cu_mgnt_xmit(PADAPTER padapter, struct xmit_frame *pmgntframe)
 {
 	return rtw_dump_xframe(padapter, pmgntframe);
