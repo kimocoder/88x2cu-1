@@ -865,16 +865,6 @@ s32 rtl8822cu_mgnt_xmit(PADAPTER padapter, struct xmit_frame *pmgntframe)
 	return rtw_dump_xframe(padapter, pmgntframe);
 }
 
-/*
- * Return
- *	_TRUE	dump packet directly ok
- *	_FALSE	temporary can't transmit packets to hardware
- */
-s32 rtl8822cu_hal_xmit(PADAPTER padapter, struct xmit_frame *pxmitframe)
-{
-	return pre_xmitframe(padapter, pxmitframe);
-}
-
 #ifdef CONFIG_RTW_MGMT_QUEUE
 s32 rtl8822cu_hal_mgmt_xmitframe_enqueue(PADAPTER padapter, struct xmit_frame *pxmitframe)
 {
