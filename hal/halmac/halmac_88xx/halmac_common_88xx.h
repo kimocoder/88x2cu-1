@@ -97,10 +97,6 @@ add_extra_ch_info_88xx(struct halmac_adapter *adapter,
 		       struct halmac_ch_extra_info *info);
 
 enum halmac_ret_status
-ctrl_ch_switch_88xx(struct halmac_adapter *adapter,
-		    struct halmac_ch_switch_option *opt);
-
-enum halmac_ret_status
 clear_ch_info_88xx(struct halmac_adapter *adapter);
 
 enum halmac_ret_status

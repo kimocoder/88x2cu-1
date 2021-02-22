@@ -2407,9 +2407,6 @@ struct halmac_api {
 	(*halmac_add_extra_ch_info)(struct halmac_adapter *adapter,
 				    struct halmac_ch_extra_info *info);
 	enum halmac_ret_status
-	(*halmac_ctrl_ch_switch)(struct halmac_adapter *adapter,
-				 struct halmac_ch_switch_option *opt);
-	enum halmac_ret_status
 	(*halmac_p2pps)(struct halmac_adapter *adapter,
 			struct halmac_p2pps *info);
 
