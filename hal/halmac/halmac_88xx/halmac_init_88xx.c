@@ -31,7 +31,6 @@
 #include "halmac_pcie_88xx.h"
 #endif
 #include "halmac_gpio_88xx.h"
-#include "halmac_flash_88xx.h"
 
 #if HALMAC_8822B_SUPPORT
 #include "halmac_8822b/halmac_init_8822b.h"
@@ -290,7 +289,6 @@ mount_api_88xx(struct halmac_adapter *adapter)
 	api->halmac_cfg_csi_rate = cfg_csi_rate_88xx;
 
 	api->halmac_txfifo_is_empty = txfifo_is_empty_88xx;
-	api->halmac_erase_flash = erase_flash_88xx;
 	api->halmac_cfg_edca_para = cfg_edca_para_88xx;
 	api->halmac_pinmux_wl_led_mode = pinmux_wl_led_mode_88xx;
 	api->halmac_pinmux_wl_led_sw_ctrl = pinmux_wl_led_sw_ctrl_88xx;

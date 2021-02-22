@@ -55,7 +55,6 @@ halmac-y +=		$(path_hm_d1)/halmac_bb_rf_$(series).o \
 			$(path_hm_d1)/halmac_cfg_wmac_$(series).o \
 			$(path_hm_d1)/halmac_common_$(series).o \
 			$(path_hm_d1)/halmac_efuse_$(series).o \
-			$(path_hm_d1)/halmac_flash_$(series).o \
 			$(path_hm_d1)/halmac_fw_$(series).o \
 			$(path_hm_d1)/halmac_gpio_$(series).o \
 			$(path_hm_d1)/halmac_init_$(series).o \
