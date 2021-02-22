@@ -290,7 +290,6 @@ mount_api_88xx(struct halmac_adapter *adapter)
 	api->halmac_cfg_csi_rate = cfg_csi_rate_88xx;
 
 	api->halmac_txfifo_is_empty = txfifo_is_empty_88xx;
-	api->halmac_download_flash = download_flash_88xx;
 	api->halmac_read_flash = read_flash_88xx;
 	api->halmac_erase_flash = erase_flash_88xx;
 	api->halmac_check_flash = check_flash_88xx;

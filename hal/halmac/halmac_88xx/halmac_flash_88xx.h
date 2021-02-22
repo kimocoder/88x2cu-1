@@ -21,10 +21,6 @@
 #if HALMAC_88XX_SUPPORT
 
 enum halmac_ret_status
-download_flash_88xx(struct halmac_adapter *adapter, u8 *fw_bin, u32 size,
-		    u32 rom_addr);
-
-enum halmac_ret_status
 read_flash_88xx(struct halmac_adapter *adapter, u32 addr, u32 length, u8 *data);
 
 enum halmac_ret_status
