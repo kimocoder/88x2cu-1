@@ -20,59 +20,6 @@
 
 #if HALMAC_88XX_SUPPORT
 /**
- * start_dpk_88xx() -trigger FW DPK
- * @adapter : the adapter of halmac
- * Author : Yong-Ching Lin/KaiYuan Chang/Ivan Lin
- * Return : enum halmac_ret_status
- * More details of status code can be found in prototype document
- */
-enum halmac_ret_status
-start_dpk_88xx(struct halmac_adapter *adapter)
-{
-	u8 h2c_buf[H2C_PKT_SIZE_88XX] = { 0 };
-	u16 seq_num = 0;
-	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
-	struct halmac_h2c_header_info hdr_info;
-	enum halmac_cmd_process_status *proc_status;
-
-	proc_status = &adapter->halmac_state.dpk_state.proc_status;
-
-	if (halmac_fw_validate(adapter) != HALMAC_RET_SUCCESS)
-		return HALMAC_RET_NO_DLFW;
-
-	if (adapter->fw_ver.h2c_version < 15)
-		return HALMAC_RET_FW_NO_SUPPORT;
-
-	PLTFM_MSG_TRACE("[TRACE]%s ===>\n", __func__);
-
-	if (*proc_status == HALMAC_CMD_PROCESS_SENDING) {
-		PLTFM_MSG_TRACE("[TRACE]Wait event(dpk)\n");
-		return HALMAC_RET_BUSY_STATE;
-	}
-
-	*proc_status = HALMAC_CMD_PROCESS_SENDING;
-
-	hdr_info.sub_cmd_id = SUB_CMD_ID_DPK;
-	hdr_info.content_size = 1;
-	hdr_info.ack = 1;
-	set_h2c_pkt_hdr_88xx(adapter, h2c_buf, &hdr_info, &seq_num);
-
-	adapter->halmac_state.dpk_state.seq_num = seq_num;
-
-	status = send_h2c_pkt_88xx(adapter, h2c_buf);
-
-	if (status != HALMAC_RET_SUCCESS) {
-		PLTFM_MSG_ERR("[ERR]send h2c pkt fail!!\n");
-		reset_ofld_feature_88xx(adapter, HALMAC_FEATURE_DPK);
-		return status;
-	}
-
-	PLTFM_MSG_TRACE("[TRACE]%s <===\n", __func__);
-
-	return HALMAC_RET_SUCCESS;
-}
-
-/**
  * start_iqk_88xx() -trigger FW IQK
  * @adapter : the adapter of halmac
  * @param : IQK parameter

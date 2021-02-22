@@ -53,9 +53,6 @@ enum halmac_ret_status
 get_psd_data_88xx(struct halmac_adapter *adapter, u8 *buf, u32 size);
 
 enum halmac_ret_status
-start_dpk_88xx(struct halmac_adapter *adapter);
-
-enum halmac_ret_status
 get_h2c_ack_dpk_88xx(struct halmac_adapter *adapter, u8 *buf, u32 size);
 
 enum halmac_ret_status
