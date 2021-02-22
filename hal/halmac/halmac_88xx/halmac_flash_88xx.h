@@ -21,9 +21,6 @@
 #if HALMAC_88XX_SUPPORT
 
 enum halmac_ret_status
-read_flash_88xx(struct halmac_adapter *adapter, u32 addr, u32 length, u8 *data);
-
-enum halmac_ret_status
 erase_flash_88xx(struct halmac_adapter *adapter, u8 erase_cmd, u32 addr);
 
 enum halmac_ret_status

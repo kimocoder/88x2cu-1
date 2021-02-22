@@ -2509,14 +2509,8 @@ struct halmac_api {
 	enum halmac_ret_status
 	(*halmac_txfifo_is_empty)(struct halmac_adapter *adapter, u32 chk_num);
 	enum halmac_ret_status
-	(*halmac_read_flash)(struct halmac_adapter *adapter, u32 addr,
-			     u32 length, u8 *data);
-	enum halmac_ret_status
 	(*halmac_erase_flash)(struct halmac_adapter *adapter, u8 erase_cmd,
 			      u32 addr);
-	enum halmac_ret_status
-	(*halmac_check_flash)(struct halmac_adapter *adapter, u8 *fw_bin,
-			      u32 size, u32 addr);
 	enum halmac_ret_status
 	(*halmac_cfg_edca_para)(struct halmac_adapter *adapter,
 				enum halmac_acq_id acq_id,
