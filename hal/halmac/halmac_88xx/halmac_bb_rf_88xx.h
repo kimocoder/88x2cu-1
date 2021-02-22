@@ -24,10 +24,6 @@ enum halmac_ret_status
 start_iqk_88xx(struct halmac_adapter *adapter, struct halmac_iqk_para *param);
 
 enum halmac_ret_status
-ctrl_pwr_tracking_88xx(struct halmac_adapter *adapter,
-		       struct halmac_pwr_tracking_option *opt);
-
-enum halmac_ret_status
 get_iqk_status_88xx(struct halmac_adapter *adapter,
 		    enum halmac_cmd_process_status *proc_status);
 
