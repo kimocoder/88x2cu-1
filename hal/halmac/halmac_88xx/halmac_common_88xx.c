@@ -146,10 +146,6 @@ static enum halmac_ret_status
 gen_cfg_param_h2c_88xx(struct halmac_adapter *adapter, u8 *buff);
 
 static enum halmac_ret_status
-send_bt_coex_cmd_88xx(struct halmac_adapter *adapter, u8 *buf, u32 size,
-		      u8 ack);
-
-static enum halmac_ret_status
 read_buf_88xx(struct halmac_adapter *adapter, u32 offset, u32 size,
 	      enum hal_fifo_sel sel, u8 *data);
 
@@ -1667,56 +1663,6 @@ run_datapack_88xx(struct halmac_adapter *adapter,
 		  enum halmac_data_type data_type)
 {
 	return HALMAC_RET_NOT_SUPPORT;
-}
-
-enum halmac_ret_status
-send_bt_coex_88xx(struct halmac_adapter *adapter, u8 *buf, u32 size, u8 ack)
-{
-	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
-
-	if (halmac_fw_validate(adapter) != HALMAC_RET_SUCCESS)
-		return HALMAC_RET_NO_DLFW;
-
-	PLTFM_MSG_TRACE("[TRACE]%s ===>\n", __func__);
-
-	status = send_bt_coex_cmd_88xx(adapter, buf, size, ack);
-
-	if (status != HALMAC_RET_SUCCESS) {
-		PLTFM_MSG_ERR("[ERR]bt coex cmd!!\n");
-		return status;
-	}
-
-	PLTFM_MSG_TRACE("[TRACE]%s <===\n", __func__);
-
-	return HALMAC_RET_SUCCESS;
-}
-
-static enum halmac_ret_status
-send_bt_coex_cmd_88xx(struct halmac_adapter *adapter, u8 *buf, u32 size,
-		      u8 ack)
-{
-	u8 h2c_buf[H2C_PKT_SIZE_88XX] = { 0 };
-	u16 seq_num = 0;
-	struct halmac_h2c_header_info hdr_info;
-	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
-
-	PLTFM_MSG_TRACE("[TRACE]%s ===>\n", __func__);
-
-	PLTFM_MEMCPY(h2c_buf + 8, buf, size);
-
-	hdr_info.sub_cmd_id = SUB_CMD_ID_BT_COEX;
-	hdr_info.content_size = (u16)size;
-	hdr_info.ack = ack;
-	set_h2c_pkt_hdr_88xx(adapter, h2c_buf, &hdr_info, &seq_num);
-
-	status = send_h2c_pkt_88xx(adapter, h2c_buf);
-
-	if (status != HALMAC_RET_SUCCESS) {
-		PLTFM_MSG_ERR("[ERR]send h2c!!\n");
-		return status;
-	}
-
-	return HALMAC_RET_SUCCESS;
 }
 
 /**

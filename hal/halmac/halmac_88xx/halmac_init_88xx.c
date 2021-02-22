@@ -243,7 +243,6 @@ mount_api_88xx(struct halmac_adapter *adapter)
 	api->halmac_cfg_parameter = cfg_parameter_88xx;
 	api->halmac_update_datapack = update_datapack_88xx;
 	api->halmac_run_datapack = run_datapack_88xx;
-	api->halmac_send_bt_coex = send_bt_coex_88xx;
 	api->halmac_verify_platform_api = verify_platform_api_88xx;
 	api->halmac_bcn_ie_filter = bcn_ie_filter_88xx;
 	api->halmac_cfg_txbf = cfg_txbf_88xx;

@@ -80,9 +80,6 @@ run_datapack_88xx(struct halmac_adapter *adapter,
 		  enum halmac_data_type data_type);
 
 enum halmac_ret_status
-send_bt_coex_88xx(struct halmac_adapter *adapter, u8 *buf, u32 size, u8 ack);
-
-enum halmac_ret_status
 dump_fifo_88xx(struct halmac_adapter *adapter, enum hal_fifo_sel sel,
 	       u32 start_addr, u32 size, u8 *data);
 

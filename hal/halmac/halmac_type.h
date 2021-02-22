@@ -2359,9 +2359,6 @@ struct halmac_api {
 	(*halmac_cfg_drv_info)(struct halmac_adapter *adapter,
 			       enum halmac_drv_info drv_info);
 	enum halmac_ret_status
-	(*halmac_send_bt_coex)(struct halmac_adapter *adapter, u8 *buf,
-			       u32 size, u8 ack);
-	enum halmac_ret_status
 	(*halmac_verify_platform_api)(struct halmac_adapter *adapter);
 	u32
 	(*halmac_get_fifo_size)(struct halmac_adapter *adapter,
