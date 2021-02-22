@@ -140,11 +140,6 @@ typedef struct _RT_FIRMWARE_8192E {
 	#define WOWLAN_PAGE_NUM_8192E	0x00
 #endif
 
-#ifdef CONFIG_PNO_SUPPORT
-	#undef WOWLAN_PAGE_NUM_8192E
-	#define WOWLAN_PAGE_NUM_8192E	0x0d
-#endif
-
 /* Note:
 Tx FIFO Size : 64KB
 Tx page Size : 256B

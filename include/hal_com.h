@@ -618,12 +618,6 @@ void rtw_dump_wow_pattern(void *sel, struct rtl_wow_pattern *pwow_pattern, u8 id
 void rtw_wow_pattern_read_cam_ent(_adapter *adapter, u8 id, struct  rtl_wow_pattern *context);
 #endif
 
-#ifdef CONFIG_PNO_SUPPORT
-struct pno_ssid;
-void rtw_hal_construct_ProbeReq(_adapter *padapter, u8 *pframe,
-                                u32 *pLength, struct pno_ssid *ssid);
-#endif
-
 struct rtw_ndp_info {
 	u8 enable:1;
 	u8 check_remote_ip:1; /* Need to Check Sender IP or not */

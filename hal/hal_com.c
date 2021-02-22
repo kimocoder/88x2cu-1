@@ -5606,15 +5606,6 @@ static u8 rtw_hal_set_remote_wake_ctrl_cmd(_adapter *adapter, u8 enable)
 			SET_H2CCMD_REMOTE_WAKE_CTRL_FW_PARSING_UNTIL_WAKEUP(
 				u1H2CRemoteWakeCtrlParm, 1);
 		}
-	#ifdef CONFIG_PNO_SUPPORT
-		else {
-			SET_H2CCMD_REMOTE_WAKECTRL_ENABLE(
-				u1H2CRemoteWakeCtrlParm, enable);
-			SET_H2CCMD_REMOTE_WAKE_CTRL_NLO_OFFLOAD_EN(
-				u1H2CRemoteWakeCtrlParm, enable);
-		}
-	#endif
-	
 	#ifdef CONFIG_P2P_WOWLAN
 		if (_TRUE == ppwrpriv->wowlan_p2p_mode) {
 			RTW_INFO("P2P OFFLOAD ENABLE\n");
@@ -5714,34 +5705,6 @@ static u8 rtw_hal_set_global_info_cmd(_adapter *adapter, u8 group_alg, u8 pairwi
 
 	return ret;
 }
-
-#ifdef CONFIG_PNO_SUPPORT
-static u8 rtw_hal_set_scan_offload_info_cmd(_adapter *adapter,
-		PRSVDPAGE_LOC rsvdpageloc, u8 enable)
-{
-	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(adapter);
-	u8 ret = _FAIL;
-	u8 u1H2CNLOINFOInfoParm[H2C_NLO_INFO_LEN] = {0};
-
-	RTW_INFO("%s: loc_nlo_info: %d enable %d\n", __func__,
-	rsvdpageloc->LocPNOInfo, enable);
-
-	SET_H2CCMD_NLO_FUN_EN(u1H2CNLOINFOInfoParm, enable);
-#ifdef CONFIG_LPS_LCLK
-	/* This H2C bit requires driver leave LCLK in rtw_resume_process_wow().
-	 * In addition, WoWLAN PS mode should be LCLK.
-	 */
-	/* SET_H2CCMD_NLO_PS_32K(u1H2CNLOINFOInfoParm, enable); */
-#endif
-	SET_H2CCMD_NLO_LOC_NLO_INFO(u1H2CNLOINFOInfoParm, rsvdpageloc->LocPNOInfo);
-
-	ret = rtw_hal_fill_h2c_cmd(adapter,
-		H2C_NLO_INFO,
-		H2C_NLO_INFO_LEN,
-		u1H2CNLOINFOInfoParm);
-	return ret;
-}
-#endif /* CONFIG_PNO_SUPPORT */
 
 void rtw_hal_set_fw_wow_related_cmd(_adapter *padapter, u8 enable)
 {
@@ -8255,100 +8218,6 @@ static void rtw_hal_construct_ndp_info(_adapter *padapter,
 }
 #endif /* CONFIG_IPV6 */
 
-#ifdef CONFIG_PNO_SUPPORT
-void rtw_hal_construct_ProbeReq(_adapter *padapter, u8 *pframe,
-				u32 *pLength, pno_ssid_t *ssid)
-{
-	struct rtw_ieee80211_hdr	*pwlanhdr;
-	u16				*fctrl;
-	u32				pktlen;
-	unsigned char			*mac;
-	unsigned char			bssrate[NumRates];
-	struct xmit_priv		*pxmitpriv = &(padapter->xmitpriv);
-	struct mlme_priv *pmlmepriv = &(padapter->mlmepriv);
-	struct mlme_ext_priv	*pmlmeext = &(padapter->mlmeextpriv);
-	struct mlme_ext_info	*pmlmeinfo = &(pmlmeext->mlmext_info);
-	int	bssrate_len = 0;
-	u8	bc_addr[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-
-	pwlanhdr = (struct rtw_ieee80211_hdr *)pframe;
-	mac = adapter_mac_addr(padapter);
-
-	fctrl = &(pwlanhdr->frame_ctl);
-	*(fctrl) = 0;
-
-	_rtw_memcpy(pwlanhdr->addr1, bc_addr, ETH_ALEN);
-	_rtw_memcpy(pwlanhdr->addr3, bc_addr, ETH_ALEN);
-
-	_rtw_memcpy(pwlanhdr->addr2, mac, ETH_ALEN);
-
-	SetSeqNum(pwlanhdr, 0);
-	set_frame_sub_type(pframe, WIFI_PROBEREQ);
-
-	pktlen = sizeof(struct rtw_ieee80211_hdr_3addr);
-	pframe += pktlen;
-
-	if (ssid == NULL)
-		pframe = rtw_set_ie(pframe, _SSID_IE_, 0, NULL, &pktlen);
-	else {
-		/* RTW_INFO("%s len:%d\n", ssid->SSID, ssid->SSID_len); */
-		pframe = rtw_set_ie(pframe, _SSID_IE_, ssid->SSID_len, ssid->SSID, &pktlen);
-	}
-
-	get_rate_set(padapter, bssrate, &bssrate_len);
-
-	if (bssrate_len > 8) {
-		pframe = rtw_set_ie(pframe, _SUPPORTEDRATES_IE_ , 8, bssrate, &pktlen);
-		pframe = rtw_set_ie(pframe, _EXT_SUPPORTEDRATES_IE_ , (bssrate_len - 8), (bssrate + 8), &pktlen);
-	} else
-		pframe = rtw_set_ie(pframe, _SUPPORTEDRATES_IE_ , bssrate_len , bssrate, &pktlen);
-
-	*pLength = pktlen;
-}
-
-static void rtw_hal_construct_PNO_info(_adapter *padapter,
-				       u8 *pframe, u32 *pLength)
-{
-	struct pwrctrl_priv *pwrctl = adapter_to_pwrctl(padapter);
-	int i;
-
-	u8	*pPnoInfoPkt = pframe;
-	pPnoInfoPkt = (u8 *)(pframe + *pLength);
-	_rtw_memcpy(pPnoInfoPkt, &pwrctl->pnlo_info->ssid_num, 1);
-
-	pPnoInfoPkt += 1;
-	_rtw_memcpy(pPnoInfoPkt, &pwrctl->pnlo_info->hidden_ssid_num, 1);
-
-	pPnoInfoPkt += 3;
-	/* Pattern check for 3081 ICs */
-	_rtw_memset(pPnoInfoPkt, 0xA5A5A5A5, 4);
-	pPnoInfoPkt += 12;
-	_rtw_memcpy(pPnoInfoPkt, &pwrctl->pnlo_info->ssid_length, MAX_PNO_LIST_COUNT);
-
-	pPnoInfoPkt += MAX_PNO_LIST_COUNT;
-	_rtw_memcpy(pPnoInfoPkt, &pwrctl->pnlo_info->ssid_cipher_info, MAX_PNO_LIST_COUNT);
-
-	pPnoInfoPkt += MAX_PNO_LIST_COUNT;
-	_rtw_memcpy(pPnoInfoPkt, &pwrctl->pnlo_info->ssid_channel_info, MAX_PNO_LIST_COUNT);
-
-	pPnoInfoPkt += MAX_PNO_LIST_COUNT;
-	_rtw_memcpy(pPnoInfoPkt, &pwrctl->pnlo_info->loc_probe_req, MAX_HIDDEN_AP);
-
-	pPnoInfoPkt += MAX_HIDDEN_AP;
-
-	/* SSID is located at 72th byte in NLO info Page for ICs that have HAMMAC */
-	*pLength += 72;
-	pPnoInfoPkt = pframe + 72;
-	for (i = 0; i < pwrctl->pnlo_info->ssid_num ; i++) {
-		_rtw_memcpy(pPnoInfoPkt, &pwrctl->pno_ssid_list->node[i].SSID,
-			    pwrctl->pnlo_info->ssid_length[i]);
-		*pLength += WLAN_SSID_MAXLEN;
-		pPnoInfoPkt += WLAN_SSID_MAXLEN;
-	}
-}
-
-#endif /* CONFIG_PNO_SUPPORT */
-
 #ifdef CONFIG_WAR_OFFLOAD
 #ifdef CONFIG_OFFLOAD_MDNS_V4
 
@@ -10131,11 +10000,6 @@ static void rtw_hal_wow_disable(_adapter *adapter)
 		else
 			RTW_INFO("%s: psta is null\n", __func__);
 	}
-#if defined(CONFIG_PNO_SUPPORT)
-	else {
-		rtw_halmac_pno_scanoffload(adapter->dvobj, 0);
-	}
-#endif
 
 	if (0) {
 		RTW_INFO("0x630:0x%02x\n", rtw_read8(adapter, 0x630));
@@ -10304,10 +10168,6 @@ void rtw_hal_set_wow_fw_rsvd_page(_adapter *adapter, u8 *pframe, u16 index,
 	u8 kek[RTW_KEK_LEN];
 	u8 kck[RTW_KCK_LEN];
 #endif /* CONFIG_GTK_OL */
-#ifdef CONFIG_PNO_SUPPORT
-	int pno_index;
-	u8 ssid_num;
-#endif /* CONFIG_PNO_SUPPORT */
 #ifdef CONFIG_WOW_PATTERN_IN_TXFIFO
 	u32 PatternLen = 0;
 	u32 cam_start_offset = 0;
@@ -10829,49 +10689,6 @@ void rtw_hal_set_wow_fw_rsvd_page(_adapter *adapter, u8 *pframe, u16 index,
 
 
 	} else {
-#ifdef CONFIG_PNO_SUPPORT
-		if (pwrctl->wowlan_in_resume == _FALSE &&
-		    pwrctl->pno_inited == _TRUE) {
-			/* Hidden SSID Probe Request */
-			ssid_num = pwrctl->pnlo_info->hidden_ssid_num;
-
-			for (pno_index = 0 ; pno_index < ssid_num ; pno_index++) {
-				pwrctl->pnlo_info->loc_probe_req[pno_index] =
-					*page_num;
-
-				rtw_hal_construct_ProbeReq(
-					adapter,
-					&pframe[index],
-					&ProbeReqLength,
-					&pwrctl->pno_ssid_list->node[pno_index]);
-
-				rtw_hal_fill_fake_txdesc(adapter,
-						 &pframe[index - tx_desc],
-					ProbeReqLength, _FALSE, _FALSE, _FALSE);
-
-				CurtPktPageNum =
-					(u8)PageNum(tx_desc + ProbeReqLength, page_size);
-
-				*page_num += CurtPktPageNum;
-
-				index += (CurtPktPageNum * page_size);
-				RSVD_PAGE_CFG("WOW-ProbeReq", CurtPktPageNum, *page_num, 0);
-			}
-
-			/* PNO INFO Page */
-			rsvd_page_loc->LocPNOInfo = *page_num;
-			RTW_INFO("LocPNOInfo: %d\n", rsvd_page_loc->LocPNOInfo);
-			rtw_hal_construct_PNO_info(adapter,
-						   &pframe[index - tx_desc],
-						   &PNOLength);
-
-			CurtPktPageNum = (u8)PageNum(PNOLength, page_size);
-			*page_num += CurtPktPageNum;
-			*total_pkt_len = index + PNOLength;
-			index += (CurtPktPageNum * page_size);
-			RSVD_PAGE_CFG("WOW-PNOInfo", CurtPktPageNum, *page_num, 0);
-		}
-#endif /* CONFIG_PNO_SUPPORT */
 	}
 }
 #endif /*CONFIG_WOWLAN*/
@@ -11928,15 +11745,6 @@ download_page:
 			rtw_hal_set_ap_rsvdpage_loc_cmd(adapter, &RsvdPageLoc);
 #endif /* CONFIG_AP_WOWLAN */
 	} else if (pwrctl->wowlan_pno_enable) {
-#ifdef CONFIG_PNO_SUPPORT
-		rtw_hal_set_FwAoacRsvdPage_cmd(adapter, &RsvdPageLoc);
-		if (pwrctl->wowlan_in_resume)
-			rtw_hal_set_scan_offload_info_cmd(adapter,
-							  &RsvdPageLoc, 0);
-		else
-			rtw_hal_set_scan_offload_info_cmd(adapter,
-							  &RsvdPageLoc, 1);
-#endif /* CONFIG_PNO_SUPPORT */
 	}
 
 #ifdef CONFIG_P2P_WOWLAN

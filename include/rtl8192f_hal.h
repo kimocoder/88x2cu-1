@@ -134,11 +134,6 @@ typedef struct _RT_8192F_FIRMWARE_HDR {
 	#define WKCAM_OFFSET_BIT_MASK_OFFSET 0
 #endif
 
-#ifdef CONFIG_PNO_SUPPORT
-	#undef WOWLAN_PAGE_NUM_8192F
-	#define WOWLAN_PAGE_NUM_8192F	0x15
-#endif
-
 #ifdef CONFIG_AP_WOWLAN
 	#define AP_WOWLAN_PAGE_NUM_8192F	0x02
 #endif

@@ -717,12 +717,6 @@ void rtw_set_fw_in_ips_mode(PADAPTER padapter, u8 enable)
 		RTW_INFO("%s: issue H2C to FW when entering IPS\n", __func__);
 
 		parm[0] = 0x1;/* suggest by Isaac.Hsu*/
-#ifdef CONFIG_PNO_SUPPORT
-		if (pwrpriv->pno_inited) {
-			parm[1] = pwrpriv->pnlo_info->fast_scan_iterations;
-			parm[2] = pwrpriv->pnlo_info->slow_scan_period;
-		}
-#endif
 
 		rtw_hal_fill_h2c_cmd(padapter, /* H2C_FWLPS_IN_IPS_, */
 				     H2C_INACTIVE_PS_,
@@ -807,7 +801,7 @@ void rtw_set_fw_in_ips_mode(PADAPTER padapter, u8 enable)
 #endif
 	}
 }
-#endif /* CONFIG_PNO_SUPPORT */
+#endif /* CONFIG_FWLPS_IN_IPS */
 
 void rtw_exec_lps(_adapter *padapter, u8 ps_mode)
 {
@@ -1427,7 +1421,7 @@ void LeaveAllPowerSaveModeDirect(PADAPTER Adapter)
 	} else {
 		if (pwrpriv->rf_pwrstate == rf_off) {
 
-#if defined(CONFIG_FWLPS_IN_IPS) || defined(CONFIG_SWLPS_IN_IPS) || defined(CONFIG_RTL8188E) || defined(CONFIG_PNO_SUPPORT)
+#if defined(CONFIG_FWLPS_IN_IPS) || defined(CONFIG_SWLPS_IN_IPS) || defined(CONFIG_RTL8188E)
 #ifdef CONFIG_IPS
 			if (_FALSE == ips_leave(pri_padapter))
 				RTW_INFO("======> ips_leave fail.............\n");
@@ -2351,12 +2345,6 @@ void rtw_init_pwrctrl_priv(PADAPTER padapter)
 		pwrctrlpriv->default_patterns_en = _FALSE;
 
 	rtw_wow_pattern_sw_reset(padapter);
-#ifdef CONFIG_PNO_SUPPORT
-	pwrctrlpriv->pno_inited = _FALSE;
-	pwrctrlpriv->pnlo_info = NULL;
-	pwrctrlpriv->pscan_info = NULL;
-	pwrctrlpriv->pno_ssid_list = NULL;
-#endif /* CONFIG_PNO_SUPPORT */
 #ifdef CONFIG_WOW_PATTERN_HW_CAM
 	_rtw_mutex_init(&pwrctrlpriv->wowlan_pattern_cam_mutex);
 #endif
@@ -2425,16 +2413,6 @@ void rtw_free_pwrctrl_priv(PADAPTER adapter)
 #endif
 
 #ifdef CONFIG_WOWLAN
-#ifdef CONFIG_PNO_SUPPORT
-	if (pwrctrlpriv->pnlo_info != NULL)
-		printk("****** pnlo_info memory leak********\n");
-
-	if (pwrctrlpriv->pscan_info != NULL)
-		printk("****** pscan_info memory leak********\n");
-
-	if (pwrctrlpriv->pno_ssid_list != NULL)
-		printk("****** pno_ssid_list memory leak********\n");
-#endif
 #ifdef CONFIG_WOW_PATTERN_HW_CAM
 	_rtw_mutex_free(&pwrctrlpriv->wowlan_pattern_cam_mutex);
 #endif

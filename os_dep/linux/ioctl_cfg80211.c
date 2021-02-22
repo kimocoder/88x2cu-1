@@ -9601,138 +9601,6 @@ exit:
 
 #endif /* defined(CONFIG_RTW_MESH) */
 
-#if defined(CONFIG_PNO_SUPPORT) && (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 0, 0))
-static int cfg80211_rtw_sched_scan_start(struct wiphy *wiphy,
-		struct net_device *dev,
-		struct cfg80211_sched_scan_request *request)
-{
-
-	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
-	struct	mlme_priv	*pmlmepriv = &(padapter->mlmepriv);
-	struct cfg80211_ssid *ssids;
-	int n_ssids = 0;
-	int interval = 0;
-	int i = 0;
-	u8 ret;
-
-	if (padapter->bup == _FALSE) {
-		RTW_INFO("%s: net device is down.\n", __func__);
-		return -EIO;
-	}
-
-	if (check_fwstate(pmlmepriv, WIFI_UNDER_SURVEY) == _TRUE ||
-		check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE  ||
-		check_fwstate(pmlmepriv, WIFI_UNDER_LINKING) == _TRUE) {
-		RTW_INFO("%s: device is busy.\n", __func__);
-		rtw_scan_abort(padapter);
-	}
-
-	if (request == NULL) {
-		RTW_INFO("%s: invalid cfg80211_requests parameters.\n", __func__);
-		return -EINVAL;
-	}
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0)
-
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 4, 0)
-	interval = request->scan_plans->interval;
-#else
-	interval = request->interval;
-#endif
-	n_ssids = request->n_match_sets;
-	ssids = (struct cfg80211_ssid *)rtw_zmalloc(n_ssids * sizeof(struct cfg80211_ssid));
-	if(ssids == NULL) {
-		RTW_ERR("Fail to allocate ssids for PNO\n");
-		return -ENOMEM;
-	}
-	for (i=0;i<request->n_match_sets;i++) {
-			ssids[i].ssid_len = request->match_sets[i].ssid.ssid_len;
-			memcpy(ssids[i].ssid, request->match_sets[i].ssid.ssid,
-					request->match_sets[i].ssid.ssid_len);
-	}
-#else
-	interval = request->interval;
-	n_ssids = request->n_ssids;
-	ssids = request->ssids;
-#endif
-ret = rtw_android_cfg80211_pno_setup(dev, ssids,
-			n_ssids, interval);
-	if (ret < 0) {
-		RTW_INFO("%s ret: %d\n", __func__, ret);
-		goto exit;
-	}
-
-	ret = rtw_android_pno_enable(dev, _TRUE);
-	if (ret < 0) {
-		RTW_INFO("%s ret: %d\n", __func__, ret);
-		goto exit;
-	}
-exit:
-	return ret;
-}
-
-static int cfg80211_rtw_sched_scan_stop(struct wiphy *wiphy,
-		struct net_device *dev)
-{
-	return rtw_android_pno_enable(dev, _FALSE);
-}
-
-int	cfg80211_rtw_suspend(struct wiphy *wiphy, struct cfg80211_wowlan *wow) {
-	RTW_DBG("==> %s\n",__func__);
-	RTW_DBG("<== %s\n",__func__);
-	return 0;
-}
-
-int	cfg80211_rtw_resume(struct wiphy *wiphy) {
-
-	_adapter *padapter;
-	struct pwrctrl_priv *pwrpriv;
-	struct mlme_priv *pmlmepriv;
-	struct sitesurvey_parm parm;
-	int i, len;
-
-	padapter = wiphy_to_adapter(wiphy);
-	pwrpriv = adapter_to_pwrctl(padapter);
-	pmlmepriv = &padapter->mlmepriv;
-
-	RTW_DBG("==> %s\n",__func__);
-	if (pwrpriv->wowlan_last_wake_reason == RX_PNO) {
-
-		struct rtw_wdev_priv *pwdev_priv = adapter_wdev_data(padapter);
-		_irqL irqL;
-		int PNOWakeupScanWaitCnt = 0;
-
-		rtw_cfg80211_disconnected(padapter->rtw_wdev, 0, NULL, 0, 1, GFP_ATOMIC);
-
-		rtw_init_sitesurvey_parm(padapter, &parm);
-		for (i=0;i<pwrpriv->pnlo_info->ssid_num && i < RTW_SSID_SCAN_AMOUNT; i++) {
-			len = pwrpriv->pno_ssid_list->node[i].SSID_len;
-			_rtw_memcpy(&parm.ssid[i].Ssid, pwrpriv->pno_ssid_list->node[i].SSID, len);
-			parm.ssid[i].SsidLength = len;
-		}
-		parm.ssid_num = pwrpriv->pnlo_info->ssid_num;
-
-		_rtw_spinlock_bh(&pmlmepriv->lock);
-		//This modification fix PNO wakeup reconnect issue with hidden SSID AP.
-		rtw_sitesurvey_cmd(padapter, &parm);
-		_rtw_spinunlock_bh(&pmlmepriv->lock);
-		
-		for (PNOWakeupScanWaitCnt = 0; PNOWakeupScanWaitCnt < 10; PNOWakeupScanWaitCnt++) {
-			if(check_fwstate(pmlmepriv, WIFI_UNDER_SURVEY) == _FALSE)
-				break;
-			rtw_msleep_os(1000);
-		}
-		
-		_rtw_spinlock_bh(&pmlmepriv->lock);
-		cfg80211_sched_scan_results(padapter->rtw_wdev->wiphy);
-		_rtw_spinunlock_bh(&pmlmepriv->lock);
-
-	}
-	RTW_DBG("<== %s\n",__func__);
-	return 0;
-	
-}
-#endif /* CONFIG_PNO_SUPPORT */
-
 #ifdef CONFIG_80211N_HT
 static void rtw_cfg80211_init_ht_capab_ex(_adapter *padapter
 	, struct ieee80211_sta_ht_cap *ht_cap, BAND_TYPE band, u8 rf_type)
@@ -10117,12 +9985,6 @@ static int rtw_cfg80211_init_wiphy(_adapter *adapter, struct wiphy *wiphy)
 #if defined(CONFIG_PM) && (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 0, 0) && \
 			   LINUX_VERSION_CODE < KERNEL_VERSION(4, 12, 0))
 	wiphy->flags |= WIPHY_FLAG_SUPPORTS_SCHED_SCAN;
-#ifdef CONFIG_PNO_SUPPORT
-	wiphy->max_sched_scan_ssids = MAX_PNO_LIST_COUNT;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 2, 0)
-	wiphy->max_match_sets = MAX_PNO_LIST_COUNT;
-#endif
-#endif
 #endif
 
 #if defined(CONFIG_PM) && (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 0, 0))
@@ -10539,12 +10401,6 @@ static struct cfg80211_ops rtw_cfg80211_ops = {
 	.tdls_oper = cfg80211_rtw_tdls_oper,
 #endif /* CONFIG_TDLS */
 
-#if defined(CONFIG_PNO_SUPPORT) && (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 0, 0))
-	.sched_scan_start = cfg80211_rtw_sched_scan_start,
-	.sched_scan_stop = cfg80211_rtw_sched_scan_stop,
-	.suspend = cfg80211_rtw_suspend,
-	.resume = cfg80211_rtw_resume,
-#endif /* CONFIG_PNO_SUPPORT */
 #ifdef CONFIG_RFKILL_POLL
 	.rfkill_poll = cfg80211_rtw_rfkill_poll,
 #endif

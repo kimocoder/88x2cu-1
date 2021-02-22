@@ -7913,12 +7913,8 @@ static int rtw_wowlan_ctrl(struct net_device *dev,
 	if (!check_fwstate(pmlmepriv, WIFI_ASOC_STATE) &&
 		check_fwstate(pmlmepriv, WIFI_STATION_STATE) &&
 		!WOWLAN_IS_STA_MIX_MODE(padapter)) {
-#ifdef CONFIG_PNO_SUPPORT
-		pwrctrlpriv->wowlan_pno_enable = _TRUE;
-#else
 		RTW_INFO("[%s] WARNING: Please Connect With AP First!!\n", __func__);
 		goto _rtw_wowlan_ctrl_exit_free;
-#endif /* CONFIG_PNO_SUPPORT */
 	}
 
 	if (check_fwstate(pmlmepriv, WIFI_UNDER_SURVEY))
@@ -7935,11 +7931,6 @@ static int rtw_wowlan_ctrl(struct net_device *dev,
 		RTW_ENABLE_FUNC(adapter_to_dvobj(padapter), DF_TX_BIT);
 #endif
 		rtw_resume_common(padapter);
-
-#ifdef CONFIG_PNO_SUPPORT
-		pwrctrlpriv->wowlan_pno_enable = _FALSE;
-#endif /* CONFIG_PNO_SUPPORT */
-
 	} else {
 		RTW_INFO("[%s] Invalid Parameter.\n", __func__);
 		goto _rtw_wowlan_ctrl_exit_free;

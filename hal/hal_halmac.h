@@ -203,9 +203,6 @@ int rtw_halmac_led_cfg(struct dvobj_priv *d, u8 enable, u8 mode);
 void rtw_halmac_led_switch(struct dvobj_priv *d, u8 on);
 int rtw_halmac_bt_wake_cfg(struct dvobj_priv *d, u8 enable);
 int rtw_halmac_rfe_ctrl_cfg(struct dvobj_priv *d, u8 gpio);
-#ifdef CONFIG_PNO_SUPPORT
-int rtw_halmac_pno_scanoffload(struct dvobj_priv *d, u32 enable);
-#endif
 
 #ifdef CONFIG_SDIO_HCI
 int rtw_halmac_query_tx_page_num(struct dvobj_priv *);

@@ -112,9 +112,6 @@ enum h2c_cmd {
 	H2C_GPIO_CUSTOM = 0x89,
 	H2C_P2P_OFFLOAD_RSVD_PAGE = 0x8A,
 	H2C_P2P_OFFLOAD = 0x8B,
-#ifdef CONFIG_PNO_SUPPORT
-	H2C_NLO_INFO = 0x8C, /* for ICs that have HAMMAC */
-#endif
 	H2C_WAR_OFFLOAD = 0x8D,
 	H2C_WAROFLD_RSVDPAGE1 = 0x8E,
 #ifdef CONFIG_WOW_KEEP_ALIVE_PATTERN
@@ -174,9 +171,6 @@ enum h2c_cmd {
 #define H2C_PROBERSP_RSVDPAGE_LEN	5
 #define H2C_P2PRSVDPAGE_LOC_LEN	5
 #define H2C_P2P_OFFLOAD_LEN	3
-#ifdef CONFIG_PNO_SUPPORT
-#define H2C_NLO_INFO_LEN	2
-#endif
 #ifdef CONFIG_MCC_MODE
 	#define H2C_MCC_CTRL_LEN			7
 #ifdef CONFIG_MCC_MODE_V2
@@ -641,25 +635,9 @@ s32 rtw_hal_customer_str_write(_adapter *adapter, const u8 *cs);
 /* AOAC_RSVDPAGE_2_0x84 */
 
 /* AOAC_RSVDPAGE_3_0x88 */
-#ifdef CONFIG_PNO_SUPPORT
-#define SET_H2CCMD_AOAC_RSVDPAGE_LOC_NLO_INFO(__pH2CCmd, __Value)		SET_BITS_TO_LE_1BYTE((__pH2CCmd), 0, 8, __Value)
-#endif
 #define SET_H2CCMD_AOAC_RSVDPAGE_LOC_AOAC_REPORT(__pH2CCmd, __Value) \
 	SET_BITS_TO_LE_1BYTE((__pH2CCmd) + 1, 0, 8, __Value)
 
-#ifdef CONFIG_PNO_SUPPORT
-/* D0_Scan_Offload_Info_0x86 */
-#define SET_H2CCMD_AOAC_NLO_FUN_EN(__pH2CCmd, __Value)			SET_BITS_TO_LE_1BYTE((__pH2CCmd), 3, 1, __Value)
-#define SET_H2CCMD_AOAC_NLO_IPS_EN(__pH2CCmd, __Value)			SET_BITS_TO_LE_1BYTE((__pH2CCmd), 4, 1, __Value)
-#define SET_H2CCMD_AOAC_RSVDPAGE_LOC_PROBE_PACKET(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE((__pH2CCmd)+1, 0, 8, __Value)
-#define SET_H2CCMD_AOAC_RSVDPAGE_LOC_SCAN_INFO(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE((__pH2CCmd)+2, 0, 8, __Value)
-#define SET_H2CCMD_AOAC_RSVDPAGE_LOC_SSID_INFO(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE((__pH2CCmd)+3, 0, 8, __Value)
-
-/* NLO SCAN offload for ICs that have HALMAC */
-#define SET_H2CCMD_NLO_FUN_EN(__pH2CCmd, __Value)                      SET_BITS_TO_LE_1BYTE((__pH2CCmd), 0, 1, __Value)
-#define SET_H2CCMD_NLO_PS_32K(__pH2CCmd, __Value)                      SET_BITS_TO_LE_1BYTE((__pH2CCmd), 1, 1, __Value)
-#define SET_H2CCMD_NLO_LOC_NLO_INFO(__pH2CCmd, __Value)        SET_BITS_TO_LE_1BYTE((__pH2CCmd)+1, 0, 8, __Value)
-#endif /* CONFIG_PNO_SUPPORT */
 
 /* _GPIO_CUSTOM_CMD_0x89 */
 #define SET_H2CCMD_CUSTOMERID(__pH2CCmd, __Value)		SET_BITS_TO_LE_1BYTE(__pH2CCmd, 0, 8, __Value)
@@ -759,12 +737,6 @@ typedef struct _RSVDPAGE_LOC {
 #endif /* CONFIG_GTK_OL */
 	u8 LocNDPInfo;
 	u8 LocAOACReport;
-#ifdef CONFIG_PNO_SUPPORT
-	u8 LocPNOInfo;
-	u8 LocScanInfo;
-	u8 LocSSIDInfo;
-	u8 LocProbePacket;
-#endif /* CONFIG_PNO_SUPPORT */
 #ifdef CONFIG_WOW_KEEP_ALIVE_PATTERN
 	u8 LocKeepAlive;
 #endif /*CONFIG_WOW_KEEP_ALIVE_PATTERN*/

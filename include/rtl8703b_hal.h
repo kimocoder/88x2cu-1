@@ -121,11 +121,6 @@ typedef struct _RT_8703B_FIRMWARE_HDR {
 	#define WOWLAN_PAGE_NUM_8703B	0x00
 #endif
 
-#ifdef CONFIG_PNO_SUPPORT
-	#undef WOWLAN_PAGE_NUM_8703B
-	#define WOWLAN_PAGE_NUM_8703B	0x15
-#endif
-
 #ifdef CONFIG_AP_WOWLAN
 	#define AP_WOWLAN_PAGE_NUM_8703B	0x02
 #endif

@@ -2166,15 +2166,6 @@ __inline static void RTW_ENABLE_FUNC(struct dvobj_priv *dvobj, int func_bit)
 	(RTW_CANNOT_RUN(dvobj) || \
 	 RTW_IS_FUNC_DISABLED((dvobj), DF_TX_BIT))
 
-#ifdef CONFIG_PNO_SUPPORT
-int rtw_parse_ssid_list_tlv(char **list_str, pno_ssid_t *ssid, int max, int *bytes_left);
-int rtw_dev_pno_set(struct net_device *net, pno_ssid_t *ssid, int num,
-		    int pno_time, int pno_repeat, int pno_freq_expo_max);
-#ifdef CONFIG_PNO_SET_DEBUG
-	void rtw_dev_pno_debug(struct net_device *net);
-#endif /* CONFIG_PNO_SET_DEBUG */
-#endif /* CONFIG_PNO_SUPPORT */
-
 int rtw_suspend_free_assoc_resource(_adapter *padapter);
 #ifdef CONFIG_WOWLAN
 	int rtw_suspend_wow(_adapter *padapter);
