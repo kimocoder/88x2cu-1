@@ -146,10 +146,6 @@ static enum halmac_ret_status
 gen_cfg_param_h2c_88xx(struct halmac_adapter *adapter, u8 *buff);
 
 static enum halmac_ret_status
-send_h2c_send_scan_packet_88xx(struct halmac_adapter *adapter,
-			       u8 index, u8 *pkt, u32 size);
-
-static enum halmac_ret_status
 send_h2c_drop_scan_packet_88xx(struct halmac_adapter *adapter,
 			       struct halmac_drop_pkt_option *option);
 
@@ -1651,41 +1647,6 @@ malloc_cfg_param_buf_88xx(struct halmac_adapter *adapter, u8 full_fifo)
 	} else {
 		return HALMAC_RET_MALLOC_FAIL;
 	}
-
-	return HALMAC_RET_SUCCESS;
-}
-
-enum halmac_ret_status
-send_scan_packet_88xx(struct halmac_adapter *adapter, u8 index,
-		      u8 *pkt, u32 size)
-{
-	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
-	enum halmac_cmd_process_status *proc_status =
-		&adapter->halmac_state.scan_pkt_state.proc_status;
-
-	if (halmac_fw_validate(adapter) != HALMAC_RET_SUCCESS)
-		return HALMAC_RET_NO_DLFW;
-
-	if (adapter->fw_ver.h2c_version < 13)
-		return HALMAC_RET_FW_NO_SUPPORT;
-
-	if (size > UPDATE_PKT_RSVDPG_SIZE)
-		return HALMAC_RET_RSVD_PG_OVERFLOW_FAIL;
-
-	PLTFM_MSG_TRACE("[TRACE]%s ===>\n", __func__);
-
-	if (*proc_status == HALMAC_CMD_PROCESS_SENDING) {
-		PLTFM_MSG_TRACE("[TRACE]Wait event(send_scan)\n");
-		return HALMAC_RET_BUSY_STATE;
-	}
-
-	*proc_status = HALMAC_CMD_PROCESS_SENDING;
-
-	status = send_h2c_send_scan_packet_88xx(adapter, index, pkt, size);
-	if (status != HALMAC_RET_SUCCESS)
-		return status;
-
-	PLTFM_MSG_TRACE("[TRACE]%s <===\n", __func__);
 
 	return HALMAC_RET_SUCCESS;
 }

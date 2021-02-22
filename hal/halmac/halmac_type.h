@@ -2413,9 +2413,6 @@ struct halmac_api {
 	(*halmac_ctrl_ch_switch)(struct halmac_adapter *adapter,
 				 struct halmac_ch_switch_option *opt);
 	enum halmac_ret_status
-	(*halmac_send_scan_packet)(struct halmac_adapter *adapter, u8 index,
-				   u8 *pkt, u32 size);
-	enum halmac_ret_status
 	(*halmac_drop_scan_packet)(struct halmac_adapter *adapter,
 				   struct halmac_drop_pkt_option *opt);
 	enum halmac_ret_status
