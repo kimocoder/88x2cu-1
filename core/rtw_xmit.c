@@ -5434,7 +5434,8 @@ static void xmit_dequeue(struct sta_info *sta)
 		RTW_INFO(FUNC_ADPT_FMT ": de-queue tx frame of macid=%d\n",
 			 FUNC_ADPT_ARG(a), sta->cmn.mac_id);
 
-		rtw_hal_xmit(a, frame);
+		/*rtw_hal_xmit(a, frame);*/
+		rtw_intf_data_xmit(a, frame);
 	} while (1);
 
 	_rtw_spinunlock_bh(&sta->tx_queue.lock);
@@ -5550,7 +5551,8 @@ s32 rtw_xmit_posthandle(_adapter *padapter, struct xmit_frame *pxmitframe, struc
 		return 1;
 
 	/* pre_xmitframe */
-	if (rtw_hal_xmit(padapter, pxmitframe) == _FALSE)
+	/*if (rtw_hal_xmit(padapter, pxmitframe) == _FALSE)*/
+	if (rtw_intf_data_xmit(padapter, pxmitframe) == _FALSE)
 		return 1;
 
 	return 0;
