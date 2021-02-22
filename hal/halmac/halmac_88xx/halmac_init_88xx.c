@@ -221,7 +221,6 @@ mount_api_88xx(struct halmac_adapter *adapter)
 	api->halmac_read_efuse_bt = read_efuse_bt_88xx;
 	api->halmac_cfg_efuse_auto_check = cfg_efuse_auto_check_88xx;
 	api->halmac_dump_logical_efuse_map = dump_log_efuse_map_88xx;
-	api->halmac_dump_logical_efuse_mask = dump_log_efuse_mask_88xx;
 	api->halmac_pg_efuse_by_map = pg_efuse_by_map_88xx;
 	api->halmac_mask_logical_efuse = mask_log_efuse_88xx;
 	api->halmac_get_efuse_size = get_efuse_size_88xx;

@@ -58,9 +58,6 @@ get_log_efuse_size_88xx(struct halmac_adapter *adapter, u32 *size);
 enum halmac_ret_status
 dump_log_efuse_map_88xx(struct halmac_adapter *adapter,
 			enum halmac_efuse_read_cfg cfg);
-enum halmac_ret_status
-dump_log_efuse_mask_88xx(struct halmac_adapter *adapter,
-			 enum halmac_efuse_read_cfg cfg);
 
 enum halmac_ret_status
 read_logical_efuse_88xx(struct halmac_adapter *adapter, u32 offset, u8 *value);

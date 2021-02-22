@@ -2279,9 +2279,6 @@ struct halmac_api {
 					 u32 *size);
 	enum halmac_ret_status
 	(*halmac_dump_logical_efuse_map)(struct halmac_adapter *adapter,
-					 enum halmac_efuse_read_cfg cfg);
-	enum halmac_ret_status
-	(*halmac_dump_logical_efuse_mask)(struct halmac_adapter *adapter,
 					  enum halmac_efuse_read_cfg cfg);
 	enum halmac_ret_status
 	(*halmac_write_logical_efuse)(struct halmac_adapter *adapter,
