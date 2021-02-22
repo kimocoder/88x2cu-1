@@ -146,10 +146,6 @@ static enum halmac_ret_status
 gen_cfg_param_h2c_88xx(struct halmac_adapter *adapter, u8 *buff);
 
 static enum halmac_ret_status
-send_h2c_drop_scan_packet_88xx(struct halmac_adapter *adapter,
-			       struct halmac_drop_pkt_option *option);
-
-static enum halmac_ret_status
 send_bt_coex_cmd_88xx(struct halmac_adapter *adapter, u8 *buf, u32 size,
 		      u8 ack);
 
@@ -1649,112 +1645,6 @@ malloc_cfg_param_buf_88xx(struct halmac_adapter *adapter, u8 full_fifo)
 	}
 
 	return HALMAC_RET_SUCCESS;
-}
-
-static enum halmac_ret_status
-send_h2c_send_scan_packet_88xx(struct halmac_adapter *adapter,
-			       u8 index, u8 *pkt, u32 size)
-{
-	u8 h2c_buf[H2C_PKT_SIZE_88XX] = { 0 };
-	u16 seq_num = 0;
-	u16 pg_addr = adapter->txff_alloc.rsvd_h2c_info_addr;
-	u16 pg_offset;
-	struct halmac_h2c_header_info hdr_info;
-	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
-
-	status = dl_rsvd_page_88xx(adapter, pg_addr, pkt, size);
-	if (status != HALMAC_RET_SUCCESS) {
-		PLTFM_MSG_ERR("[ERR]dl rsvd pg!!\n");
-		return status;
-	}
-
-	pg_offset = pg_addr - adapter->txff_alloc.rsvd_boundary;
-	SEND_SCAN_PKT_SET_SIZE(h2c_buf, size +
-			       adapter->hw_cfg_info.txdesc_size);
-	SEND_SCAN_PKT_SET_INDEX(h2c_buf, index);
-	SEND_SCAN_PKT_SET_LOC(h2c_buf, pg_offset);
-
-	hdr_info.sub_cmd_id = SUB_CMD_ID_SEND_SCAN_PKT;
-	hdr_info.content_size = 8;
-	hdr_info.ack = 1;
-	set_h2c_pkt_hdr_88xx(adapter, h2c_buf, &hdr_info, &seq_num);
-	adapter->halmac_state.scan_pkt_state.seq_num = seq_num;
-
-	status = send_h2c_pkt_88xx(adapter, h2c_buf);
-
-	if (status != HALMAC_RET_SUCCESS) {
-		PLTFM_MSG_ERR("[ERR]send h2c!!\n");
-		reset_ofld_feature_88xx(adapter,
-					HALMAC_FEATURE_SEND_SCAN_PACKET);
-		return status;
-	}
-
-	return status;
-}
-
-enum halmac_ret_status
-drop_scan_packet_88xx(struct halmac_adapter *adapter,
-		      struct halmac_drop_pkt_option *option)
-{
-	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
-	enum halmac_cmd_process_status *proc_status =
-		&adapter->halmac_state.drop_pkt_state.proc_status;
-
-	if (halmac_fw_validate(adapter) != HALMAC_RET_SUCCESS)
-		return HALMAC_RET_NO_DLFW;
-
-	if (adapter->fw_ver.h2c_version < 13)
-		return HALMAC_RET_FW_NO_SUPPORT;
-
-	PLTFM_MSG_TRACE("[TRACE]%s ===>\n", __func__);
-
-	if (*proc_status == HALMAC_CMD_PROCESS_SENDING) {
-		PLTFM_MSG_TRACE("[TRACE]Wait event(drop_scan)\n");
-		return HALMAC_RET_BUSY_STATE;
-	}
-
-	*proc_status = HALMAC_CMD_PROCESS_SENDING;
-
-	status = send_h2c_drop_scan_packet_88xx(adapter, option);
-	if (status != HALMAC_RET_SUCCESS)
-		return status;
-
-	PLTFM_MSG_TRACE("[TRACE]%s <===\n", __func__);
-
-	return HALMAC_RET_SUCCESS;
-}
-
-static enum halmac_ret_status
-send_h2c_drop_scan_packet_88xx(struct halmac_adapter *adapter,
-			       struct halmac_drop_pkt_option *option)
-{
-	u8 h2c_buf[H2C_PKT_SIZE_88XX] = { 0 };
-	u16 seq_num = 0;
-	struct halmac_h2c_header_info hdr_info;
-	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
-
-	PLTFM_MSG_TRACE("[TRACE]%s\n", __func__);
-
-	DROP_SCAN_PKT_SET_DROP_ALL(h2c_buf, option->drop_all);
-	DROP_SCAN_PKT_SET_DROP_SINGLE(h2c_buf, option->drop_single);
-	DROP_SCAN_PKT_SET_DROP_IDX(h2c_buf, option->drop_index);
-
-	hdr_info.sub_cmd_id = SUB_CMD_ID_DROP_SCAN_PKT;
-	hdr_info.content_size = 8;
-	hdr_info.ack = 1;
-	set_h2c_pkt_hdr_88xx(adapter, h2c_buf, &hdr_info, &seq_num);
-	adapter->halmac_state.drop_pkt_state.seq_num = seq_num;
-
-	status = send_h2c_pkt_88xx(adapter, h2c_buf);
-
-	if (status != HALMAC_RET_SUCCESS) {
-		PLTFM_MSG_ERR("[ERR]send h2c!!\n");
-		reset_ofld_feature_88xx(adapter,
-					HALMAC_FEATURE_DROP_SCAN_PACKET);
-		return status;
-	}
-
-	return status;
 }
 
 enum halmac_ret_status

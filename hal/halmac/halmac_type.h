@@ -2413,13 +2413,12 @@ struct halmac_api {
 	(*halmac_ctrl_ch_switch)(struct halmac_adapter *adapter,
 				 struct halmac_ch_switch_option *opt);
 	enum halmac_ret_status
-	(*halmac_drop_scan_packet)(struct halmac_adapter *adapter,
-				   struct halmac_drop_pkt_option *opt);
-	enum halmac_ret_status
 	(*halmac_p2pps)(struct halmac_adapter *adapter,
 			struct halmac_p2pps *info);
+
 	enum halmac_ret_status
 	(*halmac_clear_ch_info)(struct halmac_adapter *adapter);
+
 	enum halmac_ret_status
 	(*halmac_send_general_info)(struct halmac_adapter *adapter,
 				    struct halmac_general_info *info);

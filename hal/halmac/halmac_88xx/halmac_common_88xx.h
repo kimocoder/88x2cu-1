@@ -67,10 +67,6 @@ cfg_parameter_88xx(struct halmac_adapter *adapter,
 		   struct halmac_phy_parameter_info *info, u8 full_fifo);
 
 enum halmac_ret_status
-drop_scan_packet_88xx(struct halmac_adapter *adapter,
-		      struct halmac_drop_pkt_option *option);
-
-enum halmac_ret_status
 bcn_ie_filter_88xx(struct halmac_adapter *adapter,
 		   struct halmac_bcn_ie_info *info);
 
