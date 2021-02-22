@@ -791,19 +791,6 @@ void	rtl8822cu_free_xmit_priv(PADAPTER padapter)
 {
 }
 
-static s32 xmitframe_direct(PADAPTER padapter, struct xmit_frame *pxmitframe)
-{
-	s32 res = _SUCCESS;
-
-	res = rtw_xmitframe_coalesce(padapter, pxmitframe->pkt, pxmitframe);
-	if (res == _SUCCESS)
-		rtw_dump_xframe(padapter, pxmitframe);
-	else
-		RTW_INFO("%s: xmitframe_coalsece failed\n", __func__);
-
-	return res;
-}
-
 s32 rtl8822cu_mgnt_xmit(PADAPTER padapter, struct xmit_frame *pmgntframe)
 {
 	return rtw_dump_xframe(padapter, pmgntframe);
