@@ -1172,46 +1172,4 @@ proc_send_phydm_info_88xx(struct halmac_adapter *adapter,
 	return status;
 }
 
-/**
- * drv_fwctrl_88xx() - send drv-defined h2c pkt
- * @adapter : the adapter of halmac
- * @payload : no include offload pkt h2c header
- * @size : no include offload pkt h2c header
- * Author : Ivan Lin
- * Return : enum halmac_ret_status
- * More details of status code can be found in prototype document
- */
-enum halmac_ret_status
-drv_fwctrl_88xx(struct halmac_adapter *adapter, u8 *payload, u32 size, u8 ack)
-{
-	u8 h2c_buf[H2C_PKT_SIZE_88XX] = { 0 };
-	u16 seq_num = 0;
-	struct halmac_h2c_header_info hdr_info;
-	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
-
-	PLTFM_MSG_TRACE("[TRACE]%s ===>\n", __func__);
-
-	if (!payload)
-		return HALMAC_RET_DATA_BUF_NULL;
-
-	if (size > H2C_PKT_SIZE_88XX - H2C_PKT_HDR_SIZE_88XX)
-		return HALMAC_RET_DATA_SIZE_INCORRECT;
-
-	PLTFM_MEMCPY(h2c_buf + H2C_PKT_HDR_SIZE_88XX, payload, size);
-
-	hdr_info.sub_cmd_id = SUB_CMD_ID_FW_FWCTRL;
-	hdr_info.content_size = (u16)size;
-	hdr_info.ack = ack;
-	set_h2c_pkt_hdr_88xx(adapter, h2c_buf, &hdr_info, &seq_num);
-
-	status = send_h2c_pkt_88xx(adapter, h2c_buf);
-
-	if (status != HALMAC_RET_SUCCESS)
-		PLTFM_MSG_ERR("[ERR]send h2c!!\n");
-
-	PLTFM_MSG_TRACE("[TRACE]%s <===\n", __func__);
-
-	return status;
-}
-
 #endif /* HALMAC_88XX_SUPPORT */

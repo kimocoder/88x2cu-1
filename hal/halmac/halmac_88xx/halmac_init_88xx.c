@@ -315,7 +315,6 @@ mount_api_88xx(struct halmac_adapter *adapter)
 
 	api->halmac_enter_cpu_sleep_mode = enter_cpu_sleep_mode_88xx;
 	api->halmac_get_cpu_mode = get_cpu_mode_88xx;
-	api->halmac_drv_fwctrl = drv_fwctrl_88xx;
 	api->halmac_get_watcher = get_watcher_88xx;
 
 	if (adapter->intf == HALMAC_INTERFACE_SDIO) {

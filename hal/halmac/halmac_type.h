@@ -2588,9 +2588,6 @@ struct halmac_api {
 	(*halmac_get_cpu_mode)(struct halmac_adapter *adapter,
 			       enum halmac_wlcpu_mode *mode);
 	enum halmac_ret_status
-	(*halmac_drv_fwctrl)(struct halmac_adapter *adapter, u8 *payload,
-			     u32 size, u8 ack);
-	enum halmac_ret_status
 	(*halmac_read_efuse)(struct halmac_adapter *adapter, u32 offset,
 			     u8 *value);
 	enum halmac_ret_status
