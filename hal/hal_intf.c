@@ -1968,10 +1968,6 @@ u8 rtw_hal_ops_check(_adapter *padapter)
 		rtw_hal_error_msg("free_xmit_priv");
 		ret = _FAIL;
 	}
-	if (NULL == padapter->hal_func.hal_xmit) {
-		rtw_hal_error_msg("hal_xmit");
-		ret = _FAIL;
-	}
 	if (NULL == padapter->hal_func.mgnt_xmit) {
 		rtw_hal_error_msg("mgnt_xmit");
 		ret = _FAIL;

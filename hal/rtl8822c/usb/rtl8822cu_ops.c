@@ -320,7 +320,6 @@ void rtl8822cu_set_hal_ops(PADAPTER padapter)
 	ops->SetHalDefVarHandler = sethaldefvar;
 
 
-	ops->hal_xmit = rtl8822cu_hal_xmit;
 	ops->mgnt_xmit = rtl8822cu_mgnt_xmit;
 #ifdef CONFIG_RTW_MGMT_QUEUE
 	ops->hal_mgmt_xmitframe_enqueue = rtl8822cu_hal_mgmt_xmitframe_enqueue;

@@ -298,7 +298,6 @@ struct hal_ops {
 	/*** xmit section ***/
 	s32(*init_xmit_priv)(_adapter *padapter);
 	void	(*free_xmit_priv)(_adapter *padapter);
-	s32(*hal_xmit)(_adapter *padapter, struct xmit_frame *pxmitframe);
 	/*
 	 * mgnt_xmit should be implemented to run in interrupt context
 	 */
