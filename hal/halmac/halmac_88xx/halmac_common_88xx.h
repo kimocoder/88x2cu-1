@@ -67,10 +67,6 @@ cfg_parameter_88xx(struct halmac_adapter *adapter,
 		   struct halmac_phy_parameter_info *info, u8 full_fifo);
 
 enum halmac_ret_status
-update_packet_88xx(struct halmac_adapter *adapter, enum halmac_packet_id pkt_id,
-		   u8 *pkt, u32 size);
-
-enum halmac_ret_status
 send_scan_packet_88xx(struct halmac_adapter *adapter, u8 index,
 		      u8 *pkt, u32 size);
 

@@ -1659,65 +1659,6 @@ malloc_cfg_param_buf_88xx(struct halmac_adapter *adapter, u8 full_fifo)
 	return HALMAC_RET_SUCCESS;
 }
 
-/**
- * update_packet_88xx() - send specific packet to FW
- * @adapter : the adapter of halmac
- * @pkt_id : packet id, to know the purpose of this packet
- * @pkt : packet
- * @size : packet size
- *
- * Note : TX_DESC is not included in the pkt
- *
- * Author : KaiYuan Chang/Ivan Lin
- * Return : enum halmac_ret_status
- * More details of status code can be found in prototype document
- */
-enum halmac_ret_status
-update_packet_88xx(struct halmac_adapter *adapter, enum halmac_packet_id pkt_id,
-		   u8 *pkt, u32 size)
-{
-	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
-	enum halmac_cmd_process_status *proc_status =
-		&adapter->halmac_state.update_pkt_state.proc_status;
-	u8 *used_page = &adapter->halmac_state.update_pkt_state.used_page;
-
-	if (halmac_fw_validate(adapter) != HALMAC_RET_SUCCESS)
-		return HALMAC_RET_NO_DLFW;
-
-	if (adapter->fw_ver.h2c_version < 4)
-		return HALMAC_RET_FW_NO_SUPPORT;
-
-	if (size > UPDATE_PKT_RSVDPG_SIZE)
-		return HALMAC_RET_RSVD_PG_OVERFLOW_FAIL;
-
-	PLTFM_MSG_TRACE("[TRACE]%s ===>\n", __func__);
-
-	if (*proc_status == HALMAC_CMD_PROCESS_SENDING) {
-		PLTFM_MSG_TRACE("[TRACE]Wait event(upd)\n");
-		return HALMAC_RET_BUSY_STATE;
-	}
-
-	*proc_status = HALMAC_CMD_PROCESS_SENDING;
-
-	status = send_h2c_update_packet_88xx(adapter, pkt_id, pkt, size);
-	if (status != HALMAC_RET_SUCCESS) {
-		PLTFM_MSG_ERR("[ERR]send h2c!!\n");
-		PLTFM_MSG_ERR("[ERR]pkt id : %X!!\n", pkt_id);
-		return status;
-	}
-
-	*used_page = (u8)get_update_packet_page_size(adapter, size);
-
-	if (packet_in_nlo_88xx(adapter, pkt_id)) {
-		*proc_status = HALMAC_CMD_PROCESS_DONE;
-		adapter->nlo_flag = 1;
-	}
-
-	PLTFM_MSG_TRACE("[TRACE]%s <===\n", __func__);
-
-	return HALMAC_RET_SUCCESS;
-}
-
 static enum halmac_ret_status
 send_h2c_update_packet_88xx(struct halmac_adapter *adapter,
 			    enum halmac_packet_id pkt_id, u8 *pkt, u32 size)
