@@ -2578,10 +2578,6 @@ struct halmac_api {
 	(*halmac_rx_cut_amsdu_cfg)(struct halmac_adapter *adapter,
 				   struct halmac_cut_amsdu_cfg *cfg);
 	enum halmac_ret_status
-	(*halmac_fw_snding)(struct halmac_adapter *adapter,
-			    struct halmac_su_snding_info *su_info,
-			    struct halmac_mu_snding_info *mu_info, u8 period);
-	enum halmac_ret_status
 	(*halmac_get_mac_addr)(struct halmac_adapter *adapter, u8 port,
 			       union halmac_wlan_addr *addr);
 	enum halmac_ret_status

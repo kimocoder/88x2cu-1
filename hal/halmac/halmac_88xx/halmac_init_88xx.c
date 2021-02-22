@@ -311,7 +311,6 @@ mount_api_88xx(struct halmac_adapter *adapter)
 	api->halmac_pinmux_pin_status = pinmux_pin_status_88xx;
 
 	api->halmac_rx_cut_amsdu_cfg = rx_cut_amsdu_cfg_88xx;
-	api->halmac_fw_snding = fw_snding_88xx;
 	api->halmac_get_mac_addr = get_mac_addr_88xx;
 
 	api->halmac_enter_cpu_sleep_mode = enter_cpu_sleep_mode_88xx;
