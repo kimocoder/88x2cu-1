@@ -2435,9 +2435,6 @@ struct halmac_api {
 	(*halmac_ctrl_pwr_tracking)(struct halmac_adapter *adapter,
 				    struct halmac_pwr_tracking_option *opt);
 	enum halmac_ret_status
-	(*halmac_psd)(struct halmac_adapter *adapter, u16 start_psd,
-		      u16 end_psd);
-	enum halmac_ret_status
 	(*halmac_cfg_tx_agg_align)(struct halmac_adapter *adapter, u8 enable,
 				   u16 align_size);
 	enum halmac_ret_status

@@ -271,7 +271,6 @@ mount_api_88xx(struct halmac_adapter *adapter)
 	api->halmac_start_iqk = start_iqk_88xx;
 	api->halmac_start_dpk = start_dpk_88xx;
 	api->halmac_ctrl_pwr_tracking = ctrl_pwr_tracking_88xx;
-	api->halmac_psd = psd_88xx;
 	api->halmac_cfg_la_mode = cfg_la_mode_88xx;
 	api->halmac_cfg_rxff_expand_mode = cfg_rxfifo_expand_mode_88xx;
 

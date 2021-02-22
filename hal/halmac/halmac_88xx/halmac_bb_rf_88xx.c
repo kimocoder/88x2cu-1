@@ -280,68 +280,6 @@ get_psd_status_88xx(struct halmac_adapter *adapter,
 	return HALMAC_RET_SUCCESS;
 }
 
-/**
- * psd_88xx() - trigger fw psd
- * @adapter : the adapter of halmac
- * @start_psd : start PSD
- * @end_psd : end PSD
- * Author : KaiYuan Chang/Ivan Lin
- * Return : enum halmac_ret_status
- * More details of status code can be found in prototype document
- */
-enum halmac_ret_status
-psd_88xx(struct halmac_adapter *adapter, u16 start_psd, u16 end_psd)
-{
-	u8 h2c_buf[H2C_PKT_SIZE_88XX] = { 0 };
-	u16 seq_num = 0;
-	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
-	struct halmac_h2c_header_info hdr_info;
-	enum halmac_cmd_process_status *proc_status;
-
-	proc_status = &adapter->halmac_state.psd_state.proc_status;
-
-	if (halmac_fw_validate(adapter) != HALMAC_RET_SUCCESS)
-		return HALMAC_RET_NO_DLFW;
-
-	PLTFM_MSG_TRACE("[TRACE]%s ===>\n", __func__);
-
-	if (*proc_status == HALMAC_CMD_PROCESS_SENDING) {
-		PLTFM_MSG_TRACE("[TRACE]Wait event(psd)\n");
-		return HALMAC_RET_BUSY_STATE;
-	}
-
-	if (adapter->halmac_state.psd_state.data) {
-		PLTFM_FREE(adapter->halmac_state.psd_state.data,
-			   adapter->halmac_state.psd_state.data_size);
-		adapter->halmac_state.psd_state.data = (u8 *)NULL;
-	}
-
-	adapter->halmac_state.psd_state.data_size = 0;
-	adapter->halmac_state.psd_state.seg_size = 0;
-
-	*proc_status = HALMAC_CMD_PROCESS_SENDING;
-
-	PSD_SET_START_PSD(h2c_buf, start_psd);
-	PSD_SET_END_PSD(h2c_buf, end_psd);
-
-	hdr_info.sub_cmd_id = SUB_CMD_ID_PSD;
-	hdr_info.content_size = 4;
-	hdr_info.ack = 1;
-	set_h2c_pkt_hdr_88xx(adapter, h2c_buf, &hdr_info, &seq_num);
-
-	status = send_h2c_pkt_88xx(adapter, h2c_buf);
-
-	if (status != HALMAC_RET_SUCCESS) {
-		PLTFM_MSG_ERR("[ERR]send h2c pkt fail!!\n");
-		reset_ofld_feature_88xx(adapter, HALMAC_FEATURE_PSD);
-		return status;
-	}
-
-	PLTFM_MSG_TRACE("[TRACE]%s <===\n", __func__);
-
-	return HALMAC_RET_SUCCESS;
-}
-
 enum halmac_ret_status
 get_h2c_ack_iqk_88xx(struct halmac_adapter *adapter, u8 *buf, u32 size)
 {
