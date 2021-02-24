@@ -1639,7 +1639,8 @@ static void rtw_hook_vir_if_ops(struct net_device *ndev)
 	ndev->set_mac_address = rtw_net_set_mac_address;
 #endif
 }
-_adapter *rtw_drv_add_vir_if(_adapter *primary_padapter,
+
+static _adapter *rtw_drv_add_vir_if(_adapter *primary_padapter,
 	void (*set_intf_ops)(_adapter *primary_padapter, struct _io_ops *pops))
 {
 	int res = _FAIL;
@@ -1756,6 +1757,25 @@ free_adapter:
 	}
 exit:
 	return padapter;
+}
+
+u8 rtw_drv_add_vir_ifaces(struct dvobj_priv *dvobj)
+{
+	u8 i;
+	u8 rst = _FAIL;
+
+	if (dvobj->virtual_iface_num > (CONFIG_IFACE_NUMBER - 1))
+		dvobj->virtual_iface_num = (CONFIG_IFACE_NUMBER - 1);
+
+	for (i = 0; i < dvobj->virtual_iface_num; i++) {
+		if (rtw_drv_add_vir_if(dvobj) == NULL) {
+			RTW_ERR("rtw_drv_add_vir_if failed! (%d)\n", i);
+			goto _exit;
+		}
+	}
+	rst = _SUCCESS;
+_exit:
+	return rst;
 }
 
 void rtw_drv_stop_vir_if(_adapter *padapter)

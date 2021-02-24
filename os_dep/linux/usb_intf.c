@@ -1317,7 +1317,6 @@ static void rtw_usb_primary_adapter_deinit(_adapter *padapter)
 static int rtw_dev_probe(struct usb_interface *pusb_intf, const struct usb_device_id *pdid)
 {
 	_adapter *padapter = NULL;
-	int status = _FAIL;
 	struct dvobj_priv *dvobj;
 #ifdef CONFIG_CONCURRENT_MODE
 	int i;
@@ -1358,15 +1357,8 @@ static int rtw_dev_probe(struct usb_interface *pusb_intf, const struct usb_devic
 	}
 
 #ifdef CONFIG_CONCURRENT_MODE
-	if (padapter->registrypriv.virtual_iface_num > (CONFIG_IFACE_NUMBER - 1))
-		padapter->registrypriv.virtual_iface_num = (CONFIG_IFACE_NUMBER - 1);
-
-	for (i = 0; i < padapter->registrypriv.virtual_iface_num; i++) {
-		if (rtw_drv_add_vir_if(padapter, usb_set_intf_ops) == NULL) {
-			RTW_INFO("rtw_drv_add_iface failed! (%d)\n", i);
-			goto free_if_vir;
-		}
-	}
+	if (rtw_drv_add_vir_ifaces(dvobj) == _FAIL)
+		goto free_if_vir
 #endif
 
 #ifdef CONFIG_GLOBAL_UI_PID
@@ -1395,15 +1387,13 @@ static int rtw_dev_probe(struct usb_interface *pusb_intf, const struct usb_devic
 	return 0;
 
 free_if_vir:
-	if (status != _SUCCESS) {
-		#ifdef CONFIG_CONCURRENT_MODE
-		rtw_drv_stop_vir_ifaces(dvobj);
-		rtw_drv_free_vir_ifaces(dvobj);
-		#endif
-	}
+	#ifdef CONFIG_CONCURRENT_MODE
+	rtw_drv_stop_vir_ifaces(dvobj);
+	rtw_drv_free_vir_ifaces(dvobj);
+	#endif
 
 free_if_prim:
-	if (status != _SUCCESS && padapter)
+	if (padapter)
 		rtw_usb_primary_adapter_deinit(padapter);
 
 free_trx_reso:
