@@ -308,7 +308,6 @@ extern int _rtw_write32(_adapter *adapter, u32 addr, u32 val);
 extern int _rtw_writeN(_adapter *adapter, u32 addr, u32 length, u8 *pdata);
 
 extern u32 _rtw_write_port(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
-u32 _rtw_write_port_and_wait(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem, int timeout_ms);
 extern void _rtw_write_port_cancel(_adapter *adapter);
 
 #ifdef DBG_IO
@@ -339,9 +338,7 @@ extern int dbg_rtw_writeN(_adapter *adapter, u32 addr , u32 length , u8 *data, c
 #define rtw_write16_async(adapter, addr, val) _rtw_write16_async((adapter), (addr), (val))
 #define rtw_write32_async(adapter, addr, val) _rtw_write32_async((adapter), (addr), (val))
 
-//#define rtw_write_mem(adapter, addr, cnt, mem) _rtw_write_mem((adapter), addr, cnt, mem)
 #define rtw_write_port(adapter, addr, cnt, mem) _rtw_write_port(adapter, addr, cnt, mem)
-#define rtw_write_port_and_wait(adapter, addr, cnt, mem, timeout_ms) _rtw_write_port_and_wait((adapter), (addr), (cnt), (mem), (timeout_ms))
 #define rtw_write_port_cancel(adapter) _rtw_write_port_cancel(adapter)
 
 #else /* DBG_IO */
@@ -354,7 +351,6 @@ extern int dbg_rtw_writeN(_adapter *adapter, u32 addr , u32 length , u8 *data, c
 #define rtw_write32(adapter, addr, val) rtw_phl_write32(adapter_to_dvobj((_adapter *)(adapter))->phl, (addr), (val))
 
 #define rtw_write_port(adapter, addr, cnt, mem) _rtw_write_port((adapter), (addr), (cnt), (mem))
-#define rtw_write_port_and_wait(adapter, addr, cnt, mem, timeout_ms) _rtw_write_port_and_wait((adapter), (addr), (cnt), (mem), (timeout_ms))
 #define rtw_write_port_cancel(adapter) _rtw_write_port_cancel((adapter))
 
 #endif /* DBG_IO */
