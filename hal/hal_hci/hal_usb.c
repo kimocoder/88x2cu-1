@@ -255,31 +255,6 @@ void usb_c2h_hisr_hdl(_adapter *adapter, u8 *buf)
 }
 #endif
 
-int usb_writeN(struct intf_hdl *pintfhdl, u32 addr, u32 length, u8 *pdata)
-{
-	u8 request;
-	u8 requesttype;
-	u16 wvalue;
-	u16 index;
-	u16 len;
-	u8 buf[VENDOR_CMD_MAX_DATA_LEN] = {0};
-	int ret;
-
-
-	request = 0x05;
-	requesttype = 0x00;/* write_out */
-	index = 0;/* n/a */
-
-	wvalue = (u16)(addr & 0x0000ffff);
-	len = length;
-	_rtw_memcpy(buf, pdata, len);
-	ret = usbctrl_vendorreq(pintfhdl->pintf_dev, request, wvalue, index,
-				buf, len, requesttype);
-
-
-	return ret;
-}
-
 void usb_set_intf_ops(_adapter *padapter, struct _io_ops *pops)
 {
 	_rtw_memset((u8 *)pops, 0, sizeof(struct _io_ops));

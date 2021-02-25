@@ -265,13 +265,7 @@ u32 rtl8822cu_inirp_init(PADAPTER padapter)
 	u8 i, status;
 	struct recv_buf *precvbuf;
 	struct dvobj_priv *pdev = adapter_to_dvobj(padapter);
-	struct intf_hdl *pintfhdl = &padapter->iopriv.intf;
 	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
-	u32(*_read_port)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);
-#ifdef CONFIG_USB_INTERRUPT_IN_PIPE
-	HAL_DATA_TYPE *pHalData = GET_HAL_DATA(padapter);
-	u32(*_read_interrupt)(struct intf_hdl *pintfhdl, u32 addr);
-#endif
 
 #ifdef CONFIG_FWLPS_IN_IPS
 	/* Do not sumbit urb repeat */
@@ -283,43 +277,11 @@ u32 rtl8822cu_inirp_init(PADAPTER padapter)
 	}
 #endif /* CONFIG_FWLPS_IN_IPS */
 
-	//_read_port = pintfhdl->io_ops._read_port;
-
 	status = _SUCCESS;
-
 
 	precvpriv->ff_hwaddr = RECV_BULK_IN_ADDR;
 
-#if 0 // NEO mark off first
-	/* issue Rx irp to receive data */
-	precvbuf = (struct recv_buf *)precvpriv->precv_buf;
-	for (i = 0; i < regsty->recvbuf_nr; i++) {
-		if (_read_port(pintfhdl, precvpriv->ff_hwaddr, 0, (u8 *)precvbuf) == _FALSE) {
-			status = _FAIL;
-			goto exit;
-		}
-
-		precvbuf++;
-		precvpriv->free_recv_buf_queue_cnt--;
-	}
-#endif // if 0 NEO
-
-#ifdef CONFIG_USB_INTERRUPT_IN_PIPE
-	if (pdev->RtInPipe[REALTEK_USB_IN_INT_EP_IDX] != 0x05) {
-		status = _FAIL;
-		RTW_INFO("%s =>Warning !! Have not USB Int-IN pipe, RtIntInPipe(%d)!!!\n", __func__, pdev->RtInPipe[REALTEK_USB_IN_INT_EP_IDX]);
-		goto exit;
-	}
-	_read_interrupt = pintfhdl->io_ops._read_interrupt;
-	if (_read_interrupt(pintfhdl, RECV_INT_IN_ADDR) == _FALSE) {
-		status = _FAIL;
-	}
-#endif
-
 exit:
-
-
-
 	return status;
 
 }

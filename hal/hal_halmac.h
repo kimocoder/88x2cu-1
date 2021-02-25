@@ -15,7 +15,7 @@
 #ifndef _HAL_HALMAC_H_
 #define _HAL_HALMAC_H_
 
-#include <drv_types.h>		/* adapter_to_dvobj(), struct intf_hdl and etc. */
+#include <drv_types.h>		/* adapter_to_dvobj() and etc. */
 #include <hal_data.h>		/* struct hal_spec_t */
 #include "halmac/halmac_api.h"	/* struct halmac_adapter* and etc. */
 
@@ -100,18 +100,6 @@ struct rtw_halmac_bcn_ctrl {
 extern struct halmac_platform_api rtw_halmac_platform_api;
 
 /* HALMAC API for Driver(HAL) */
-u8 rtw_halmac_read8(struct intf_hdl *, u32 addr);
-u16 rtw_halmac_read16(struct intf_hdl *, u32 addr);
-u32 rtw_halmac_read32(struct intf_hdl *, u32 addr);
-void rtw_halmac_read_mem(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);
-#ifdef CONFIG_SDIO_INDIRECT_ACCESS
-u8 rtw_halmac_iread8(struct intf_hdl *pintfhdl, u32 addr);
-u16 rtw_halmac_iread16(struct intf_hdl *pintfhdl, u32 addr);
-u32 rtw_halmac_iread32(struct intf_hdl *pintfhdl, u32 addr);
-#endif /* CONFIG_SDIO_INDIRECT_ACCESS */
-int rtw_halmac_write8(struct intf_hdl *, u32 addr, u8 value);
-int rtw_halmac_write16(struct intf_hdl *, u32 addr, u16 value);
-int rtw_halmac_write32(struct intf_hdl *, u32 addr, u32 value);
 
 /* Software Information */
 void rtw_halmac_get_version(char *str, u32 len);

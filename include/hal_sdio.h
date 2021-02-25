@@ -39,27 +39,6 @@ void sd_c2h_hisr_hdl(_adapter *adapter);
 #define SDIO_LOCAL_CMD_ADDR(addr) ((SDIO_LOCAL_DEVICE_ID << 13) | ((addr) & SDIO_LOCAL_MSK))
 #endif
 
-#ifdef CONFIG_SDIO_CHK_HCI_RESUME
-bool sdio_chk_hci_resume(struct intf_hdl *pintfhdl);
-void sdio_chk_hci_suspend(struct intf_hdl *pintfhdl);
-#else
-#define sdio_chk_hci_resume(pintfhdl) _FALSE
-#define sdio_chk_hci_suspend(pintfhdl) do {} while (0)
-#endif /* CONFIG_SDIO_CHK_HCI_RESUME */
-
-#ifdef CONFIG_SDIO_INDIRECT_ACCESS
-/* program indirect access register in sdio local to read/write page0 registers */
-s32 sdio_iread(PADAPTER padapter, u32 addr, u8 size, u8 *v);
-s32 sdio_iwrite(PADAPTER padapter, u32 addr, u8 size, u8 *v);
-u8 sdio_iread8(struct intf_hdl *pintfhdl, u32 addr);
-u16 sdio_iread16(struct intf_hdl *pintfhdl, u32 addr);
-u32 sdio_iread32(struct intf_hdl *pintfhdl, u32 addr);
-s32 sdio_iwrite8(struct intf_hdl *pintfhdl, u32 addr, u8 val);
-s32 sdio_iwrite16(struct intf_hdl *pintfhdl, u32 addr, u16 val);
-s32 sdio_iwrite32(struct intf_hdl *pintfhdl, u32 addr, u32 val);
-#endif /* CONFIG_SDIO_INDIRECT_ACCESS */
-u32 cmd53_4byte_alignment(struct intf_hdl *pintfhdl, u32 addr);
-
 #ifndef CONFIG_SDIO_TX_TASKLET
 #ifdef SDIO_FREE_XMIT_BUF_SEMA
 void _rtw_sdio_free_xmitbuf_sema_up(struct xmit_priv *xmit);

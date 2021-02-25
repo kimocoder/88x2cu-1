@@ -57,13 +57,6 @@
 		((timeout_ms) == 0) || ((timeout_ms) * HZ / 1000 > 0) ? ((timeout_ms) * HZ / 1000) : 1)
 #endif
 
-
-#ifdef CONFIG_USB_SUPPORT_ASYNC_VDN_REQ
-int usb_async_write8(struct intf_hdl *pintfhdl, u32 addr, u8 val);
-int usb_async_write16(struct intf_hdl *pintfhdl, u32 addr, u16 val);
-int usb_async_write32(struct intf_hdl *pintfhdl, u32 addr, u32 val);
-#endif /* CONFIG_USB_SUPPORT_ASYNC_VDN_REQ */
-
 unsigned int bulkid2pipe(struct dvobj_priv *pdvobj, u32 addr, u8 bulk_out);
 
 u32 rtw_usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *wmem);
@@ -80,12 +73,10 @@ int _usbctrl_vendorreq_async_write(struct usb_device *udev, u8 request,
 		u16 value, u16 index, void *pdata, u16 len, u8 requesttype);
 #endif /* CONFIG_USB_SUPPORT_ASYNC_VDN_REQ */
 
-int usb_writeN(struct intf_hdl *pintfhdl, u32 addr, u32 length, u8 *pdata);
 void usb_recv_tasklet(void *priv);
 
 #ifdef CONFIG_USB_INTERRUPT_IN_PIPE
 void usb_read_interrupt_complete(struct urb *purb, struct pt_regs *regs);
-u32 usb_read_interrupt(struct intf_hdl *pintfhdl, u32 addr);
 #endif
 
 u32 rtw_usb_g6_write_port(void *d, u8 *phl_tx_buf_ptr,
