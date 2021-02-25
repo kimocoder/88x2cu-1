@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright(c) 2007 - 2017 Realtek Corporation.
+ * Copyright(c) 2007 - 2019 Realtek Corporation.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -25,7 +25,7 @@
 #include <linux/module.h>
 #include <linux/namei.h>
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 5))
-	#include <linux/kref.h>
+#include <linux/kref.h>
 #endif
 /* #include <linux/smp_lock.h> */
 #include <linux/netdevice.h>
@@ -37,9 +37,9 @@
 #include <asm/atomic.h>
 #include <asm/io.h>
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 26))
-	#include <asm/semaphore.h>
+#include <asm/semaphore.h>
 #else
-	#include <linux/semaphore.h>
+#include <linux/semaphore.h>
 #endif
 #include <linux/sem.h>
 #include <linux/sched.h>
@@ -56,77 +56,67 @@
 #include <linux/list.h>
 #include <linux/vmalloc.h>
 
+#ifdef CONFIG_RECV_THREAD_MODE
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 4, 0))
-	#include <uapi/linux/sched/types.h>
+#include <uapi/linux/sched/types.h>
+#endif
 #endif
 
 #if (LINUX_VERSION_CODE <= KERNEL_VERSION(2, 5, 41))
-	#include <linux/tqueue.h>
+#include <linux/tqueue.h>
 #endif
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 7, 0))
-	#include <uapi/linux/limits.h>
+#include <uapi/linux/limits.h>
 #else
-	#include <linux/limits.h>
+#include <linux/limits.h>
 #endif
 
 #ifdef RTK_DMP_PLATFORM
-	#if (LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 12))
-		#include <linux/pageremap.h>
-	#endif
-	#include <asm/io.h>
+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 12))
+#include <linux/pageremap.h>
+#endif
+#include <asm/io.h>
 #endif
 
 #ifdef CONFIG_NET_RADIO
-	#define CONFIG_WIRELESS_EXT
+#define CONFIG_WIRELESS_EXT
 #endif
 
 /* Monitor mode */
 #include <net/ieee80211_radiotap.h>
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24))
-	#include <linux/ieee80211.h>
+#include <linux/ieee80211.h>
 #endif
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 25) && \
 	 LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 29))
-	#define CONFIG_IEEE80211_HT_ADDT_INFO
+#define CONFIG_IEEE80211_HT_ADDT_INFO
 #endif
 
 #ifdef CONFIG_IOCTL_CFG80211
 	/*	#include <linux/ieee80211.h> */
-	#include <net/cfg80211.h>
-#else
-	#ifdef CONFIG_REGD_SRC_FROM_OS
-	#error "CONFIG_REGD_SRC_FROM_OS requires CONFIG_IOCTL_CFG80211"
-	#endif
+#include <net/cfg80211.h>
 #endif /* CONFIG_IOCTL_CFG80211 */
 
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
-	#include <linux/earlysuspend.h>
+#include <linux/earlysuspend.h>
 #endif /* CONFIG_HAS_EARLYSUSPEND */
 
 #ifdef CONFIG_EFUSE_CONFIG_FILE
-	#include <linux/fs.h>
+#include <linux/fs.h>
 #endif
 
 #ifdef CONFIG_USB_HCI
-	#include <linux/usb.h>
-	#if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 21))
-		#include <linux/usb_ch9.h>
-	#else
-		#include <linux/usb/ch9.h>
-	#endif
+#include <linux/usb.h>
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 21))
+#include <linux/usb_ch9.h>
+#else
+#include <linux/usb/ch9.h>
 #endif
-
-#ifdef CONFIG_BT_COEXIST_SOCKET_TRX
-	#include <net/sock.h>
-	#include <net/tcp.h>
-	#include <linux/udp.h>
-	#include <linux/in.h>
-	#include <linux/netlink.h>
-#endif /* CONFIG_BT_COEXIST_SOCKET_TRX */
+#endif
 
 #if defined(CONFIG_RTW_GRO) && (!defined(CONFIG_RTW_NAPI))
 
@@ -148,7 +138,6 @@
 	/*#warning "Linux Kernel version too old to support GRO(should newer than 2.6.33)\n"*/
 
 #endif
-
 
 #define ATOMIC_T atomic_t
 
@@ -268,9 +257,8 @@ static inline void _rtw_usb_buffer_free(struct usb_device *dev, size_t size, voi
 }
 #endif /* CONFIG_USB_HCI */
 
-
+/*lock - spinlock*/
 typedef	spinlock_t	_lock;
-
 static inline void _rtw_spinlock_init(_lock *plock)
 {
 	spin_lock_init(plock);
@@ -304,6 +292,7 @@ __inline static void _rtw_spinunlock_bh(_lock *plock)
 	spin_unlock_bh(plock);
 }
 
+
 /*lock - semaphore*/
 typedef struct	semaphore _sema;
 static inline void _rtw_init_sema(_sema *sema, int init_val)
@@ -325,6 +314,7 @@ static inline u32 _rtw_down_sema(_sema *sema)
 		return _SUCCESS;
 }
 
+/*lock - mutex*/
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37))
 	typedef struct mutex		_mutex;
 #else
@@ -378,14 +368,6 @@ __inline static void _rtw_mutex_unlock(_mutex *pmutex)
 	up(pmutex);
 #endif
 }
-
-struct rtw_timer_list {
-	struct timer_list timer;
-	void (*function)(void *);
-	void *arg;
-};
-
-typedef struct rtw_timer_list _timer;
 
 /*completion*/
 typedef struct completion _completion;
@@ -685,19 +667,29 @@ __inline static _list	*get_list_head(_queue	*queue)
 	return &(queue->queue);
 }
 
+struct rtw_timer_list {
+	struct timer_list timer;
+	void (*function)(void *);
+	void *arg;
+};
+
+typedef struct rtw_timer_list _timer;
+
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0))
 static inline void timer_hdl(struct timer_list *in_timer)
-#else
-static inline void timer_hdl(unsigned long cntx)
-#endif
 {
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0))
 	_timer *ptimer = from_timer(ptimer, in_timer, timer);
-#else
-	_timer *ptimer = (_timer *)cntx;
-#endif
+
 	ptimer->function(ptimer->arg);
 }
+#else
+static inline void timer_hdl(unsigned long cntx)
+{
+	_timer *ptimer = (_timer *)cntx;
+
+	ptimer->function(ptimer->arg);
+}
+#endif
 
 __inline static void _init_timer(_timer *ptimer, void *pfunc, void *cntx)
 {
