@@ -59,7 +59,6 @@
 
 unsigned int bulkid2pipe(struct dvobj_priv *pdvobj, u32 addr, u8 bulk_out);
 
-u32 rtw_usb_write_port(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *wmem);
 void rtw_usb_write_port_cancel(struct intf_hdl *pintfhdl);
 
 int rtw_os_urb_resource_alloc(struct data_urb *dataurb);
