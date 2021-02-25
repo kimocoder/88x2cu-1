@@ -25,7 +25,6 @@
 #include <sdio_ops_linux.h>
 #endif
 
-extern void sdio_set_intf_ops(_adapter *padapter, struct _io_ops *pops);
 void dump_sdio_card_info(void *sel, struct dvobj_priv *dvobj);
 
 u32 sdio_init(struct dvobj_priv *dvobj);

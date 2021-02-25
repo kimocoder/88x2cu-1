@@ -86,9 +86,6 @@ struct intf_priv;
 struct intf_hdl;
 struct io_queue;
 
-struct _io_ops {
-};
-
 struct io_req {
 	_list	list;
 	u32	addr;
@@ -104,7 +101,6 @@ struct io_req {
 struct	intf_hdl {
 	_adapter *padapter;
 	struct dvobj_priv *pintf_dev;/*	pointer to &(padapter->dvobjpriv); */
-	struct _io_ops	io_ops;
 };
 
 struct reg_protocol_rd {
@@ -315,9 +311,6 @@ extern void async_write32(_adapter *adapter, u32 addr, u32 val,
 
 extern void async_write_mem(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
 extern void async_write_port(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
-
-
-int rtw_init_io_priv(_adapter *padapter, void (*set_intf_ops)(_adapter *padapter, struct _io_ops *pops));
 
 
 extern uint alloc_io_queue(_adapter *adapter);

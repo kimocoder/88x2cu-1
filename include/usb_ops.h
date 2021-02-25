@@ -94,7 +94,6 @@ void interrupt_handler_8703bu(_adapter *padapter, u16 pkt_len, u8 *pbuf);
 
 #ifdef CONFIG_RTL8723D
 void rtl8723du_set_hw_type(struct dvobj_priv *pdvobj);
-void rtl8723du_set_intf_ops(struct _io_ops *pops);
 void rtl8723du_recv_tasklet(void *priv);
 void rtl8723du_xmit_tasklet(void *priv);
 #ifdef CONFIG_SUPPORT_USB_INT
@@ -104,7 +103,6 @@ void interrupt_handler_8723du(_adapter *padapter, u16 pkt_len, u8 *pbuf);
 
 #ifdef CONFIG_RTL8710B
 void rtl8710bu_set_hw_type(struct dvobj_priv *pdvobj);
-void rtl8710bu_set_intf_ops(struct _io_ops *pops);
 void rtl8710bu_recv_tasklet(void *priv);
 void rtl8710bu_xmit_tasklet(void *priv);
 #ifdef CONFIG_SUPPORT_USB_INT
