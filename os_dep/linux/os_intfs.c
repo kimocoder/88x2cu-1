@@ -1644,7 +1644,7 @@ static _adapter *rtw_drv_add_vir_if(_adapter *primary_padapter)
 {
 	int res = _FAIL;
 	_adapter *padapter = NULL;
-	struct dvobj_priv *pdvobjpriv;
+	struct dvobj_priv *dvobj;
 	u8 mac[ETH_ALEN];
 #ifdef CONFIG_MI_UNIQUE_MACADDR_BIT
 	u32 mi_unique_macaddr_bit = 0;
@@ -1681,17 +1681,12 @@ static _adapter *rtw_drv_add_vir_if(_adapter *primary_padapter)
 
 
 	/****** hook vir if into dvobj ******/
-	pdvobjpriv = adapter_to_dvobj(padapter);
-	padapter->iface_id = pdvobjpriv->iface_nums;
-	pdvobjpriv->padapters[pdvobjpriv->iface_nums++] = padapter;
+	dvobj = adapter_to_dvobj(padapter);
+	padapter->iface_id = dvobj->iface_nums;
+	dvobj->padapters[dvobj->iface_nums++] = padapter;
 
 	padapter->intf_start = primary_padapter->intf_start;
 	padapter->intf_stop = primary_padapter->intf_stop;
-
-	/* step init_io_priv */
-	if ((rtw_init_io_priv(padapter, set_intf_ops)) == _FAIL) {
-		goto free_adapter;
-	}
 
 	/*init drv data*/
 	if (rtw_init_drv_sw(padapter) != _SUCCESS)

@@ -47,36 +47,6 @@ jackson@realtek.com.tw
 #include <drv_types.h>
 #include <hal_data.h>
 
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_PLATFORM_RTL8197D)
-	#define rtw_le16_to_cpu(val)		val
-	#define rtw_le32_to_cpu(val)		val
-	#define rtw_cpu_to_le16(val)		val
-	#define rtw_cpu_to_le32(val)		val
-#else
-	#define rtw_le16_to_cpu(val)		le16_to_cpu(val)
-	#define rtw_le32_to_cpu(val)		le32_to_cpu(val)
-	#define rtw_cpu_to_le16(val)		cpu_to_le16(val)
-	#define rtw_cpu_to_le32(val)		cpu_to_le32(val)
-#endif
-
-
-int rtw_init_io_priv(_adapter *padapter, void (*set_intf_ops)(_adapter *padapter, struct _io_ops *pops))
-{
-	struct io_priv	*piopriv = &padapter->iopriv;
-	struct intf_hdl *pintf = &piopriv->intf;
-
-	if (set_intf_ops == NULL)
-		return _FAIL;
-
-	piopriv->padapter = padapter;
-	pintf->padapter = padapter;
-	pintf->pintf_dev = adapter_to_dvobj(padapter);
-
-	set_intf_ops(padapter, &pintf->io_ops);
-
-	return _SUCCESS;
-}
-
 /*
 * Increase and check if the continual_io_error of this @param dvobjprive is larger than MAX_CONTINUAL_IO_ERR
 * @return _TRUE:
