@@ -87,7 +87,6 @@ struct intf_hdl;
 struct io_queue;
 
 struct _io_ops {
-	u32(*_write_port)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);
 	void (*_write_port_cancel)(struct intf_hdl *pintfhdl);
 };
 

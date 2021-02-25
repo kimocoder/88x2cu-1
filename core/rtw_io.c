@@ -60,23 +60,6 @@ jackson@realtek.com.tw
 #endif
 
 
-u32 _rtw_write_port(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem)
-{
-	u32(*_write_port)(struct intf_hdl *pintfhdl, u32 addr, u32 cnt, u8 *pmem);
-	/* struct	io_queue  	*pio_queue = (struct io_queue *)adapter->pio_queue; */
-	struct io_priv *pio_priv = &adapter->iopriv;
-	struct	intf_hdl		*pintfhdl = &(pio_priv->intf);
-	u32 ret = _SUCCESS;
-
-
-	_write_port = pintfhdl->io_ops._write_port;
-
-	ret = _write_port(pintfhdl, addr, cnt, pmem);
-
-
-	return ret;
-}
-
 void _rtw_write_port_cancel(_adapter *adapter)
 {
 	void (*_write_port_cancel)(struct intf_hdl *pintfhdl);
