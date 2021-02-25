@@ -609,8 +609,6 @@ static s32 rtw_dump_xframe(PADAPTER padapter, struct xmit_frame *pxmitframe)
 		inner_ret = rtw_halmac_usb_write_port(padapter, ff_hwaddr, w_sz, (unsigned char *)pxmitbuf);
 		rtw_count_tx_stats(padapter, pxmitframe, sz);
 
-		/* RTW_INFO("rtw_write_port, w_sz=%d, sz=%d, txdesc_sz=%d, tid=%d\n", w_sz, sz, w_sz-sz, pattrib->priority);*/
-
 		mem_addr += w_sz;
 
 		mem_addr = (u8 *)RND4(((SIZE_PTR)(mem_addr)));
