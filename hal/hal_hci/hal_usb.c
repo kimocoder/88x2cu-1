@@ -255,14 +255,3 @@ void usb_c2h_hisr_hdl(_adapter *adapter, u8 *buf)
 }
 #endif
 
-void usb_set_intf_ops(_adapter *padapter, struct _io_ops *pops)
-{
-	_rtw_memset((u8 *)pops, 0, sizeof(struct _io_ops));
-
-	pops->_write_port_cancel = &rtw_usb_write_port_cancel;
-
-#ifdef CONFIG_USB_INTERRUPT_IN_PIPE
-	pops->_read_interrupt = &usb_read_interrupt;
-#endif
-
-}

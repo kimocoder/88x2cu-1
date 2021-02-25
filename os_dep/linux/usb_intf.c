@@ -1171,10 +1171,6 @@ _adapter *rtw_usb_primary_adapter_init(struct dvobj_priv *dvobj,
 	padapter->hw_port = HW_PORT0;
 #endif
 
-	/* step init_io_priv */
-	if (rtw_init_io_priv(padapter, usb_set_intf_ops) == _FAIL)
-		goto free_adapter;
-
 	/* step 2. hook HalFunc, allocate HalData */
 	if (rtw_set_hal_ops(padapter) == _FAIL)
 		goto free_hal_data;
