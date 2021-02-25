@@ -207,8 +207,8 @@ exit:
 	/*_usbctrl_vendorreq_async_callback(urb)*/
 /*#define usb_bulkout_zero_complete(purb, regs)\*/
 	/*usb_bulkout_zero_complete(purb)*/
-#define rtw_usb_g6_write_port_complete(purb, regs)\
-	rtw_usb_g6_write_port_complete(purb)
+#define rtw_usb_write_port_complete(purb, regs)\
+	rtw_usb_write_port_complete(purb)
 #define rtw_usb_read_port_complete(purb, regs)\
 	rtw_usb_read_port_complete(purb)
 #define rtw_usb_read_interrupt_complete(purb, regs)\
@@ -321,7 +321,7 @@ s32 rtw_free_dataurb(struct trx_urb_buf_q *urb_q,
 	return _SUCCESS;
 }
 
-static void rtw_usb_g6_write_port_complete(struct urb *purb, struct pt_regs *regs)
+static void rtw_usb_write_port_complete(struct urb *purb, struct pt_regs *regs)
 {
 
 	struct lite_data_buf *litexmitbuf =
@@ -389,7 +389,7 @@ check_completion:
 }
 
 
-u32 rtw_usb_g6_write_port(void *d, u8 *phl_tx_buf_ptr,
+u32 rtw_usb_write_port(void *d, u8 *phl_tx_buf_ptr,
 	u8  bulk_id, u32 len, u8 *pkt_data_buf)
 {
 
@@ -436,7 +436,7 @@ u32 rtw_usb_g6_write_port(void *d, u8 *phl_tx_buf_ptr,
 	usb_fill_bulk_urb(xmiturb->urb, pusbd, pipe,
 			  litexmitbuf->pbuf,
 			  len,
-			  rtw_usb_g6_write_port_complete,
+			  rtw_usb_write_port_complete,
 			  litexmitbuf);
 	xmiturb->urb->transfer_flags |= URB_ZERO_PACKET;
 	status = usb_submit_urb(xmiturb->urb, GFP_ATOMIC);

@@ -728,7 +728,7 @@ static __inline void os_out_token_free(void *drv_priv)
 static inline int os_usb_tx(void *d, u8 *tx_buf_ptr,
 			u8 bulk_id, u32 len, u8 *pkt_data_buf)
 {
-	return rtw_usb_g6_write_port((struct dvobj_priv *)d, tx_buf_ptr,
+	return rtw_usb_write_port((struct dvobj_priv *)d, tx_buf_ptr,
 			bulk_id, len, pkt_data_buf);
 }
 
