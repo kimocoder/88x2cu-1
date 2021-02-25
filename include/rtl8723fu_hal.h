@@ -52,9 +52,6 @@
 	void rtl8723fu_set_hal_ops(PADAPTER padapter);
 	void rtl8723fu_set_hw_type(struct dvobj_priv *pdvobj);
 
-	/* rtl8723fu_io.c */
-	void rtl8723fu_set_intf_ops(struct _io_ops *pops);
-
 #endif /* CONFIG_USB_HCI */
 
 

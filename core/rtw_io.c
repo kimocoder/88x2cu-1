@@ -60,20 +60,6 @@ jackson@realtek.com.tw
 #endif
 
 
-void _rtw_write_port_cancel(_adapter *adapter)
-{
-	void (*_write_port_cancel)(struct intf_hdl *pintfhdl);
-	struct io_priv *pio_priv = &adapter->iopriv;
-	struct intf_hdl *pintfhdl = &(pio_priv->intf);
-
-	_write_port_cancel = pintfhdl->io_ops._write_port_cancel;
-
-	RTW_DISABLE_FUNC(adapter_to_dvobj(adapter), DF_TX_BIT);
-
-	if (_write_port_cancel)
-		_write_port_cancel(pintfhdl);
-}
-
 int rtw_init_io_priv(_adapter *padapter, void (*set_intf_ops)(_adapter *padapter, struct _io_ops *pops))
 {
 	struct io_priv	*piopriv = &padapter->iopriv;

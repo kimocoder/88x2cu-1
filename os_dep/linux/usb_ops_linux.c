@@ -474,13 +474,10 @@ exit:
 
 }
 
-void rtw_usb_write_port_cancel(struct intf_hdl *pintfhdl)
+void rtw_usb_write_port_cancel(void *d)
 {
 	int i, j;
-	_adapter	*padapter = pintfhdl->padapter;
-	struct xmit_buf *pxmitbuf = (struct xmit_buf *)padapter->xmitpriv.pxmitbuf;
-
-	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
+	struct dvobj_priv *dvobj = (struct dvobj_priv *)d;
 	struct data_urb *xmiturb = (struct data_urb *)dvobj->xmit_urb_q.urb_buf;
 	u32 xmiturb_nr = RTW_XMITURB_NR;
 

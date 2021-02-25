@@ -1640,8 +1640,7 @@ static void rtw_hook_vir_if_ops(struct net_device *ndev)
 #endif
 }
 
-static _adapter *rtw_drv_add_vir_if(_adapter *primary_padapter,
-	void (*set_intf_ops)(_adapter *primary_padapter, struct _io_ops *pops))
+static _adapter *rtw_drv_add_vir_if(_adapter *primary_padapter)
 {
 	int res = _FAIL;
 	_adapter *padapter = NULL;

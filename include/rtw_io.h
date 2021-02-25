@@ -87,7 +87,6 @@ struct intf_hdl;
 struct io_queue;
 
 struct _io_ops {
-	void (*_write_port_cancel)(struct intf_hdl *pintfhdl);
 };
 
 struct io_req {
@@ -277,8 +276,6 @@ extern void unregister_intf_hdl(struct intf_hdl *pintfhdl);
 extern void _rtw_attrib_read(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
 extern void _rtw_attrib_write(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
 
-extern void _rtw_write_port_cancel(_adapter *adapter);
-
 #define rtw_read8(adapter, addr) rtw_phl_read8(adapter_to_dvobj((_adapter *)(adapter))->phl, (addr))
 #define rtw_read16(adapter, addr) rtw_phl_read16(adapter_to_dvobj((_adapter *)(adapter))->phl, (addr))
 #define rtw_read32(adapter, addr) rtw_phl_read32(adapter_to_dvobj((_adapter *)(adapter))->phl, (addr))
@@ -286,7 +283,7 @@ extern void _rtw_write_port_cancel(_adapter *adapter);
 #define rtw_write16(adapter, addr, val) rtw_phl_write16(adapter_to_dvobj((_adapter *)(adapter))->phl, (addr), (val))
 #define rtw_write32(adapter, addr, val) rtw_phl_write32(adapter_to_dvobj((_adapter *)(adapter))->phl, (addr), (val))
 
-#define rtw_write_port_cancel(adapter) _rtw_write_port_cancel((adapter))
+#define rtw_write_port_cancel(adapter) rtw_usb_write_port_cancel(adapter_to_dvobj(adapter))
 
 extern void rtw_write_scsi(_adapter *adapter, u32 cnt, u8 *pmem);
 

@@ -147,7 +147,6 @@ struct spi_more_data {
 #endif
 extern void spi_set_chip_endian(PADAPTER padapter);
 extern unsigned int spi_write8_endian(ADAPTER *Adapter, unsigned int addr, unsigned int buf, u32 big);
-extern void spi_set_intf_ops(_adapter *padapter, struct _io_ops *pops);
 extern void spi_set_chip_endian(PADAPTER padapter);
 extern void InitInterrupt8723ASdio(PADAPTER padapter);
 extern void InitSysInterrupt8723ASdio(PADAPTER padapter);

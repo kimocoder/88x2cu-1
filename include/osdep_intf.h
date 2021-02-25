@@ -126,7 +126,6 @@ void rtw_ips_pwr_down(_adapter *padapter);
 #endif
 
 #ifdef CONFIG_CONCURRENT_MODE
-struct _io_ops;
 struct dvobj_priv;
 u8 rtw_drv_add_vir_ifaces(struct dvobj_priv *dvobj);
 void rtw_drv_stop_vir_ifaces(struct dvobj_priv *dvobj);
