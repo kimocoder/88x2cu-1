@@ -31,7 +31,6 @@
 #define MAC_AX_8852B_SUPPORT	0
 #endif
 
-//NEO 
 //#ifdef CONFIG_RTL8852B
 #define MAC_AC_8822C_SUPPORT	1
 //#else

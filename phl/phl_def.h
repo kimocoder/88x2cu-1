@@ -1258,7 +1258,7 @@ struct hal_spec_t {
 	u8 sec_cap;
 	u8 wow_cap;
 
-	#if 1 // Neo : rtk_wifi_driver
+	#if 1 // rtk_wifi_driver
 	u8 macid_cap;
 	u16 macid_txrpt;
 	u8 macid_txrpt_pgsz;
@@ -1268,7 +1268,7 @@ struct hal_spec_t {
 	u8 rfpath_num_5g:4;	/* used for tx power index path */
 	u8 rf_reg_path_num;
 
-	#if 1 // Neo : rtk_wifi_driver
+	#if 1 // rtk_wifi_driver
 	u8 rf_reg_path_avail_num;
 	u8 rf_reg_trx_path_bmp; /* [7:4]TX path bmp, [0:3]RX path bmp */
 	#endif
@@ -1283,14 +1283,14 @@ struct hal_spec_t {
 	u8 port_num;
 	u8 proto_cap;	/* value of PROTO_CAP_XXX */
 
-	#if 1 // Neo : rtk_wifi_driver
+	#if 1 // rtk_wifi_driver
 	u8 txgi_max; /* maximum tx power gain index */
 	u8 txgi_pdbm; /* tx power gain index per dBm */
 	#endif
 
 	u8 wl_func;		/* value of WL_FUNC_XXX */
 
-	#if 1 // Neo : rtk_wifi_driver
+	#if 1 // rtk_wifi_driver
 	u8 tx_aclt_unit_factor; /* how many 32us */
 
 	u8 rx_tsf_filter:1;

@@ -34,27 +34,6 @@
 	#include <net/arp.h>
 #endif
 
-#ifdef PLATFORM_OS_XP
-	#include <drv_types_xp.h>
-#endif
-
-#ifdef PLATFORM_OS_CE
-	#include <drv_types_ce.h>
-#endif
-
-#ifdef PLATFORM_LINUX
-	#include <drv_types_linux.h>
-#endif
-
-enum _NIC_VERSION {
-
-	RTL8711_NIC,
-	RTL8712_NIC,
-	RTL8713_NIC,
-	RTL8716_NIC
-
-};
-
 typedef struct _ADAPTER _adapter, ADAPTER, *PADAPTER;
 
 /* connection interface of drv and hal */

@@ -52,7 +52,6 @@
 	#include <linux/sched/types.h>
 #endif
 	#include <osdep_service_linux.h>
-	#include <drv_types_linux.h>
 #endif
 
 #ifdef PLATFORM_OS_XP
