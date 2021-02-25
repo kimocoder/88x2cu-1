@@ -1784,9 +1784,7 @@ aa
 	struct	rm_priv		rmpriv;
 #endif
 	/* struct	io_queue	*pio_queue; */
-	//struct	io_priv	iopriv;
 	struct	xmit_priv	xmitpriv;
-	//struct	recv_priv	recvpriv;
 	struct	recv_info	recvinfo;
 	struct	sta_priv	stapriv;
 	struct	security_priv	securitypriv;

@@ -83,7 +83,6 @@
 #define _INTF_ASYNC_	BIT(0)	/* support async io */
 
 struct intf_priv;
-struct intf_hdl;
 struct io_queue;
 
 struct io_req {
@@ -96,11 +95,6 @@ struct io_req {
 	_sema	sema;
 	void (*_async_io_callback)(_adapter *padater, struct io_req *pio_req, u8 *cnxt);
 	u8 *cnxt;
-};
-
-struct	intf_hdl {
-	_adapter *padapter;
-	struct dvobj_priv *pintf_dev;/*	pointer to &(padapter->dvobjpriv); */
 };
 
 struct reg_protocol_rd {
@@ -235,41 +229,6 @@ struct reg_protocol_wt {
 
 int rtw_inc_and_chk_continual_io_error(struct dvobj_priv *dvobj);
 void rtw_reset_continual_io_error(struct dvobj_priv *dvobj);
-
-/*
-Below is the data structure used by _io_handler
-
-*/
-
-struct io_queue {
-	_lock	lock;
-	_list	free_ioreqs;
-	_list		pending;		/* The io_req list that will be served in the single protocol read/write.	 */
-	_list		processing;
-	u8	*free_ioreqs_buf; /* 4-byte aligned */
-	u8	*pallocated_free_ioreqs_buf;
-	struct	intf_hdl	intf;
-};
-
-#if 0
-struct io_priv {
-
-	_adapter *padapter;
-
-	struct intf_hdl intf;
-
-};
-#endif
-
-extern uint ioreq_flush(_adapter *adapter, struct io_queue *ioqueue);
-extern void sync_ioreq_enqueue(struct io_req *preq, struct io_queue *ioqueue);
-extern uint sync_ioreq_flush(_adapter *adapter, struct io_queue *ioqueue);
-
-extern uint free_ioreq(struct io_req *preq, struct io_queue *pio_queue);
-extern struct io_req *alloc_ioreq(struct io_queue *pio_q);
-
-extern uint register_intf_hdl(u8 *dev, struct intf_hdl *pintfhdl);
-extern void unregister_intf_hdl(struct intf_hdl *pintfhdl);
 
 extern void _rtw_attrib_read(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
 extern void _rtw_attrib_write(_adapter *adapter, u32 addr, u32 cnt, u8 *pmem);
