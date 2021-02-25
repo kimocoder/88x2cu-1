@@ -251,6 +251,7 @@ struct io_queue {
 	struct	intf_hdl	intf;
 };
 
+#if 0
 struct io_priv {
 
 	_adapter *padapter;
@@ -258,6 +259,7 @@ struct io_priv {
 	struct intf_hdl intf;
 
 };
+#endif
 
 extern uint ioreq_flush(_adapter *adapter, struct io_queue *ioqueue);
 extern void sync_ioreq_enqueue(struct io_req *preq, struct io_queue *ioqueue);
