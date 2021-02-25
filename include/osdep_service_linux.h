@@ -393,11 +393,43 @@ struct	__queue	{
 typedef unsigned char	_buffer;
 
 typedef struct	__queue	_queue;
+
+/*list*/
+#define LIST_CONTAINOR(ptr, type, member) \
+	((type *)((char *)(ptr)-(SIZE_T)(&((type *)0)->member)))
+
+
+
 typedef struct	list_head	_list;
+/* Caller must check if the list is empty before calling rtw_list_delete*/
+__inline static void rtw_list_delete(_list *plist)
+{
+	list_del_init(plist);
+}
+
+__inline static _list *get_next(_list	*list)
+{
+	return list->next;
+}
+__inline static _list	*get_list_head(_queue *queue)
+{
+	return &(queue->queue);
+}
+#define rtw_list_first_entry(ptr, type, member) list_first_entry(ptr, type, member)
 
 /* hlist */
 typedef struct	hlist_head	rtw_hlist_head;
 typedef struct	hlist_node	rtw_hlist_node;
+#define rtw_hlist_for_each_entry(pos, head, member) hlist_for_each_entry(pos, head, member)
+#define rtw_hlist_for_each_safe(pos, n, head) hlist_for_each_safe(pos, n, head)
+#define rtw_hlist_entry(ptr, type, member) hlist_entry(ptr, type, member)
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 9, 0))
+#define rtw_hlist_for_each_entry_safe(pos, np, n, head, member) hlist_for_each_entry_safe(pos, n, head, member)
+#define rtw_hlist_for_each_entry_rcu(pos, node, head, member) hlist_for_each_entry_rcu(pos, head, member)
+#else
+#define rtw_hlist_for_each_entry_safe(pos, np, n, head, member) hlist_for_each_entry_safe(pos, np, n, head, member)
+#define rtw_hlist_for_each_entry_rcu(pos, node, head, member) hlist_for_each_entry_rcu(pos, node, head, member)
+#endif
 
 /* RCU */
 typedef struct rcu_head rtw_rcu_head;
@@ -584,32 +616,6 @@ static inline unsigned char *skb_end_pointer(const struct sk_buff *skb)
 }
 #endif
 
-__inline static void rtw_list_delete(_list *plist)
-{
-	list_del_init(plist);
-}
-
-__inline static _list *get_next(_list	*list)
-{
-	return list->next;
-}
-
-#define LIST_CONTAINOR(ptr, type, member) \
-	((type *)((char *)(ptr)-(SIZE_T)(&((type *)0)->member)))
-
-#define rtw_list_first_entry(ptr, type, member) list_first_entry(ptr, type, member)
-
-#define rtw_hlist_for_each_entry(pos, head, member) hlist_for_each_entry(pos, head, member)
-#define rtw_hlist_for_each_safe(pos, n, head) hlist_for_each_safe(pos, n, head)
-#define rtw_hlist_entry(ptr, type, member) hlist_entry(ptr, type, member)
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 9, 0))
-#define rtw_hlist_for_each_entry_safe(pos, np, n, head, member) hlist_for_each_entry_safe(pos, n, head, member)
-#define rtw_hlist_for_each_entry_rcu(pos, node, head, member) hlist_for_each_entry_rcu(pos, head, member)
-#else
-#define rtw_hlist_for_each_entry_safe(pos, np, n, head, member) hlist_for_each_entry_safe(pos, np, n, head, member)
-#define rtw_hlist_for_each_entry_rcu(pos, node, head, member) hlist_for_each_entry_rcu(pos, node, head, member)
-#endif
-
 __inline static void _enter_critical(_lock *plock, _irqL *pirqL)
 {
 	spin_lock_irqsave(plock, *pirqL);
@@ -660,11 +666,6 @@ __inline static void _exit_critical_mutex(_mutex *pmutex, _irqL *pirqL)
 #else
 	up(pmutex);
 #endif
-}
-
-__inline static _list	*get_list_head(_queue	*queue)
-{
-	return &(queue->queue);
 }
 
 struct rtw_timer_list {
