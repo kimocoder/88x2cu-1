@@ -125,7 +125,7 @@
 #define PHL_MAX_STA_NUM 128
 
 
-#define CONFIG_CMD_DISP
+/**** #define CONFIG_CMD_DISP ***/
 
 #ifdef DISABLE_CMD_DISPR
 #undef CONFIG_CMD_DISP

@@ -782,76 +782,6 @@ void rtw_evt_notify_isr(struct evt_priv *pevtpriv)
 }
 #endif
 
-void rtw_init_sitesurvey_parm(_adapter *padapter, struct sitesurvey_parm *pparm)
-{
-	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
-
-
-	_rtw_memset(pparm, 0, sizeof(struct sitesurvey_parm));
-	pparm->scan_mode = pmlmepriv->scan_mode;
-}
-
-/*
-rtw_sitesurvey_cmd(~)
-	### NOTE:#### (!!!!)
-	MUST TAKE CARE THAT BEFORE CALLING THIS FUNC, YOU SHOULD HAVE LOCKED pmlmepriv->lock
-*/
-u8 rtw_sitesurvey_cmd(_adapter *padapter, struct sitesurvey_parm *pparm)
-{
-	u8 res = _FAIL;
-	struct cmd_obj		*ph2c;
-	struct sitesurvey_parm	*psurveyPara;
-	struct cmd_priv	*pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
-	struct mlme_priv	*pmlmepriv = &padapter->mlmepriv;
-
-#ifdef CONFIG_LPS
-	if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE)
-		rtw_lps_ctrl_wk_cmd(padapter, LPS_CTRL_SCAN, 0);
-#endif
-
-#ifdef CONFIG_P2P_PS
-	if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE)
-		p2p_ps_wk_cmd(padapter, P2P_PS_SCAN, 1);
-#endif /* CONFIG_P2P_PS */
-
-	ph2c = (struct cmd_obj *)rtw_zmalloc(sizeof(struct cmd_obj));
-	if (ph2c == NULL)
-		return _FAIL;
-
-	psurveyPara = (struct sitesurvey_parm *)rtw_zmalloc(sizeof(struct sitesurvey_parm));
-	if (psurveyPara == NULL) {
-		rtw_mfree((unsigned char *) ph2c, sizeof(struct cmd_obj));
-		return _FAIL;
-	}
-
-	if (pparm)
-		_rtw_memcpy(psurveyPara, pparm, sizeof(struct sitesurvey_parm));
-	else
-		psurveyPara->scan_mode = pmlmepriv->scan_mode;
-
-	rtw_free_network_queue(padapter, _FALSE);
-
-	init_h2fwcmd_w_parm_no_rsp(ph2c, psurveyPara, CMD_SITE_SURVEY);
-
-	set_fwstate(pmlmepriv, WIFI_UNDER_SURVEY);
-
-	res = rtw_enqueue_cmd(pcmdpriv, ph2c);
-
-	if (res == _SUCCESS) {
-		u32 scan_timeout_ms;
-
-		pmlmepriv->scan_start_time = rtw_get_current_time();
-		scan_timeout_ms = rtw_scan_timeout_decision(padapter);
-		mlme_set_scan_to_timer(pmlmepriv,scan_timeout_ms);
-
-		rtw_led_control(padapter, LED_CTL_SITE_SURVEY);
-	} else
-		_clr_fwstate_(pmlmepriv, WIFI_UNDER_SURVEY);
-
-
-	return res;
-}
-
 void rtw_readtssi_cmdrsp_callback(_adapter	*padapter,  struct cmd_obj *pcmd)
 {
 
@@ -5450,23 +5380,6 @@ u8 rtw_drvextra_cmd_hdl(_adapter *padapter, unsigned char *pbuf)
 	return ret;
 }
 
-void rtw_survey_cmd_callback(_adapter	*padapter ,  struct cmd_obj *pcmd)
-{
-	struct	mlme_priv *pmlmepriv = &padapter->mlmepriv;
-
-
-	if (pcmd->res == H2C_DROPPED) {
-		/* TODO: cancel timer and do timeout handler directly... */
-		/* need to make timeout handlerOS independent */
-		mlme_set_scan_to_timer(pmlmepriv, 1);
-	} else if (pcmd->res != H2C_SUCCESS) {
-		mlme_set_scan_to_timer(pmlmepriv, 1);
-	}
-
-	/* free cmd */
-	rtw_free_cmd_obj(pcmd);
-
-}
 void rtw_disassoc_cmd_callback(_adapter	*padapter,  struct cmd_obj *pcmd)
 {
 	_irqL	irqL;

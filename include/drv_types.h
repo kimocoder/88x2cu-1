@@ -79,6 +79,7 @@ typedef struct _ADAPTER _adapter, ADAPTER, *PADAPTER;
 #include "../hal/hal_dm.h"
 #include <rtw_qos.h>
 #include <rtw_pwrctrl.h>
+#include "rtw_scan.h"
 #ifdef CONFIG_RTW_80211R
 #include <rtw_ft.h>
 #endif
@@ -1849,6 +1850,12 @@ aa
 	void (*intf_stop)(_adapter *adapter);
 
 #ifdef PLATFORM_LINUX
+#ifdef CONFIG_IOCTL_CFG80211
+#ifdef CONFIG_P2P
+struct cfg80211_wifidirect_info cfg80211_wdinfo;
+#endif /* CONFIG_P2P */
+#endif /* CONFIG_IOCTL_CFG80211 */
+
 	_nic_hdl pnetdev;
 	char old_ifname[IFNAMSIZ];
 	u8 ndev_unregistering;

@@ -153,84 +153,6 @@ struct action_handler {
 	unsigned int (*func)(_adapter *padapter, union recv_frame *precv_frame);
 };
 
-enum SCAN_STATE {
-	SCAN_DISABLE = 0,
-	SCAN_START = 1,
-	SCAN_PS_ANNC_WAIT = 2,
-	SCAN_ENTER = 3,
-	SCAN_PROCESS = 4,
-
-	/* backop */
-	SCAN_BACKING_OP = 5,
-	SCAN_BACK_OP = 6,
-	SCAN_LEAVING_OP = 7,
-	SCAN_LEAVE_OP = 8,
-
-	/* SW antenna diversity (before linked) */
-	SCAN_SW_ANTDIV_BL = 9,
-
-	/* legacy p2p */
-	SCAN_TO_P2P_LISTEN = 10,
-	SCAN_P2P_LISTEN = 11,
-
-	SCAN_COMPLETE = 12,
-	SCAN_STATE_MAX,
-};
-
-const char *scan_state_str(u8 state);
-
-enum ss_backop_flag {
-	SS_BACKOP_EN = BIT0, /* backop when linked */
-	SS_BACKOP_EN_NL = BIT1, /* backop even when no linked */
-
-	SS_BACKOP_PS_ANNC = BIT4,
-	SS_BACKOP_TX_RESUME = BIT5,
-};
-
-struct ss_res {
-	u8 state;
-	u8 next_state; /* will set to state on next cmd hdl */
-	int	bss_cnt;
-	u8 activate_ch_cnt;
-	int	channel_idx;
-	u8 force_ssid_scan;
-	int	scan_mode;
-	u16 scan_ch_ms;
-	u32 scan_timeout_ms;
-	u8 rx_ampdu_accept;
-	u8 rx_ampdu_size;
-	u8 igi_scan;
-	u8 igi_before_scan; /* used for restoring IGI value without enable DIG & FA_CNT */
-#ifdef CONFIG_SCAN_BACKOP
-	u8 backop_flags_sta; /* policy for station mode*/
-	#ifdef CONFIG_AP_MODE
-	u8 backop_flags_ap; /* policy for ap mode */
-	#endif
-	#ifdef CONFIG_RTW_MESH
-	u8 backop_flags_mesh; /* policy for mesh mode */
-	#endif
-	u8 backop_flags; /* per backop runtime decision */
-	u8 scan_cnt;
-	u8 scan_cnt_max;
-	systime backop_time; /* the start time of backop */
-	u16 backop_ms;
-#endif
-#if defined(CONFIG_ANTENNA_DIVERSITY) || defined(DBG_SCAN_SW_ANTDIV_BL)
-	u8 is_sw_antdiv_bl_scan;
-#endif
-	u8 ssid_num;
-	u8 ch_num;
-	NDIS_802_11_SSID ssid[RTW_SSID_SCAN_AMOUNT];
-	struct rtw_ieee80211_channel ch[RTW_CHANNEL_SCAN_AMOUNT];
-
-	u32 token; 	/* 0: use to identify caller */
-	u16 duration;	/* 0: use default */
-	u8 igi;		/* 0: use defalut */
-	u8 bw;		/* 0: use default */
-
-	bool acs; /* aim to trigger channel selection when scan done */
-};
-
 #ifdef CONFIG_TDLS
 enum TDLS_option {
 	TDLS_ESTABLISHED = 1,
@@ -360,6 +282,8 @@ enum {
 /* The channel information about this channel including joining, scanning, and power constraints. */
 typedef struct _RT_CHANNEL_INFO {
 	u8				ChannelNum;		/* The channel number. */
+	enum rtw_phl_scan_type		ScanType;
+	bool dfs;
 
 	/*
 	* Bitmap and its usage:
@@ -509,9 +433,11 @@ struct mlme_ext_priv {
 #endif
 	/* struct fw_priv 	fwpriv; */
 
+	
 	unsigned char	cur_channel;
 	unsigned char	cur_bwmode;
 	unsigned char	cur_ch_offset;/* PRIME_CHNL_OFFSET */
+	struct rtw_chan_def chandef;
 	unsigned char	cur_wireless_mode;	/* NETWORK_TYPE */
 
 	unsigned char	basicrate[NumRates];
@@ -545,6 +471,7 @@ struct mlme_ext_priv {
 
 	systime last_scan_time;
 	u8	scan_abort;
+	bool scan_abort_to;
 	u8 join_abort;
 	u8	tx_rate; /* TXRATE when USERATE is set. */
 
@@ -692,8 +619,6 @@ void sitesurvey_set_offch_state(_adapter *adapter, u8 scan_state);
 #define mlmeext_assign_scan_backop_flags_mesh(mlmeext, flags) do {} while (0)
 #endif /* defined(CONFIG_SCAN_BACKOP) && defined(CONFIG_RTW_MESH) */
 
-u32 rtw_scan_timeout_decision(_adapter *padapter);
-
 void init_mlme_default_rate_set(_adapter *padapter);
 int init_mlme_ext_priv(_adapter *padapter);
 int init_hw_mlme_ext(_adapter *padapter);
@@ -751,7 +676,7 @@ BOOLEAN IsLegal5GChannel(PADAPTER Adapter, u8 channel);
 
 void site_survey(_adapter *padapter, u8 survey_channel, RT_SCAN_TYPE ScanType);
 u8 collect_bss_info(_adapter *padapter, union recv_frame *precv_frame, WLAN_BSSID_EX *bssid);
-void update_network(WLAN_BSSID_EX *dst, WLAN_BSSID_EX *src, _adapter *padapter, bool update_ie);
+void rtw_update_network(WLAN_BSSID_EX *dst, WLAN_BSSID_EX *src, _adapter *padapter, bool update_ie);
 
 u8 *get_my_bssid(WLAN_BSSID_EX *pnetwork);
 u16 get_beacon_interval(WLAN_BSSID_EX *bss);
@@ -911,7 +836,7 @@ bool rtw_tim_map_anyone_be_set_exclude_aid0(_adapter *padapter, const u8 *map);
 
 u32 report_join_res(_adapter *padapter, int aid_res, u16 status);
 void report_survey_event(_adapter *padapter, union recv_frame *precv_frame);
-void report_surveydone_event(_adapter *padapter, bool acs);
+void report_surveydone_event(_adapter *padapter, bool acs, u8 flags);
 u32 report_del_sta_event(_adapter *padapter, unsigned char *MacAddr, unsigned short reason, bool enqueue, u8 locally_generated);
 void report_add_sta_event(_adapter *padapter, unsigned char *MacAddr);
 bool rtw_port_switch_chk(_adapter *adapter);

@@ -113,6 +113,12 @@ struct	evt_priv {
 
 };
 
+struct back_op_param {
+	unsigned int off_ch_dur;
+	unsigned int off_ch_ext_dur; /* extend when MGNT_TX */
+	unsigned int on_ch_dur;
+};
+
 #define init_h2fwcmd_w_parm_no_rsp(pcmd, pparm, code) \
 	do {\
 		_rtw_init_listhead(&pcmd->list);\
@@ -338,34 +344,6 @@ struct createbss_parm {
 struct	setopmode_parm {
 	u8	mode;
 	u8	rsvd[3];
-};
-
-/*
-Caller Mode: AP, Ad-HoC, Infra
-
-Notes: To ask RTL8711 performing site-survey
-
-Command-Event Mode
-
-*/
-
-#define RTW_SSID_SCAN_AMOUNT 9 /* for WEXT_CSCAN_AMOUNT 9 */
-#define RTW_CHANNEL_SCAN_AMOUNT (14+37)
-struct sitesurvey_parm {
-	sint scan_mode;	/* active: 1, passive: 0 */
-	/* sint bsslimit;	// 1 ~ 48 */
-	u8 ssid_num;
-	u8 ch_num;
-	NDIS_802_11_SSID ssid[RTW_SSID_SCAN_AMOUNT];
-	struct rtw_ieee80211_channel ch[RTW_CHANNEL_SCAN_AMOUNT];
-
-	u32 token; 	/* 80211k use it to identify caller */
-	u16 duration;	/* 0: use default, otherwise: channel scan time */
-	u8 igi;		/* 0: use defalut */
-	u8 bw;		/* 0: use default */
-
-	bool acs; /* aim to trigger channel selection when scan done */
-	u8 reason;
 };
 
 /*
@@ -598,12 +576,8 @@ Result:
 #define H2C_ENQ_HEAD_FAIL		0x09
 #define H2C_CMD_FAIL			0x0A
 
-void rtw_init_sitesurvey_parm(_adapter *padapter, struct sitesurvey_parm *pparm);
-u8 rtw_sitesurvey_cmd(_adapter *padapter, struct sitesurvey_parm *pparm);
-#ifdef CONFIG_AP_MODE
 u8 rtw_create_ibss_cmd(_adapter *adapter, int flags);
 u8 rtw_startbss_cmd(_adapter *adapter, int flags);
-#endif
 
 #define REQ_CH_NONE		-1
 #define REQ_CH_INT_INFO	-2

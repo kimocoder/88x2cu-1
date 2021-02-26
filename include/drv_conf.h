@@ -808,4 +808,20 @@ defined(CONFIG_RTL8723F) /*|| defined(CONFIG_RTL8814A)*/
 #define DBG_CPU_INFO	/* Add CPU info to debug message prefix */
 #endif
 
+
+#ifdef CONFIG_CMD_DISP
+	/*#define DBG_CONFIG_CMD_DISP*/
+
+	#define CONFIG_CMD_SCAN
+	#if defined(CONFIG_CMD_SCAN) && defined(CONFIG_IOCTL_CFG80211)
+		#define CONFIG_PHL_CMD_SCAN_BKOP_TIME
+	#endif
+	#define CONFIG_CMD_GENERAL
+	#define CONFIG_CMD_SER
+	#define CONFIG_STA_CMD_DISPR
+	#define CONFIG_AP_CMD_DISPR
+	/*#define CONFIG_IBSS_CMD_DISPR*/
+	#define CONFIG_CMD_TSF_SYNC
+#endif
+
 #endif /* __DRV_CONF_H__ */

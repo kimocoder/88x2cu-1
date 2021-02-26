@@ -98,6 +98,9 @@ CONFIG_RTW_UP_MAPPING_RULE = tos
 CONFIG_RTW_MBO = n
 
 CONFIG_PHL_ARCH = y
+CONFIG_FSM = n
+CONFIG_CMD_DISP = y
+
 
 RTW_PHL_RX = y
 RTW_PHL_TX = y
@@ -1106,6 +1109,10 @@ endif
 ifeq ($(CONFIG_MP_INCLUDED), y)
 #MODULE_NAME := $(MODULE_NAME)_mp
 EXTRA_CFLAGS += -DCONFIG_MP_INCLUDED
+endif
+
+ifeq ($(CONFIG_CMD_DISP), y)
+EXTRA_CFLAGS += -DCONFIG_CMD_DISP
 endif
 
 ifeq ($(CONFIG_POWER_SAVING), y)
@@ -2457,7 +2464,8 @@ rtk_core :=	core/rtw_cmd.o \
 		core/rtw_mbo.o \
 		core/rtw_rm_util.o \
 		core/efuse/rtw_efuse.o \
-		core/rtw_roch.o
+		core/rtw_roch.o \
+		core/rtw_scan.o
 
 rtk_core += core/rtw_phl.o
 

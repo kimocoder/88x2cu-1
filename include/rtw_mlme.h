@@ -843,6 +843,20 @@ struct mlme_priv {
 		adapter->mlmepriv.auto_scan_int_ms = ms; \
 	} while (0)
 
+#define set_assoc_timer(mlme, ms) \
+	do { \
+		/*RTW_INFO("%s set_assoc_timer(%p, %d)\n", __FUNCTION__, (mlme), (ms));*/ \
+		_set_timer(&(mlme)->assoc_timer, (ms)); \
+	} while (0)
+
+#define cancel_assoc_timer(mlme) \
+	do { \
+		/*RTW_INFO("%s cancel_assoc_timer(%p)\n", __FUNCTION__, (mlme));*/ \
+		_cancel_timer_ex(&(mlme)->assoc_timer); \
+	} while (0)
+
+
+
 #define RTW_AUTO_SCAN_REASON_UNSPECIFIED		0
 #define RTW_AUTO_SCAN_REASON_2040_BSS			BIT0
 #define RTW_AUTO_SCAN_REASON_ACS				BIT1
@@ -994,7 +1008,6 @@ void rtw_drv_scan_by_self(_adapter *padapter, u8 reason);
 void rtw_scan_wait_completed(_adapter *adapter);
 u32 rtw_scan_abort_timeout(_adapter *adapter, u32 timeout_ms);
 void rtw_scan_abort_no_wait(_adapter *adapter);
-void rtw_scan_abort(_adapter *adapter);
 u32 rtw_join_abort_timeout(_adapter *adapter, u32 timeout_ms);
 
 int rtw_cached_pmkid(_adapter *Adapter, u8 *bssid);
@@ -1017,27 +1030,6 @@ extern void rtw_scan_timeout_handler(void *ctx);
 
 extern void rtw_dynamic_check_timer_handlder(void *ctx);
 extern void rtw_iface_dynamic_check_timer_handlder(_adapter *adapter);
-
-enum {
-	SS_DENY_MP_MODE,
-	SS_DENY_RSON_SCANING,
-	SS_DENY_BLOCK_SCAN,
-	SS_DENY_BY_DRV,
-	SS_DENY_SELF_AP_UNDER_WPS,
-	SS_DENY_SELF_AP_UNDER_LINKING,
-	SS_DENY_SELF_AP_UNDER_SURVEY,
-	/*SS_DENY_SELF_STA_UNDER_WPS,*/
-	SS_DENY_SELF_STA_UNDER_LINKING,
-	SS_DENY_SELF_STA_UNDER_SURVEY,
-	SS_DENY_BUDDY_UNDER_LINK_WPS,
-	SS_DENY_BUDDY_UNDER_SURVEY,
-	SS_DENY_BUSY_TRAFFIC,
-	SS_ALLOW,
-#ifdef DBG_LA_MODE
-	SS_DENY_LA_MODE,
-#endif
-	SS_DENY_ADAPTIVITY,
-};
 
 u8 _rtw_sitesurvey_condition_check(const char *caller, _adapter *adapter, bool check_sc_interval);
 #define rtw_sitesurvey_condition_check(adapter, check_sc_interval) _rtw_sitesurvey_condition_check(__func__, adapter, check_sc_interval)
