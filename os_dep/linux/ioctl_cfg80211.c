@@ -3149,7 +3149,6 @@ static int cfg80211_rtw_scan(struct wiphy *wiphy
 	u8 _status = _FALSE;
 	int ret = 0;
 	struct sitesurvey_parm parm;
-	_irqL	irqL;
 	u8 survey_times = 3;
 	u8 survey_times_for_one_ch = 6;
 	struct cfg80211_ssid *ssids = request->ssids;
@@ -3211,7 +3210,6 @@ static int cfg80211_rtw_scan(struct wiphy *wiphy
 #endif
 
 
-#if 1
 	ssc_chk = rtw_sitesurvey_condition_check(padapter, _TRUE);
 
 	if (ssc_chk == SS_DENY_MP_MODE)
@@ -3320,142 +3318,6 @@ bypass_p2p_chk:
 		need_indicate_scan_done = _TRUE;
 		goto check_need_indicate_scan_done;
 	}
-
-#else
-
-
-#ifdef CONFIG_MP_INCLUDED
-	if (rtw_mp_mode_check(padapter)) {
-		RTW_INFO("MP mode block Scan request\n");
-		ret = -EPERM;
-		goto exit;
-	}
-#endif
-
-#ifdef CONFIG_P2P
-	if (pwdinfo->driver_interface == DRIVER_CFG80211) {
-		if (request->n_ssids && ssids
-			&& _rtw_memcmp(ssids[0].ssid, "DIRECT-", 7)
-			&& rtw_get_p2p_ie((u8 *)request->ie, request->ie_len, NULL, NULL)
-		) {
-			if (rtw_p2p_chk_state(pwdinfo, P2P_STATE_NONE))
-				rtw_p2p_enable(padapter, P2P_ROLE_DEVICE);
-			else {
-				rtw_p2p_set_pre_state(pwdinfo, rtw_p2p_state(pwdinfo));
-				#ifdef CONFIG_DEBUG_CFG80211
-				RTW_INFO("%s, role=%d, p2p_state=%d\n", __func__, rtw_p2p_role(pwdinfo), rtw_p2p_state(pwdinfo));
-				#endif
-			}
-			rtw_p2p_set_state(pwdinfo, P2P_STATE_LISTEN);
-
-			if (request->n_channels == 3 &&
-				request->channels[0]->hw_value == 1 &&
-				request->channels[1]->hw_value == 6 &&
-				request->channels[2]->hw_value == 11
-			)
-				social_channel = 1;
-		}
-	}
-#endif /*CONFIG_P2P*/
-
-	if (request->ie && request->ie_len > 0)
-		rtw_cfg80211_set_probe_req_wpsp2pie(padapter, (u8 *)request->ie, request->ie_len);
-
-#ifdef CONFIG_RTW_REPEATER_SON
-	if (padapter->rtw_rson_scanstage == RSON_SCAN_PROCESS) {
-		RTW_INFO(FUNC_ADPT_FMT" blocking scan for under rson scanning process\n", FUNC_ADPT_ARG(padapter));
-		need_indicate_scan_done = _TRUE;
-		goto check_need_indicate_scan_done;
-	}
-#endif
-
-	if (adapter_wdev_data(padapter)->block_scan == _TRUE) {
-		RTW_INFO(FUNC_ADPT_FMT" wdev_priv.block_scan is set\n", FUNC_ADPT_ARG(padapter));
-		need_indicate_scan_done = _TRUE;
-		goto check_need_indicate_scan_done;
-	}
-
-	rtw_ps_deny(padapter, PS_DENY_SCAN);
-	ps_denied = _TRUE;
-	if (_FAIL == rtw_pwr_wakeup(padapter)) {
-		need_indicate_scan_done = _TRUE;
-		goto check_need_indicate_scan_done;
-	}
-
-	if (rtw_is_scan_deny(padapter)) {
-		RTW_INFO(FUNC_ADPT_FMT	": scan deny\n", FUNC_ADPT_ARG(padapter));
-#ifdef CONFIG_NOTIFY_SCAN_ABORT_WITH_BUSY
-		ret = -EBUSY;
-		goto exit;
-#else
-		need_indicate_scan_done = _TRUE;
-		goto check_need_indicate_scan_done;
-#endif
-	}
-
-	/* check fw state*/
-	if (check_fwstate(pmlmepriv, WIFI_AP_STATE) == _TRUE) {
-
-#ifdef CONFIG_DEBUG_CFG80211
-		RTW_INFO(FUNC_ADPT_FMT" under WIFI_AP_STATE\n", FUNC_ADPT_ARG(padapter));
-#endif
-
-		if (check_fwstate(pmlmepriv, WIFI_UNDER_WPS | WIFI_UNDER_SURVEY | WIFI_UNDER_LINKING) == _TRUE) {
-			RTW_INFO("%s, fwstate=0x%x\n", __func__, pmlmepriv->fw_state);
-
-			if (check_fwstate(pmlmepriv, WIFI_UNDER_WPS))
-				RTW_INFO("AP mode process WPS\n");
-
-			need_indicate_scan_done = _TRUE;
-			goto check_need_indicate_scan_done;
-		}
-	}
-
-	if (check_fwstate(pmlmepriv, WIFI_UNDER_SURVEY) == _TRUE) {
-		RTW_INFO("%s, fwstate=0x%x\n", __func__, pmlmepriv->fw_state);
-		need_indicate_scan_done = _TRUE;
-		goto check_need_indicate_scan_done;
-	} else if (check_fwstate(pmlmepriv, WIFI_UNDER_LINKING) == _TRUE) {
-		RTW_INFO("%s, fwstate=0x%x\n", __func__, pmlmepriv->fw_state);
-		ret = -EBUSY;
-		goto check_need_indicate_scan_done;
-	}
-
-#ifdef CONFIG_CONCURRENT_MODE
-	if (rtw_mi_buddy_check_fwstate(padapter, WIFI_UNDER_LINKING | WIFI_UNDER_WPS)) {
-		RTW_INFO("%s exit due to buddy_intf's mlme state under linking or wps\n", __func__);
-		need_indicate_scan_done = _TRUE;
-		goto check_need_indicate_scan_done;
-
-	} else if (rtw_mi_buddy_check_fwstate(padapter, WIFI_UNDER_SURVEY)) {
-		bool scan_via_buddy = rtw_cfg80211_scan_via_buddy(padapter, request);
-
-		if (scan_via_buddy == _FALSE)
-			need_indicate_scan_done = _TRUE;
-
-		goto check_need_indicate_scan_done;
-	}
-#endif /* CONFIG_CONCURRENT_MODE */
-
-#ifdef RTW_BUSY_DENY_SCAN
-	/*
-	 * busy traffic check
-	 * Rules:
-	 * 1. If (scan interval <= BUSY_TRAFFIC_SCAN_DENY_PERIOD) always allow
-	 *    scan, otherwise goto rule 2.
-	 * 2. Deny scan if any interface is busy, otherwise allow scan.
-	 */
-	if (pmlmepriv->lastscantime
-	    && (rtw_get_passing_time_ms(pmlmepriv->lastscantime) >
-		registry_par->scan_interval_thr)
-	    && rtw_mi_busy_traffic_check(padapter)) {
-		RTW_WARN(FUNC_ADPT_FMT ": scan abort!! BusyTraffic\n",
-			 FUNC_ADPT_ARG(padapter));
- 		need_indicate_scan_done = _TRUE;
-		goto check_need_indicate_scan_done;
-	}
-#endif /* RTW_BUSY_DENY_SCAN */
-#endif
 
 #ifdef CONFIG_P2P
 	if (!rtw_p2p_chk_state(pwdinfo, P2P_STATE_NONE) && !rtw_p2p_chk_state(pwdinfo, P2P_STATE_IDLE)) {
