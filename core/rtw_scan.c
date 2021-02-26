@@ -54,7 +54,6 @@ void rtw_set_scan_deny(_adapter *adapter, u32 ms)
 }
 #endif
 
-
 void rtw_drv_scan_by_self(_adapter *padapter, u8 reason)
 {
 	struct sitesurvey_parm parm;
@@ -66,17 +65,17 @@ void rtw_drv_scan_by_self(_adapter *padapter, u8 reason)
 	ssc_chk = rtw_sitesurvey_condition_check(padapter, _FALSE);
 	if( ssc_chk == SS_DENY_BUSY_TRAFFIC) {
 		#ifdef CONFIG_LAYER2_ROAMING
-		if (rtw_chk_roam_flags(padapter, RTW_ROAM_ACTIVE) && pmlmepriv->need_to_roam == _TRUE)
+		if (rtw_chk_roam_flags(padapter, RTW_ROAM_ACTIVE) && pmlmepriv->need_to_roam == _TRUE) {
 			RTW_INFO(FUNC_ADPT_FMT" need to roam, don't care BusyTraffic\n", FUNC_ADPT_ARG(padapter));
-		else
+		} else
 		#endif
 		{
 			RTW_INFO(FUNC_ADPT_FMT" exit BusyTraffic\n", FUNC_ADPT_ARG(padapter));
 			goto exit;
 		}
-	}
-	else if (ssc_chk != SS_ALLOW)
+	} else if (ssc_chk != SS_ALLOW) {
 		goto exit;
+	}
 
 	if (!rtw_is_adapter_up(padapter))
 		goto exit;
@@ -205,7 +204,6 @@ exit:
 	return ret;
 }
 #endif /* CONFIG_RTW_ACS */
-
 
 static u32 _rtw_wait_scan_done(_adapter *adapter, u8 abort, u32 timeout_ms)
 {
@@ -623,7 +621,6 @@ void rtw_survey_event_callback(_adapter	*adapter, u8 *pbuf)
 	if ((check_fwstate(pmlmepriv, WIFI_ADHOC_MASTER_STATE)) == _TRUE) {
 		if (_rtw_memcmp(&(pmlmepriv->cur_network.network.MacAddress), pnetwork->MacAddress, ETH_ALEN)) {
 			struct wlan_network *ibss_wlan = NULL;
-			_irqL	irqL;
 
 			_rtw_memcpy(pmlmepriv->cur_network.network.IEs, pnetwork->IEs, 8);
 			_rtw_spinlock_bh(&(pmlmepriv->scanned_queue.lock));
@@ -645,7 +642,6 @@ void rtw_survey_event_callback(_adapter	*adapter, u8 *pbuf)
 	}
 
 exit:
-
 	_rtw_spinunlock_bh(&pmlmepriv->lock);
 
 
@@ -654,7 +650,6 @@ exit:
 
 void rtw_surveydone_event_callback(_adapter	*adapter, u8 *pbuf)
 {
-	_irqL  irqL;
 	struct surveydone_event *parm = (struct surveydone_event *)pbuf;
 	struct	mlme_priv	*pmlmepriv = &(adapter->mlmepriv);
 	struct mlme_ext_priv	*pmlmeext = &adapter->mlmeextpriv;
@@ -663,7 +658,6 @@ void rtw_surveydone_event_callback(_adapter	*adapter, u8 *pbuf)
 	mlmeext_surveydone_event_callback(adapter);
 #endif
 
-
 	_rtw_spinlock_bh(&pmlmepriv->lock);
 	if (pmlmepriv->wps_probe_req_ie) {
 		u32 free_len = pmlmepriv->wps_probe_req_ie_len;
@@ -671,7 +665,6 @@ void rtw_surveydone_event_callback(_adapter	*adapter, u8 *pbuf)
 		rtw_mfree(pmlmepriv->wps_probe_req_ie, free_len);
 		pmlmepriv->wps_probe_req_ie = NULL;
 	}
-
 
 	if (check_fwstate(pmlmepriv, WIFI_UNDER_SURVEY) == _FALSE) {
 		RTW_INFO(FUNC_ADPT_FMT" fw_state:0x%x\n", FUNC_ADPT_ARG(adapter), get_fwstate(pmlmepriv));
@@ -697,8 +690,10 @@ void rtw_surveydone_event_callback(_adapter	*adapter, u8 *pbuf)
 			if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _FALSE) {
 				set_fwstate(pmlmepriv, WIFI_UNDER_LINKING);
 
-				if (rtw_select_and_join_from_scanned_queue(pmlmepriv) == _SUCCESS)
-					_set_timer(&pmlmepriv->assoc_timer, MAX_JOIN_TIMEOUT);
+				if (rtw_select_and_join_from_scanned_queue(pmlmepriv) == _SUCCESS) {
+					/*_set_timer(&pmlmepriv->assoc_timer, MAX_JOIN_TIMEOUT);*/
+					set_assoc_timer(pmlmepriv, MAX_JOIN_TIMEOUT);
+				}
 				#ifdef CONFIG_AP_MODE
 				else {
 					WLAN_BSSID_EX    *pdev_network = &(adapter->registrypriv.dev_network);
