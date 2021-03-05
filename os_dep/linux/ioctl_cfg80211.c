@@ -3195,6 +3195,8 @@ static int cfg80211_rtw_scan(struct wiphy *wiphy
 	RTW_INFO(FUNC_ADPT_FMT"%s\n", FUNC_ADPT_ARG(padapter)
 		, wdev == wiphy_to_pd_wdev(wiphy) ? " PD" : "");
 
+	rtw_init_sitesurvey_parm(padapter, &parm);
+
 #ifdef CONFIG_RTW_SCAN_RAND
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 19, 0))
 	if (request->flags & NL80211_SCAN_FLAG_RANDOM_ADDR) {
@@ -3209,7 +3211,6 @@ static int cfg80211_rtw_scan(struct wiphy *wiphy
 #endif
 #endif
 
-
 	ssc_chk = rtw_sitesurvey_condition_check(padapter, _TRUE);
 
 	if (ssc_chk == SS_DENY_MP_MODE)
@@ -3219,31 +3220,29 @@ static int cfg80211_rtw_scan(struct wiphy *wiphy
 		goto bypass_p2p_chk;
 #endif
 #ifdef CONFIG_P2P
-	if (pwdinfo->driver_interface == DRIVER_CFG80211) {
-		if (request->n_ssids && ssids
-			&& _rtw_memcmp(ssids[0].ssid, "DIRECT-", 7)
-			&& rtw_get_p2p_ie((u8 *)request->ie, request->ie_len, NULL, NULL)
-		) {
-			if (rtw_p2p_chk_state(pwdinfo, P2P_STATE_NONE)) {
-				if (!rtw_p2p_enable(padapter, P2P_ROLE_DEVICE)) {
-					ret = -EOPNOTSUPP;
-					goto exit;
-				}
-			} else {
-				rtw_p2p_set_pre_state(pwdinfo, rtw_p2p_state(pwdinfo));
-				#ifdef CONFIG_DEBUG_CFG80211
-				RTW_INFO("%s, role=%d, p2p_state=%d\n", __func__, rtw_p2p_role(pwdinfo), rtw_p2p_state(pwdinfo));
-				#endif
+	if (request->n_ssids && ssids
+		&& _rtw_memcmp(ssids[0].ssid, "DIRECT-", 7)
+		&& rtw_get_p2p_ie((u8 *)request->ie, request->ie_len, NULL, NULL)
+	) {
+		if (rtw_p2p_chk_state(pwdinfo, P2P_STATE_NONE)) {
+			if (!rtw_p2p_enable(padapter, P2P_ROLE_DEVICE)) {
+				ret = -EOPNOTSUPP;
+				goto exit;
 			}
-			rtw_p2p_set_state(pwdinfo, P2P_STATE_LISTEN);
-
-			if (request->n_channels == 3 &&
-				request->channels[0]->hw_value == 1 &&
-				request->channels[1]->hw_value == 6 &&
-				request->channels[2]->hw_value == 11
-			)
-				social_channel = 1;
+		} else {
+			rtw_p2p_set_pre_state(pwdinfo, rtw_p2p_state(pwdinfo));
+			#ifdef CONFIG_DEBUG_CFG80211
+			RTW_INFO("%s, role=%d, p2p_state=%d\n", __func__, rtw_p2p_role(pwdinfo), rtw_p2p_state(pwdinfo));
+			#endif
 		}
+		rtw_p2p_set_state(pwdinfo, P2P_STATE_LISTEN);
+
+		if (request->n_channels == 3 &&
+			request->channels[0]->hw_value == 1 &&
+			request->channels[1]->hw_value == 6 &&
+			request->channels[2]->hw_value == 11
+		)
+			social_channel = 1;
 	}
 #endif /*CONFIG_P2P*/
 
@@ -3330,7 +3329,6 @@ bypass_p2p_chk:
 	}
 #endif /* CONFIG_P2P */
 
-	rtw_init_sitesurvey_parm(padapter, &parm);
 
 	/* parsing request ssids, n_ssids */
 	for (i = 0; i < request->n_ssids && ssids && i < RTW_SSID_SCAN_AMOUNT; i++) {
