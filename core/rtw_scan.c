@@ -2641,9 +2641,6 @@ u8 rtw_sitesurvey_cmd(_adapter *padapter, struct sitesurvey_parm *pparm)
 }
 #else /*!CONFIG_CMD_SCAN*/
 
-
-#if 0 // NEO PHL_ARCH
-
 /**
  * prepare phl_channel list according to SCAN type
  *
@@ -2835,6 +2832,7 @@ u8 rtw_sitesurvey_cmd(_adapter *padapter, struct sitesurvey_parm *pparm)
 #endif/*CONFIG_CMD_SCAN*/
 
 
+#if 0 // NEO PHL_ARCH
 
 /* inform caller phl_scan are ready on remain channel */
 static int roch_ready_cb(void *priv, struct rtw_phl_scan_param *param)
