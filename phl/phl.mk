@@ -18,63 +18,97 @@ phl_path_d1 := $(src)/$(HAL)
 endif
 
 _PHL_FILES := $(phl_path)phl_init.o \
-		$(phl_path)phl_api_drv.o \
-		$(phl_path)phl_btc_fsm.o \
-		$(phl_path)phl_chan.o \
-		$(phl_path)phl_cmd_dispatcher.o \
-		$(phl_path)phl_cmd_dispatch_engine.o \
-		$(phl_path)phl_cmd_fsm.o \
-		$(phl_path)phl_cmd_general.o \
-		$(phl_path)phl_cmd_job.o \
 		$(phl_path)phl_debug.o \
-		$(phl_path)phl_fsm.o \
-		$(phl_path)phl_led.o \
-		$(phl_path)phl_mr.o \
-		$(phl_path)phl_msg_hub.o \
-		$(phl_path)phl_pkt_ofld.o \
-		$(phl_path)phl_role.o \
-		$(phl_path)phl_rx.o \
-		$(phl_path)phl_scan_fsm.o \
-		$(phl_path)phl_sec.o \
-		$(phl_path)phl_ser_fsm.o \
-		$(phl_path)phl_sound.o \
-		$(phl_path)phl_sound_fsm.o \
-		$(phl_path)phl_sta.o \
-		$(phl_path)phl_sw_cap.o \
 		$(phl_path)phl_tx.o \
+		$(phl_path)phl_rx.o \
+		$(phl_path)phl_api_drv.o \
+		$(phl_path)phl_role.o \
+		$(phl_path)phl_sta.o \
+		$(phl_path)phl_mr.o \
+		$(phl_path)phl_sec.o \
+		$(phl_path)phl_chan.o \
+		$(phl_path)phl_sw_cap.o \
 		$(phl_path)phl_util.o \
-		$(phl_path)phl_wow.o
+		$(phl_path)phl_pkt_ofld.o \
+		$(phl_path)phl_wow.o \
+		$(phl_path)phl_led.o \
+		$(phl_path)phl_msg_hub.o \
+		$(phl_path)phl_sound.o
 
 #_PHL_FILES := $(phl_path)phl_init.o \
+			$(phl_path)phl_debug.o \
+			$(phl_path)phl_tx.o \
+			$(phl_path)phl_rx.o \
 			$(phl_path)phl_rx_agg.o \
+			$(phl_path)phl_api_drv.o \
+			$(phl_path)phl_role.o \
+			$(phl_path)phl_sta.o \
+			$(phl_path)phl_mr.o \
 			$(phl_path)phl_sec.o \
+			$(phl_path)phl_chan.o \
+			$(phl_path)phl_sw_cap.o \
+			$(phl_path)phl_util.o \
+			$(phl_path)phl_pkt_ofld.o \
 			$(phl_path)phl_connect.o \
-			$(phl_path)phl_lps.o \
-			$(phl_path)phl_ips.o \
-			$(phl_path)phl_pm.o \
-			$(phl_path)phl_ps_fsm.o \
-			$(phl_path)phl_ps_api.o \
 			$(phl_path)phl_chan_info.o \
+			$(phl_path)phl_wow.o\
 			$(phl_path)phl_dm.o \
 			$(phl_path)phl_chnlplan.o \
 			$(phl_path)phl_country.o \
 			$(phl_path)phl_regulation.o \
+			$(phl_path)phl_led.o \
 			$(phl_path)phl_trx_mit.o \
-			$(phl_path)test/phl_dbg_cmd.o \
 			$(phl_path)phl_acs.o \
-			$(phl_path)phl_mcc.o
+			$(phl_path)phl_mcc.o \
+			$(phl_path)phl_ecsa.o \
+			$(phl_path)test/phl_dbg_cmd.o \
+			$(phl_path)test/phl_ps_dbg_cmd.o \
+			$(phl_path)phl_msg_hub.o \
+			$(phl_path)phl_sound.o \
+			$(phl_path)phl_twt.o \
+			$(phl_path)phl_notify.o \
+			$(phl_path)phl_sound_cmd.o
 
-_PHL_FILES += $(phl_path)phl_cmd_ser.o
+ifeq ($(CONFIG_POWER_SAVE), y)
+_PHL_FILES += $(phl_path)phl_lps.o \
+						$(phl_path)phl_ips.o \
+						$(phl_path)phl_pm.o \
+						$(phl_path)phl_ps_api.o
+endif
+
+_PHL_FILES += $(phl_path)phl_fsm.o \
+		$(phl_path)phl_cmd_fsm.o \
+		$(phl_path)phl_cmd_job.o \
+		$(phl_path)phl_ser_fsm.o \
+		$(phl_path)phl_btc_fsm.o \
+		$(phl_path)phl_scan_fsm.o \
+		$(phl_path)phl_sound_fsm.o
+
+ifeq ($(CONFIG_FSM), y)
+_PHL_FILES += $(phl_path)phl_fsm.o \
+						$(phl_path)phl_cmd_fsm.o \
+						$(phl_path)phl_cmd_job.o \
+						$(phl_path)phl_ser_fsm.o \
+						$(phl_path)phl_btc_fsm.o \
+						$(phl_path)phl_scan_fsm.o \
+						$(phl_path)phl_sound_fsm.o \
+						$(phl_path)phl_ps_fsm.o
+endif
+
+_PHL_FILES += $(phl_path)phl_cmd_dispatch_engine.o \
+		$(phl_path)phl_cmd_dispatcher.o \
+		$(phl_path)phl_cmd_ser.o \
+		$(phl_path)phl_cmd_general.o
 
 #_PHL_FILES += $(phl_path)phl_cmd_dispatch_engine.o\
-			$(phl_path)phl_cmd_dispatcher.o\
-			$(phl_path)phl_cmd_dispr_controller.o \
-			$(phl_path)phl_cmd_ser.o \
-			$(phl_path)phl_cmd_general.o \
-			$(phl_path)phl_cmd_scan.o \
-			$(phl_path)phl_cmd_btc.o \
-			$(phl_path)phl_sound_cmd.o \
-			$(phl_path)phl_watchdog.o
+						$(phl_path)phl_cmd_dispatcher.o\
+						$(phl_path)phl_cmd_dispr_controller.o \
+						$(phl_path)phl_cmd_ser.o \
+						$(phl_path)phl_cmd_general.o \
+						$(phl_path)phl_cmd_scan.o \
+						$(phl_path)phl_cmd_btc.o \
+						$(phl_path)phl_sound_cmd.o \
+						$(phl_path)phl_watchdog.o
 
 ifeq ($(CONFIG_PCI_HCI), y)
 _PHL_FILES += $(phl_path)hci/phl_trx_pcie.o
@@ -90,9 +124,6 @@ _PHL_FILES += $(phl_path)custom/phl_custom.o
 ifeq ($(CONFIG_PHL_CUSTOM_FEATURE_FB), y)
 _PHL_FILES += $(phl_path)custom/phl_custom_fb.o
 endif
-endif
-ifeq ($(CONFIG_PHL_CMD_SCAN), y)
-_PHL_FILES += $(phl_path)phl_cmd_scan.o
 endif
 ifeq ($(CONFIG_PHL_TEST_SUITE), y)
 _PHL_FILES += $(phl_path)test/trx_test.o
