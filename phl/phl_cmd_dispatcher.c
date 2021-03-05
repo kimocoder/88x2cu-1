@@ -1288,8 +1288,7 @@ static enum rtw_phl_status _register_dispr_controller(struct cmd_dispatcher *obj
 {
 	struct phl_bk_module *ctrl = &(obj->controller);
 
-	// NEO
-	//dispr_ctrl_hook_ops(obj, &(ctrl->ops));
+	dispr_ctrl_hook_ops(obj, &(ctrl->ops));
 	ctrl->id = PHL_MDL_PHY_MGNT;
 
 	if(bk_module_init(obj, &(obj->controller)) == true)
@@ -1385,8 +1384,7 @@ enum rtw_phl_status dispr_init(struct phl_info_t *phl_info, void **dispr, u8 idx
 	_os_spinlock_init(d, &(obj->token_op_q_lock));
 	SET_STATUS_FLAG(obj->status, DISPR_INIT);
 	SET_STATUS_FLAG(obj->status, DISPR_NOTIFY_IDLE);
-	// NEO
-	//_register_dispr_controller(obj);
+	_register_dispr_controller(obj);
 	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s, size dispr(%d), msg_ex(%d), req_ex(%d) \n",
 		 __FUNCTION__, (int)sizeof(struct cmd_dispatcher),
 		 (int)sizeof(struct phl_dispr_msg_ex),
