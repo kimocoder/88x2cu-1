@@ -97,6 +97,7 @@ endif
 
 _PHL_FILES += $(phl_path)phl_cmd_dispatch_engine.o \
 		$(phl_path)phl_cmd_dispatcher.o \
+		$(phl_path)phl_cmd_dispr_controller.o \
 		$(phl_path)phl_cmd_ser.o \
 		$(phl_path)phl_cmd_general.o
 
