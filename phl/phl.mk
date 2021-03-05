@@ -100,7 +100,8 @@ _PHL_FILES += $(phl_path)phl_cmd_dispatch_engine.o \
 		$(phl_path)phl_cmd_dispr_controller.o \
 		$(phl_path)phl_cmd_ser.o \
 		$(phl_path)phl_cmd_general.o \
-		$(phl_path)phl_cmd_scan.o
+		$(phl_path)phl_cmd_scan.o \
+		$(phl_path)phl_cmd_btc.o
 
 #_PHL_FILES += $(phl_path)phl_cmd_dispatch_engine.o\
 						$(phl_path)phl_cmd_dispatcher.o\

@@ -362,6 +362,8 @@ enum rtw_phl_status phl_btc_cancel(struct btc_obj *pbtc)
 #endif /* PHL_INCLUDE_FSM */
 }
 
+#ifdef CONFIG_FSM
+
 /* For EXTERNAL application to notify btc (expose) */
 /* @phl: refer to phl_infi_t
  * @notify: notification event
@@ -428,6 +430,8 @@ void rtw_phl_btc_role_notify(void *phl, u8 role_id, enum role_state rstate)
 	rtw_phl_btc_notify(phl, ntfy.notify, &ntfy);
 }
 
+#endif // CONFIG_FSM
+
 void rtw_phl_btc_specific_packet_notify(void *phl, u8 role_id, u8 packet_type)
 {
 	struct rtw_phl_btc_ntfy ntfy = {0};
@@ -443,6 +447,8 @@ void rtw_phl_btc_specific_packet_notify(void *phl, u8 role_id, u8 packet_type)
 
 	rtw_phl_btc_notify(phl, ntfy.notify, &ntfy);
 }
+
+#ifdef CONFIG_FSM
 
 void rtw_phl_btc_hub_msg_hdl(void *phl, struct phl_msg *msg)
 {
@@ -464,3 +470,4 @@ void rtw_phl_btc_hub_msg_hdl(void *phl, struct phl_msg *msg)
 	}
 }
 
+#endif // CONFIG_FSM
