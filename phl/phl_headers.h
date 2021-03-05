@@ -39,6 +39,7 @@
 #include "phl_wow_def.h"
 #include "phl_btc_def.h"
 #include "phl_cmd_dispatch.h"
+#include "phl_wow.h"
 #include "phl_struct.h"
 #include "phl_msg_hub.h"
 #include "phl_chan.h"
@@ -52,20 +53,27 @@
 #include "phl_tx.h"
 #include "phl_rx_agg.h"
 #include "phl_rx.h"
+
+#include "phl_ser_def.h"
+#include "phl_sound.h"
+
+#include "phl_ps_api.h"
+
+//#ifdef CONFIG_FSM
 #include "phl_fsm.h"
 #include "phl_cmd_fsm.h"
 #include "phl_cmd_job.h"
-#include "phl_ser_def.h"
 #include "phl_ser_fsm.h"
 #include "phl_scan_fsm.h"
 #include "phl_btc_fsm.h"
-#include "phl_sound.h"
 #include "phl_sound_fsm.h"
-#include "phl_pkt_ofld.h"
-#include "phl_ps_api.h"
 #include "phl_ps_fsm.h"
+//#endif /*CONFIG_FSM*/
+
+#include "phl_sound_cmd.h"
+
+#include "phl_pkt_ofld.h"
 #include "test/phl_dbg_cmd.h"
-#include "phl_wow.h"
 #include "phl_chan.h"
 #include "phl_acs.h"
 #include "phl_led_def.h"
