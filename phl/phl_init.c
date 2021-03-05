@@ -1968,30 +1968,6 @@ void rtw_phl_mac_dbg_status_dump(void *phl, u32 *val, u8 *en)
 
 #endif // NEO if 0
 
-void rtw_phl_watchdog_callback(void *phl)
-{
-	RTW_ERR("%s NEO TODO\n", __func__);
-#if 0  // NEO TODO
-	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct rtw_phl_com_t* phl_com = phl_info->phl_com;
-	enum rtw_phl_status pstatus;
-
-	phl_tx_watchdog(phl_info);
-	phl_rx_watchdog(phl_info);
-	phl_pcie_trx_mit_watchdog(phl_info);
-	phl_mr_watchdog(phl_info);
-
-	pstatus = rtw_phl_ps_notify(phl, PHL_PS_NTFY_WATCHDOG_START, NULL);
-	if(pstatus == RTW_PHL_STATUS_SUCCESS) {
-		rtw_hal_watchdog(phl_info->hal);
-		pstatus = rtw_phl_ps_notify(phl, PHL_PS_NTFY_WATCHDOG_STOP, NULL);
-	} else {
-		PHL_TRACE(COMP_PHL_PS, _PHL_DEBUG_,
-			"[PM] Bypass hal watchdog by power (%d) !!\n", pstatus);
-	}
-#endif // if 0 NEO
-}
-
 static inline enum halmac_usb_mode _usb_mode_drv2halmac(enum rtw_usb_speed usb_mode)
 {
 	enum halmac_usb_mode halmac_usb_mode = HALMAC_USB_MODE_U2;

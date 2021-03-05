@@ -15,6 +15,153 @@
 #define _PHL_CMD_GENERAL_C_
 #include "phl_headers.h"
 
+#ifdef CONFIG_CMD_DISP
+
+enum phl_cmd_sts {
+	PHL_CMD_SUBMITTED = -1,
+	PHL_CMD_DONE_SUCCESS = 0,
+	PHL_CMD_DONE_TIMEOUT,
+	PHL_CMD_DONE_CMD_ERROR,
+	PHL_CMD_DONE_CMD_DROP,
+	PHL_CMD_DONE_CANNOT_IO,
+	PHL_CMD_DONE_UNKNOWN,
+};
+
+struct phl_sync {
+	u32 submit_time;
+	u32 timeout_ms; /* 0: wait forever, >0: up to ms waiting */
+	enum phl_cmd_sts status; /* status for operation */
+	_os_event done;
+};
+
+struct phl_cmd_sync {
+	enum phl_msg_evt_id evt_id;
+	struct phl_sync sync;
+	_os_lock lock;
+};
+
+struct phl_cmd_obj {
+	enum phl_msg_evt_id evt_id; /* u8 id */
+	u8 *buf;
+	u32 buf_len;
+	bool no_io;
+	void (*cmd_complete)(void* priv, u8 *buf, u32 buf_len, enum rtw_phl_status status);
+	/*cmd sync*/
+	bool is_cmd_wait;
+	_os_atomic ref_cnt;
+	struct phl_cmd_sync cmd_sync;
+};
+
+#define DBG_CMD_SYNC
+
+#ifdef DBG_CMD_SYNC
+static void _phl_cmd_sync_dump(struct phl_cmd_sync *cmd_sync, const char *caller)
+{
+	PHL_INFO("[CMD_SYNC] %s\n", caller);
+	PHL_INFO("[CMD_SYNC] evt_id:%d status:%d\n", cmd_sync->evt_id, cmd_sync->sync.status);
+	PHL_INFO("[CMD_SYNC] take:%d ms\n", phl_get_passing_time_ms(cmd_sync->sync.submit_time));
+}
+#endif
+
+static void _phl_cmd_sync_init(struct phl_info_t *phl_info,
+		enum phl_msg_evt_id evt_id,
+		struct phl_cmd_sync *cmd_sync, u32 timeout_ms)
+{
+	void *drv = phl_to_drvpriv(phl_info);
+
+	_os_spinlock_init(drv, &cmd_sync->lock);
+	cmd_sync->evt_id = evt_id;
+	cmd_sync->sync.timeout_ms = timeout_ms;
+	cmd_sync->sync.submit_time = _os_get_cur_time_ms();
+	_os_event_init(drv, &(cmd_sync->sync.done));
+	cmd_sync->sync.status = PHL_CMD_SUBMITTED;
+}
+
+static void _phl_cmd_sync_deinit(struct phl_info_t *phl_info,
+			struct phl_cmd_sync *cmd_sync)
+{
+	#ifdef DBG_CMD_SYNC
+	_phl_cmd_sync_dump(cmd_sync, __func__);
+	#endif
+	_os_spinlock_free(phl_to_drvpriv(phl_info), &cmd_sync->lock);
+}
+
+inline static enum rtw_phl_status _cmd_stat_2_phl_stat(enum phl_cmd_sts status)
+{
+	if (status == PHL_CMD_DONE_TIMEOUT)
+		return RTW_PHL_STATUS_CMD_TIMEOUT;
+	else if(status == PHL_CMD_DONE_CANNOT_IO)
+		return RTW_PHL_STATUS_CMD_CANNOT_IO;
+	else if (status == PHL_CMD_DONE_CMD_ERROR)
+		return RTW_PHL_STATUS_CMD_ERROR;
+	else if (status == PHL_CMD_DONE_CMD_DROP)
+		return RTW_PHL_STATUS_CMD_DROP;
+	else
+		return RTW_PHL_STATUS_CMD_SUCCESS;
+}
+
+static enum rtw_phl_status
+_phl_cmd_wait(struct phl_info_t *phl_info, struct phl_cmd_sync *cmd_sync)
+{
+	void *drv = phl_to_drvpriv(phl_info);
+	u32 cmd_wait_ms = cmd_sync->sync.timeout_ms;/*0: wait forever, >0: up to ms waiting*/
+
+	#ifdef DBG_CMD_SYNC
+	PHL_INFO("evt_id:%d %s in...............\n", cmd_sync->evt_id, __func__);
+	#endif
+
+	if (_os_event_wait(drv, &cmd_sync->sync.done, cmd_wait_ms) == 0) {
+		_os_spinlock(drv, &cmd_sync->lock, _bh, NULL);
+		cmd_sync->sync.status = PHL_CMD_DONE_TIMEOUT;
+		_os_spinunlock(drv, &cmd_sync->lock, _bh, NULL);
+		PHL_ERR("%s evt_id:%d timeout\n", __func__, cmd_sync->evt_id);
+	}
+	#ifdef DBG_CMD_SYNC
+	PHL_INFO("evt_id:%d %s out...............\n", cmd_sync->evt_id, __func__);
+	_phl_cmd_sync_dump(cmd_sync, __func__);
+	#endif
+	return _cmd_stat_2_phl_stat(cmd_sync->sync.status);
+}
+
+static bool _phl_cmd_chk_wating_status(enum phl_cmd_sts status)
+{
+	switch (status) {
+	case PHL_CMD_SUBMITTED:
+		/* fall through */
+	case PHL_CMD_DONE_UNKNOWN:
+		return true;
+	default:
+		return false;
+	}
+}
+
+static void _phl_cmd_done(struct phl_info_t *phl_info,
+		struct phl_cmd_sync *cmd_sync, enum phl_cmd_sts status)
+{
+	void *drv = phl_to_drvpriv(phl_info);
+
+	if (!cmd_sync) {
+		PHL_ERR("%s cmd_sync is NULL\n", __func__);
+		_os_warn_on(1);
+		return;
+	}
+	#ifdef DBG_CMD_SYNC
+	PHL_INFO("evt_id:%d %s in...............\n", cmd_sync->evt_id, __func__);
+	#endif
+	_os_spinlock(drv, &cmd_sync->lock, _bh, NULL);
+	if (_phl_cmd_chk_wating_status(cmd_sync->sync.status)) {
+		PHL_INFO("%s status:%d\n", __func__, status);
+		cmd_sync->sync.status = status;
+	}
+	_os_spinunlock(drv, &cmd_sync->lock, _bh, NULL);
+
+	_os_event_set(drv, &cmd_sync->sync.done);
+	#ifdef DBG_CMD_SYNC
+	PHL_INFO("evt_id:%d %s out...............\n", cmd_sync->evt_id, __func__);
+	_phl_cmd_sync_dump(cmd_sync, __func__);
+	#endif
+}
+/********************************************************/
 static enum rtw_phl_status
 _phl_cmd_general_pre_phase_msg_hdlr(struct phl_info_t *phl_info, void *dispr,
 				    struct phl_msg *msg)
@@ -171,3 +318,127 @@ enum rtw_phl_status phl_register_cmd_general(struct phl_info_t *phl_info)
 
 	return status;
 }
+
+static enum rtw_phl_status
+_phl_cmd_obj_free(struct phl_info_t *phl_info, struct phl_cmd_obj *phl_cmd)
+{
+	void *drv = phl_to_drvpriv(phl_info);
+
+	if(phl_cmd == NULL) {
+		PHL_ERR("%s phl_cmd is NULL\n", __func__);
+		_os_warn_on(1);
+		return RTW_PHL_STATUS_FAILURE;
+	}
+
+	if (phl_cmd->is_cmd_wait == true)
+		_phl_cmd_sync_deinit(phl_info, &phl_cmd->cmd_sync);
+	_os_kmem_free(drv, phl_cmd, sizeof(struct phl_cmd_obj));
+	phl_cmd = NULL;
+	return RTW_PHL_STATUS_SUCCESS;
+}
+
+static void _phl_cmd_complete(void *priv, struct phl_msg *msg)
+{
+	struct phl_info_t *phl_info = (struct phl_info_t *)priv;
+	void *drv = phl_to_drvpriv(phl_info);
+	struct phl_cmd_obj *phl_cmd = (struct phl_cmd_obj *)msg->inbuf;
+	enum phl_cmd_sts csts = PHL_CMD_DONE_UNKNOWN;
+	enum rtw_phl_status pstst = RTW_PHL_STATUS_SUCCESS;
+
+	PHL_DBG("%s evt_id:%d\n", __func__, phl_cmd->evt_id);
+
+	if (IS_MSG_CANNOT_IO(msg->msg_id))
+		csts = PHL_CMD_DONE_CANNOT_IO;
+	else if (IS_MSG_FAIL(msg->msg_id))
+		csts = PHL_CMD_DONE_CMD_ERROR;
+	else if (IS_MSG_CANCEL(msg->msg_id))
+		csts = PHL_CMD_DONE_CMD_DROP;
+	else
+		csts = PHL_CMD_DONE_SUCCESS;
+
+	if (phl_cmd->is_cmd_wait)
+		_phl_cmd_done(phl_info, &phl_cmd->cmd_sync, csts);
+
+	pstst = _cmd_stat_2_phl_stat(csts);
+	if (phl_cmd->cmd_complete)
+		phl_cmd->cmd_complete(drv, phl_cmd->buf, phl_cmd->buf_len, pstst);
+
+	if (phl_cmd->is_cmd_wait) {
+		#define PHL_MAX_SCHEDULE_TIMEOUT 100000
+		u32 try_cnt = 0;
+		u32 start = _os_get_cur_time_ms();
+
+		do {
+			if (_os_atomic_read(drv, &(phl_cmd->ref_cnt)) == 1)
+				break;
+			_os_sleep_ms(drv, 10);
+			try_cnt++;
+			if (try_cnt == 50)
+				PHL_ERR("F-%s, L-%d polling is_cmd_wait to false\n",
+							__FUNCTION__, __LINE__);
+		} while (phl_get_passing_time_ms(start) < PHL_MAX_SCHEDULE_TIMEOUT);
+	}
+
+	_phl_cmd_obj_free(phl_info, phl_cmd);
+}
+
+enum rtw_phl_status
+phl_cmd_enqueue(struct phl_info_t *phl_info,
+                enum phl_band_idx band_idx,
+                enum phl_msg_evt_id evt_id,
+                u8 *cmd_buf,
+                u32 cmd_len,
+                void (*cmd_complete)(void* priv, u8 *buf, u32 buf_len, enum rtw_phl_status status),
+                enum phl_cmd_type cmd_type,
+                u32 cmd_timeout)
+{
+	void *drv = phl_to_drvpriv(phl_info);
+	enum rtw_phl_status psts = RTW_PHL_STATUS_FAILURE;
+	struct phl_cmd_obj *phl_cmd = NULL;
+	struct phl_msg msg = {0};
+	struct phl_msg_attribute attr = {0};
+
+	phl_cmd = _os_kmem_alloc(drv, sizeof(struct phl_cmd_obj));
+	if (phl_cmd == NULL) {
+		PHL_ERR("%s: alloc phl_cmd failed!\n", __func__);
+		psts = RTW_PHL_STATUS_RESOURCE;
+		goto _exit;
+	}
+	phl_cmd->evt_id = evt_id;
+	phl_cmd->buf = cmd_buf;
+	phl_cmd->buf_len = cmd_len;
+	phl_cmd->cmd_complete = cmd_complete;
+
+	SET_MSG_MDL_ID_FIELD(msg.msg_id, PHL_MDL_GENERAL);
+	SET_MSG_EVT_ID_FIELD(msg.msg_id, evt_id);
+	msg.inbuf = (u8 *)phl_cmd;
+	msg.inlen = sizeof(struct phl_cmd_obj);
+	msg.band_idx = band_idx;
+	attr.completion.completion = _phl_cmd_complete;
+	attr.completion.priv = phl_info;
+
+	if (cmd_type == PHL_CMD_WAIT) {
+		phl_cmd->is_cmd_wait = true;
+		_os_atomic_set(drv, &phl_cmd->ref_cnt, 0);
+		_phl_cmd_sync_init(phl_info, evt_id, &phl_cmd->cmd_sync, cmd_timeout);
+	}
+
+	psts = phl_disp_eng_send_msg(phl_info, &msg, &attr, NULL);
+	if (psts == RTW_PHL_STATUS_SUCCESS) {
+		if (phl_cmd->is_cmd_wait == true) {
+			psts = _phl_cmd_wait(phl_info, &phl_cmd->cmd_sync);
+			/*ref_cnt++ for cmd wait done*/
+			_os_atomic_inc(drv, &phl_cmd->ref_cnt);
+		} else {
+			psts = RTW_PHL_STATUS_SUCCESS;
+		}
+	} else {
+		PHL_ERR("%s send msg failed\n", __func__);
+		_phl_cmd_obj_free(phl_info, phl_cmd);
+	}
+_exit:
+	return psts;
+}
+
+#endif /*CONFIG_CMD_DISP*/
+

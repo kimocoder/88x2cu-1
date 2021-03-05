@@ -1296,6 +1296,37 @@ rtw_phl_change_stainfo(void *phl,
 }
 
 /**
+ * This function updates tx/rx traffic status of each active station info
+ */
+void
+phl_sta_trx_tfc_upd(struct phl_info_t *phl_info)
+{
+	struct g6_macid_ctl_t *macid_ctl = phl_to_mac_ctrl(phl_info);
+	struct rtw_phl_stainfo_t *phl_sta = NULL;
+	struct rtw_stats *sta_stats = NULL;
+	u16 max_macid_num = 0;
+	u16 mid = 0;
+
+	RTW_INFO("%s NEO TODO\n", __func__);
+#if 0 // NEO TODO
+	max_macid_num = macid_ctl->max_num;
+
+	_os_spinlock(phl_to_drvpriv(phl_info), &macid_ctl->lock, _ps, NULL);
+	for(mid = 0; mid < max_macid_num; mid++) {
+		if (_phl_macid_is_used(macid_ctl->used_map, mid)) {
+			phl_sta = macid_ctl->sta[mid];
+			if (phl_sta) {
+				sta_stats = &phl_sta->stats;
+				phl_tx_traffic_upd(sta_stats);
+				phl_rx_traffic_upd(sta_stats);
+			}
+		}
+	}
+	_os_spinunlock(phl_to_drvpriv(phl_info), &macid_ctl->lock, _ps, NULL);
+#endif // NEO if 0
+}
+
+/**
  * This function is used to get phl sta info
  * by macid
  * @phl: see phl_info_t

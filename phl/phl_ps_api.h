@@ -102,7 +102,7 @@ phl_ps_issue_cmd(void *phl, u32 *token,
 	void *ctx, u8 wait);
 enum rtw_phl_status
 phl_ps_cancel_cmd(void *phl, u32 token);
-
+void phl_ps_watchdog(struct phl_info_t *phl_info);
 #else
 #define rtw_phl_ps_send_battery_chg_hub_msg(_phl, _ips_auto, _lps_auto)
 #define rtw_phl_ps_notify(_phl, _notify, _param) RTW_PHL_STATUS_SUCCESS
@@ -116,7 +116,7 @@ phl_ps_cancel_cmd(void *phl, u32 token);
 #define phl_ps_leave_cmd_async(_phl, _token, _cb, _ctx)	\
 	RTW_PHL_STATUS_SUCCESS
 #define phl_ps_leave_cmd_cancel(_phl, _token)
-
+#define phl_ps_watchdog(_phl_info)
 #endif /*CONFIG_PS */
 
 #ifdef CONFIG_PS_PM

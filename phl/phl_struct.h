@@ -246,7 +246,7 @@ struct phl_info_t {
 	struct pkt_ofld_obj *pkt_ofld;
 
 	struct phl_cmd_dispatch_engine disp_eng;
-	//struct phl_watchdog wdog;
+	struct phl_watchdog wdog;
 	void *msg_hub;
 	void *cmd_que;
 	void *hal;
@@ -280,7 +280,7 @@ struct phl_info_t {
 	u8 rx_new_pending;
 #endif
 
-	//struct phl_wow_info wow_info;
+	struct phl_wow_info wow_info;
 
 #ifdef CONFIG_RTW_ACS
 	struct auto_chan_sel acs;

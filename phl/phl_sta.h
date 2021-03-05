@@ -117,6 +117,8 @@ rtw_phl_alloc_stainfo_hw(void *phl, struct rtw_phl_stainfo_t *sta);
 enum rtw_phl_status
 phl_change_stainfo(struct phl_info_t *phl_info, struct rtw_phl_stainfo_t *sta,
 				enum phl_upd_mode mode);
+void
+phl_sta_trx_tfc_upd(struct phl_info_t *phl_info);
 
 #endif	/*_PHL_STA_H_*/
 

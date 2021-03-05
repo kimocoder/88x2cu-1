@@ -40,6 +40,7 @@
 #include "phl_btc_def.h"
 #include "phl_cmd_dispatch.h"
 #include "phl_wow.h"
+#include "phl_watchdog.h"
 #include "phl_struct.h"
 #include "phl_msg_hub.h"
 #include "phl_chan.h"

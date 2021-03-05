@@ -12,19 +12,21 @@
  * more details.
  *
  *****************************************************************************/
-#ifndef _PHL_CMD_GENERAL_H_
-#define _PHL_CMD_GENERAL_H_
+#ifndef _PHL_WATCHDOG_H_
+#define _PHL_WATCHDOG_H_
 
+#define WDOG_PERIOD 2000
 
-enum rtw_phl_status phl_register_cmd_general(struct phl_info_t *phl_info);
+struct phl_watchdog {
+	_os_timer wdog_timer;
+	void (*core_wdog)(void *drv_priv);
+	u16 period;
+};
 
 enum rtw_phl_status
-phl_cmd_enqueue(struct phl_info_t *phl_info,
-                enum phl_band_idx band_idx,
-                enum phl_msg_evt_id evt_id,
-                u8 *cmd_buf,
-                u32 cmd_len,
-                void (*cmd_complete)(void *priv, u8 *cmd, u32 cmd_len, enum rtw_phl_status status),
-                enum phl_cmd_type cmd_type,
-                u32 cmd_timeout);
-#endif /*_PHL_CMD_GENERAL_H_*/
+phl_watchdog_cmd_hdl(struct phl_info_t *phl_info);
+
+void rtw_phl_watchdog_callback(void *phl);
+
+#endif /*_PHL_WATCHDOG_H_*/
+
