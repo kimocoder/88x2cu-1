@@ -147,6 +147,25 @@ void pq_del_node(void *d, struct phl_queue *q, _os_list *obj, enum lock_type typ
 	_os_spinunlock(d, &q->lock, type, &sp_flags);
 }
 
+u8 pq_insert(void *d, struct phl_queue *q, enum lock_type type, void *priv, _os_list *input,
+		  u8 (*predicate)(void *d, void *priv,_os_list *input, _os_list *obj))
+{
+	_os_spinlockfg sp_flags;
+	_os_list *obj = NULL;
+
+	_os_spinlock(d, &q->lock, type, &sp_flags);
+	obj = q->queue.next;
+	while (obj != &(q->queue)) {
+		if (predicate && predicate(d, priv, input, obj) == true)
+			break;
+		obj = obj->next;
+	}
+	list_add_tail(input, obj);
+	q->cnt++;
+	_os_spinunlock(d, &q->lock, type, &sp_flags);
+	return true;
+}
+
 #if 0 // NEO TODO mark off first for _os_get_cur_time_us()
 u32 phl_get_passing_time_us(u32 start)
 {

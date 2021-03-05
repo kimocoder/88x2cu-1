@@ -13,20 +13,17 @@
  *
  *****************************************************************************/
 #include "phl_headers.h"
-#include "phl_fsm.h"
-#include "phl_ser_fsm.h"
-
 
 /*
  * SER stands for System Error Recovery
  */
 
 #define SER_FW_TIMEOUT 1000 /* ms */
-#define SER_POLLING_INTERVAL 100 /* ms */
+#define SER_POLLING_INTERVAL 10 /* ms */
 #define SER_USB_POLLING_INTERVAL_IDL 1000 /* ms */
 #define SER_USB_POLLING_INTERVAL_ACT 10 /* ms */
 
-#define SER_POLL_IO_TIMES 30
+#define SER_POLL_IO_TIMES 200
 #define SER_USB_POLL_IO_TIMES 300
 #define SER_POLL_BULK_TIMES 100
 
@@ -251,6 +248,15 @@ static void ser_usb_chk_int_event(struct ser_obj *pser)
 /*
  * SER state handler
  */
+u8 rtw_phl_ser_inprogress(void *phl)
+{
+	return phl_ser_inprogress(phl);
+}
+
+void rtw_phl_ser_clear_status(void *phl, u32 serstatus)
+{
+	 phl_ser_clear_status(phl, serstatus);
+}
 
 /*
  * ser idle handler
@@ -258,7 +264,6 @@ static void ser_usb_chk_int_event(struct ser_obj *pser)
 static int ser_idle_st_hdl(void *obj, u16 event, void *param)
 {
 	struct ser_obj *pser = (struct ser_obj *)obj;
-	struct hal_info_t *hal_info = (struct hal_info_t *)(pser->phl_info->hal);
 	void *d = phl_to_drvpriv(pser->phl_info);
 	u8 notify;
 
@@ -267,13 +272,13 @@ static int ser_idle_st_hdl(void *obj, u16 event, void *param)
 		break;
 
 	case SER_EV_CHK_SER_EVENT:
-		if (true == rtw_hal_recognize_halt_c2h_interrupt(hal_info)) {
+		if (true == rtw_hal_recognize_halt_c2h_interrupt(pser->phl_info->hal)) {
 			phl_ser_event_notify(pser->phl_info, &notify);
 			if ((notify == RTW_PHL_SER_L0_RESET) || (notify == RTW_PHL_SER_L2_RESET))
-				rtw_hal_config_interrupt(hal_info, RTW_PHL_EN_HCI_INT);
+				rtw_hal_config_interrupt(pser->phl_info->hal, RTW_PHL_EN_HCI_INT);
 		}
 		else {
-			rtw_hal_config_interrupt(hal_info, RTW_PHL_EN_HCI_INT);
+			rtw_hal_config_interrupt(pser->phl_info->hal, RTW_PHL_EN_HCI_INT);
 		}
 
 		break;
@@ -315,7 +320,7 @@ static int ser_usb_idle_st_hdl(void *obj, u16 event, void *param)
 		/* fallthrough */
 	case FSM_EV_STATE_IN:
 
-#ifdef RTW_WKARD_SER_USB_POLLING_EVENT
+#if defined(RTW_WKARD_SER_USB_POLLING_EVENT) && !defined(CONFIG_PHL_CMD_SER)
 		phl_fsm_set_alarm_ext(pser->fsm_obj,
 			SER_USB_POLLING_INTERVAL_IDL, SER_EV_POLL_USB_INT_EXPIRE, 1, NULL);
 #endif
@@ -361,7 +366,6 @@ static int ser_usb_idle_st_hdl(void *obj, u16 event, void *param)
 static int ser_pci_l1_pause_trx_st_hdl(void *obj, u16 event, void *param)
 {
 	struct ser_obj *pser = (struct ser_obj *)obj;
-	struct hal_info_t *hal_info = (struct hal_info_t *)(pser->phl_info->hal);
 	struct phl_hci_trx_ops *ops = pser->phl_info->hci_trx_ops;
 	struct phl_msg msg = {0};
 	u32 mac_err = 0;
@@ -380,7 +384,7 @@ static int ser_pci_l1_pause_trx_st_hdl(void *obj, u16 event, void *param)
 		ops->req_tx_stop(pser->phl_info);
 		rtw_phl_tx_req_notify(pser->phl_info);
 
-		if(rtw_hal_lv1_rcvy(hal_info, RTW_PHL_SER_LV1_RCVY_STEP_1) != 0){
+		if(rtw_hal_lv1_rcvy(pser->phl_info->hal, RTW_PHL_SER_LV1_RCVY_STEP_1) != 0){
 			ser_resume_trx_process(pser, PHL_REQ_PAUSE_TX);
 			rtw_phl_tx_req_notify(pser->phl_info);
 			phl_fsm_state_goto(pser->fsm_obj, SER_ST_L2);
@@ -417,7 +421,7 @@ static int ser_pci_l1_pause_trx_st_hdl(void *obj, u16 event, void *param)
 
 	case SER_EV_FW_TIMER_EXPIRE:
 		/*phl_fsm_state_goto(pser->fsm_obj, SER_ST_L2);*/
-		mac_err = rtw_hal_lv1_rcvy(hal_info, RTW_PHL_SER_LV1_SER_RCVY_STEP_2);
+		mac_err = rtw_hal_lv1_rcvy(pser->phl_info->hal, RTW_PHL_SER_LV1_SER_RCVY_STEP_2);
 
 		ser_resume_trx_process(pser, PHL_REQ_PAUSE_RX);
 		rtw_phl_start_rx_process(pser->phl_info);
@@ -510,9 +514,7 @@ static int ser_pci_l1_pause_trx_st_hdl(void *obj, u16 event, void *param)
 
 static void ser_usb_l1_pause_trx_done(struct ser_obj *pser)
 {
-	struct hal_info_t *hal_info = (struct hal_info_t *)(pser->phl_info->hal);
-
-	rtw_hal_lv1_rcvy(hal_info, RTW_PHL_SER_LV1_RCVY_STEP_1);
+	rtw_hal_lv1_rcvy(pser->phl_info->hal, RTW_PHL_SER_LV1_RCVY_STEP_1);
 
 	ser_send_m2_event(pser);
 }
@@ -520,7 +522,6 @@ static void ser_usb_l1_pause_trx_done(struct ser_obj *pser)
 static int ser_usb_l1_pause_trx_st_hdl(void *obj, u16 event, void *param)
 {
 	struct ser_obj *pser = (struct ser_obj *)obj;
-	struct hal_info_t *hal_info = (struct hal_info_t *)(pser->phl_info->hal);
 	struct phl_hci_trx_ops *ops = pser->phl_info->hci_trx_ops;
 	struct phl_msg msg = {0};
 	u32 mac_err = 0;
@@ -580,11 +581,11 @@ static int ser_usb_l1_pause_trx_st_hdl(void *obj, u16 event, void *param)
 		break;
 
 	case SER_EV_FW_TIMER_EXPIRE:
-		
-		mac_err = rtw_hal_lv1_rcvy(hal_info, RTW_PHL_SER_LV1_SER_RCVY_STEP_2);
+
+		mac_err = rtw_hal_lv1_rcvy(pser->phl_info->hal, RTW_PHL_SER_LV1_SER_RCVY_STEP_2);
 		ser_resume_trx_process(pser, PHL_REQ_PAUSE_TX);
-		rtw_phl_tx_req_notify(pser->phl_info);		
-		
+		rtw_phl_tx_req_notify(pser->phl_info);
+
 		if(mac_err != 0)
 			phl_fsm_state_goto(pser->fsm_obj, SER_ST_L2);
 		else
@@ -653,7 +654,6 @@ static int ser_usb_l1_pause_trx_st_hdl(void *obj, u16 event, void *param)
 static int ser_sdio_l1_pause_trx_st_hdl(void *obj, u16 event, void *param)
 {
 	struct ser_obj *pser = (struct ser_obj *)obj;
-	struct hal_info_t *hal_info = (struct hal_info_t *)(pser->phl_info->hal);
 	struct phl_hci_trx_ops *ops = pser->phl_info->hci_trx_ops;
 	struct phl_msg msg = {0};
 	u32 mac_err = 0;
@@ -681,15 +681,15 @@ static int ser_sdio_l1_pause_trx_st_hdl(void *obj, u16 event, void *param)
 			break;
 		}
 
-		rtw_hal_config_interrupt(hal_info, RTW_PHL_DIS_HCI_INT);
+		rtw_hal_config_interrupt(pser->phl_info->hal, RTW_PHL_DIS_HCI_INT);
 
-		if (rtw_hal_lv1_rcvy(hal_info, RTW_PHL_SER_LV1_RCVY_STEP_1) != 0) {
-			rtw_hal_config_interrupt(hal_info, RTW_PHL_EN_HCI_INT);
+		if (rtw_hal_lv1_rcvy(pser->phl_info->hal, RTW_PHL_SER_LV1_RCVY_STEP_1) != 0) {
+			rtw_hal_config_interrupt(pser->phl_info->hal, RTW_PHL_EN_HCI_INT);
 			phl_fsm_state_goto(pser->fsm_obj, SER_ST_L2);
 			break;
 		}
 
-		rtw_hal_config_interrupt(hal_info, RTW_PHL_SER_HANDSHAKE_MODE);
+		rtw_hal_config_interrupt(pser->phl_info->hal, RTW_PHL_SER_HANDSHAKE_MODE);
 
 		ser_send_m2_event(pser);
 
@@ -699,25 +699,25 @@ static int ser_sdio_l1_pause_trx_st_hdl(void *obj, u16 event, void *param)
 		break;
 
 	case SER_EV_CHK_SER_EVENT:
-		if (true == rtw_hal_recognize_halt_c2h_interrupt(hal_info))
+		if (true == rtw_hal_recognize_halt_c2h_interrupt(pser->phl_info->hal))
 			phl_ser_event_notify(pser->phl_info, NULL);
 
 		break;
 
 	case SER_EV_M3_DO_RECOVERY:
-		rtw_hal_clear_interrupt(hal_info);
+		rtw_hal_clear_interrupt(pser->phl_info->hal);
 		phl_fsm_state_goto(pser->fsm_obj, SER_ST_L1_DO_HCI);
 		break;
 
 	case SER_EV_FW_TIMER_EXPIRE:
-		mac_err = rtw_hal_lv1_rcvy(hal_info, RTW_PHL_SER_LV1_SER_RCVY_STEP_2);
+		mac_err = rtw_hal_lv1_rcvy(pser->phl_info->hal, RTW_PHL_SER_LV1_SER_RCVY_STEP_2);
 
 		ser_resume_trx_process(pser, PHL_REQ_PAUSE_RX);
 		rtw_phl_start_rx_process(pser->phl_info);
 		ser_resume_trx_process(pser, PHL_REQ_PAUSE_TX);
 		rtw_phl_tx_req_notify(pser->phl_info);
 
-		rtw_hal_config_interrupt(hal_info, RTW_PHL_EN_HCI_INT);
+		rtw_hal_config_interrupt(pser->phl_info->hal, RTW_PHL_EN_HCI_INT);
 
 		if (mac_err != 0) {
 			phl_fsm_state_goto(pser->fsm_obj, SER_ST_L2);
@@ -734,7 +734,7 @@ static int ser_sdio_l1_pause_trx_st_hdl(void *obj, u16 event, void *param)
 		ser_resume_trx_process(pser, PHL_REQ_PAUSE_TX);
 		rtw_phl_tx_req_notify(pser->phl_info);
 
-		rtw_hal_config_interrupt(hal_info, RTW_PHL_EN_HCI_INT);
+		rtw_hal_config_interrupt(pser->phl_info->hal, RTW_PHL_EN_HCI_INT);
 
 		phl_fsm_state_goto(pser->fsm_obj, SER_ST_L2);
 		break;
@@ -744,13 +744,13 @@ static int ser_sdio_l1_pause_trx_st_hdl(void *obj, u16 event, void *param)
 		if (pser->poll_io_times-- <= 0) {
 #ifdef RTW_WKARD_SER_L1_EXPIRE
 
-			if (rtw_hal_lv1_rcvy(hal_info, RTW_PHL_SER_LV1_RCVY_STEP_1) != 0) {
-				rtw_hal_config_interrupt(hal_info, RTW_PHL_EN_HCI_INT);
+			if (rtw_hal_lv1_rcvy(pser->phl_info->hal, RTW_PHL_SER_LV1_RCVY_STEP_1) != 0) {
+				rtw_hal_config_interrupt(pser->phl_info->hal, RTW_PHL_EN_HCI_INT);
 				phl_fsm_state_goto(pser->fsm_obj, SER_ST_L2);
 				break;
 			}
 
-			rtw_hal_config_interrupt(hal_info, RTW_PHL_SER_HANDSHAKE_MODE);
+			rtw_hal_config_interrupt(pser->phl_info->hal, RTW_PHL_SER_HANDSHAKE_MODE);
 
 			ser_send_m2_event(pser);
 
@@ -763,7 +763,7 @@ static int ser_sdio_l1_pause_trx_st_hdl(void *obj, u16 event, void *param)
 			ser_resume_trx_process(pser, PHL_REQ_PAUSE_TX);
 			rtw_phl_tx_req_notify(pser->phl_info);
 
-			rtw_hal_config_interrupt(hal_info, RTW_PHL_EN_HCI_INT);
+			rtw_hal_config_interrupt(pser->phl_info->hal, RTW_PHL_EN_HCI_INT);
 
 			phl_fsm_state_goto(pser->fsm_obj, SER_ST_L2);
 #endif
@@ -777,15 +777,15 @@ static int ser_sdio_l1_pause_trx_st_hdl(void *obj, u16 event, void *param)
 			break;
 		}
 
-		rtw_hal_config_interrupt(hal_info, RTW_PHL_DIS_HCI_INT);
+		rtw_hal_config_interrupt(pser->phl_info->hal, RTW_PHL_DIS_HCI_INT);
 
-		if (rtw_hal_lv1_rcvy(hal_info, RTW_PHL_SER_LV1_RCVY_STEP_1) != 0) {
-			rtw_hal_config_interrupt(hal_info, RTW_PHL_EN_HCI_INT);
+		if (rtw_hal_lv1_rcvy(pser->phl_info->hal, RTW_PHL_SER_LV1_RCVY_STEP_1) != 0) {
+			rtw_hal_config_interrupt(pser->phl_info->hal, RTW_PHL_EN_HCI_INT);
 			phl_fsm_state_goto(pser->fsm_obj, SER_ST_L2);
 			break;
 		}
 
-		rtw_hal_config_interrupt(hal_info, RTW_PHL_SER_HANDSHAKE_MODE);
+		rtw_hal_config_interrupt(pser->phl_info->hal, RTW_PHL_SER_HANDSHAKE_MODE);
 
 		ser_send_m2_event(pser);
 
@@ -794,7 +794,7 @@ static int ser_sdio_l1_pause_trx_st_hdl(void *obj, u16 event, void *param)
 		break;
 
 	case FSM_EV_CANCEL:
-		rtw_hal_config_interrupt(hal_info, RTW_PHL_EN_HCI_INT);
+		rtw_hal_config_interrupt(pser->phl_info->hal, RTW_PHL_EN_HCI_INT);
 		phl_fsm_state_goto(pser->fsm_obj, SER_ST_IDLE);
 		break;
 
@@ -811,13 +811,11 @@ static int ser_sdio_l1_pause_trx_st_hdl(void *obj, u16 event, void *param)
 static int ser_pci_l1_do_hci_st_hdl(void *obj, u16 event, void *param)
 {
 	struct ser_obj *pser = (struct ser_obj *)obj;
-	struct hal_info_t *hal_info = (struct hal_info_t *)(pser->phl_info->hal);
-
 
 	switch (event) {
 	case FSM_EV_STATE_IN:
 
-		if(rtw_hal_lv1_rcvy(hal_info, RTW_PHL_SER_LV1_SER_RCVY_STEP_2) != 0){
+		if(rtw_hal_lv1_rcvy(pser->phl_info->hal, RTW_PHL_SER_LV1_SER_RCVY_STEP_2) != 0){
 			ser_resume_trx_process(pser, PHL_REQ_PAUSE_RX);
 			rtw_phl_start_rx_process(pser->phl_info);
 			ser_resume_trx_process(pser, PHL_REQ_PAUSE_TX);
@@ -876,11 +874,10 @@ static int ser_pci_l1_do_hci_st_hdl(void *obj, u16 event, void *param)
 static int ser_usb_l1_do_hci_st_hdl(void *obj, u16 event, void *param)
 {
 	struct ser_obj *pser = (struct ser_obj *)obj;
-	struct hal_info_t *hal_info = (struct hal_info_t *)(pser->phl_info->hal);
 
 	switch (event) {
 	case FSM_EV_STATE_IN:
-		if (rtw_hal_lv1_rcvy(hal_info, RTW_PHL_SER_LV1_SER_RCVY_STEP_2) != 0) {
+		if (rtw_hal_lv1_rcvy(pser->phl_info->hal, RTW_PHL_SER_LV1_SER_RCVY_STEP_2) != 0) {
 			phl_fsm_state_goto(pser->fsm_obj, SER_ST_L2);
 			break;
 		}
@@ -934,20 +931,19 @@ static int ser_usb_l1_do_hci_st_hdl(void *obj, u16 event, void *param)
 static int ser_sdio_l1_do_hci_st_hdl(void *obj, u16 event, void *param)
 {
 	struct ser_obj *pser = (struct ser_obj *)obj;
-	struct hal_info_t *hal_info = (struct hal_info_t *)(pser->phl_info->hal);
 
 	switch (event) {
 	case FSM_EV_STATE_IN:
 
-		if (rtw_hal_lv1_rcvy(hal_info, RTW_PHL_SER_LV1_SER_RCVY_STEP_2) != 0) {
-			rtw_hal_config_interrupt(hal_info, RTW_PHL_EN_HCI_INT);
+		if (rtw_hal_lv1_rcvy(pser->phl_info->hal, RTW_PHL_SER_LV1_SER_RCVY_STEP_2) != 0) {
+			rtw_hal_config_interrupt(pser->phl_info->hal, RTW_PHL_EN_HCI_INT);
 			phl_fsm_state_goto(pser->fsm_obj, SER_ST_L2);
 			break;
 		}
 		ser_resume_trx_process(pser, PHL_REQ_PAUSE_RX);
 		rtw_phl_start_rx_process(pser->phl_info);
 
-		rtw_hal_config_interrupt(hal_info, RTW_PHL_SER_HANDSHAKE_MODE);
+		rtw_hal_config_interrupt(pser->phl_info->hal, RTW_PHL_SER_HANDSHAKE_MODE);
 
 		ser_send_m4_event(pser);
 
@@ -956,30 +952,30 @@ static int ser_sdio_l1_do_hci_st_hdl(void *obj, u16 event, void *param)
 		break;
 
 	case SER_EV_CHK_SER_EVENT:
-		if (true == rtw_hal_recognize_halt_c2h_interrupt(hal_info))
+		if (true == rtw_hal_recognize_halt_c2h_interrupt(pser->phl_info->hal))
 			phl_ser_event_notify(pser->phl_info, NULL);
 
 		break;
 
 	case SER_EV_M5_READY:
-		rtw_hal_config_interrupt(hal_info, RTW_PHL_EN_HCI_INT);
+		rtw_hal_config_interrupt(pser->phl_info->hal, RTW_PHL_EN_HCI_INT);
 		phl_fsm_state_goto(pser->fsm_obj, SER_ST_L1_RESUME_TRX);
 		break;
 
 	case SER_EV_FW_TIMER_EXPIRE:
 		ser_resume_trx_process(pser, PHL_REQ_PAUSE_TX);
 		rtw_phl_tx_req_notify(pser->phl_info);
-		rtw_hal_config_interrupt(hal_info, RTW_PHL_EN_HCI_INT);
+		rtw_hal_config_interrupt(pser->phl_info->hal, RTW_PHL_EN_HCI_INT);
 		phl_fsm_state_goto(pser->fsm_obj, SER_ST_IDLE);
 		break;
 
 	case SER_EV_M9_L2_RESET:
-		rtw_hal_config_interrupt(hal_info, RTW_PHL_EN_HCI_INT);
+		rtw_hal_config_interrupt(pser->phl_info->hal, RTW_PHL_EN_HCI_INT);
 		phl_fsm_state_goto(pser->fsm_obj, SER_ST_L2);
 		break;
 
 	case FSM_EV_CANCEL:
-		rtw_hal_config_interrupt(hal_info, RTW_PHL_EN_HCI_INT);
+		rtw_hal_config_interrupt(pser->phl_info->hal, RTW_PHL_EN_HCI_INT);
 		phl_fsm_state_goto(pser->fsm_obj, SER_ST_IDLE);
 		break;
 
@@ -1028,9 +1024,12 @@ static int ser_l2_st_hdl(void *obj, u16 event, void *param)
 	struct ser_obj *pser = (struct ser_obj *)obj;
 	struct phl_msg msg = {0};
 
-
 	switch (event) {
 	case FSM_EV_STATE_IN:
+
+		/*To avoid fw watchdog intr trigger periodically*/
+		//NEO
+		//rtw_hal_ser_reset_wdt_intr(pser->phl_info->hal);
 
 		/* TODO do something */
 		phl_ser_clear_status(pser, SER_L1);
@@ -1190,13 +1189,18 @@ enum rtw_phl_status phl_ser_cancel(void *phl)
 enum rtw_phl_status phl_ser_event_notify(void *phl, u8* p_ntfy)
 {
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
+	// NEO
 	struct hal_info_t *hal_info = (struct hal_info_t *)(phl_info->hal);
 	struct ser_obj *pser = phl_info->ser_obj;
+	struct phl_msg msg = {0};
+	//NEO
 	bool ignored = false;
 
 	enum RTW_PHL_SER_NOTIFY_EVENT notify = RTW_PHL_SER_L2_RESET;
 	u32 err = 0;
 
+	//NEO
+	//notify = rtw_hal_ser_get_error_status(pser->phl_info->hal, &err);
 	notify = rtw_hal_ser_get_error_status(hal_info, &err, &ignored);
 
 	if (p_ntfy != NULL)
@@ -1206,27 +1210,29 @@ enum rtw_phl_status phl_ser_event_notify(void *phl, u8* p_ntfy)
 
 	PHL_TRACE(COMP_PHL_DBG, _PHL_INFO_, "phl_ser_event_notify, error 0x%x, notify 0x%x\n", err, notify);
 
-#ifdef RTW_WKARD_SER_L2_IGNORED_WHILE_L1
-	if (pser->trigger_l1_reset == true && ignored == true) {
-		PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_, "phl_ser_event_notify, ignore l2 during l1\n");
-		return RTW_PHL_STATUS_SUCCESS;
-	}
-#endif
-	if(notify == RTW_PHL_SER_L0_RESET) {
+	if (notify == RTW_PHL_SER_L0_RESET) {
 		PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_, "phl_ser_event_notify, hit L0 Reset\n");
 		return RTW_PHL_STATUS_SUCCESS;
 	}
 
-	return phl_ser_send_msg(phl, notify);
-}
+	//NEO
+	//if (notify == RTW_PHL_SER_LOG_ONLY) {
+	if (notify == RTW_PHL_SER_L0_RESET) {
+		PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_, "phl_ser_event_notify, RTW_PHL_SER_LOG_ONLY\n");
+		return RTW_PHL_STATUS_SUCCESS;
+	}
 
-enum rtw_phl_status phl_ser_event_check(void *phl)
-{
-	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct hal_info_t *hal_info = (struct hal_info_t *)(phl_info->hal);
-	struct ser_obj *pser = phl_info->ser_obj;
-	bool ignored = false;
-	enum RTW_PHL_SER_NOTIFY_EVENT notify = RTW_PHL_SER_EVENT_CHK;
+#if 0 //NEO
+	if (notify == RTW_PHL_SER_DUMP_FW_LOG) {
+		PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_, "phl_ser_event_notify, RTW_PHL_SER_DUMP_FW_LOG\n");
+
+		SET_MSG_MDL_ID_FIELD(msg.msg_id, PHL_MDL_PHY_MGNT);
+		SET_MSG_EVT_ID_FIELD(msg.msg_id, MSG_EVT_DUMP_PLE_BUFFER);
+		phl_msg_hub_send(phl_info, NULL, &msg);
+
+		return RTW_PHL_STATUS_SUCCESS;
+	}
+#endif // if 0 NEO
 
 	return phl_ser_send_msg(phl, notify);
 }
@@ -1235,47 +1241,44 @@ enum rtw_phl_status phl_ser_event_check(void *phl)
 enum rtw_phl_status phl_ser_event_to_fw(void *phl, u32 err)
 {
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct hal_info_t *hal_info = (struct hal_info_t *)(phl_info->hal);
-
 	enum rtw_hal_status rtw_status;
 
-	rtw_status = rtw_hal_ser_set_error_status(hal_info ,err);
+	rtw_status = rtw_hal_ser_set_error_status(phl_info->hal ,err);
 	PHL_TRACE(COMP_PHL_DBG, _PHL_ERR_, "phl_ser_event_to_fw  err  %d, status 0x%x\n", err, rtw_status);
 	return rtw_status;
 }
 
+#ifdef CONFIG_FSM
+
 /* For EXTERNAL interrupt handler and dump fw ple (expose) */
-enum rtw_phl_status rtw_phl_ser_fw_watchdog_timeout(void *phl)
+enum rtw_phl_status rtw_phl_ser_dump_ple_buffer(void *phl)
 {
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct hal_info_t *hal_info = (struct hal_info_t *)(phl_info->hal);
 
-	PHL_TRACE(COMP_PHL_DBG, _PHL_ERR_, "rtw_phl_ser_fw_watchdog_timeout happen !!!\n");
+	PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_, "rtw_phl_ser_dump_ple_buffer\n");
 
-	/* rtw_hal_dbg_dump_fw_rsvd_ple(hal_info); */
+	RTW_INFO("%s: NEO TODO rtw_hal_dump_fw_rsvd_ple\n", __func__);
+	//rtw_hal_dump_fw_rsvd_ple(phl_info->hal);
 
 	return RTW_PHL_STATUS_SUCCESS;
 }
 
+#endif //CONFIG_FSM
+
 /* For EXTERNAL interrupt handler and dump fw ple (expose) */
 enum rtw_phl_status phl_fw_watchdog_timeout_notify(void *phl)
 {
-	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
+	enum RTW_PHL_SER_NOTIFY_EVENT notify = RTW_PHL_SER_L2_RESET;
+	PHL_TRACE(COMP_PHL_DBG, _PHL_ERR_, "phl_fw_watchdog_timeout_notify triggle L2 Reset !!!\n");
 
-	struct phl_msg msg = {0};
-
-	PHL_TRACE(COMP_PHL_DBG, _PHL_ERR_, "phl_fw_watchdog_timeout_notify !!!\n");
-
-	SET_MSG_MDL_ID_FIELD(msg.msg_id, PHL_MDL_PHY_MGNT);
-	SET_MSG_EVT_ID_FIELD(msg.msg_id, MSG_EVT_FW_WATCHDOG_TIMEOUT);
-	phl_msg_hub_send(phl_info, NULL, &msg);
-
-	return RTW_PHL_STATUS_SUCCESS;
+	return phl_ser_send_msg(phl, notify);
 }
 
 /* @phl: phl_info_t
  * @notify: event to ser fsm
  */
+
+#ifndef CONFIG_PHL_CMD_SER
 enum rtw_phl_status phl_ser_send_msg(void *phl,
 	enum RTW_PHL_SER_NOTIFY_EVENT notify)
 {
@@ -1309,8 +1312,10 @@ enum rtw_phl_status phl_ser_send_msg(void *phl,
 		return RTW_PHL_STATUS_FAILURE;
 	}
 	PHL_TRACE(COMP_PHL_DBG, _PHL_INFO_, "phl_ser_send_msg  event  %d\n", event);
+
 	return phl_fsm_gen_msg(phl, pser->fsm_obj, NULL, 0, event);
 }
+
 
 /* For EXTERNAL application to do L2 reset (expose) */
 /* @pser: ser job will be cancelled
@@ -1335,6 +1340,7 @@ u8 phl_ser_inprogress(void *phl)
 	_os_spinunlock(d, &pser->state_lock, _bh, NULL);
 	return reset_type;
 }
+#endif
 
 /* For EXTERNAL application to do L2 reset (expose) */
 /* @pser: ser job will be cancelled
@@ -1381,4 +1387,8 @@ void phl_ser_notify_from_upper_watchdog_status(void *phl, bool inprogress)
 	pser->dynamicThredRunning = inprogress;
 }
 
+void rtw_phl_notify_watchdog_status(void *phl, bool inprogress)
+{
+	phl_ser_notify_from_upper_watchdog_status(phl, inprogress);
+}
 

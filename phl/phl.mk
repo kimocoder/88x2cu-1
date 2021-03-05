@@ -21,8 +21,8 @@ _PHL_FILES := $(phl_path)phl_init.o \
 		$(phl_path)phl_api_drv.o \
 		$(phl_path)phl_btc_fsm.o \
 		$(phl_path)phl_chan.o \
-		$(phl_path)phl_cmd_dispatcher.o\
-		$(phl_path)phl_cmd_dispatch_engine.o\
+		$(phl_path)phl_cmd_dispatcher.o \
+		$(phl_path)phl_cmd_dispatch_engine.o \
 		$(phl_path)phl_cmd_fsm.o \
 		$(phl_path)phl_cmd_general.o \
 		$(phl_path)phl_cmd_job.o \
@@ -63,6 +63,18 @@ _PHL_FILES := $(phl_path)phl_init.o \
 			$(phl_path)test/phl_dbg_cmd.o \
 			$(phl_path)phl_acs.o \
 			$(phl_path)phl_mcc.o
+
+_PHL_FILES += $(phl_path)phl_cmd_ser.o
+
+#_PHL_FILES += $(phl_path)phl_cmd_dispatch_engine.o\
+			$(phl_path)phl_cmd_dispatcher.o\
+			$(phl_path)phl_cmd_dispr_controller.o \
+			$(phl_path)phl_cmd_ser.o \
+			$(phl_path)phl_cmd_general.o \
+			$(phl_path)phl_cmd_scan.o \
+			$(phl_path)phl_cmd_btc.o \
+			$(phl_path)phl_sound_cmd.o \
+			$(phl_path)phl_watchdog.o
 
 ifeq ($(CONFIG_PCI_HCI), y)
 _PHL_FILES += $(phl_path)hci/phl_trx_pcie.o

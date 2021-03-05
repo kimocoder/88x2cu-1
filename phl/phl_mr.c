@@ -527,6 +527,9 @@ _phl_mrc_module_swch_start_hdlr(void *dispr,
 	struct rtw_phl_scan_param* scan_param = NULL;
 	u8 (*scan_issue_null_data)(void *, u8, bool) = NULL;
 #endif
+	u8 idx = 0xff;
+
+	phl_dispr_get_idx(dispr, &idx);
 	/*
 	* Handle mr offchan before switching channel when
 	* STA connect & AP start.
@@ -543,7 +546,7 @@ _phl_mrc_module_swch_start_hdlr(void *dispr,
 		"%s: MSG_EVT_SWCH_START\n", __FUNCTION__);
 	op_info.op_code = FG_REQ_OP_GET_ROLE;
 
-	if(phl_dispr_query_cur_cmd_info(dispr, &op_info)
+	if(phl_disp_eng_query_cur_cmd_info(phl_info, idx, &op_info)
 		!= RTW_PHL_STATUS_SUCCESS){
 		PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
 				"Query wifi role fail!\n");
@@ -576,7 +579,7 @@ _phl_mrc_module_swch_start_hdlr(void *dispr,
 	else
 		op_info.op_code = FG_REQ_OP_GET_ISSUE_NULL_OPS;
 
-	if(phl_dispr_query_cur_cmd_info(dispr, &op_info)
+	if(phl_disp_eng_query_cur_cmd_info(phl_info, idx, &op_info)
 		!= RTW_PHL_STATUS_SUCCESS){
 		PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
 			  "Query fail! (opcode %d)\n", op_info.op_code);
@@ -623,6 +626,9 @@ _phl_mrc_module_swch_done_hdlr(void *dispr,
 #ifdef RTW_WKARD_MRC_ISSUE_NULL_WITH_SCAN_OPS
 	struct rtw_phl_scan_param* scan_param = NULL;
 #endif
+	u8 idx = 0xff;
+
+	phl_dispr_get_idx(dispr, &idx);
 	/*
 	* Handle mr offchan after switching channel to op channel
 	*/
@@ -644,7 +650,7 @@ _phl_mrc_module_swch_done_hdlr(void *dispr,
 #ifdef RTW_WKARD_MRC_ISSUE_NULL_WITH_SCAN_OPS
 	op_info.op_code = FG_REQ_OP_GET_SCAN_PARAM;
 
-	if(phl_dispr_query_cur_cmd_info(dispr, &op_info)
+	if(phl_disp_eng_query_cur_cmd_info(phl_info, idx, &op_info)
 		!= RTW_PHL_STATUS_SUCCESS){
 		PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
 				"Query scan_param fail!\n");
@@ -685,6 +691,8 @@ _phl_mrc_module_msg_hdlr(void *dispr,
 	struct rtw_phl_scan_param* scan_param = NULL;
 	u8 (*scan_issue_null_data)(void *, u8, bool) = NULL;
 #endif
+	u8 idx = 0xff;
+	phl_dispr_get_idx(dispr, &idx);
 
 	FUNCIN();
 
@@ -766,15 +774,7 @@ _phl_mrc_module_msg_hdlr(void *dispr,
 			PHL_TRACE(COMP_PHL_DBG, _PHL_INFO_,
 				  "%s: MSG_EVT_CONNECT_START\n", __FUNCTION__);
 
-			op_info.op_code = FG_REQ_OP_GET_ROLE;
-
-			if(phl_dispr_query_cur_cmd_info(dispr, &op_info)
-				!= RTW_PHL_STATUS_SUCCESS){
-				PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
-						"Query wifi role fail!\n");
-				break;
-			}
-			role = (struct rtw_wifi_role_t *)op_info.outbuf;
+			role = (struct rtw_wifi_role_t *)msg->rsvd[0];
 
 			if(role == NULL){
 				PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
@@ -800,7 +800,7 @@ _phl_mrc_module_msg_hdlr(void *dispr,
 
 			op_info.op_code = FG_REQ_OP_GET_ROLE;
 
-			if(phl_dispr_query_cur_cmd_info(dispr, &op_info)
+			if(phl_disp_eng_query_cur_cmd_info(phl_info, idx, &op_info)
 				!= RTW_PHL_STATUS_SUCCESS){
 				PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
 						"Query wifi role fail!\n");
@@ -835,7 +835,7 @@ _phl_mrc_module_msg_hdlr(void *dispr,
 
 			op_info.op_code = FG_REQ_OP_GET_ROLE;
 
-			if(phl_dispr_query_cur_cmd_info(dispr, &op_info)
+			if(phl_disp_eng_query_cur_cmd_info(phl_info, idx, &op_info)
 				!= RTW_PHL_STATUS_SUCCESS){
 				PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
 						"Query wifi role fail!\n");
@@ -868,7 +868,7 @@ _phl_mrc_module_msg_hdlr(void *dispr,
 
 			op_info.op_code = FG_REQ_OP_GET_ROLE;
 
-			if(phl_dispr_query_cur_cmd_info(dispr, &op_info)
+			if(phl_disp_eng_query_cur_cmd_info(phl_info, idx, &op_info)
 				!= RTW_PHL_STATUS_SUCCESS){
 				PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
 						"Query wifi role fail!\n");
@@ -899,6 +899,13 @@ _phl_mrc_module_msg_hdlr(void *dispr,
 			PHL_TRACE(COMP_PHL_DBG, _PHL_INFO_,
 				  "%s: MSG_EVT_AP_START_END\n", __FUNCTION__);
 
+			role = (struct rtw_wifi_role_t *)msg->rsvd[0];
+			if (role == NULL) {
+				PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
+					  "%s: role is NULL\n", __FUNCTION__);
+				break;
+			}
+
 			if(msg->inbuf == NULL){
 				PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
 					  "%s:AP start status info not found!\n",
@@ -923,16 +930,7 @@ _phl_mrc_module_msg_hdlr(void *dispr,
 			PHL_TRACE(COMP_PHL_DBG, _PHL_INFO_,
 				  "%s: MSG_EVT_AP_STOP\n", __FUNCTION__);
 
-			op_info.op_code = FG_REQ_OP_GET_ROLE;
-
-			if(phl_dispr_query_cur_cmd_info(dispr, &op_info)
-				!= RTW_PHL_STATUS_SUCCESS){
-				PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
-						"Query wifi role fail!\n");
-				break;
-			}
-
-			role = (struct rtw_wifi_role_t *)op_info.outbuf;
+			role = (struct rtw_wifi_role_t *)msg->rsvd[0];
 
 			if(role == NULL){
 				PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
@@ -963,7 +961,7 @@ _phl_mrc_module_msg_hdlr(void *dispr,
 #ifdef RTW_WKARD_MRC_ISSUE_NULL_WITH_SCAN_OPS
 			op_info.op_code = FG_REQ_OP_GET_SCAN_PARAM;
 
-			if(phl_dispr_query_cur_cmd_info(dispr, &op_info)
+			if(phl_disp_eng_query_cur_cmd_info(phl_info, idx, &op_info)
 				!= RTW_PHL_STATUS_SUCCESS){
 				PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
 						"Query scan_param fail!\n");

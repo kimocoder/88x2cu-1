@@ -741,10 +741,8 @@ _phl_pkt_ofld_cancel_type(struct pkt_ofld_obj *ofld_obj,
 #endif // if 0 NEO
 
 /* For EXTERNAL application to create packet offload object */
-enum rtw_phl_status phl_pkt_ofld_init(void *phl)
+enum rtw_phl_status phl_pkt_ofld_init(struct phl_info_t *phl_info)
 {
-	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct rtw_phl_com_t *phl_com = phl_info->phl_com;
 	void *d = phl_to_drvpriv(phl_info);
 	struct pkt_ofld_obj *ofld_obj;
 
@@ -752,7 +750,7 @@ enum rtw_phl_status phl_pkt_ofld_init(void *phl)
 	if (ofld_obj == NULL)
 		return RTW_PHL_STATUS_RESOURCE;
 
-	phl_com->pkt_ofld = ofld_obj;
+	phl_info->pkt_ofld = ofld_obj;
 
 	ofld_obj->phl_info = phl_info;
 	INIT_LIST_HEAD(&ofld_obj->entry_q);
@@ -764,10 +762,9 @@ enum rtw_phl_status phl_pkt_ofld_init(void *phl)
 }
 
 /* For EXTERNAL application to free packet offload object */
-void phl_pkt_ofld_deinit(void *phl)
+void phl_pkt_ofld_deinit(struct phl_info_t *phl_info)
 {
-	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct pkt_ofld_obj *ofld_obj = phl_info->phl_com->pkt_ofld;
+	struct pkt_ofld_obj *ofld_obj = phl_info->pkt_ofld;
 	struct pkt_ofld_entry *pos = NULL;
 	struct pkt_ofld_entry *n = NULL;
 	void *d = phl_to_drvpriv(phl_info);

@@ -17,6 +17,8 @@
 #ifdef CONFIG_CMD_DISP
 
 enum rtw_phl_status phl_disp_eng_bk_module_deinit(struct phl_info_t *phl);
+enum rtw_phl_status _disp_eng_get_dispr_by_idx(struct phl_info_t *phl,
+						  u8 band_idx, void **dispr);
 int share_thread_hdl(void *param)
 {
 	struct phl_info_t *phl_info = (struct phl_info_t *)param;
@@ -66,12 +68,15 @@ enum rtw_phl_status phl_disp_eng_init(struct phl_info_t *phl, u8 phy_num)
 	disp_eng->thread_mode = SHARE_THREAD_MODE;
 #endif
 	disp_eng->dispatcher = _os_mem_alloc(d, sizeof(void*) * phy_num);
-
+#ifdef CONFIG_CMD_DISP_SOLO_MODE
+	_os_sema_init(d, &(disp_eng->dispr_ctrl_sema), 1);
+#endif
 	if (disp_eng->dispatcher == NULL) {
 		disp_eng->phy_num = 0;
 		PHL_ERR("[PHY]: %s, alloc fail\n",__FUNCTION__);
 		return RTW_PHL_STATUS_RESOURCE;
 	}
+
 	for (i = 0 ; i < phy_num; i++) {
 		status = dispr_init(phl, &(disp_eng->dispatcher[i]), i);
 		if(status != RTW_PHL_STATUS_SUCCESS)
@@ -101,7 +106,9 @@ enum rtw_phl_status phl_disp_eng_deinit(struct phl_info_t *phl)
 		dispr_deinit(phl, disp_eng->dispatcher[i]);
 		disp_eng->dispatcher[i] = NULL;
 	}
-
+#ifdef CONFIG_CMD_DISP_SOLO_MODE
+	_os_sema_free(d, &(disp_eng->dispr_ctrl_sema));
+#endif
 	if (disp_eng->phy_num) {
 		_os_mem_free(d, disp_eng->dispatcher,
 				sizeof(void *) * (disp_eng->phy_num));
@@ -198,40 +205,23 @@ rtw_phl_deregister_module(void *phl,u8 band_idx, enum phl_module_id id)
 					      band_idx, id);
 }
 
+u8 rtw_phl_is_fg_empty(void *phl,u8 band_idx)
+{
+	return phl_disp_eng_is_fg_empty((struct phl_info_t *)phl, band_idx);
+}
+
 enum rtw_phl_status
-rtw_phl_send_msg_to_dispr(void *phl, u8 band_idx,
-			  struct phl_msg *msg,
+rtw_phl_send_msg_to_dispr(void *phl, struct phl_msg *msg,
 			  struct phl_msg_attribute *attr,
 			  u32 *msg_hdl)
 {
-	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct phl_cmd_dispatch_engine *disp_eng = &(phl_info->disp_eng);
-	enum rtw_phl_status status = RTW_PHL_STATUS_SUCCESS;
-	u8 idx = band_idx;
-
-	if ((band_idx + 1) > disp_eng->phy_num) {
-		PHL_WARN("%s invalid input :%d\n", __func__, band_idx);
-		return RTW_PHL_STATUS_INVALID_PARAM;
-	}
-
-	return phl_dispr_send_msg(disp_eng->dispatcher[idx],
-				  msg, attr, msg_hdl);
+	return phl_disp_eng_send_msg(phl, msg, attr, msg_hdl);
 }
 
 enum rtw_phl_status
 rtw_phl_cancel_dispr_msg(void *phl, u8 band_idx, u32 *msg_hdl)
 {
-	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct phl_cmd_dispatch_engine *disp_eng = &(phl_info->disp_eng);
-	enum rtw_phl_status status = RTW_PHL_STATUS_SUCCESS;
-	u8 idx = band_idx;
-
-	if ((band_idx + 1) > disp_eng->phy_num) {
-		PHL_WARN("%s invalid input :%d\n", __func__, band_idx);
-		return RTW_PHL_STATUS_INVALID_PARAM;
-	}
-
-	return phl_dispr_cancel_msg(disp_eng->dispatcher[idx], msg_hdl);
+	return phl_disp_eng_cancel_msg(phl, band_idx, msg_hdl);
 }
 
 enum rtw_phl_status
@@ -239,129 +229,52 @@ rtw_phl_add_cmd_token_req(void *phl, u8 band_idx,
 			  struct phl_cmd_token_req *req,
 			  u32 *req_hdl)
 {
-	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct phl_cmd_dispatch_engine *disp_eng = &(phl_info->disp_eng);
-	enum rtw_phl_status status = RTW_PHL_STATUS_SUCCESS;
-	u8 idx = band_idx;
-
-	if ((band_idx + 1) > disp_eng->phy_num) {
-		PHL_WARN("%s invalid input :%d\n", __func__, band_idx);
-		return RTW_PHL_STATUS_INVALID_PARAM;
-	}
-
-	return phl_dispr_add_token_req(disp_eng->dispatcher[idx],
-				       req, req_hdl);
+	return phl_disp_eng_add_token_req(phl, band_idx, req, req_hdl);
 }
 
 enum rtw_phl_status
 rtw_phl_cancel_cmd_token(void *phl, u8 band_idx, u32 *req_hdl)
 {
-	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct phl_cmd_dispatch_engine *disp_eng = &(phl_info->disp_eng);
-	enum rtw_phl_status status = RTW_PHL_STATUS_SUCCESS;
-	u8 idx = band_idx;
-
-	if ((band_idx + 1) > disp_eng->phy_num) {
-		PHL_WARN("%s invalid input :%d\n", __func__, band_idx);
-		return RTW_PHL_STATUS_INVALID_PARAM;
-	}
-
-	return phl_dispr_cancel_token_req(disp_eng->dispatcher[idx],
-					  req_hdl);
+	return phl_disp_eng_cancel_token_req(phl, band_idx, req_hdl);
 }
 
 enum rtw_phl_status
 rtw_phl_free_cmd_token(void *phl, u8 band_idx, u32 *req_hdl)
 {
-	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct phl_cmd_dispatch_engine *disp_eng = &(phl_info->disp_eng);
-	enum rtw_phl_status status = RTW_PHL_STATUS_SUCCESS;
-	u8 idx = band_idx;
-
-	if ((band_idx + 1) > disp_eng->phy_num) {
-		PHL_WARN("%s invalid input :%d\n", __func__, band_idx);
-		return RTW_PHL_STATUS_INVALID_PARAM;
-	}
-
-	return phl_dispr_free_token(disp_eng->dispatcher[idx], req_hdl);
+	return phl_disp_eng_free_token(phl, band_idx, req_hdl);
+}
+enum rtw_phl_status rtw_phl_set_cur_cmd_info(void *phl, u8 band_idx,
+					       struct phl_module_op_info* op_info)
+{
+	return phl_disp_eng_set_cur_cmd_info(phl, band_idx, op_info);
 }
 
 enum rtw_phl_status rtw_phl_query_cur_cmd_info(void *phl, u8 band_idx,
 					       struct phl_module_op_info* op_info)
 {
-	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct phl_cmd_dispatch_engine *disp_eng = &(phl_info->disp_eng);
-	u8 idx = band_idx;
-
-	if ((band_idx + 1) > disp_eng->phy_num) {
-		PHL_WARN("%s invalid input :%d\n", __func__, band_idx);
-		return RTW_PHL_STATUS_INVALID_PARAM;
-	}
-
-	return phl_dispr_query_cur_cmd_info(disp_eng->dispatcher[idx],
-					    op_info);
+	return phl_disp_eng_query_cur_cmd_info(phl, band_idx, op_info);
 }
 
 enum rtw_phl_status rtw_phl_set_bk_module_info(void *phl, u8 band_idx,
 		enum phl_module_id id, struct phl_module_op_info *op_info)
 {
-	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct phl_cmd_dispatch_engine *disp_eng = &(phl_info->disp_eng);
-	void *handle = NULL;
-	enum rtw_phl_status status = RTW_PHL_STATUS_SUCCESS;
-	u8 idx = band_idx;
-
-	if ((band_idx + 1) > disp_eng->phy_num) {
-		PHL_WARN("%s invalid input :%d\n", __func__, band_idx);
-		return RTW_PHL_STATUS_INVALID_PARAM;
-	}
-
-	status = phl_dispr_get_bk_module_handle(disp_eng->dispatcher[idx],
-						id, &handle);
-	if(status != RTW_PHL_STATUS_SUCCESS)
-		return RTW_PHL_STATUS_FAILURE;
-
-	return phl_dispr_set_bk_module_info(disp_eng->dispatcher[idx],
-						handle, op_info);
+	return phl_disp_eng_set_bk_module_info(phl, band_idx, id, op_info);
 }
 enum rtw_phl_status rtw_phl_query_bk_module_info(void *phl, u8 band_idx,
 		enum phl_module_id id, struct phl_module_op_info *op_info)
 {
-	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct phl_cmd_dispatch_engine *disp_eng = &(phl_info->disp_eng);
-	void *handle = NULL;
-	enum rtw_phl_status status = RTW_PHL_STATUS_SUCCESS;
-	u8 idx = band_idx;
-
-	if ((band_idx + 1) > disp_eng->phy_num) {
-		PHL_WARN("%s invalid input :%d\n", __func__, band_idx);
-		return RTW_PHL_STATUS_INVALID_PARAM;
-	}
-
-	status = phl_dispr_get_bk_module_handle(disp_eng->dispatcher[idx],
-						id, &handle);
-	if (status != RTW_PHL_STATUS_SUCCESS)
-		return RTW_PHL_STATUS_FAILURE;
-
-	return phl_dispr_query_bk_module_info(disp_eng->dispatcher[idx],
-					      handle, op_info);
+	return phl_disp_eng_query_bk_module_info(phl, band_idx, id, op_info);
 }
 enum rtw_phl_status
-phl_disp_eng_get_dispr_by_idx(struct phl_info_t *phl, u8 band_idx, void **dispr)
+_disp_eng_get_dispr_by_idx(struct phl_info_t *phl, u8 band_idx, void **dispr)
 {
 	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
-	u8 idx = band_idx;
 
-	if ((band_idx + 1) > disp_eng->phy_num) {
+	if (band_idx > (disp_eng->phy_num - 1) || (dispr == NULL)) {
 		PHL_WARN("%s invalid input :%d\n", __func__, band_idx);
 		return RTW_PHL_STATUS_INVALID_PARAM;
 	}
-
-	if (dispr == NULL) {
-		PHL_ERR("%s invalid dispr\n", __func__);
-		return RTW_PHL_STATUS_FAILURE;
-	}
-	(*dispr) = disp_eng->dispatcher[idx];
+	(*dispr) = disp_eng->dispatcher[band_idx];
 	return RTW_PHL_STATUS_SUCCESS;
 }
 enum rtw_phl_status phl_disp_eng_register_module(struct phl_info_t *phl,
@@ -401,7 +314,271 @@ void disp_eng_notify_share_thread(struct phl_info_t *phl, void *dispr)
 
 	_os_sema_up(d, &(disp_eng->msg_q_sema));
 }
+u8 phl_disp_eng_is_dispr_busy(struct phl_info_t *phl, u8 band_idx)
+{
+	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
+	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
+	void* dispr = NULL;
+	void *handle = NULL;
+
+	if (_disp_eng_get_dispr_by_idx(phl, band_idx, &dispr) != RTW_PHL_STATUS_SUCCESS)
+		return false;
+	if (dispr_get_cur_cmd_req(dispr, &handle) == RTW_PHL_STATUS_SUCCESS)
+		return true;
+	else
+		return false;
+}
+
+enum rtw_phl_status
+phl_disp_eng_set_cur_cmd_info(struct phl_info_t *phl,
+                              u8 band_idx,
+                              struct phl_module_op_info *op_info)
+{
+	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
+	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
+	void* dispr = NULL;
+
+	status = _disp_eng_get_dispr_by_idx(phl, band_idx, &dispr);
+	if (RTW_PHL_STATUS_SUCCESS != status)
+		return status;
+
+	return dispr_set_cur_cmd_info(dispr, op_info);
+}
+
+enum rtw_phl_status
+phl_disp_eng_query_cur_cmd_info(struct phl_info_t *phl,
+                                u8 band_idx,
+                                struct phl_module_op_info *op_info)
+{
+	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
+	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
+	void* dispr = NULL;
+
+	status = _disp_eng_get_dispr_by_idx(phl, band_idx, &dispr);
+	if (RTW_PHL_STATUS_SUCCESS != status)
+		return status;
+
+	return dispr_query_cur_cmd_info(dispr, op_info);
+}
+
+enum rtw_phl_status
+phl_disp_eng_set_bk_module_info(struct phl_info_t *phl,
+                                u8 band_idx,
+                                enum phl_module_id id,
+                                struct phl_module_op_info *op_info)
+{
+	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
+	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
+	void* dispr = NULL;
+	void* handle = NULL;
+
+	status = _disp_eng_get_dispr_by_idx(phl, band_idx, &dispr);
+	if (RTW_PHL_STATUS_SUCCESS != status)
+		return status;
+
+	status = dispr_get_bk_module_handle(dispr, id, &handle);
+	if (RTW_PHL_STATUS_SUCCESS != status)
+		return status;
+
+	return dispr_set_bk_module_info(dispr, handle, op_info);
+}
+
+enum rtw_phl_status
+phl_disp_eng_query_bk_module_info(struct phl_info_t *phl,
+                                  u8 band_idx,
+                                  enum phl_module_id id,
+                                  struct phl_module_op_info *op_info)
+{
+	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
+	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
+	void* dispr = NULL;
+	void* handle = NULL;
+
+	status = _disp_eng_get_dispr_by_idx(phl, band_idx, &dispr);
+	if (RTW_PHL_STATUS_SUCCESS != status)
+		return status;
+
+	status = dispr_get_bk_module_handle(dispr, id, &handle);
+	if (RTW_PHL_STATUS_SUCCESS != status)
+		return status;
+
+	return dispr_query_bk_module_info(dispr, handle, op_info);
+}
+
+enum rtw_phl_status
+phl_disp_eng_set_src_info(struct phl_info_t *phl,
+                          struct phl_msg *msg,
+                          struct phl_module_op_info *op_info)
+{
+	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
+	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
+	void* dispr = NULL;
+
+	status = _disp_eng_get_dispr_by_idx(phl, msg->band_idx, &dispr);
+	if (RTW_PHL_STATUS_SUCCESS != status)
+		return status;
+
+	return dispr_set_src_info(dispr, msg, op_info);
+}
+
+enum rtw_phl_status
+phl_disp_eng_query_src_info(struct phl_info_t *phl,
+                            struct phl_msg *msg,
+                            struct phl_module_op_info *op_info)
+{
+	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
+	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
+	void* dispr = NULL;
+
+	status = _disp_eng_get_dispr_by_idx(phl, msg->band_idx, &dispr);
+	if (RTW_PHL_STATUS_SUCCESS != status)
+		return status;
+
+	return dispr_query_src_info(dispr, msg, op_info);
+}
+
+enum rtw_phl_status
+phl_disp_eng_send_msg(struct phl_info_t *phl,
+                      struct phl_msg *msg,
+                      struct phl_msg_attribute *attr,
+                      u32 *msg_hdl)
+{
+	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
+	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
+	void* dispr = NULL;
+
+	status = _disp_eng_get_dispr_by_idx(phl, msg->band_idx, &dispr);
+	if (RTW_PHL_STATUS_SUCCESS != status)
+		return status;
+
+	return dispr_send_msg(dispr, msg, attr, msg_hdl);
+}
+
+enum rtw_phl_status
+phl_disp_eng_cancel_msg(struct phl_info_t *phl, u8 band_idx, u32 *msg_hdl)
+{
+	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
+	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
+	void* dispr = NULL;
+
+	status = _disp_eng_get_dispr_by_idx(phl, band_idx, &dispr);
+	if (RTW_PHL_STATUS_SUCCESS != status)
+		return status;
+
+	return dispr_cancel_msg(dispr, msg_hdl);
+}
+
+enum rtw_phl_status
+phl_disp_eng_clr_pending_msg(struct phl_info_t *phl, u8 band_idx)
+{
+	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
+	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
+	void* dispr = NULL;
+
+	status = _disp_eng_get_dispr_by_idx(phl, band_idx, &dispr);
+	if (RTW_PHL_STATUS_SUCCESS != status)
+		return status;
+
+	return dispr_clr_pending_msg(dispr);
+}
+
+enum rtw_phl_status
+phl_disp_eng_add_token_req(struct phl_info_t *phl,
+                           u8 band_idx,
+                           struct phl_cmd_token_req *req,
+                           u32 *req_hdl)
+{
+	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
+	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
+	void* dispr = NULL;
+
+	status = _disp_eng_get_dispr_by_idx(phl, band_idx, &dispr);
+	if (RTW_PHL_STATUS_SUCCESS != status)
+		return status;
+
+	return dispr_add_token_req(dispr, req, req_hdl);
+}
+
+enum rtw_phl_status
+phl_disp_eng_cancel_token_req(struct phl_info_t *phl, u8 band_idx, u32 *req_hdl)
+{
+	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
+	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
+	void* dispr = NULL;
+
+	status = _disp_eng_get_dispr_by_idx(phl, band_idx, &dispr);
+	if (RTW_PHL_STATUS_SUCCESS != status)
+		return status;
+
+	return dispr_cancel_token_req(dispr, req_hdl);
+}
+
+enum rtw_phl_status
+phl_disp_eng_free_token(struct phl_info_t *phl, u8 band_idx, u32 *req_hdl)
+{
+	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
+	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
+	void* dispr = NULL;
+
+	status = _disp_eng_get_dispr_by_idx(phl, band_idx, &dispr);
+	if (RTW_PHL_STATUS_SUCCESS != status)
+		return status;
+
+	return dispr_free_token(dispr, req_hdl);
+}
+enum rtw_phl_status phl_disp_eng_notify_dev_io_status(struct phl_info_t *phl, u8 band_idx,
+							enum phl_module_id mdl_id, bool allow_io)
+{
+	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
+	u8 i = 0;
+
+	band_idx = HW_BAND_MAX; /* force all band stop IO */
+	if (band_idx != HW_BAND_MAX)
+		return dispr_notify_dev_io_status(disp_eng->dispatcher[band_idx], mdl_id, allow_io);
+
+	for (i = 0; i < disp_eng->phy_num; i++)
+		dispr_notify_dev_io_status(disp_eng->dispatcher[i], mdl_id, allow_io);
+	return RTW_PHL_STATUS_SUCCESS;
+}
+
+u8
+phl_disp_eng_is_fg_empty(struct phl_info_t *phl, u8 band_idx)
+{
+	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
+	u8 i = 0;
+
+	if (band_idx != HW_BAND_MAX)
+		return dispr_is_fg_empty(disp_eng->dispatcher[band_idx]);
+
+	for (i = 0; i < disp_eng->phy_num; i++)
+		if (false == dispr_is_fg_empty(disp_eng->dispatcher[i]))
+			return false;
+
+	return true;
+}
+#ifdef CONFIG_CMD_DISP_SOLO_MODE
+void dispr_ctrl_sema_down(struct phl_info_t *phl_info)
+{
+	_os_sema_down(phl_to_drvpriv(phl_info),
+			&(phl_info->disp_eng.dispr_ctrl_sema));
+}
+void dispr_ctrl_sema_up(struct phl_info_t *phl_info)
+{
+	_os_sema_up(phl_to_drvpriv(phl_info),
+			&(phl_info->disp_eng.dispr_ctrl_sema));
+}
+#endif
 #else
+enum rtw_phl_status rtw_phl_set_bk_module_info(void *phl, u8 band_idx,
+		enum phl_module_id id, struct phl_module_op_info *op_info)
+{
+	return RTW_PHL_STATUS_SUCCESS;
+}
+enum rtw_phl_status rtw_phl_query_bk_module_info(void *phl, u8 band_idx,
+		enum phl_module_id id, struct phl_module_op_info *op_info)
+{
+	return RTW_PHL_STATUS_SUCCESS;
+}
 enum rtw_phl_status phl_disp_eng_init(struct phl_info_t *phl, u8 phy_num)
 {
 	return RTW_PHL_STATUS_SUCCESS;
@@ -433,97 +610,74 @@ enum rtw_phl_status phl_disp_eng_deregister_module(struct phl_info_t *phl,
 {
 	return RTW_PHL_STATUS_FAILURE;
 }
-enum rtw_phl_status phl_disp_eng_get_dispr_by_idx(struct phl_info_t *phl,
-						  u8 band_idx, void **dispr)
-{
-	return RTW_PHL_STATUS_FAILURE;
-}
 enum rtw_phl_status phl_dispr_get_idx(void *dispr, u8 *idx)
 {
 	return RTW_PHL_STATUS_FAILURE;
 }
 
-/* use phl_disp_eng_get_dispr_by_idx to get valid dispr handle first */
-enum rtw_phl_status phl_dispr_get_cur_cmd_req(void *dispr, void **handle)
+u8 phl_disp_eng_is_dispr_busy(struct phl_info_t *phl, u8 band_idx)
 {
-	return RTW_PHL_STATUS_FAILURE;
+	return true;
 }
-enum rtw_phl_status phl_dispr_set_cur_cmd_info(void *dispr,
+enum rtw_phl_status phl_disp_eng_set_cur_cmd_info(struct phl_info_t *phl, u8 band_idx,
 					       struct phl_module_op_info *op_info)
 {
 	return RTW_PHL_STATUS_FAILURE;
 }
-enum rtw_phl_status phl_dispr_query_cur_cmd_info(void *dispr,
+enum rtw_phl_status phl_disp_eng_query_cur_cmd_info(struct phl_info_t *phl, u8 band_idx,
 						 struct phl_module_op_info *op_info)
 {
 	return RTW_PHL_STATUS_FAILURE;
 }
-enum rtw_phl_status phl_dispr_get_bk_module_handle(void *dispr,
-						   enum phl_module_id id,
-						   void **handle)
+enum rtw_phl_status phl_disp_eng_set_bk_module_info(struct phl_info_t *phl, u8 band_idx,
+						enum phl_module_id id, struct phl_module_op_info *op_info)
 {
 	return RTW_PHL_STATUS_FAILURE;
 }
-enum rtw_phl_status phl_dispr_set_bk_module_info(void *dispr, void *handle,
-						 struct phl_module_op_info *op_info)
+enum rtw_phl_status phl_disp_eng_query_bk_module_info(struct phl_info_t *phl, u8 band_idx,
+							enum phl_module_id id, struct phl_module_op_info *op_info)
 {
 	return RTW_PHL_STATUS_FAILURE;
 }
-enum rtw_phl_status phl_dispr_query_bk_module_info(void *dispr, void *handle,
-						   struct phl_module_op_info *op_info)
+enum rtw_phl_status phl_disp_eng_set_src_info(struct phl_info_t *phl, struct phl_msg *msg,
+						struct phl_module_op_info *op_info)
 {
 	return RTW_PHL_STATUS_FAILURE;
 }
-enum rtw_phl_status phl_dispr_set_src_info(void *dispr, struct phl_msg *msg,
-					   struct phl_module_op_info *op_info)
+enum rtw_phl_status phl_disp_eng_query_src_info(struct phl_info_t *phl, struct phl_msg *msg,
+						struct phl_module_op_info *op_info)
 {
 	return RTW_PHL_STATUS_FAILURE;
 }
-enum rtw_phl_status phl_dispr_query_src_info(void *dispr, struct phl_msg *msg,
-					     struct phl_module_op_info *op_info)
+enum rtw_phl_status phl_disp_eng_send_msg(struct phl_info_t *phl, struct phl_msg *msg,
+						struct phl_msg_attribute *attr, u32 *msg_hdl)
 {
 	return RTW_PHL_STATUS_FAILURE;
 }
-enum rtw_phl_status phl_dispr_send_msg(void *dispr, struct phl_msg *msg,
-				       struct phl_msg_attribute *attr, u32 *msg_hdl)
+enum rtw_phl_status phl_disp_eng_cancel_msg(struct phl_info_t *phl, u8 band_idx, u32 *msg_hdl)
 {
 	return RTW_PHL_STATUS_FAILURE;
 }
-enum rtw_phl_status phl_dispr_cancel_msg(void *dispr, u32 *msg_hdl)
-{
-	return RTW_PHL_STATUS_FAILURE;
-}
-enum rtw_phl_status phl_dispr_clr_pending_msg(void *dispr)
+enum rtw_phl_status phl_disp_eng_clr_pending_msg(struct phl_info_t *phl, u8 band_idx)
 {
 	return RTW_PHL_STATUS_FAILURE;
 }
 
-enum rtw_phl_status phl_dispr_add_token_req(void *dispr,
+enum rtw_phl_status phl_disp_eng_add_token_req(struct phl_info_t *phl, u8 band_idx,
 					    struct phl_cmd_token_req *req, u32 *req_hdl)
 {
 	return RTW_PHL_STATUS_FAILURE;
 }
-enum rtw_phl_status phl_dispr_cancel_token_req(void *dispr, u32 *req_hdl)
+enum rtw_phl_status phl_disp_eng_cancel_token_req(struct phl_info_t *phl, u8 band_idx, u32 *req_hdl)
 {
 	return RTW_PHL_STATUS_FAILURE;
 }
-enum rtw_phl_status phl_dispr_free_token(void *dispr, u32 *req_hdl)
+enum rtw_phl_status phl_disp_eng_free_token(struct phl_info_t *phl, u8 band_idx, u32 *req_hdl)
 {
 	return RTW_PHL_STATUS_FAILURE;
 }
-enum rtw_phl_status rtw_phl_query_cur_cmd_info(void *phl, u8 band_idx,
-					       struct phl_module_op_info* op_info)
-{
-	return RTW_PHL_STATUS_FAILURE;
-}
-
-enum rtw_phl_status rtw_phl_set_bk_module_info(void *phl, u8 band_idx,
-		enum phl_module_id id, struct phl_module_op_info *op_info)
-{
-	return RTW_PHL_STATUS_FAILURE;
-}
-enum rtw_phl_status rtw_phl_query_bk_module_info(void *phl, u8 band_idx,
-		enum phl_module_id id, struct phl_module_op_info *op_info)
+enum rtw_phl_status phl_disp_eng_notify_dev_io_status(struct phl_info_t *phl, u8 band_idx,
+							enum phl_module_id mdl_id, bool allow_io)
 {
 	return RTW_PHL_STATUS_FAILURE;
 }

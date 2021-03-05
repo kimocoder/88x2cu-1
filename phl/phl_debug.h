@@ -29,6 +29,13 @@ enum {
 #define PHL_PREFIX "PHL: "
 #define HALPS_PREFIX "HALPS:"
 
+#define	PHL_DBG_OUTBUF(max_buff_len, used_len, buff_addr, remain_len, fmt, ...)\
+	do {									\
+		u32 *used_len_tmp = &(used_len);				\
+		if (*used_len_tmp < max_buff_len)				\
+			*used_len_tmp += _os_snprintf(buff_addr, remain_len, fmt, ##__VA_ARGS__);\
+	} while (0)
+
 #ifdef CONFIG_RTW_DEBUG
 
 /*Define the tracing components*/
@@ -47,6 +54,11 @@ enum {
 #define COMP_PHL_RF BIT12
 #define COMP_PHL_LED BIT13
 #define COMP_PHL_MCC BIT14
+#define COMP_PHL_P2PPS BIT15
+#define COMP_PHL_ECSA BIT16
+#define COMP_PHL_CMDDISP BIT17
+#define COMP_PHL_BTC BIT18
+#define COMP_PHL_TWT BIT19
 
 extern u32 phl_log_components;
 extern u8 phl_log_level;
@@ -69,7 +81,6 @@ struct dbg_mem_ctx {
 
 
 #undef PHL_TRACE
-#undef PHL_DATA
 #define PHL_TRACE(comp, level, fmt, ...)     \
 	do {\
 		if(((comp) & phl_log_components) && (level <= phl_log_level)) {\
@@ -77,13 +88,13 @@ struct dbg_mem_ctx {
 		} \
 	} while (0)
 
+#undef PHL_DATA
 #define PHL_DATA(comp, level, fmt, ...)     \
 	do {\
 		if(((comp) & phl_log_components) && (level <= phl_log_level)) {\
 			_os_dbgdump(KERN_CONT fmt, ##__VA_ARGS__);\
 		} \
 	} while (0)
-
 
 #undef PHL_ASSERT
 #define PHL_ASSERT(fmt, ...) \

@@ -52,6 +52,7 @@
 
 #define RTW_U32_MAX 0xFFFFFFFF
 
+// NEO : add RTL8814A / RTL8822B / RTL8822C
 enum rtl_ic_id {
 	RTL8814A,
 	RTL8822B,
@@ -59,6 +60,7 @@ enum rtl_ic_id {
 	RTL8852A,
 	RTL8834A,
 	RTL8852B,
+	RTL8852C,
 	MAX_IC_ID
 };
 
@@ -79,6 +81,20 @@ enum rtw_hci_type {
 #define MAC_ADDRESS_LENGTH 6
 #define IPV4_ADDRESS_LENGTH 4
 #define IPV6_ADDRESS_LENGTH 16
+
+/* Core shall translate system condition into device state for PHL controller */
+enum rtw_dev_state {
+	RTW_DEV_WORKING = BIT0,
+	RTW_DEV_SURPRISE_REMOVAL = BIT1,
+	RTW_DEV_MAX
+};
+
+enum rtw_rate_mode {
+	RTW_LEGACY_MODE = 0,
+	RTW_HT_MODE = 1,
+	RTW_VHT_MODE = 2,
+	RTW_HE_MODE = 3
+};
 
 enum rtw_data_rate {
 	RTW_DATA_RATE_CCK1		= 0x0,
@@ -300,7 +316,7 @@ typedef enum band_type {
 	BAND_ON_5G	= 1,
 	BAND_ON_6G	= 2,
 	BAND_MAX,
-} BAND_TYPE, *PBAND_TYPE;
+} BAND_TYPE, *PBAND_TYPE; // NEO : add BAND_TYPE / PBAND_TYPE first
 
 /*HW SPEC & SW/HW CAP*/
 #define BAND_CAP_2G	BIT(BAND_ON_24G)
@@ -320,15 +336,6 @@ enum channel_width {
 };
 
 /*HW SPEC & SW/HW CAP*/
-#define BW_CAP_5M		BIT0
-#define BW_CAP_10M		BIT1
-#define BW_CAP_20M		BIT2
-#define BW_CAP_40M		BIT3
-#define BW_CAP_80M		BIT4
-#define BW_CAP_160M		BIT5
-#define BW_CAP_80_80M		BIT6
-#define BW_CAP_BIT_NUM		7
-
 #if 0 // NEO : G6's definition is different with rtk_wifi_driver
 #define BW_CAP_20M		BIT(CHANNEL_WIDTH_20)
 #define BW_CAP_40M		BIT(CHANNEL_WIDTH_40)
@@ -354,6 +361,7 @@ enum chan_offset {
 	CHAN_OFFSET_LOWER = 3,		/*SCB - secondary channel below*/
 };
 
+// NEO : add RF_4T3R ... RF_1T3R first
 enum rf_type {
 	RF_1T1R	= 0,
 	RF_1T2R	= 1,
@@ -363,14 +371,14 @@ enum rf_type {
 	RF_3T3R	= 5,
 	RF_3T4R	= 6,
 	RF_4T4R	= 7,
-	RF_4T3R	= 8,
-	RF_4T2R	= 9,
-	RF_4T1R	= 10,
-	RF_3T2R	= 11,
-	RF_3T1R	= 12,
-	RF_2T1R	= 13,
-	RF_1T4R	= 14,
-	RF_1T3R	= 15,
+	RF_4T3R = 8,
+	RF_4T2R = 9,
+	RF_4T1R = 10,
+	RF_3T2R = 11,
+	RF_3T1R = 12,
+	RF_2T1R = 13,
+	RF_1T4R = 14,
+	RF_1T3R = 15,
 	RF_TYPE_MAX,
 };
 
@@ -531,7 +539,8 @@ enum rtw_he_ru_idx {
 enum rtw_protect_mode {
 	RTW_PROTECT_DISABLE = 0,
 	RTW_PROTECT_RTS = 1,
-	RTW_PROTECT_CTS2SELF = 2
+	RTW_PROTECT_CTS2SELF = 2,
+	RTW_PROTECT_HW_RTS = 3
 };
 
 enum rtw_ac {
@@ -548,11 +557,19 @@ enum rtw_edcca_mode {
 	RTW_EDCCA_MAX
 };
 
+enum rtw_mac_pwr_st {
+	RTW_MAC_PWR_NONE = 0,
+	RTW_MAC_PWR_OFF = 1,
+	RTW_MAC_PWR_ON = 2,
+	RTW_MAC_PWR_LPS = 3,
+	RTW_MAC_PWR_MAX = 0x4
+};
 
 enum rtw_pcie_bus_func_cap_t {
 	RTW_PCIE_BUS_FUNC_DISABLE = 0,
 	RTW_PCIE_BUS_FUNC_ENABLE = 1,
-	RTW_PCIE_BUS_FUNC_DEFAULT = 2
+	RTW_PCIE_BUS_FUNC_DEFAULT = 2,
+	RTW_PCIE_BUS_FUNC_IGNORE = 3
 };
 
 /*MAC_AX_PCIE_L0SDLY_IGNORE = 0xFF, MAC_AX_PCIE_L1DLY_IGNORE = 0xFF, MAC_AX_PCIE_CLKDLY_IGNORE = 0xFF */
@@ -590,5 +607,7 @@ enum rtw_pcie_bus_func_cap_t {
 	 (_TYPE == RTW_FRAME_TYPE_REASOC_REQ) || \
 	 (_TYPE == RTW_FRAME_TYPE_ASOC_RESP) || \
 	 (_TYPE == RTW_FRAME_TYPE_ASOC_REQ)) ? true : false
+
+#define TU 1024 /* Time Unit (TU): 1024 us*/
 
 #endif /*_RTW_GENERAL_DEF_H_*/

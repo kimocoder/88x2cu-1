@@ -243,11 +243,15 @@ struct phl_info_t {
 	struct hci_info_t *hci;
 	struct phl_hci_trx_ops *hci_trx_ops;
 
+	struct pkt_ofld_obj *pkt_ofld;
+
 	struct phl_cmd_dispatch_engine disp_eng;
+	//struct phl_watchdog wdog;
 	void *msg_hub;
 	void *cmd_que;
 	void *hal;
 
+//#ifdef CONFIG_FSM
 	void *fsm_root;
 	void *cmd_fsm;
 	void *cmd_obj;
@@ -262,6 +266,7 @@ struct phl_info_t {
 	void *btc_obj;
 
 	void *snd_fsm;
+//#endif /*CONFIG_FSM*/
 	void *snd_obj;
 
 	void *ps_fsm;
@@ -269,9 +274,13 @@ struct phl_info_t {
 
 	void *led_ctrl;
 
+	void *ecsa_ctrl;
+	void *phl_twt_info; /* struct phl_twt_info */
 #ifdef PHL_RX_BATCH_IND
 	u8 rx_new_pending;
 #endif
+
+	//struct phl_wow_info wow_info;
 
 #ifdef CONFIG_RTW_ACS
 	struct auto_chan_sel acs;

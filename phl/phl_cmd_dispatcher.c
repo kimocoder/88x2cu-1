@@ -16,12 +16,10 @@
 #include "phl_headers.h"
 #ifdef CONFIG_CMD_DISP
 
-
 #define MAX_PHL_MSG_NUM (24)
 #define MAX_CMD_REQ_NUM (8)
 #define MODL_MASK_LEN (PHL_BK_MDL_END/8)
 
-#define IS_GENRAL_MODULE(_mdl_id) ((_mdl_id) <= PHL_MDL_RX)
 #define GEN_VALID_HDL(_idx) ((u32)(BIT31 | (u32)(_idx)))
 #define IS_HDL_VALID(_hdl) ((_hdl) & BIT31)
 #define GET_IDX_FROM_HDL(_hdl) ((u8)((_hdl) & 0xFF))
@@ -30,6 +28,10 @@
 	((u16)((_obj)->mdl_info[(_mdl_id)].pending_evt_id))
 #define SET_CUR_PENDING_EVT( _obj, _mdl_id, _evt_id) \
 	((_obj)->mdl_info[(_mdl_id)].pending_evt_id = (_evt_id))
+
+#define IS_EXCL_MDL(_obj, _mdl) ((_obj)->exclusive_mdl == (_mdl))
+#define SET_EXCL_MDL(_obj, _mdl) ((_obj)->exclusive_mdl = (_mdl))
+#define CLEAR_EXCL_MDL(_obj) ((_obj)->exclusive_mdl = PHL_MDL_ID_MAX)
 
 enum phl_msg_status {
 	MSG_STATUS_ENQ = BIT0,
@@ -42,6 +44,8 @@ enum phl_msg_status {
 	MSG_STATUS_OWNER_REQ = BIT7,
 	MSG_STATUS_CLR_SNDR_MSG_IF_PENDING = BIT8,
 	MSG_STATUS_PENDING = BIT9,
+	MSG_STATUS_FOR_ABORT = BIT10,
+	MSG_STATUS_PENDING_DURING_CANNOT_IO = BIT11,
 };
 
 enum cmd_req_status {
@@ -64,12 +68,16 @@ enum dispatcher_status {
 	DISPR_REQ_INIT = BIT3,
 	DISPR_NOTIFY_IDLE = BIT4,
 	DISPR_CLR_PEND_MSG = BIT5,
+	DISPR_CTRL_PRESENT = BIT6,
+	DISPR_WAIT_ABORT_MSG_DONE = BIT7,
+	DISPR_CANNOT_IO = BIT8,
 };
 
 enum token_op_type {
 	TOKEN_OP_ADD_CMD_REQ = 1,
 	TOKEN_OP_FREE_CMD_REQ = 2,
 	TOKEN_OP_CANCEL_CMD_REQ = 3,
+	TOKEN_OP_RENEW_CMD_REQ = 4,
 };
 
 /**
@@ -153,10 +161,14 @@ struct mdl_mgnt_info {
  * @bitmap: cosist of existing background modules loaded in current dispatcher,
  *	    refer to enum phl_module_id
  * @basemap: BK modules that must be notified when handling msg
+ * @controller: instance of dispr controller module
+ * @renew_req_info: used to trigger next token req registration
+ * @exclusive_mdl: In certain conditions, like dev IO status change,
+ * 		   dispr would only allow designated module to send msg and cancel the rest,
  */
 struct cmd_dispatcher {
 	u8 idx;
-	u8 status;
+	u16 status;
 	struct phl_info_t *phl_info;
 	struct phl_queue module_q[PHL_MDL_PRI_MAX];
 	struct phl_dispr_msg_ex msg_ex_pool[MAX_PHL_MSG_NUM];
@@ -175,11 +187,18 @@ struct cmd_dispatcher {
 	u8 bitmap[MODL_MASK_LEN];
 	u8 basemap[MODL_MASK_LEN];
 	struct mdl_mgnt_info mdl_info[PHL_MDL_ID_MAX];
+	struct phl_bk_module controller;
+	struct phl_token_op_info renew_req_info;
+	u8 exclusive_mdl;
 };
 
 enum rtw_phl_status dispr_process_token_req(struct cmd_dispatcher *obj);
 void send_bk_msg_phy_on(struct cmd_dispatcher *obj);
 void send_bk_msg_phy_idle(struct cmd_dispatcher *obj);
+enum rtw_phl_status send_dev_io_status_change(struct cmd_dispatcher *obj, u8 allow_io);
+void _notify_dispr_controller(struct cmd_dispatcher *obj, struct phl_dispr_msg_ex *ex);
+static u8 dispr_enqueue_token_op_info(struct cmd_dispatcher *obj, struct phl_token_op_info *op_info,
+			    	enum token_op_type type, u8 data);
 
 inline static
 enum phl_bk_module_priority _get_mdl_priority(enum phl_module_id id)
@@ -207,9 +226,10 @@ inline static void _print_bitmap(u8 *bitmap)
 {
 	u8 k = 0;
 
-	PHL_INFO("print bitmap: \n");
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "print bitmap: \n");
+
 	for (k = 0; k < MODL_MASK_LEN; k++) {
-		PHL_DBG("[%d]:0x%x\n", k, bitmap[k]);
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_DEBUG_,"[%d]:0x%x\n", k, bitmap[k]);
 	}
 }
 
@@ -221,6 +241,15 @@ static void notify_bk_thread(struct cmd_dispatcher *obj)
 		_os_sema_up(d, &(obj->msg_q_sema));
 	else
 		disp_eng_notify_share_thread(obj->phl_info, (void*)obj);
+}
+
+static void on_abort_msg_complete(struct cmd_dispatcher *obj, struct phl_dispr_msg_ex *ex)
+{
+	/* since struct phl_token_op_info is used to synchronously handle token req in background thread
+	 * here use add_req_info to notify background thread to run dispr_process_token_req again before handling next msg
+	 */
+	CLEAR_STATUS_FLAG(obj->status, DISPR_WAIT_ABORT_MSG_DONE);
+	dispr_enqueue_token_op_info(obj, &obj->renew_req_info, TOKEN_OP_RENEW_CMD_REQ, 0xff);
 }
 
 static u8 pop_front_idle_msg(struct cmd_dispatcher *obj,
@@ -239,7 +268,7 @@ static u8 pop_front_idle_msg(struct cmd_dispatcher *obj,
 		_os_mem_set(d, (*msg)->premap, 0, MODL_MASK_LEN);
 		_os_mem_set(d, (*msg)->postmap, 0, MODL_MASK_LEN);
 		_os_mem_set(d, &((*msg)->msg), 0, sizeof(struct phl_msg));
-		PHL_INFO("%s: remain cnt(%d)\n", __FUNCTION__, obj->msg_idle_q.cnt);
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s: remain cnt(%d)\n", __FUNCTION__, obj->msg_idle_q.cnt);
 		return true;
 	} else {
 		return false;
@@ -258,6 +287,8 @@ static void push_back_idle_msg(struct cmd_dispatcher *obj,
 		ex->completion.completion(ex->completion.priv, &(ex->msg));
 		CLEAR_STATUS_FLAG(ex->status, MSG_STATUS_NOTIFY_COMPLETE);
 	}
+	if (TEST_STATUS_FLAG(ex->status, MSG_STATUS_FOR_ABORT))
+		on_abort_msg_complete(obj, ex);
 	ex->status = 0;
 	if(GET_CUR_PENDING_EVT(obj, MSG_MDL_ID_FIELD(ex->msg.msg_id)) == MSG_EVT_ID_FIELD(ex->msg.msg_id))
 		SET_CUR_PENDING_EVT(obj, MSG_MDL_ID_FIELD(ex->msg.msg_id), MSG_EVT_MAX);
@@ -294,6 +325,28 @@ static void push_back_wait_msg(struct cmd_dispatcher *obj,
 	notify_bk_thread(obj);
 }
 
+ u8 is_higher_priority(void *d, void *priv,_os_list *input, _os_list *obj)
+ {
+	struct phl_dispr_msg_ex *ex_input = (struct phl_dispr_msg_ex *)input;
+	struct phl_dispr_msg_ex *ex_obj = (struct phl_dispr_msg_ex *)obj;
+
+	if (IS_DISPR_CTRL(MSG_MDL_ID_FIELD(ex_input->msg.msg_id)) &&
+	    !IS_DISPR_CTRL(MSG_MDL_ID_FIELD(ex_obj->msg.msg_id)))
+		return true;
+	return false;
+ }
+
+static void insert_msg_by_priority(struct cmd_dispatcher *obj,
+			       struct phl_dispr_msg_ex *ex)
+{
+	void *d = phl_to_drvpriv(obj->phl_info);
+
+	SET_STATUS_FLAG(ex->status, MSG_STATUS_ENQ);
+	CLEAR_STATUS_FLAG(ex->status, MSG_STATUS_RUN);
+	pq_insert(d, &(obj->msg_wait_q), _bh, NULL, &(ex->list), is_higher_priority);
+	notify_bk_thread(obj);
+}
+
 static u8 pop_front_pending_msg(struct cmd_dispatcher *obj,
 			     struct phl_dispr_msg_ex **msg)
 {
@@ -320,7 +373,7 @@ static void push_back_pending_msg(struct cmd_dispatcher *obj,
 	if(TEST_STATUS_FLAG(ex->status, MSG_STATUS_CLR_SNDR_MSG_IF_PENDING))
 		SET_CUR_PENDING_EVT(obj, MSG_MDL_ID_FIELD(ex->msg.msg_id), MSG_EVT_ID_FIELD(ex->msg.msg_id));
 	pq_push(d, &(obj->msg_pend_q), &(ex->list), _tail, _bh);
-	PHL_INFO("%s: remain cnt(%d)\n", __FUNCTION__, obj->msg_pend_q.cnt);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s: remain cnt(%d)\n", __FUNCTION__, obj->msg_pend_q.cnt);
 }
 
 static void clear_pending_msg(struct cmd_dispatcher *obj)
@@ -330,21 +383,41 @@ static void clear_pending_msg(struct cmd_dispatcher *obj)
 	if(!TEST_STATUS_FLAG(obj->status, DISPR_CLR_PEND_MSG))
 		return;
 	CLEAR_STATUS_FLAG(obj->status, DISPR_CLR_PEND_MSG);
-	while (pop_front_pending_msg(obj, &ex))
-		push_back_wait_msg(obj, ex);
+	while (pop_front_pending_msg(obj, &ex)) {
+		if (IS_DISPR_CTRL(MSG_EVT_ID_FIELD(ex->msg.msg_id)))
+			insert_msg_by_priority(obj, ex);
+		else
+			push_back_wait_msg(obj, ex);
+	}
 }
 
 static void clear_waiting_msg(struct cmd_dispatcher *obj)
 {
 	struct phl_dispr_msg_ex *ex = NULL;
 
-	PHL_INFO("%s: remain cnt(%d)\n", __FUNCTION__, obj->msg_idle_q.cnt);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s: remain cnt(%d)\n", __FUNCTION__, obj->msg_idle_q.cnt);
 	while(obj->msg_idle_q.cnt != MAX_PHL_MSG_NUM) {
 		while (pop_front_pending_msg(obj, &ex))
 			push_back_wait_msg(obj, ex);
 		while (pop_front_wait_msg(obj, &ex))
 			push_back_idle_msg(obj, ex);
 	}
+}
+
+static bool is_special_msg(struct cmd_dispatcher *obj, struct phl_dispr_msg_ex *ex)
+{
+	u8 mdl_id = MSG_MDL_ID_FIELD(ex->msg.msg_id);
+	u16 evt = MSG_EVT_ID_FIELD(ex->msg.msg_id);
+
+	if (TEST_STATUS_FLAG(obj->status, DISPR_CANNOT_IO)) {
+		if ( IS_EXCL_MDL(obj, mdl_id) ||
+		     evt == MSG_EVT_DEV_CANNOT_IO ||
+		     evt == MSG_EVT_DEV_RESUME_IO ||
+		     evt == MSG_EVT_PHY_ON ||
+		     evt == MSG_EVT_PHY_IDLE)
+			return true;
+	}
+	return false;
 }
 
 static bool is_msg_canceled(struct cmd_dispatcher *obj, struct phl_dispr_msg_ex *ex)
@@ -357,8 +430,24 @@ static bool is_msg_canceled(struct cmd_dispatcher *obj, struct phl_dispr_msg_ex 
 
 	if (pending_evt != MSG_EVT_MAX && pending_evt != MSG_EVT_ID_FIELD(ex->msg.msg_id)) {
 		SET_STATUS_FLAG(ex->status, MSG_STATUS_CANCEL);
-		PHL_INFO("msg canceled, cur pending evt(%d)\n", pending_evt);
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "msg canceled, cur pending evt(%d)\n", pending_evt);
 		return true;
+	}
+
+	if (TEST_STATUS_FLAG(obj->status, DISPR_CANNOT_IO)) {
+		if( is_special_msg(obj, ex)) {
+			SET_MSG_INDC_FIELD(ex->msg.msg_id, MSG_INDC_CANNOT_IO);
+			PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "special msg found, still sent with CANNOT IO flag set\n");
+		}
+		else if (!TEST_STATUS_FLAG(ex->status, MSG_STATUS_PENDING_DURING_CANNOT_IO)) {
+			SET_STATUS_FLAG(ex->status, MSG_STATUS_CANCEL);
+			SET_MSG_INDC_FIELD(ex->msg.msg_id, MSG_INDC_CANNOT_IO);
+			PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "msg canceled due to CANNOT IO status\n");
+			return true;
+		} else {
+			SET_STATUS_FLAG(ex->status, MSG_STATUS_PENDING);
+			PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "msg pending due to CANNOT IO status\n");
+		}
 	}
 
 	return false;
@@ -419,16 +508,26 @@ void cancel_running_msg(struct cmd_dispatcher *obj)
 			cancel_msg(obj, &(obj->msg_ex_pool[i]));
 	}
 }
-void set_msg_bitmap(struct cmd_dispatcher *obj, struct phl_dispr_msg_ex *ex,
-		    enum phl_msg_opt opt, u8 mdl_id, u8 *id_arr, u32 len)
+void set_msg_bitmap(struct cmd_dispatcher *obj, struct phl_dispr_msg_ex *ex, u8 mdl_id)
 {
 	void *d = phl_to_drvpriv(obj->phl_info);
 
-	if (!(opt & MSG_OPT_SKIP_NOTIFY_OPT_MDL)) {
-		_os_mem_cpy(d, ex->premap, obj->bitmap, MODL_MASK_LEN);
-		_os_mem_cpy(d, ex->postmap, obj->bitmap, MODL_MASK_LEN);
-	} else {
-		/* ensure mandatory & wifi role module recv all msg*/
+	/* ensure mandatory & wifi role module recv all msg*/
+	_os_mem_cpy(d, ex->premap, obj->bitmap, MODL_MASK_LEN);
+	_os_mem_cpy(d, ex->postmap, obj->bitmap, MODL_MASK_LEN);
+	if(_chk_bitmap_bit(obj->bitmap, mdl_id)) {
+		_add_bitmap_bit(ex->premap, &mdl_id, 1);
+		_add_bitmap_bit(ex->postmap, &mdl_id, 1);
+	}
+//_print_bitmap(ex->premap);
+}
+
+void set_msg_custom_bitmap(struct cmd_dispatcher *obj, struct phl_dispr_msg_ex *ex,
+		    enum phl_msg_opt opt, u8 *id_arr, u32 len, u8 mdl_id)
+{
+	void *d = phl_to_drvpriv(obj->phl_info);
+
+	if (opt & MSG_OPT_SKIP_NOTIFY_OPT_MDL) {
 		_os_mem_cpy(d, ex->premap, obj->basemap, MODL_MASK_LEN);
 		_os_mem_cpy(d, ex->postmap, obj->basemap, MODL_MASK_LEN);
 	}
@@ -439,12 +538,10 @@ void set_msg_bitmap(struct cmd_dispatcher *obj, struct phl_dispr_msg_ex *ex,
 		_add_bitmap_bit(ex->premap, id_arr, len);
 		_add_bitmap_bit(ex->postmap, id_arr, len);
 	}
-
 	if(_chk_bitmap_bit(obj->bitmap, mdl_id)) {
 		_add_bitmap_bit(ex->premap, &mdl_id, 1);
 		_add_bitmap_bit(ex->postmap, &mdl_id, 1);
 	}
-//_print_bitmap(ex->premap);
 }
 
 u8 *get_msg_bitmap(struct phl_dispr_msg_ex *ex)
@@ -530,7 +627,8 @@ static void clear_wating_req(struct cmd_dispatcher *obj)
 {
 	 struct phl_cmd_token_req_ex *ex = NULL;
 
-	PHL_INFO("%s: remain cnt(%d)\n", __FUNCTION__, obj->token_req_idle_q.cnt);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_,
+		"%s: remain cnt(%d)\n", __FUNCTION__, obj->token_req_idle_q.cnt);
 	while(obj->token_req_idle_q.cnt != MAX_CMD_REQ_NUM) {
 		while (pop_front_wait_req(obj, &ex)) {
 			ex->req.abort(obj, ex->req.priv);
@@ -548,7 +646,9 @@ void deregister_cur_cmd_req(struct cmd_dispatcher *obj, u8 notify)
 
 	if (obj->cur_cmd_req) {
 		req = &(obj->cur_cmd_req->req);
-		PHL_INFO("%s, id(%d), status(%d)\n", __FUNCTION__, req->module_id, obj->cur_cmd_req->status);
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_,
+				"%s, id(%d), status(%d)\n",
+				__FUNCTION__, req->module_id, obj->cur_cmd_req->status);
 		CLEAR_STATUS_FLAG(obj->cur_cmd_req->status, REQ_STATUS_RUN);
 		for (i = 0; i < MAX_PHL_MSG_NUM; i++) {
 			ex = &(obj->msg_ex_pool[i]);
@@ -557,9 +657,8 @@ void deregister_cur_cmd_req(struct cmd_dispatcher *obj, u8 notify)
 			CLEAR_STATUS_FLAG(ex->status, MSG_STATUS_OWNER_REQ);
 			cancel_msg(obj, ex);
 			if(TEST_STATUS_FLAG(ex->status, MSG_STATUS_PENDING)) {
-				phl_dispr_clr_pending_msg((void*)obj);
-				/* inserted pending msg of this sepecific sender
-				 * back to wait Q before abort notify
+				dispr_clr_pending_msg((void*)obj);
+				/* inserted pending msg from this sepecific sender back to wait Q before abort notify
 				 * would guarantee msg sent in abort notify is exactly last msg from this sender
 				 * */
 				clear_pending_msg(obj);
@@ -575,7 +674,7 @@ void deregister_cur_cmd_req(struct cmd_dispatcher *obj, u8 notify)
 			       _os_atomic_read(d, &(obj->token_cnt))-1);
 	}
 	obj->cur_cmd_req = NULL;
-	PHL_INFO("%s\n", __FUNCTION__);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s\n", __FUNCTION__);
 }
 
 u8 register_cur_cmd_req(struct cmd_dispatcher *obj,
@@ -589,9 +688,10 @@ u8 register_cur_cmd_req(struct cmd_dispatcher *obj,
 	obj->cur_cmd_req = req;
 	_os_atomic_set(d, &(obj->token_cnt),
 		       _os_atomic_read(d, &(obj->token_cnt))+1);
-	PHL_INFO("%s, id(%d)\n", __FUNCTION__, obj->cur_cmd_req->req.module_id);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_,
+			"%s, id(%d)\n", __FUNCTION__, obj->cur_cmd_req->req.module_id);
 	ret = obj->cur_cmd_req->req.acquired((void*)obj, obj->cur_cmd_req->req.priv);
-	PHL_INFO("%s, ret(%d)\n", __FUNCTION__, ret);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s, ret(%d)\n", __FUNCTION__, ret);
 
 	if (ret == MDL_RET_FAIL) {
 		deregister_cur_cmd_req(obj, false);
@@ -714,10 +814,14 @@ void _handle_token_op_info(struct cmd_dispatcher *obj, struct phl_token_op_info 
 	void *d = phl_to_drvpriv(obj->phl_info);
 
 	switch (op_info->type) {
+		case TOKEN_OP_RENEW_CMD_REQ:
+			/* fall through*/
 		case TOKEN_OP_ADD_CMD_REQ:
 			dispr_process_token_req(obj);
 			break;
 		case TOKEN_OP_FREE_CMD_REQ:
+			if (op_info->data >= MAX_CMD_REQ_NUM)
+				return;
 			req_ex = &(obj->token_req_ex_pool[op_info->data]);
 			if (!TEST_STATUS_FLAG(req_ex->status, REQ_STATUS_RUN))
 				break;
@@ -725,11 +829,13 @@ void _handle_token_op_info(struct cmd_dispatcher *obj, struct phl_token_op_info 
 			dispr_process_token_req(obj);
 			break;
 		case TOKEN_OP_CANCEL_CMD_REQ:
+			if (op_info->data >= MAX_CMD_REQ_NUM)
+				return;
 			req_ex = &(obj->token_req_ex_pool[op_info->data]);
 			if (TEST_STATUS_FLAG(req_ex->status, REQ_STATUS_ENQ)) {
 				pq_del_node(d, &(obj->token_req_wait_q), &(req_ex->list), _bh);
 				/*
-				 * Call command abort handle, abort handle 
+				 * Call command abort handle, abort handle
 				 * should decide it has been acquired or not.
 				 */
 				req_ex->req.abort(obj, req_ex->req.priv);
@@ -765,7 +871,8 @@ dispr_enqueue_token_op_info(struct cmd_dispatcher *obj,
 u8 bk_module_init(struct cmd_dispatcher *obj, struct phl_bk_module *module)
 {
 	if (TEST_STATUS_FLAG(module->status, MDL_INIT)) {
-		PHL_ERR("%s module_id:%d already init\n",
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_ERR_,
+			"%s module_id:%d already init\n",
 			__FUNCTION__, module->id);
 		return false;
 	}
@@ -775,7 +882,8 @@ u8 bk_module_init(struct cmd_dispatcher *obj, struct phl_bk_module *module)
 		SET_STATUS_FLAG(module->status, MDL_INIT);
 		return true;
 	} else {
-		PHL_ERR("%s fail module_id: %d \n", __FUNCTION__, module->id);
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_ERR_,
+			"%s fail module_id: %d \n", __FUNCTION__, module->id);
 		return false;
 	}
 }
@@ -791,7 +899,8 @@ u8 bk_module_start(struct cmd_dispatcher *obj, struct phl_bk_module *module)
 {
 	if (!TEST_STATUS_FLAG(module->status, MDL_INIT) ||
 	    TEST_STATUS_FLAG(module->status, MDL_STARTED)) {
-		PHL_ERR("%s module_id:%d already start\n", __FUNCTION__,
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_ERR_,
+			"%s module_id:%d already start\n", __FUNCTION__,
 			module->id);
 		return false;
 	}
@@ -800,8 +909,8 @@ u8 bk_module_start(struct cmd_dispatcher *obj, struct phl_bk_module *module)
 		SET_STATUS_FLAG(module->status, MDL_STARTED);
 		return true;
 	} else {
-		PHL_ERR("%s fail module_id: %d \n", __FUNCTION__,
-			module->id);
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_ERR_,
+			"%s fail module_id: %d \n", __FUNCTION__, module->id);
 		return false;
 	}
 }
@@ -814,7 +923,8 @@ u8 bk_module_stop(struct cmd_dispatcher *obj, struct phl_bk_module *module)
 	if (module->ops.stop((void*)obj, module->priv) == MDL_RET_SUCCESS) {
 		return true;
 	} else {
-		PHL_ERR("%s fail module_id: %d \n", __FUNCTION__,
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_ERR_,
+			"%s fail module_id: %d \n", __FUNCTION__,
 			module->id);
 		return false;
 	}
@@ -829,16 +939,25 @@ void cur_req_hdl(struct cmd_dispatcher *obj, struct phl_dispr_msg_ex *ex)
 	if (!TEST_STATUS_FLAG(cur_req->status, REQ_STATUS_RUN) ||
 	    TEST_STATUS_FLAG(cur_req->status, REQ_STATUS_CANCEL))
 		return;
+	if (TEST_STATUS_FLAG(ex->status, MSG_STATUS_FOR_ABORT))
+		return;
 	cur_req->req.msg_hdlr((void*)obj, cur_req->req.priv, &(ex->msg));
 }
 
-void notify_msg_fail(struct cmd_dispatcher *obj, struct phl_dispr_msg_ex *ex)
+void notify_msg_fail(struct cmd_dispatcher *obj,
+                     struct phl_dispr_msg_ex *ex,
+                     enum phl_mdl_ret_code ret)
 {
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s\n", __FUNCTION__);
+
 	SET_STATUS_FLAG(ex->status, MSG_STATUS_FAIL);
+
 	SET_MSG_INDC_FIELD(ex->msg.msg_id, MSG_INDC_FAIL);
-	PHL_INFO("%s\n", __FUNCTION__);
+	if (ret == MDL_RET_CANNOT_IO)
+		SET_MSG_INDC_FIELD(ex->msg.msg_id, MSG_INDC_CANNOT_IO);
+
 	if (TEST_STATUS_FLAG(ex->status, MSG_STATUS_OWNER_BK_MDL) &&
-	    _chk_bitmap_bit(obj->bitmap, ex->module->id)) {
+	   (IS_DISPR_CTRL(MSG_MDL_ID_FIELD(ex->msg.msg_id)) || _chk_bitmap_bit(obj->bitmap, ex->module->id))) {
 		ex->module->ops.msg_hdlr(obj, ex->module->priv, &(ex->msg));
 	}
 
@@ -854,14 +973,15 @@ enum phl_mdl_ret_code feed_mdl_msg(struct cmd_dispatcher *obj,
 	enum phl_mdl_ret_code ret = MDL_RET_FAIL;
 	u8 *bitmap = NULL;
 
-	PHL_DBG("%s, id:%d \n", __FUNCTION__, mdl->id);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_DEBUG_, "%s, id:%d \n", __FUNCTION__, mdl->id);
 	ret = mdl->ops.msg_hdlr(obj, mdl->priv, &(ex->msg));
-	if (ret == MDL_RET_FAIL) {
-		PHL_INFO("id:%d evt:0x%x fail\n",
+	if (ret == MDL_RET_FAIL || ret == MDL_RET_CANNOT_IO) {
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "id:%d evt:0x%x fail\n",
 			 mdl->id, ex->msg.msg_id);
-		notify_msg_fail(obj, ex);
+		ex->msg.rsvd[0] = mdl;
+		notify_msg_fail(obj, ex, ret);
 	} else if (ret == MDL_RET_PENDING) {
-		PHL_INFO("id:%d evt:0x%x pending\n",
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "id:%d evt:0x%x pending\n",
 			 mdl->id, ex->msg.msg_id);
 		SET_STATUS_FLAG(ex->status, MSG_STATUS_PENDING);
 	} else {
@@ -966,51 +1086,68 @@ u8 get_cur_cmd_req_id(struct cmd_dispatcher *obj, u32 *req_status)
 		return cur_req->req.module_id;
 }
 
+#define MSG_REDIRECT_CHK(_ex) \
+	if (TEST_STATUS_FLAG(ex->status, MSG_STATUS_FAIL)|| \
+	    TEST_STATUS_FLAG(ex->status, MSG_STATUS_CANCEL)) \
+		goto recycle;\
+	if (TEST_STATUS_FLAG(ex->status, MSG_STATUS_PENDING)) \
+		goto reschedule;
 
 void msg_dispatch(struct cmd_dispatcher *obj, struct phl_dispr_msg_ex *ex)
 {
 	u8 *bitmap = get_msg_bitmap(ex);
 	void *d = phl_to_drvpriv(obj->phl_info);
 
-	PHL_DBG("%s, msg_id:0x%x \n", __FUNCTION__, ex->msg.msg_id);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_DEBUG_,
+		"%s, msg_id:0x%x status: 0x%x\n", __FUNCTION__, ex->msg.msg_id, ex->status);
+	MSG_REDIRECT_CHK(ex);
+
+	_notify_dispr_controller(obj, ex);
+
+	MSG_REDIRECT_CHK(ex);
+
 	if ((MSG_INDC_FIELD(ex->msg.msg_id) & MSG_INDC_PRE_PHASE) &&
 	    _is_bitmap_empty(d, bitmap) == false)
 		msg_pre_phase_hdl(obj, ex);
 
-	if (TEST_STATUS_FLAG(ex->status, MSG_STATUS_FAIL)||
-	    TEST_STATUS_FLAG(ex->status, MSG_STATUS_CANCEL))
-		goto recycle;
+	MSG_REDIRECT_CHK(ex);
 
 	if (_is_bitmap_empty(d, bitmap)) {
 		/* pre protocol phase done, switch to post protocol phase*/
 		CLEAR_STATUS_FLAG(ex->status, MSG_STATUS_PRE_PHASE);
 		bitmap = get_msg_bitmap(ex);
 	} else {
-		goto reschedule;
+		PHL_ERR("%s, invalid bitmap state, msg status:0x%x \n", __FUNCTION__, ex->status);
+		SET_STATUS_FLAG(ex->status, MSG_STATUS_CANCEL);
+		goto recycle;
 	}
 
 	if (_is_bitmap_empty(d, bitmap) == false)
 		msg_post_phase_hdl(obj, ex);
 
-	if (TEST_STATUS_FLAG(ex->status, MSG_STATUS_FAIL)||
-	    TEST_STATUS_FLAG(ex->status, MSG_STATUS_CANCEL))
-		goto recycle;
+	MSG_REDIRECT_CHK(ex);
 
 	if (_is_bitmap_empty(d, bitmap)) {
 		/* post protocol phase done */
 		cur_req_hdl(obj, ex);
 		goto recycle;
+	} else {
+		PHL_ERR("%s, invalid bitmap state, msg status:0x%x \n", __FUNCTION__, ex->status);
+		SET_STATUS_FLAG(ex->status, MSG_STATUS_CANCEL);
+		goto recycle;
 	}
 reschedule:
-	PHL_INFO("%s, msg:0x%x reschedule \n", __FUNCTION__,
-		 ex->msg.msg_id);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_,
+			"%s, msg:0x%x reschedule \n", __FUNCTION__,
+		 	ex->msg.msg_id);
 	if(TEST_STATUS_FLAG(ex->status, MSG_STATUS_PENDING))
 		push_back_pending_msg(obj, ex);
 	else
 		push_back_wait_msg(obj, ex);
 	return;
 recycle:
-	PHL_DBG("%s, msg:0x%x recycle \n", __FUNCTION__,
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_DEBUG_,
+		"%s, msg:0x%x recycle \n", __FUNCTION__,
 		 ex->msg.msg_id);
 	push_back_idle_msg(obj, ex);
 }
@@ -1057,7 +1194,7 @@ int background_thread_hdl(void *param)
 	struct cmd_dispatcher *obj = (struct cmd_dispatcher *)param;
 	void *d = phl_to_drvpriv(obj->phl_info);
 
-	PHL_INFO("%s enter\n", __FUNCTION__);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s enter\n", __FUNCTION__);
 	while (!_os_thread_check_stop(d, &(obj->bk_thread))) {
 
 		_os_sema_down(d, &obj->msg_q_sema);
@@ -1068,7 +1205,7 @@ int background_thread_hdl(void *param)
 	}
 	dispr_thread_leave_hdl(obj);
 	_os_thread_wait_stop(d, &(obj->bk_thread));
-	PHL_INFO("%s down\n", __FUNCTION__);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s down\n", __FUNCTION__);
 	return 0;
 }
 
@@ -1079,23 +1216,31 @@ u8 search_mdl(void *d, void *mdl, void *priv)
 
 	module = (struct phl_bk_module *)mdl;
 	if (module->id == id) {
-		PHL_INFO("%s :: id %d\n", __FUNCTION__, id);
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s :: id %d\n", __FUNCTION__, id);
 		return true;
 	}
 	else
 		return false;
 }
 
-u8 get_module_by_id(struct cmd_dispatcher *obj, u8 id,
+u8 get_module_by_id(struct cmd_dispatcher *obj, enum phl_module_id id,
 		    struct phl_bk_module **mdl)
 {
 	void *d = phl_to_drvpriv(obj->phl_info);
 	u8 i = 0;
 	_os_list *node = NULL;
 
-	if (IS_GENRAL_MODULE(id) ||
-	    !_chk_bitmap_bit(obj->bitmap, id) ||
-	    mdl == NULL)
+	if (mdl == NULL)
+		return false;
+
+	if (IS_DISPR_CTRL(id)) {
+		if (!TEST_STATUS_FLAG(obj->status, DISPR_CTRL_PRESENT))
+			return false;
+		*mdl = &(obj->controller);
+		return true;
+	}
+
+	if (!_chk_bitmap_bit(obj->bitmap, id))
 		return false;
 
 	for (i = 0; i < PHL_MDL_PRI_MAX; i++) {
@@ -1121,14 +1266,91 @@ enum rtw_phl_status phl_dispr_get_idx(void *dispr, u8 *idx)
 	return RTW_PHL_STATUS_SUCCESS;
 }
 
-void dispr_thread_stop_prior_hdl(struct cmd_dispatcher * obj)
+/* Each dispr has a controller.
+ * A dispr controller is designed for phl instance to interact with dispr modules that are belonged to a specific hw band,
+ * phl instance can perform follwing actions via dedicated controller:
+ * 1. allow (phl status/non-dispr phl modules) to monitor & drop msg
+ * 2. allow dispr modules, that are belonged to same dispr, to sequentially communicate with phl instance & call phl api,
+ *    and also allow (phl status/non-dispr phl modules) to notify dispr by hw band.
+ * *Note*
+ * 1. when cmd dispatch engine is in solo thread mode (each dispr has its own dedicated thread).
+ *    phl instance might receive msg from different dispr simutaneously and
+ *    currently using semaphore (dispr_ctrl_sema) to prevent multi-thread condition.
+ * 2. when cmd dispatch engine is in share thread mode, msg from different dispr would pass to controller sequentially.
+
+ * PS:
+ * phl instance: means phl_info_t, which include phl mgnt status & non-dispr phl modules
+ * dispr modules: all existing background & foreground modules.
+ * non-dispr phl module : Data path (TX/Rx), etc
+ * phl mgnt status : stop/surprise remove/cannot io
+*/
+static enum rtw_phl_status _register_dispr_controller(struct cmd_dispatcher *obj)
+{
+	struct phl_bk_module *ctrl = &(obj->controller);
+
+	// NEO
+	//dispr_ctrl_hook_ops(obj, &(ctrl->ops));
+	ctrl->id = PHL_MDL_PHY_MGNT;
+
+	if(bk_module_init(obj, &(obj->controller)) == true)
+		return RTW_PHL_STATUS_SUCCESS;
+	else {
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_ERR_, "%s(): fail \n", __func__);
+		return RTW_PHL_STATUS_FAILURE;
+	}
+}
+
+static void _deregister_dispr_controller(struct cmd_dispatcher *obj)
+{
+	bk_module_deinit(obj, &(obj->controller));
+}
+
+static enum rtw_phl_status _start_dispr_controller(struct cmd_dispatcher *obj)
+{
+	if (bk_module_start(obj, &(obj->controller)) == true) {
+		SET_STATUS_FLAG(obj->status, DISPR_CTRL_PRESENT);
+		return RTW_PHL_STATUS_SUCCESS;
+	}
+	else {
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_ERR_, "%s(): fail \n", __func__);
+		return RTW_PHL_STATUS_FAILURE;
+	}
+}
+
+static enum rtw_phl_status _stop_dispr_controller(struct cmd_dispatcher *obj)
+{
+	CLEAR_STATUS_FLAG(obj->status, DISPR_CTRL_PRESENT);
+	if (bk_module_stop(obj, &(obj->controller)) == true)
+		return RTW_PHL_STATUS_SUCCESS;
+	else {
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_ERR_, "%s(): fail \n", __func__);
+		return RTW_PHL_STATUS_FAILURE;
+	}
+}
+
+void _notify_dispr_controller(struct cmd_dispatcher *obj, struct phl_dispr_msg_ex *ex)
+{
+	if (!TEST_STATUS_FLAG(obj->status, DISPR_CTRL_PRESENT))
+		return;
+#ifdef CONFIG_CMD_DISP_SOLO_MODE
+	dispr_ctrl_sema_down(obj->phl_info);
+#endif
+	feed_mdl_msg(obj, &(obj->controller), ex);
+#ifdef CONFIG_CMD_DISP_SOLO_MODE
+	dispr_ctrl_sema_up(obj->phl_info);
+#endif
+
+}
+
+void dispr_thread_stop_prior_hdl(struct cmd_dispatcher *obj)
 {
 	CLEAR_STATUS_FLAG(obj->status, DISPR_STARTED);
+	_stop_dispr_controller(obj);
 	cancel_all_cmd_req(obj);
 	cancel_running_msg(obj);
 }
 
-void dispr_thread_stop_post_hdl(struct cmd_dispatcher * obj)
+void dispr_thread_stop_post_hdl(struct cmd_dispatcher *obj)
 {
 	void *d = phl_to_drvpriv(obj->phl_info);
 
@@ -1149,7 +1371,7 @@ enum rtw_phl_status dispr_init(struct phl_info_t *phl_info, void **dispr, u8 idx
 
 	obj = (struct cmd_dispatcher *)_os_mem_alloc(d, sizeof(struct cmd_dispatcher));
 	if (obj == NULL) {
-		PHL_ERR("%s, alloc fail\n", __FUNCTION__);
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_ERR_, "%s, alloc fail\n", __FUNCTION__);
 		return RTW_PHL_STATUS_RESOURCE;
 	}
 
@@ -1163,7 +1385,9 @@ enum rtw_phl_status dispr_init(struct phl_info_t *phl_info, void **dispr, u8 idx
 	_os_spinlock_init(d, &(obj->token_op_q_lock));
 	SET_STATUS_FLAG(obj->status, DISPR_INIT);
 	SET_STATUS_FLAG(obj->status, DISPR_NOTIFY_IDLE);
-	PHL_INFO("%s, size dispr(%d), msg_ex(%d), req_ex(%d) \n",
+	// NEO
+	//_register_dispr_controller(obj);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s, size dispr(%d), msg_ex(%d), req_ex(%d) \n",
 		 __FUNCTION__, (int)sizeof(struct cmd_dispatcher),
 		 (int)sizeof(struct phl_dispr_msg_ex),
 		 (int)sizeof(struct phl_cmd_token_req_ex));
@@ -1179,11 +1403,12 @@ enum rtw_phl_status dispr_deinit(struct phl_info_t *phl, void *dispr)
 	if (!TEST_STATUS_FLAG(obj->status, DISPR_INIT))
 		return RTW_PHL_STATUS_SUCCESS;
 	dispr_stop(dispr);
+	_deregister_dispr_controller(obj);
 	for (i = 0 ; i < PHL_MDL_PRI_MAX; i++)
 		pq_deinit(d, &(obj->module_q[i]));
 	_os_spinlock_free(d, &(obj->token_op_q_lock));
 	_os_mem_free(d, obj, sizeof(struct cmd_dispatcher));
-	PHL_INFO("%s\n", __FUNCTION__);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s\n", __FUNCTION__);
 	return RTW_PHL_STATUS_SUCCESS;
 }
 
@@ -1193,18 +1418,23 @@ enum rtw_phl_status dispr_start(void *dispr)
 	void *d = phl_to_drvpriv(obj->phl_info);
 
 	if (TEST_STATUS_FLAG(obj->status, DISPR_STARTED))
-		return RTW_PHL_STATUS_FAILURE;
+		return RTW_PHL_STATUS_UNEXPECTED_ERROR;
+
 	init_dispr_msg_pool(obj);
 	init_cmd_req_pool(obj);
 	init_dispr_mdl_mgnt_info(obj);
+	_os_mem_set(d, &(obj->renew_req_info), 0,
+			    sizeof(struct phl_token_op_info));
 	_os_sema_init(d, &(obj->msg_q_sema), 0);
+	CLEAR_EXCL_MDL(obj);
 	if (disp_eng_is_solo_thread_mode(obj->phl_info)) {
 		_os_thread_init(d, &(obj->bk_thread), background_thread_hdl, obj,
 				"dispr_solo_thread");
 		_os_thread_schedule(d, &(obj->bk_thread));
 	}
 	SET_STATUS_FLAG(obj->status, DISPR_STARTED);
-	PHL_INFO("%s\n", __FUNCTION__);
+	_start_dispr_controller(obj);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s\n", __FUNCTION__);
 	return RTW_PHL_STATUS_SUCCESS;
 }
 
@@ -1214,7 +1444,7 @@ enum rtw_phl_status dispr_stop(void *dispr)
 	void *d = phl_to_drvpriv(obj->phl_info);
 
 	if (!TEST_STATUS_FLAG(obj->status, DISPR_STARTED))
-		return RTW_PHL_STATUS_FAILURE;
+		return RTW_PHL_STATUS_UNEXPECTED_ERROR;
 
 	dispr_thread_stop_prior_hdl(obj);
 	if (disp_eng_is_solo_thread_mode(obj->phl_info)) {
@@ -1223,7 +1453,7 @@ enum rtw_phl_status dispr_stop(void *dispr)
 		_os_thread_deinit(d, &(obj->bk_thread));
 	}
 	dispr_thread_stop_post_hdl(obj);
-	PHL_INFO("%s\n", __FUNCTION__);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s\n", __FUNCTION__);
 	return RTW_PHL_STATUS_SUCCESS;
 }
 
@@ -1243,13 +1473,13 @@ enum rtw_phl_status dispr_register_module(void *dispr,
 	    priority == PHL_MDL_PRI_MAX ||
 	    chk_module_ops(ops) == false ||
 	    _chk_bitmap_bit(obj->bitmap, id) == true) {
-		PHL_ERR("%s, register fail\n", __FUNCTION__);
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_ERR_, "%s, register fail\n", __FUNCTION__);
 		return RTW_PHL_STATUS_FAILURE;
 	}
 
 	module = (struct phl_bk_module *)_os_mem_alloc(d, sizeof(struct phl_bk_module));
 	if (module == NULL) {
-		PHL_ERR("%s, allocte fail\n", __FUNCTION__);
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_ERR_, "%s, allocte fail\n", __FUNCTION__);
 		return RTW_PHL_STATUS_FAILURE;
 	}
 
@@ -1265,7 +1495,7 @@ enum rtw_phl_status dispr_register_module(void *dispr,
 		if (ret == true && priority != PHL_MDL_PRI_OPTIONAL)
 			_add_bitmap_bit(obj->basemap, &(module->id), 1);
 	}
-	PHL_INFO("%s id:%d, ret:%d\n",__FUNCTION__, id, ret);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s id:%d, ret:%d\n",__FUNCTION__, id, ret);
 	if (ret == true) {
 		return RTW_PHL_STATUS_SUCCESS;
 	} else {
@@ -1301,7 +1531,7 @@ enum rtw_phl_status dispr_deregister_module(void *dispr,
 		phl_stat = RTW_PHL_STATUS_SUCCESS;
 	}
 
-	PHL_INFO("%s, id: %d stat:%d\n", __FUNCTION__, id, phl_stat);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s, id: %d stat:%d\n", __FUNCTION__, id, phl_stat);
 	return phl_stat;
 }
 
@@ -1322,7 +1552,7 @@ enum rtw_phl_status dispr_module_init(void *dispr)
 			bk_module_init(obj, (struct phl_bk_module *)mdl);
 		} while(pq_get_next(d, &(obj->module_q[i]), mdl, &mdl, _bh));
 	}
-	PHL_INFO("%s\n", __FUNCTION__);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s\n", __FUNCTION__);
 	return RTW_PHL_STATUS_SUCCESS;
 }
 
@@ -1342,7 +1572,7 @@ enum rtw_phl_status dispr_module_deinit(void *dispr)
 			_os_mem_free(d, mdl, sizeof(struct phl_bk_module));
 		}
 	}
-	PHL_INFO("%s\n", __FUNCTION__);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s\n", __FUNCTION__);
 	return RTW_PHL_STATUS_SUCCESS;
 }
 
@@ -1356,7 +1586,7 @@ enum rtw_phl_status dispr_module_start(void *dispr)
 	u8 ret = false;
 
 	if (!TEST_STATUS_FLAG(obj->status, DISPR_STARTED))
-		return RTW_PHL_STATUS_FAILURE;
+		return RTW_PHL_STATUS_UNEXPECTED_ERROR;
 
 	for (i = 0; i < PHL_MDL_PRI_MAX; i++) {
 		if (pq_get_front(d, &(obj->module_q[i]), &mdl, _bh) == false)
@@ -1370,8 +1600,8 @@ enum rtw_phl_status dispr_module_start(void *dispr)
 				_add_bitmap_bit(obj->basemap, &(module->id), 1);
 		} while(pq_get_next(d, &(obj->module_q[i]), mdl, &mdl, _bh));
 	}
-	PHL_INFO("%s\n", __FUNCTION__);
-//_print_bitmap(obj->bitmap);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s\n", __FUNCTION__);
+	/*_print_bitmap(obj->bitmap);*/
 	return RTW_PHL_STATUS_SUCCESS;
 }
 
@@ -1384,7 +1614,7 @@ enum rtw_phl_status dispr_module_stop(void *dispr)
 	u8 i = 0;
 
 	if (!TEST_STATUS_FLAG(obj->status, DISPR_STARTED))
-		return RTW_PHL_STATUS_FAILURE;
+		return RTW_PHL_STATUS_UNEXPECTED_ERROR;
 
 	for (i = 0; i < PHL_MDL_PRI_MAX; i++) {
 		if (pq_get_front(d, &(obj->module_q[i]), &mdl, _bh) == false)
@@ -1396,15 +1626,15 @@ enum rtw_phl_status dispr_module_stop(void *dispr)
 			bk_module_stop(obj, module);
 		} while(pq_get_next(d, &(obj->module_q[i]), mdl, &mdl, _bh));
 	}
-	PHL_INFO("%s\n", __FUNCTION__);
-//_print_bitmap(obj->bitmap);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s\n", __FUNCTION__);
+	/*_print_bitmap(obj->bitmap);*/
 	return RTW_PHL_STATUS_SUCCESS;
 }
 
 /**
- * phl_dispr_get_cur_cmd_req -- background module can call this function to
+ * dispr_get_cur_cmd_req -- background module can call this function to
  * check cmd dispatcher is idle to know the risk or conflict for the I/O.
- * @dispr: dispatcher handler, get from phl_disp_eng_get_dispr_by_idx
+ * @dispr: dispatcher handler, get from _disp_eng_get_dispr_by_idx
  * @handle: get current cmd request, NULL means cmd dispatcher is idle
 
  * return RTW_PHL_STATUS_SUCCESS means cmd dispatcher is busy and can get
@@ -1412,14 +1642,16 @@ enum rtw_phl_status dispr_module_stop(void *dispr)
  * return RTW_PHL_STATUS_FAILURE means cmd dispatcher is idle
  */
 enum rtw_phl_status
-phl_dispr_get_cur_cmd_req(void *dispr, void **handle)
+dispr_get_cur_cmd_req(void *dispr, void **handle)
 {
 	struct cmd_dispatcher *obj = (struct cmd_dispatcher *)dispr;
 	struct phl_cmd_token_req_ex *cur_req = NULL;
 	enum rtw_phl_status phl_stat = RTW_PHL_STATUS_FAILURE;
 
-	if (!TEST_STATUS_FLAG(obj->status, DISPR_INIT|DISPR_STARTED) || handle == NULL)
+	if (!TEST_STATUS_FLAG(obj->status, DISPR_INIT|DISPR_STARTED) || handle == NULL) {
+		phl_stat = RTW_PHL_STATUS_UNEXPECTED_ERROR;
 		return phl_stat;
+	}
 
 	(*handle) = NULL;
 	cur_req = obj->cur_cmd_req;
@@ -1432,57 +1664,56 @@ phl_dispr_get_cur_cmd_req(void *dispr, void **handle)
 	*handle = (void *)cur_req;
 	phl_stat = RTW_PHL_STATUS_SUCCESS;
 
-	PHL_DBG("%s, req module id:%d phl_stat:%d\n", __FUNCTION__,
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_DEBUG_,
+		"%s, req module id:%d phl_stat:%d\n", __FUNCTION__,
 		 cur_req->req.module_id, phl_stat);
 	return phl_stat;
 }
 
 enum rtw_phl_status
-phl_dispr_set_cur_cmd_info(void *dispr,
+dispr_set_cur_cmd_info(void *dispr,
 			   struct phl_module_op_info *op_info)
 {
 	void *handle = NULL;
 	struct phl_cmd_token_req_ex *cmd_req = NULL;
 	struct phl_cmd_token_req *req = NULL;
 
-	if (RTW_PHL_STATUS_SUCCESS != phl_dispr_get_cur_cmd_req(dispr, &handle))
+	if (RTW_PHL_STATUS_SUCCESS != dispr_get_cur_cmd_req(dispr, &handle))
 		return RTW_PHL_STATUS_FAILURE;
 
 	cmd_req = (struct phl_cmd_token_req_ex *)handle;
 	req = &(cmd_req->req);
 
-	PHL_INFO("%s, id:%d\n", __FUNCTION__, req->module_id);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s, id:%d\n", __FUNCTION__, req->module_id);
 	if (req->set_info(dispr, req->priv, op_info) == MDL_RET_SUCCESS)
 		return RTW_PHL_STATUS_SUCCESS;
 	else
 		return RTW_PHL_STATUS_FAILURE;
 }
 
-
 enum rtw_phl_status
-phl_dispr_query_cur_cmd_info(void *dispr,
+dispr_query_cur_cmd_info(void *dispr,
 			     struct phl_module_op_info *op_info)
 {
 	void *handle = NULL;
 	struct phl_cmd_token_req_ex *cmd_req = NULL;
 	struct phl_cmd_token_req *req = NULL;
 
-	if (RTW_PHL_STATUS_SUCCESS != phl_dispr_get_cur_cmd_req(dispr, &handle))
+	if (RTW_PHL_STATUS_SUCCESS != dispr_get_cur_cmd_req(dispr, &handle))
 		return RTW_PHL_STATUS_FAILURE;
 
 	cmd_req = (struct phl_cmd_token_req_ex *)handle;
 	req = &(cmd_req->req);
 
-	PHL_DBG("%s, id:%d\n", __FUNCTION__, req->module_id);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_DEBUG_, "%s, id:%d\n", __FUNCTION__, req->module_id);
 	if (req->query_info(dispr, req->priv, op_info) == MDL_RET_SUCCESS)
 		return RTW_PHL_STATUS_SUCCESS;
 	else
 		return RTW_PHL_STATUS_FAILURE;
 }
 
-
 enum rtw_phl_status
-phl_dispr_get_bk_module_handle(void *dispr,
+dispr_get_bk_module_handle(void *dispr,
 			       enum phl_module_id id,
 			       void **handle)
 {
@@ -1506,12 +1737,13 @@ phl_dispr_get_bk_module_handle(void *dispr,
 		(*handle) = mdl;
 		phl_stat = RTW_PHL_STATUS_SUCCESS;
 	}
-	PHL_INFO("%s, id:%d phl_stat:%d\n", __FUNCTION__, id, phl_stat);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_,
+			"%s, id:%d phl_stat:%d\n", __FUNCTION__, id, phl_stat);
 	return phl_stat;
 }
 
 enum rtw_phl_status
-phl_dispr_set_bk_module_info(void *dispr,
+dispr_set_bk_module_info(void *dispr,
 			     void *handle,
 			     struct phl_module_op_info *op_info)
 {
@@ -1520,7 +1752,7 @@ phl_dispr_set_bk_module_info(void *dispr,
 
 	if (!TEST_STATUS_FLAG(module->status, MDL_INIT))
 		return RTW_PHL_STATUS_FAILURE;
-	PHL_INFO("%s, id:%d\n", __FUNCTION__, module->id);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s, id:%d\n", __FUNCTION__, module->id);
 	if (ops->set_info(dispr, module->priv, op_info) == MDL_RET_SUCCESS)
 		return RTW_PHL_STATUS_SUCCESS;
 	else
@@ -1528,7 +1760,7 @@ phl_dispr_set_bk_module_info(void *dispr,
 }
 
 enum rtw_phl_status
-phl_dispr_query_bk_module_info(void *dispr,
+dispr_query_bk_module_info(void *dispr,
 			       void *handle,
 			       struct phl_module_op_info *op_info)
 {
@@ -1537,7 +1769,7 @@ phl_dispr_query_bk_module_info(void *dispr,
 
 	if (!TEST_STATUS_FLAG(module->status, MDL_INIT))
 		return RTW_PHL_STATUS_FAILURE;
-	PHL_INFO("%s, id:%d\n", __FUNCTION__, module->id);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s, id:%d\n", __FUNCTION__, module->id);
 	if (ops->query_info(dispr, module->priv, op_info) == MDL_RET_SUCCESS)
 		return RTW_PHL_STATUS_SUCCESS;
 	else
@@ -1545,7 +1777,7 @@ phl_dispr_query_bk_module_info(void *dispr,
 }
 
 enum rtw_phl_status
-phl_dispr_set_src_info(void *dispr,
+dispr_set_src_info(void *dispr,
 		       struct phl_msg *msg,
 		       struct phl_module_op_info *op_info)
 {
@@ -1569,7 +1801,8 @@ phl_dispr_set_src_info(void *dispr,
 		ret = ex->module->ops.set_info(dispr, ex->module->priv,
 					       op_info);
 	}
-	PHL_INFO("%s, id:%d phl_stat:%d\n", __FUNCTION__, id, phl_stat);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_,
+			"%s, id:%d phl_stat:%d\n", __FUNCTION__, id, phl_stat);
 	if (ret == MDL_RET_FAIL)
 		return RTW_PHL_STATUS_FAILURE;
 	else
@@ -1577,7 +1810,7 @@ phl_dispr_set_src_info(void *dispr,
 }
 
 enum rtw_phl_status
-phl_dispr_query_src_info(void *dispr,
+dispr_query_src_info(void *dispr,
 			 struct phl_msg *msg,
 			 struct phl_module_op_info *op_info)
 {
@@ -1601,7 +1834,8 @@ phl_dispr_query_src_info(void *dispr,
 		ret = ex->module->ops.query_info(dispr, ex->module->priv,
 						 op_info);
 	}
-	PHL_INFO("%s, id:%d phl_stat:%d\n", __FUNCTION__, id, phl_stat);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_,
+		"%s, id:%d phl_stat:%d\n", __FUNCTION__, id, phl_stat);
 	if (ret == MDL_RET_FAIL)
 		return RTW_PHL_STATUS_FAILURE;
 	else
@@ -1609,10 +1843,10 @@ phl_dispr_query_src_info(void *dispr,
 }
 
 enum rtw_phl_status
-phl_dispr_send_msg(void *dispr,
-		   struct phl_msg *msg,
-		   struct phl_msg_attribute *attr,
-		   u32 *msg_hdl)
+dispr_send_msg(void *dispr,
+               struct phl_msg *msg,
+               struct phl_msg_attribute *attr,
+               u32 *msg_hdl)
 {
 	struct cmd_dispatcher *obj = (struct cmd_dispatcher *)dispr;
 	void *d = phl_to_drvpriv(obj->phl_info);
@@ -1622,25 +1856,26 @@ phl_dispr_send_msg(void *dispr,
 	u8 cur_req_id = get_cur_cmd_req_id(obj, &req_status);
 
 	if (!TEST_STATUS_FLAG(obj->status, DISPR_STARTED)) {
-		return RTW_PHL_STATUS_FAILURE;
+		return RTW_PHL_STATUS_UNEXPECTED_ERROR;
 	}
 
 	if(attr && attr->notify.id_arr == NULL && attr->notify.len) {
-		PHL_ERR("%s attribute err\n",__FUNCTION__);
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_ERR_, "%s attribute err\n",__FUNCTION__);
 		return RTW_PHL_STATUS_INVALID_PARAM;
 	}
 
-	if (!IS_GENRAL_MODULE(module_id) &&
+	if (!IS_DISPR_CTRL(module_id) &&
 	    !_chk_bitmap_bit(obj->bitmap, module_id) &&
 	    ((cur_req_id != PHL_MDL_ID_MAX  && cur_req_id != module_id) ||
 	     (cur_req_id == PHL_MDL_ID_MAX && req_status == 0)||
 	     (cur_req_id == PHL_MDL_ID_MAX && !TEST_STATUS_FLAG(req_status,REQ_STATUS_LAST_PERMIT)))) {
-		PHL_ERR("%s module not allow to send\n", __FUNCTION__);
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_ERR_,
+			"%s module not allow to send\n", __FUNCTION__);
 		return RTW_PHL_STATUS_INVALID_PARAM;
 	}
 
 	if (!pop_front_idle_msg(obj, &msg_ex)) {
-		PHL_ERR("%s idle msg empty\n", __FUNCTION__);
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_ERR_, "%s idle msg empty\n", __FUNCTION__);
 		return RTW_PHL_STATUS_RESOURCE;
 	}
 
@@ -1649,9 +1884,10 @@ phl_dispr_send_msg(void *dispr,
 
 	_os_mem_cpy(d, &msg_ex->msg, msg, sizeof(struct phl_msg));
 
+	set_msg_bitmap(obj, msg_ex, module_id);
 	if (attr) {
-		set_msg_bitmap(obj, msg_ex, attr->opt, module_id,
-			       attr->notify.id_arr, attr->notify.len);
+		set_msg_custom_bitmap(obj, msg_ex, attr->opt,
+			       attr->notify.id_arr, attr->notify.len, module_id);
 		if (attr->completion.completion) {
 			SET_STATUS_FLAG(msg_ex->status, MSG_STATUS_NOTIFY_COMPLETE);
 			msg_ex->completion.completion = attr->completion.completion;
@@ -1660,46 +1896,61 @@ phl_dispr_send_msg(void *dispr,
 		if (TEST_STATUS_FLAG(attr->opt, MSG_OPT_CLR_SNDR_MSG_IF_PENDING))
 			SET_STATUS_FLAG(msg_ex->status, MSG_STATUS_CLR_SNDR_MSG_IF_PENDING);
 
-		PHL_INFO("%s, opt:0x%x\n",__FUNCTION__, attr->opt);
-	}
-
-	if(TEST_STATUS_FLAG(req_status,REQ_STATUS_LAST_PERMIT) &&
-	   (attr == NULL || !TEST_STATUS_FLAG(attr->opt, MSG_OPT_SEND_IN_ABORT))) {
-		PHL_ERR("%s msg not allow since cur req is going to unload\n", __FUNCTION__);
-		SET_MSG_INDC_FIELD(msg_ex->msg.msg_id, MSG_INDC_FAIL);
-		push_back_idle_msg(obj, msg_ex);
-		return RTW_PHL_STATUS_FAILURE;
+		if (TEST_STATUS_FLAG(attr->opt, MSG_OPT_PENDING_DURING_CANNOT_IO))
+			SET_STATUS_FLAG(msg_ex->status, MSG_STATUS_PENDING_DURING_CANNOT_IO);
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s, opt:0x%x\n",__FUNCTION__, attr->opt);
 	}
 
 	if (cur_req_id == module_id) {
 		SET_STATUS_FLAG(msg_ex->status, MSG_STATUS_OWNER_REQ);
 	} else if (get_module_by_id(obj, module_id, &(msg_ex->module)) == true) {
 		SET_STATUS_FLAG(msg_ex->status, MSG_STATUS_OWNER_BK_MDL);
-		PHL_INFO("%s module(%d) found\n", __FUNCTION__, module_id);
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_,
+			"%s module(%d) found\n", __FUNCTION__, module_id);
+	}
+
+	if(TEST_STATUS_FLAG(msg_ex->status, MSG_STATUS_OWNER_REQ) &&
+		TEST_STATUS_FLAG(req_status,REQ_STATUS_LAST_PERMIT) &&
+	   (attr == NULL || !TEST_STATUS_FLAG(attr->opt, MSG_OPT_SEND_IN_ABORT))) {
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_ERR_,
+			"%s msg not allow since cur req is going to unload\n", __FUNCTION__);
+		SET_MSG_INDC_FIELD(msg_ex->msg.msg_id, MSG_INDC_FAIL);
+		push_back_idle_msg(obj, msg_ex);
+		return RTW_PHL_STATUS_FAILURE;
+	}
+
+	if (TEST_STATUS_FLAG(msg_ex->status, MSG_STATUS_OWNER_REQ) &&
+		TEST_STATUS_FLAG(req_status,REQ_STATUS_LAST_PERMIT)) {
+		SET_STATUS_FLAG(msg_ex->status, MSG_STATUS_FOR_ABORT);
+		SET_STATUS_FLAG(obj->status, DISPR_WAIT_ABORT_MSG_DONE);
 	}
 
 	SET_STATUS_FLAG(msg_ex->status, MSG_STATUS_PRE_PHASE);
 
-	push_back_wait_msg(obj, msg_ex);
+	if (IS_DISPR_CTRL(module_id))
+		insert_msg_by_priority(obj, msg_ex);
+	else
+		push_back_wait_msg(obj, msg_ex);
 
-	PHL_INFO("%s, status:0x%x\n",__FUNCTION__, msg_ex->status);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s, status:0x%x\n",__FUNCTION__, msg_ex->status);
 	if(msg_hdl)
 		*msg_hdl = GEN_VALID_HDL(msg_ex->idx);
-	PHL_INFO("%s, msg_id:0x%x\n", __FUNCTION__, msg->msg_id);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s, msg_id:0x%x\n", __FUNCTION__, msg->msg_id);
 	return RTW_PHL_STATUS_SUCCESS;
 }
 
-enum rtw_phl_status phl_dispr_cancel_msg(void *dispr, u32 *msg_hdl)
+enum rtw_phl_status dispr_cancel_msg(void *dispr, u32 *msg_hdl)
 {
 	struct cmd_dispatcher *obj = (struct cmd_dispatcher *)dispr;
 	void *d = phl_to_drvpriv(obj->phl_info);
 	struct phl_dispr_msg_ex *msg_ex = NULL;
 
 	if (!TEST_STATUS_FLAG(obj->status, DISPR_STARTED) || msg_hdl == NULL)
-		return RTW_PHL_STATUS_FAILURE;
+		return RTW_PHL_STATUS_UNEXPECTED_ERROR;
+
 	if (!IS_HDL_VALID(*msg_hdl) ||
 	    GET_IDX_FROM_HDL(*msg_hdl) >= MAX_PHL_MSG_NUM) {
-		PHL_ERR("%s, HDL invalid\n", __FUNCTION__);
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_ERR_, "%s, HDL invalid\n", __FUNCTION__);
 		return RTW_PHL_STATUS_FAILURE;
 	}
 
@@ -1707,27 +1958,27 @@ enum rtw_phl_status phl_dispr_cancel_msg(void *dispr, u32 *msg_hdl)
 	*msg_hdl = 0;
 	if (!TEST_STATUS_FLAG(msg_ex->status, MSG_STATUS_ENQ) &&
 	    !TEST_STATUS_FLAG(msg_ex->status, MSG_STATUS_RUN)) {
-		PHL_ERR("%s, HDL status err\n", __FUNCTION__);
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_ERR_, "%s, HDL status err\n", __FUNCTION__);
 		return RTW_PHL_STATUS_FAILURE;
 	}
 
 	cancel_msg(obj, msg_ex);
-	PHL_INFO("%s\n", __FUNCTION__);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s\n", __FUNCTION__);
 	return RTW_PHL_STATUS_SUCCESS;
 }
 
-enum rtw_phl_status phl_dispr_clr_pending_msg(void *dispr)
+enum rtw_phl_status dispr_clr_pending_msg(void *dispr)
 {
 	struct cmd_dispatcher *obj = (struct cmd_dispatcher *)dispr;
 	void *d = phl_to_drvpriv(obj->phl_info);
 
 	SET_STATUS_FLAG(obj->status, DISPR_CLR_PEND_MSG);
 	notify_bk_thread(obj);
-	PHL_INFO("%s\n", __FUNCTION__);
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s\n", __FUNCTION__);
 	return RTW_PHL_STATUS_SUCCESS;
 }
 enum rtw_phl_status
-phl_dispr_add_token_req(void *dispr,
+dispr_add_token_req(void *dispr,
 			struct phl_cmd_token_req *req,
 			u32 *req_hdl)
 {
@@ -1740,17 +1991,18 @@ phl_dispr_add_token_req(void *dispr,
 	if (!TEST_STATUS_FLAG(obj->status, DISPR_STARTED) ||
 	    req_hdl == NULL ||
 	    chk_cmd_req_ops(req) == false)
-		return RTW_PHL_STATUS_FAILURE;
+		return RTW_PHL_STATUS_UNEXPECTED_ERROR;
 
 	if (!pop_front_idle_req(obj, &req_ex)) {
-		PHL_ERR("%s idle req empty\n", __FUNCTION__);
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_ERR_, "%s idle req empty\n", __FUNCTION__);
 		return RTW_PHL_STATUS_RESOURCE;
 	}
 	_os_mem_cpy(d, &(req_ex->req), req, sizeof(struct phl_cmd_token_req));
 
 	push_back_wait_req(obj, req_ex);
 	*req_hdl = GEN_VALID_HDL(req_ex->idx);
-	PHL_INFO("%s, id:%d, hdl:0x%x token_cnt:%d\n", __FUNCTION__,
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_,
+		"%s, id:%d, hdl:0x%x token_cnt:%d\n", __FUNCTION__,
 		 req->module_id,
 		 *req_hdl,
 		 _os_atomic_read(d, &(obj->token_cnt)));
@@ -1764,25 +2016,27 @@ phl_dispr_add_token_req(void *dispr,
 	return stat;
 }
 
-enum rtw_phl_status phl_dispr_cancel_token_req(void *dispr, u32 *req_hdl)
+enum rtw_phl_status dispr_cancel_token_req(void *dispr, u32 *req_hdl)
 {
 	struct cmd_dispatcher *obj = (struct cmd_dispatcher *)dispr;
 	void *d = phl_to_drvpriv(obj->phl_info);
 	struct phl_cmd_token_req_ex *req_ex = NULL;
 
 	if (!TEST_STATUS_FLAG(obj->status, DISPR_STARTED) || req_hdl == NULL)
-		return RTW_PHL_STATUS_FAILURE;
+		return RTW_PHL_STATUS_UNEXPECTED_ERROR;
 
 	if (!IS_HDL_VALID(*req_hdl) ||
 	    GET_IDX_FROM_HDL(*req_hdl) >= MAX_CMD_REQ_NUM) {
-		PHL_ERR("%s, HDL(0x%x) invalid\n", __FUNCTION__, *req_hdl);
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_ERR_,
+			"%s, HDL(0x%x) invalid\n", __FUNCTION__, *req_hdl);
 		return RTW_PHL_STATUS_FAILURE;
 	}
 	req_ex = &(obj->token_req_ex_pool[GET_IDX_FROM_HDL(*req_hdl)]);
 	if (!TEST_STATUS_FLAG(req_ex->status, REQ_STATUS_ENQ) &&
 	    !TEST_STATUS_FLAG(req_ex->status, REQ_STATUS_RUN) &&
 	    !TEST_STATUS_FLAG(req_ex->status, REQ_STATUS_PREPARE)) {
-		PHL_ERR("%s, HDL(0x%x) status err\n", __FUNCTION__, *req_hdl);
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_ERR_,
+			"%s, HDL(0x%x) status err\n", __FUNCTION__, *req_hdl);
 		return RTW_PHL_STATUS_FAILURE;
 	}
 	SET_STATUS_FLAG(req_ex->status, REQ_STATUS_CANCEL);
@@ -1792,26 +2046,28 @@ enum rtw_phl_status phl_dispr_cancel_token_req(void *dispr, u32 *req_hdl)
 		return RTW_PHL_STATUS_FAILURE;
 }
 
-enum rtw_phl_status phl_dispr_free_token(void *dispr, u32 *req_hdl)
+enum rtw_phl_status dispr_free_token(void *dispr, u32 *req_hdl)
 {
 	struct cmd_dispatcher *obj = (struct cmd_dispatcher *)dispr;
 	void *d = phl_to_drvpriv(obj->phl_info);
 	struct phl_cmd_token_req_ex *req_ex = NULL;
 
 	if (!TEST_STATUS_FLAG(obj->status, DISPR_STARTED) || req_hdl == NULL)
-		return RTW_PHL_STATUS_FAILURE;
+		return RTW_PHL_STATUS_UNEXPECTED_ERROR;
 
 	if (obj->cur_cmd_req == NULL ||
 	    _os_atomic_read(d, &(obj->token_cnt)) == 0  ||
 	    !IS_HDL_VALID(*req_hdl) ||
 	    GET_IDX_FROM_HDL(*req_hdl) >= MAX_CMD_REQ_NUM) {
-		PHL_ERR("%s, HDL(0x%x) invalid\n", __FUNCTION__, *req_hdl);
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_ERR_,
+			"%s, HDL(0x%x) invalid\n", __FUNCTION__, *req_hdl);
 		return RTW_PHL_STATUS_FAILURE;
 	}
 	req_ex = &(obj->token_req_ex_pool[GET_IDX_FROM_HDL(*req_hdl)]);
 	if (!TEST_STATUS_FLAG(req_ex->status, REQ_STATUS_RUN) &&
 	    !TEST_STATUS_FLAG(req_ex->status, REQ_STATUS_PREPARE)) {
-		PHL_ERR("%s, HDL(0x%x) mismatch\n", __FUNCTION__, *req_hdl);
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_ERR_,
+			"%s, HDL(0x%x) mismatch\n", __FUNCTION__, *req_hdl);
 		return RTW_PHL_STATUS_FAILURE;
 	}
 	SET_STATUS_FLAG(req_ex->status, REQ_STATUS_CANCEL);
@@ -1820,15 +2076,79 @@ enum rtw_phl_status phl_dispr_free_token(void *dispr, u32 *req_hdl)
 	else
 		return RTW_PHL_STATUS_FAILURE;
 }
+enum rtw_phl_status dispr_notify_dev_io_status(void *dispr, enum phl_module_id mdl_id, bool allow_io)
+{
+	struct cmd_dispatcher *obj = (struct cmd_dispatcher *)dispr;
+	enum rtw_phl_status status = RTW_PHL_STATUS_SUCCESS;
+
+	if (allow_io == false) {
+		if (!TEST_STATUS_FLAG(obj->status, DISPR_CANNOT_IO)) {
+			SET_STATUS_FLAG(obj->status, DISPR_CANNOT_IO);
+			SET_EXCL_MDL(obj, mdl_id);
+			PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_,
+				"%s, mdl_id(%d) notify cannot io\n", __FUNCTION__, mdl_id);
+			status = send_dev_io_status_change(obj, allow_io);
+		}
+	}
+	else {
+		if (TEST_STATUS_FLAG(obj->status, DISPR_CANNOT_IO)) {
+			CLEAR_STATUS_FLAG(obj->status, DISPR_CANNOT_IO);
+			CLEAR_EXCL_MDL(obj);
+			status = send_dev_io_status_change(obj, allow_io);
+			dispr_clr_pending_msg(dispr);
+			PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_,
+				"%s, mdl_id(%d) notify io resume\n", __FUNCTION__, mdl_id);
+		}
+	}
+	return status;
+}
+
+u8 dispr_is_fg_empty(void *dispr)
+{
+	struct cmd_dispatcher *obj = (struct cmd_dispatcher *)dispr;
+	bool is_empty = true;
+	void *drv = phl_to_drvpriv(obj->phl_info);
+	struct phl_queue *q = NULL;
+	_os_list *node = NULL;
+
+	do {
+		/* shall check wait queue first then check token op queue
+		 * to avoid to get the incorrect empty state of fg cmd
+		 */
+		q = &(obj->token_req_wait_q);
+		_os_spinlock(drv, &(q->lock), _bh, NULL);
+		if(!list_empty(&q->queue) && (q->cnt > 0)) {
+			is_empty = false;
+			_os_spinunlock(drv, &(q->lock), _bh, NULL);
+			break;
+		}
+		_os_spinunlock(drv, &(q->lock), _bh, NULL);
+
+		if (pq_get_front(drv, &(obj->token_op_q), &node, _bh) == true ||
+		    _os_atomic_read(drv, &(obj->token_cnt)) > 0) {
+			is_empty = false;
+			break;
+		}
+	} while(false);
+
+	return is_empty;
+}
 
 enum rtw_phl_status dispr_process_token_req(struct cmd_dispatcher *obj)
 {
 	void *d = phl_to_drvpriv(obj->phl_info);
 	struct phl_cmd_token_req_ex *ex = NULL;
 
-	if (!TEST_STATUS_FLAG(obj->status, DISPR_STARTED) ||
-	    _os_atomic_read(d, &(obj->token_cnt)) > 0)
+	if (!TEST_STATUS_FLAG(obj->status, DISPR_STARTED))
+		return RTW_PHL_STATUS_UNEXPECTED_ERROR;
+
+	if (_os_atomic_read(d, &(obj->token_cnt)) > 0)
 		return RTW_PHL_STATUS_FAILURE;
+	if (TEST_STATUS_FLAG(obj->status, DISPR_WAIT_ABORT_MSG_DONE)) {
+		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_,
+			"%s, wait for abort msg sent from prev req finish before register next req \n", __FUNCTION__);
+		return RTW_PHL_STATUS_FAILURE;
+	}
 
 	do {
 		if (pop_front_wait_req(obj, &ex) == false) {
@@ -1875,7 +2195,7 @@ void send_bk_msg_phy_on(struct cmd_dispatcher *obj)
 
 	SET_MSG_MDL_ID_FIELD(msg.msg_id, PHL_MDL_PHY_MGNT);
 	SET_MSG_EVT_ID_FIELD(msg.msg_id, MSG_EVT_PHY_ON);
-	phl_dispr_send_msg((void*)obj, &msg, &attr, NULL);
+	dispr_send_msg((void*)obj, &msg, &attr, NULL);
 }
 
 void send_bk_msg_phy_idle(struct cmd_dispatcher *obj)
@@ -1885,8 +2205,17 @@ void send_bk_msg_phy_idle(struct cmd_dispatcher *obj)
 
 	SET_MSG_MDL_ID_FIELD(msg.msg_id, PHL_MDL_PHY_MGNT);
 	SET_MSG_EVT_ID_FIELD(msg.msg_id, MSG_EVT_PHY_IDLE);
-	phl_dispr_send_msg((void*)obj, &msg, &attr, NULL);
+	dispr_send_msg((void*)obj, &msg, &attr, NULL);
 }
 
+enum rtw_phl_status send_dev_io_status_change(struct cmd_dispatcher *obj, u8 allow_io)
+{
+	struct phl_msg msg = {0};
+	struct phl_msg_attribute attr = {0};
+	u16 event = (allow_io == true) ? (MSG_EVT_DEV_RESUME_IO) : (MSG_EVT_DEV_CANNOT_IO);
 
+	SET_MSG_MDL_ID_FIELD(msg.msg_id, PHL_MDL_PHY_MGNT);
+	SET_MSG_EVT_ID_FIELD(msg.msg_id, event);
+	return dispr_send_msg((void*)obj, &msg, &attr, NULL);
+}
 #endif

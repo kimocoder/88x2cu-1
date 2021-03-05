@@ -194,22 +194,25 @@ struct rtw_pkt_ofld_sa_query_info {
 };
 
 /* init api */
-enum rtw_phl_status phl_pkt_ofld_init(void *phl);
-void phl_pkt_ofld_deinit(void *phl);
-void phl_pkt_ofld_reset_all_entry(void *phl);
+enum rtw_phl_status phl_pkt_ofld_init(struct phl_info_t *phl_info);
+void phl_pkt_ofld_deinit(struct phl_info_t *phl_info);
+void phl_pkt_ofld_reset_all_entry(struct phl_info_t *phl_info);
+
+enum rtw_phl_status phl_pkt_ofld_add_entry(struct phl_info_t *phl_info, u16 macid);
+enum rtw_phl_status phl_pkt_ofld_del_entry(struct phl_info_t *phl_info, u16 macid);
+
 
 #define RTW_PHL_PKT_OFLD_REQ(_phl, _macid, _type, _seq, _buf)	\
-	rtw_phl_pkt_ofld_request(_phl, _macid, _type, _seq, __func__, _buf)
-
-enum rtw_phl_status phl_pkt_ofld_add_entry(void *phl, u8 macid);
-enum rtw_phl_status phl_pkt_ofld_del_entry(void *phl, u8 macid);
-enum rtw_phl_status rtw_phl_pkt_ofld_request(void *phl, u8 macid, u8 type,
+	phl_pkt_ofld_request(_phl, _macid, _type, _seq, __func__, _buf)
+enum rtw_phl_status phl_pkt_ofld_request(struct phl_info_t *phl_info,
+						u16 macid, u8 type,
 						u32 *token, const char *req_name,
 						void *buf);
-enum rtw_phl_status rtw_phl_pkt_ofld_cancel(void *phl, u8 macid,
-						u8 type, u32 *token);
-void phl_pkt_ofld_show_info(void *phl);
-u8 rtw_phl_pkt_ofld_get_id(void *phl, u8 macid, u8 type);
+
+enum rtw_phl_status phl_pkt_ofld_cancel(struct phl_info_t *phl_info,
+					u16 macid, u8 type, u32 *token);
+void phl_pkt_ofld_show_info(struct phl_info_t *phl_info);
+u8 phl_pkt_ofld_get_id(struct phl_info_t *phl_info, u16 macid, u8 type);
 const char *phl_get_pkt_ofld_str(enum pkt_ofld_type type);
 
 #endif /* __PHL_PKT_OFLD_H__ */

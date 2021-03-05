@@ -71,7 +71,7 @@ static u8 pop_front_idle_msg(struct phl_info_t* phl, struct phl_msg_ex** msg)
 	_os_list* new_msg = NULL;
 
 	(*msg) = NULL;
-	if(pq_pop(d, &hub->idle_msg_q, &new_msg, _first, _ps)) {
+	if(pq_pop(d, &hub->idle_msg_q, &new_msg, _first, _bh)) {
 		(*msg) = (struct phl_msg_ex*)new_msg;
 		_os_mem_set(d, &((*msg)->ctx), 0, sizeof(struct phl_msg));
 		(*msg)->completion.completion = NULL;
@@ -89,7 +89,7 @@ static void push_back_idle_msg(struct phl_info_t* phl, struct phl_msg_ex* ex)
 
 	if(ex->completion.completion)
 		ex->completion.completion(ex->completion.priv, &(ex->ctx));
-	pq_push(d, &hub->idle_msg_q, &ex->list, _tail, _ps);
+	pq_push(d, &hub->idle_msg_q, &ex->list, _tail, _bh);
 }
 
 static u8 pop_front_wait_msg(struct phl_info_t* phl, struct phl_msg_ex** msg)
@@ -99,7 +99,7 @@ static u8 pop_front_wait_msg(struct phl_info_t* phl, struct phl_msg_ex** msg)
 	_os_list* new_msg = NULL;
 
 	(*msg) = NULL;
-	if(pq_pop(d, &hub->wait_msg_q, &new_msg, _first, _ps)) {
+	if(pq_pop(d, &hub->wait_msg_q, &new_msg, _first, _bh)) {
 		(*msg) = (struct phl_msg_ex*)new_msg;
 		return true;
 	}
@@ -111,7 +111,7 @@ static void push_back_wait_msg(struct phl_info_t* phl, struct phl_msg_ex* ex)
 {
 	void *d = phl_to_drvpriv(phl);
 	struct phl_msg_hub* hub = (struct phl_msg_hub*)phl->msg_hub;
-	pq_push(d, &hub->wait_msg_q, &ex->list, _tail, _ps);
+	pq_push(d, &hub->wait_msg_q, &ex->list, _tail, _bh);
 	_os_sema_up(d, &(hub->msg_q_sema));
 }
 
@@ -165,6 +165,10 @@ int msg_thread_hdl(void* param)
 			msg_forward(phl, ex);
 			push_back_idle_msg(phl, ex);
 		}
+	}
+	while (hub->idle_msg_q.cnt != MAX_MSG_NUM) {
+		while (pop_front_wait_msg(phl, &ex))
+			push_back_idle_msg(phl, ex);
 	}
 	_os_thread_wait_stop(d, &(hub->msg_notify_thread));
 	PHL_INFO("%s down\n",__FUNCTION__);
@@ -226,7 +230,7 @@ enum rtw_phl_status phl_msg_hub_start(struct phl_info_t* phl)
 	_os_mem_set(d, hub->msg_pool, 0,
 			sizeof(struct phl_msg_ex) * MAX_MSG_NUM );
 	for(i = 0; i < MAX_MSG_NUM; i++) {
-		pq_push(d, &hub->idle_msg_q, &hub->msg_pool[i].list, _tail, _ps);
+		pq_push(d, &hub->idle_msg_q, &hub->msg_pool[i].list, _tail, _bh);
 	}
 	_os_thread_init(d, &(hub->msg_notify_thread), msg_thread_hdl, phl,
 						"msg_notify_thread");
@@ -248,7 +252,8 @@ enum rtw_phl_status phl_msg_hub_stop(struct phl_info_t* phl)
 	_os_thread_stop(d, &(hub->msg_notify_thread));
 	_os_sema_up(d, &(hub->msg_q_sema));
 	_os_thread_deinit(d, &(hub->msg_notify_thread));
-	pq_reset(d, &(hub->idle_msg_q), _ps);
+	pq_reset(d, &(hub->idle_msg_q), _bh);
+	pq_reset(d, &(hub->wait_msg_q), _bh);
 
 	PHL_INFO("%s\n",__FUNCTION__);
 	return RTW_PHL_STATUS_SUCCESS;
@@ -365,8 +370,8 @@ void phl_msg_hub_phy_mgnt_evt_hdlr(struct phl_info_t* phl, u16 evt_id)
 		break;
 	case MSG_EVT_FWDL_FAIL:
 		break;
-	case MSG_EVT_FW_WATCHDOG_TIMEOUT:
-		rtw_phl_ser_fw_watchdog_timeout(phl);
+	case MSG_EVT_DUMP_PLE_BUFFER:
+		rtw_phl_ser_dump_ple_buffer(phl);
 		break;
 	default:
 		break;
