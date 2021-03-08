@@ -45,19 +45,31 @@ enum rtw_hal_status rtw_hal_set_ch_bw(void *hal, u8 band_idx,
 	struct hal_info_t *hal_info = (struct hal_info_t *)hal;
 	struct rtw_hal_com_t *hal_com = hal_info->hal_com;
 	enum rtw_hal_status status = RTW_HAL_STATUS_SUCCESS;
-#if 1 // NEO
-	struct dvobj_priv *dvobj = hal_com->drv_priv;
-	_adapter *padapter = dvobj_get_primary_adapter(dvobj);
-
-	RTW_INFO("%s NEO TODO\n", __func__);
-	return status;
-#else
 	struct rtw_chan_def *chandef = &(hal_com->band[band_idx].cur_chandef);
 	u8 center_ch = 0;
 	u8 central_ch_seg1 = 0;
 	enum band_type change_band;
 	enum phl_phy_idx phy_idx = HW_PHY_0;
 
+#if 1 // NEO
+	struct dvobj_priv *dvobj = hal_com->drv_priv;
+	_adapter *padapter = dvobj_get_primary_adapter(dvobj);
+
+	RTW_INFO("%s NEO TODO\n", __func__);
+
+
+	if ((chan != chandef->chan) || (bw != chandef->bw)) {
+		if (band_idx == 1) {
+			RTW_ERR("%s: band_idx==1\n", __func__);
+			goto err_ret;
+		}
+		center_ch = rtw_phl_get_center_ch(chan, bw, offset);
+		RTW_INFO("%s NEO center_ch=%d\n", center_ch);
+	}
+
+err_ret:
+	return status;
+#else
 	if ((chan != chandef->chan) || (bw != chandef->bw)) {
 		if (band_idx == 1)
 			phy_idx = HW_PHY_1;

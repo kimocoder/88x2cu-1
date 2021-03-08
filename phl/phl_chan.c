@@ -993,6 +993,8 @@ bool rtw_phl_chanctx_test(void *phl, struct rtw_wifi_role_t *wifi_role, bool is_
 }
 #endif
 
+#endif // if 0 NEO
+
 u8 rtw_phl_get_center_ch(u8 ch,
 			enum channel_width bw, enum chan_offset offset)
 {
@@ -1047,4 +1049,3 @@ u8 rtw_phl_get_center_ch(u8 ch,
 	return cch;
 }
 
-#endif // if 0 NEO
