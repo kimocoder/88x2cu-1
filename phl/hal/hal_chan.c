@@ -42,13 +42,17 @@ rtw_hal_radar_detect_cfg(void *hal, bool dfs_enable)
 enum rtw_hal_status rtw_hal_set_ch_bw(void *hal, u8 band_idx,
 		u8 chan, enum channel_width bw, enum chan_offset offset, bool do_rfk)
 {
-	RTW_ERR("%s TODO NEO\n", __func__);
-	return RTW_HAL_STATUS_FAILURE;
-#if 0
 	struct hal_info_t *hal_info = (struct hal_info_t *)hal;
 	struct rtw_hal_com_t *hal_com = hal_info->hal_com;
-	struct rtw_chan_def *chandef = &(hal_com->band[band_idx].cur_chandef);
 	enum rtw_hal_status status = RTW_HAL_STATUS_SUCCESS;
+#if 1 // NEO
+	struct dvobj_priv *dvobj = hal_com->drv_priv;
+	_adapter *padapter = dvobj_get_primary_adapter(dvobj);
+
+	RTW_INFO("%s NEO TODO\n", __func__);
+	return status;
+#else
+	struct rtw_chan_def *chandef = &(hal_com->band[band_idx].cur_chandef);
 	u8 center_ch = 0;
 	u8 central_ch_seg1 = 0;
 	enum band_type change_band;
@@ -134,9 +138,8 @@ enum rtw_hal_status rtw_hal_set_ch_bw(void *hal, u8 band_idx,
 		if (status != RTW_HAL_STATUS_SUCCESS)
 			PHL_ERR("rtw_hal_rf_chl_rfk_trigger fail!\n");
 	}
-
+#endif
 	return status;
-#endif // if 0 NEO
 }
 
 u8 rtw_hal_get_cur_ch(void *hal, u8 band_idx)

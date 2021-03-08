@@ -115,10 +115,6 @@ rtw_phl_set_ch_bw(struct rtw_wifi_role_t *wifi_role,
 	struct phl_info_t *phl_info = wifi_role->phl_com->phl_priv;
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_FAILURE;
 
-#if 1 // NEO
-	RTW_INFO("%s TODO NEO\n", __func__);
-	return hstatus;
-#else // NEO
 #ifdef CONFIG_PHL_DFS
 	phl_radar_detect_hdl(phl_info, chan, bw, offset);
 #endif
@@ -128,8 +124,7 @@ rtw_phl_set_ch_bw(struct rtw_wifi_role_t *wifi_role,
 	if (RTW_HAL_STATUS_SUCCESS != hstatus)
 		PHL_ERR("%s rtw_hal_set_ch_bw: statuts = %u\n", __func__, hstatus);
 
-	return RTW_HAL_STATUS_SUCCESS;
-#endif // NEO
+	return RTW_PHL_STATUS_SUCCESS;
 }
 
 #if 0 // NEO mark off first

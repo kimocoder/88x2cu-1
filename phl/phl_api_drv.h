@@ -48,22 +48,13 @@ rtw_phl_get_stainfo_by_macid(void *phl, u16 macid);
 
 
 /* For hal wow use */
-#define RTW_PHL_PKT_OFLD_REQ(_phl, _macid, _type, _seq, _buf)	\
-	rtw_phl_pkt_ofld_request(_phl, _macid, _type, _seq, __func__, _buf)
-
-enum rtw_phl_status rtw_phl_pkt_ofld_request(void *phl, u8 macid, u8 type,
-						u32 *token, const char *req_name,
-						void *buf);
-enum rtw_phl_status rtw_phl_pkt_ofld_cancel(void *phl, u8 macid,
-						u8 type, u32 *token);
-u8 rtw_phl_pkt_ofld_get_id(void *phl, u8 macid, u8 type);
+void rtw_phl_pkt_ofld_reset_all_entry(struct rtw_phl_com_t *phl_com);
 
 bool rtw_phl_query_regulation_info(void *phl, struct rtw_regulation_info *info);
 bool rtw_phl_regulation_query_ch(void *phl, u8 channel,
 				struct rtw_regulation_channel *ch);
 u8 rtw_phl_get_center_ch(u8 ch,
 	enum channel_width bw, enum chan_offset offset);
-void rtw_phl_pkt_ofld_reset_all_entry(struct rtw_phl_com_t *phl_com);
 
 #endif /* _PHL_API_DRV_H_ */
 
