@@ -589,10 +589,8 @@ enum phl_mdl_ret_code _cmd_scan_hdl_internal_evt(
 				tx_pause = true;
 			}
 
-			// NEO
-			RTW_INFO("%s NEO TODO rtw_phl-set_ch_bw\n", __func__);
-			//rtw_phl_set_ch_bw(wifi_role, (u8)scan_ch->channel,
-			//		  scan_ch->bw, scan_ch->offset, false);
+			rtw_phl_set_ch_bw(wifi_role, (u8)scan_ch->channel,
+					  scan_ch->bw, scan_ch->offset, false);
 
 			if ((scan_ch->scan_mode != BACKOP_MODE) &&
 			    (scan_ch->type == RTW_PHL_SCAN_ACTIVE)) {
