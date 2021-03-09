@@ -166,7 +166,6 @@ u8 pq_insert(void *d, struct phl_queue *q, enum lock_type type, void *priv, _os_
 	return true;
 }
 
-#if 0 // NEO TODO mark off first for _os_get_cur_time_us()
 u32 phl_get_passing_time_us(u32 start)
 {
 	u32 now = _os_get_cur_time_us();
@@ -183,7 +182,6 @@ u32 phl_get_passing_time_us(u32 start)
 
 	return pass;
 }
-#endif
 
 u32 phl_get_passing_time_ms(u32 start)
 {
