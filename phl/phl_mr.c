@@ -264,6 +264,7 @@ _phl_band_ctrl_init(struct phl_info_t *phl_info)
 	return RTW_PHL_STATUS_SUCCESS;
 }
 
+#ifdef CONFIG_CMD_DISP
 static enum phl_mdl_ret_code
 _phl_mrc_module_init(void *phl_info, void *dispr, void **priv)
 {
@@ -653,22 +654,22 @@ _phl_mrc_module_swch_done_hdlr(void *dispr,
 	if(phl_disp_eng_query_cur_cmd_info(phl_info, idx, &op_info)
 		!= RTW_PHL_STATUS_SUCCESS){
 		PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
-				"Query scan_param fail!\n");
+			  "Query scan_param fail!\n");
 		goto _exit;
 	}
 	scan_param = (struct rtw_phl_scan_param*)op_info.outbuf;
 
 	if(op_info.outbuf == NULL){
 		PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
-				"%s: scan_param is NULL\n", __FUNCTION__);
+			  "%s: scan_param is NULL\n", __FUNCTION__);
 		goto _exit;
 	}
 
 	phl_mr_offch_hdl(phl_info,
-			  role,
-			  false,
-			  phl_com->drv_priv,
-			  scan_param->ops->scan_issue_null_data);
+			 role,
+			 false,
+			 phl_com->drv_priv,
+			 scan_param->ops->scan_issue_null_data);
 #endif
 	ret = MDL_RET_SUCCESS;
 _exit:
@@ -692,8 +693,8 @@ _phl_mrc_module_msg_hdlr(void *dispr,
 	u8 (*scan_issue_null_data)(void *, u8, bool) = NULL;
 #endif
 	u8 idx = 0xff;
-	phl_dispr_get_idx(dispr, &idx);
 
+	phl_dispr_get_idx(dispr, &idx);
 	FUNCIN();
 
 	if (IS_MSG_FAIL(msg->msg_id)) {
@@ -774,7 +775,14 @@ _phl_mrc_module_msg_hdlr(void *dispr,
 			PHL_TRACE(COMP_PHL_DBG, _PHL_INFO_,
 				  "%s: MSG_EVT_CONNECT_START\n", __FUNCTION__);
 
-			role = (struct rtw_wifi_role_t *)msg->rsvd[0];
+			op_info.op_code = FG_REQ_OP_GET_ROLE;
+			if(phl_disp_eng_query_cur_cmd_info(phl_info, idx, &op_info)
+				!= RTW_PHL_STATUS_SUCCESS){
+				PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
+					  "Query wifi role fail!\n");
+				break;
+			}
+			role = (struct rtw_wifi_role_t *)op_info.outbuf;
 
 			if(role == NULL){
 				PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
@@ -803,17 +811,15 @@ _phl_mrc_module_msg_hdlr(void *dispr,
 			if(phl_disp_eng_query_cur_cmd_info(phl_info, idx, &op_info)
 				!= RTW_PHL_STATUS_SUCCESS){
 				PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
-						"Query wifi role fail!\n");
+					  "Query wifi role fail!\n");
 				break;
 			}
-
 			role = (struct rtw_wifi_role_t *)op_info.outbuf;
 
 			if(role == NULL){
 				PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
 					  "%s: role is NULL\n", __FUNCTION__);
 				break;
-
 			}
 
 			if(_phl_mrc_module_connect_end_hdlr(phl_info, role) !=
@@ -833,16 +839,7 @@ _phl_mrc_module_msg_hdlr(void *dispr,
 			PHL_TRACE(COMP_PHL_DBG, _PHL_INFO_,
 				  "%s: MSG_EVT_DISCONNECT\n", __FUNCTION__);
 
-			op_info.op_code = FG_REQ_OP_GET_ROLE;
-
-			if(phl_disp_eng_query_cur_cmd_info(phl_info, idx, &op_info)
-				!= RTW_PHL_STATUS_SUCCESS){
-				PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
-						"Query wifi role fail!\n");
-				break;
-			}
-
-			role = (struct rtw_wifi_role_t *)op_info.outbuf;
+			role = (struct rtw_wifi_role_t *)msg->rsvd[0];
 
 			if(role == NULL){
 				PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
@@ -871,7 +868,7 @@ _phl_mrc_module_msg_hdlr(void *dispr,
 			if(phl_disp_eng_query_cur_cmd_info(phl_info, idx, &op_info)
 				!= RTW_PHL_STATUS_SUCCESS){
 				PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
-						"Query wifi role fail!\n");
+					  "Query wifi role fail!\n");
 				break;
 			}
 
@@ -900,7 +897,7 @@ _phl_mrc_module_msg_hdlr(void *dispr,
 				  "%s: MSG_EVT_AP_START_END\n", __FUNCTION__);
 
 			role = (struct rtw_wifi_role_t *)msg->rsvd[0];
-			if (role == NULL) {
+			if(role == NULL){
 				PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
 					  "%s: role is NULL\n", __FUNCTION__);
 				break;
@@ -964,7 +961,7 @@ _phl_mrc_module_msg_hdlr(void *dispr,
 			if(phl_disp_eng_query_cur_cmd_info(phl_info, idx, &op_info)
 				!= RTW_PHL_STATUS_SUCCESS){
 				PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
-						"Query scan_param fail!\n");
+					  "Query scan_param fail!\n");
 				break;
 			}
 			scan_param = (struct rtw_phl_scan_param*)op_info.outbuf;
@@ -1009,15 +1006,10 @@ _phl_mrc_module_msg_hdlr(void *dispr,
 
 			PHL_DUMP_CHAN_DEF_EX(&chandef);
 
-			rtw_hal_set_ch_bw(phl_info->hal,
-					  role->hw_band,
-					  chandef.chan,
-					  chandef.bw,
-					  chandef.offset,
-					  false);
+			rtw_phl_set_ch_bw(role, chandef.chan, chandef.bw, chandef.offset, false);
 
 #ifdef RTW_WKARD_MRC_ISSUE_NULL_WITH_SCAN_OPS
-			/* 
+			/*
 			 * Use msg to send ops pointer to prevent query fail in
 			 * abort case
 			 */
@@ -1035,6 +1027,47 @@ _phl_mrc_module_msg_hdlr(void *dispr,
 					  "enable MCC fail!\n");
 			}
 
+			ret = MDL_RET_SUCCESS;
+			break;
+		case MSG_EVT_ECSA_SWITCH_START:
+#ifdef CONFIG_PHL_ECSA
+			if(MSG_MDL_ID_FIELD(msg->msg_id) != PHL_FG_MDL_ECSA){
+					return MDL_RET_IGNORE;
+			}
+			PHL_TRACE(COMP_PHL_ECSA, _PHL_INFO_,
+				  "%s: MSG_EVT_ECSA_SWITCH_START\n", __FUNCTION__);
+			role = (struct rtw_wifi_role_t *)msg->rsvd[0];
+
+			if(role == NULL){
+				PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
+					  "%s: role is NULL\n", __FUNCTION__);
+				break;
+			}
+			if (phl_mr_mcc_state_change(phl_info, role, false)
+				!= RTW_PHL_STATUS_SUCCESS) {
+				PHL_TRACE(COMP_PHL_ECSA, _PHL_WARNING_,
+					  "Disable MCC failed\n");
+				break;
+			}
+#endif /* CONFIG_PHL_ECSA */
+			ret = MDL_RET_SUCCESS;
+			break;
+		case MSG_EVT_ECSA_SWITCH_DONE:
+#ifdef CONFIG_PHL_ECSA
+			if(MSG_MDL_ID_FIELD(msg->msg_id) != PHL_FG_MDL_ECSA){
+					return MDL_RET_IGNORE;
+			}
+			PHL_TRACE(COMP_PHL_ECSA, _PHL_INFO_,
+				  "%s: MSG_EVT_ECSA_SWITCH_DONE\n", __FUNCTION__);
+			role = (struct rtw_wifi_role_t *)msg->rsvd[0];
+
+			if(role == NULL){
+				PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
+					  "%s: role is NULL\n", __FUNCTION__);
+				break;
+			}
+			phl_mr_stop_all_beacon(phl_info, role,false);
+#endif /* CONFIG_PHL_ECSA */
 			ret = MDL_RET_SUCCESS;
 			break;
 		default:
@@ -1090,7 +1123,7 @@ _phl_role_bk_module_init(struct phl_info_t *phl_info)
 
 	return RTW_PHL_STATUS_SUCCESS;
 }
-
+#endif /*CONFIG_CMD_DISP*/
 /*
  * init wifi_role control components
  * init band_ctrl
@@ -1116,8 +1149,9 @@ phl_mr_ctrl_init(struct phl_info_t *phl_info)
 	_os_spinlock_init(drv, &(mr_ctl->lock));
 	mr_ctl->is_sb = true;
 	_phl_band_ctrl_init(phl_info);
+	#ifdef CONFIG_CMD_DISP
 	_phl_role_bk_module_init(phl_info);
-
+	#endif
 	_os_mem_set(phl_to_drvpriv(phl_info), phl_com->wifi_roles,
 		0, sizeof(*phl_com->wifi_roles));
 
@@ -1129,13 +1163,10 @@ phl_mr_ctrl_init(struct phl_info_t *phl_info)
 		role->active = false;
 		role->chanctx = NULL;
 	}
-
-#ifdef CONFIG_MCC_SUPPORT
 	if (RTW_PHL_STATUS_SUCCESS != (status = rtw_phl_mcc_init(phl_info))) {
 		PHL_ERR("%s mcc init fail\n", __func__);
 		/* todo, need to discuss with Georgia*/
 	}
-#endif
 	return RTW_PHL_STATUS_SUCCESS;
 }
 
@@ -1147,9 +1178,7 @@ _phl_band_ctrl_deinit(struct phl_info_t *phl_info)
 	struct hw_band_ctl_t *band_ctrl;
 	u8 band_idx = 0;
 
-#ifdef CONFIG_MCC_SUPPORT
 	rtw_phl_mcc_deinit(phl_info);
-#endif
 	for (band_idx = 0; band_idx < MAX_BAND_NUM; band_idx++) {
 		band_ctrl = &(mr_ctl->band_ctrl[band_idx]);
 		phl_chanctx_free(phl_info, band_ctrl);
@@ -1743,7 +1772,7 @@ phl_mr_offch_hdl(struct phl_info_t *phl_info,
 	ctx_num = phl_mr_get_chanctx_num(phl_info, band_ctrl);
 
 	if (ctx_num == 0){
-		PHL_WARN("ctx_num == 0!\n");
+		PHL_DBG("ctx_num == 0!\n");
 		return psts;
 	}
 
@@ -1846,6 +1875,7 @@ phl_mr_offch_hdl(struct phl_info_t *phl_info,
 #endif // if 0 NEO
 }
 
+#ifdef CONFIG_FSM
 enum rtw_phl_status
 rtw_phl_mr_offch_hdl(void *phl,
 		     struct rtw_wifi_role_t *wrole,
@@ -1877,13 +1907,14 @@ rtw_phl_mr_offch_hdl(void *phl,
 
 	return psts;
 }
+#endif
 
 void phl_mr_stop_all_beacon(struct phl_info_t *phl_info,
 			    struct rtw_wifi_role_t *wrole,
 			    bool stop)
 {
 	RTW_ERR("%s NEO TODO\n", __func__);
-#if 0 // NEO
+#if 0 //NEO
 	struct rtw_phl_com_t *phl_com = phl_info->phl_com;
 	struct mr_ctl_t *mr_ctl = phlcom_to_mr_ctrl(phl_com);
 	struct hw_band_ctl_t *band_ctrl = &(mr_ctl->band_ctrl[wrole->hw_band]);
@@ -1912,7 +1943,7 @@ void phl_mr_stop_all_beacon(struct phl_info_t *phl_info,
 			}
 		}
 	}
-#endif // if 0
+#endif // if 0 NEO
 }
 
 #ifdef DBG_PHL_MR
@@ -1927,13 +1958,14 @@ phl_mr_info_dbg(struct phl_info_t *phl_info)
 	struct rtw_wifi_role_t *role = NULL;
 	struct hw_band_ctl_t *band_ctrl = NULL;
 
-	if (0)
-		PHL_DUMP_STACTRL_EX(phl_info);
-
 	for (ridx = 0; ridx < MAX_WIFI_ROLE_NUMBER; ridx++) {
 		role = &(phl_com->wifi_roles[ridx]);
-		if (role->assoc_sta_queue.cnt)
-			PHL_ERR("role_idx:%d assoc_sta_queue not empty!\n", ridx);
+		if (role->assoc_sta_queue.cnt) {
+			PHL_DUMP_STACTRL_EX(phl_info);
+			PHL_ERR("role_idx:%d assoc_sta_queue(%d) not empty!\n",
+				ridx, role->assoc_sta_queue.cnt);
+			_os_warn_on(1);
+		}
 	}
 	for (bidx = 0; bidx < MAX_BAND_NUM; bidx++) {
 		band_ctrl = &(mr_ctl->band_ctrl[bidx]);
@@ -2012,13 +2044,26 @@ phl_mr_info_upt(struct phl_info_t *phl_info, struct rtw_wifi_role_t *wrole)
 			#endif
 		}
 	}
+	if(band_ctrl->op_mode == MR_OP_SCC ||
+	   band_ctrl->op_mode == MR_OP_MCC){
+		if(band_ctrl->cur_info.ld_sta_num && band_ctrl->cur_info.ap_num)
+			band_ctrl->op_type = MR_OP_TYPE_STATION_AP;
+		else if(band_ctrl->cur_info.ld_sta_num)
+			band_ctrl->op_type = MR_OP_TYPE_STATION_ONLY;
+		else
+			band_ctrl->op_type = MR_OP_TYPE_STATION_AP;
+	}
+	else{
+		band_ctrl->op_type = MR_OP_TYPE_NONE;
+	}
 	/*dump mr_info*/
 	PHL_INFO("%s sta_num:%d, ld_sta_num:%d, lg_sta_num:%d\n",
 		__func__, band_ctrl->cur_info.sta_num,
 		band_ctrl->cur_info.ld_sta_num, band_ctrl->cur_info.lg_sta_num);
 	PHL_INFO("%s ap_num:%d, ld_ap_num:%d\n",
 		__func__, band_ctrl->cur_info.ap_num, band_ctrl->cur_info.ld_ap_num);
-
+	PHL_INFO("%s op mode:%d op type:%d\n",
+		__func__, band_ctrl->op_mode, band_ctrl->op_type);
 	return RTW_PHL_STATUS_SUCCESS;
 }
 enum rtw_phl_status
@@ -2073,7 +2118,11 @@ phl_mr_state_upt(struct phl_info_t *phl_info, struct rtw_wifi_role_t *wrole)
 
 	/*MR - MCC section*/
 	mcc_en = (wrole->mstate == MLME_LINKED) ? true : false;
+	if(mcc_en == false)
+		phl_mr_check_ecsa_cancel(phl_info, wrole);
 	psts = phl_mr_mcc_state_change(phl_info, wrole, mcc_en);
+	if(psts == RTW_PHL_STATUS_SUCCESS && mcc_en)
+		phl_mr_check_ecsa(phl_info, wrole);
 #endif /*CONFIG_MR_SUPPORT*/
 	return psts;
 }
@@ -2262,7 +2311,7 @@ u8 rtw_phl_mr_get_opch_list(void *phl, struct rtw_wifi_role_t *wifi_role,
 	ctx_num = phl_mr_get_chanctx_num(phl_info, band_ctrl);
 
 	if (ctx_num == 0){
-		PHL_WARN("ctx_num == 0!\n");
+		PHL_DBG("ctx_num == 0!\n");
 		goto _exit;
 	}
 
@@ -2277,4 +2326,139 @@ u8 rtw_phl_mr_get_opch_list(void *phl, struct rtw_wifi_role_t *wifi_role,
 	_os_spinunlock(drv, &band_ctrl->chan_ctx_queue.lock, _ps, NULL);
 _exit:
 	return total_op_num;
+}
+
+enum mr_op_mode
+rtw_phl_mr_get_opmode(void *phl, struct rtw_wifi_role_t *wrole)
+{
+	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
+	struct rtw_phl_com_t *phl_com = phl_info->phl_com;
+	struct mr_ctl_t *mr_ctl = phlcom_to_mr_ctrl(phl_com);
+	struct hw_band_ctl_t *band_ctrl = &(mr_ctl->band_ctrl[wrole->hw_band]);
+
+	return band_ctrl->op_mode;
+}
+
+void
+phl_mr_check_ecsa(struct phl_info_t *phl_info,
+		  struct rtw_wifi_role_t *wrole)
+{
+#ifdef CONFIG_PHL_ECSA
+	enum rtw_phl_status pstatus = RTW_PHL_STATUS_SUCCESS;
+	struct rtw_phl_com_t *phl_com = phl_info->phl_com;
+	struct mr_ctl_t *mr_ctl = phlcom_to_mr_ctrl(phl_com);
+	struct hw_band_ctl_t *band_ctrl = &(mr_ctl->band_ctrl[wrole->hw_band]);
+	u8 role_map = band_ctrl->role_map;
+	struct rtw_wifi_role_t *wr = NULL, *ap_wr = NULL, *sta_wr = NULL;
+	u8 ridx;
+	enum band_type ap_band_type = BAND_ON_24G, sta_band_type = BAND_ON_24G;
+	enum phl_ecsa_start_reason reason = ECSA_START_UNKNOWN;
+	u32 delay_start_ms = 0;
+	bool ecsa_allow = false;
+	struct rtw_phl_ecsa_param param = {0};
+	void *d = phlcom_to_drvpriv(phl_com);
+
+
+	if(band_ctrl->op_mode != MR_OP_MCC)
+		return;
+	if(band_ctrl->op_type != MR_OP_TYPE_STATION_AP)
+		return;
+
+	for (ridx = 0; ridx < MAX_WIFI_ROLE_NUMBER; ridx++) {
+		if (role_map & BIT(ridx)) {
+			wr = &(phl_com->wifi_roles[ridx]);
+
+			switch (wr->type) {
+			case PHL_RTYPE_STATION:
+			case PHL_RTYPE_P2P_GC:
+				if (wr->mstate == MLME_LINKED){
+					sta_band_type = wr->chandef.band;
+					sta_wr = wr;
+				}
+				break;
+			case PHL_RTYPE_AP:
+			case PHL_RTYPE_VAP:
+			case PHL_RTYPE_P2P_GO:
+			case PHL_RTYPE_MESH:
+				if (wr->mstate == MLME_LINKED){
+					ap_band_type = wr->chandef.band;
+					ap_wr = wr;
+				}
+				break;
+			case PHL_RTYPE_MONITOR:
+			case PHL_RTYPE_P2P_DEVICE:
+			default :
+				break;
+			}
+		}
+	}
+	if(sta_band_type == BAND_ON_24G){
+		if(ap_band_type == BAND_ON_24G)
+			reason = ECSA_START_MCC_24G_TO_24G;
+		else if(ap_band_type == BAND_ON_5G)
+			reason = ECSA_START_MCC_5G_TO_24G;
+		else
+			reason = ECSA_START_UNKNOWN;
+	}
+	else if(sta_band_type == BAND_ON_5G){
+		if(ap_band_type == BAND_ON_24G)
+			reason = ECSA_START_MCC_24G_TO_5G;
+		else if(ap_band_type == BAND_ON_5G)
+			reason = ECSA_START_MCC_5G_TO_5G;
+		else
+			reason = ECSA_START_UNKNOWN;
+	}
+	else{
+		reason = ECSA_START_UNKNOWN;
+	}
+
+	if(reason != ECSA_START_UNKNOWN){
+		ecsa_allow = rtw_phl_ecsa_check_allow(phl_info,
+						      ap_wr,
+						      sta_wr->chandef,
+						      reason,
+						      &delay_start_ms);
+	}
+
+	if(ecsa_allow){
+		param.ch = sta_wr->chandef.chan;
+		param.op_class = rtw_phl_get_operating_class(sta_wr->chandef);
+		param.count = ECSA_DEFAULT_CHANNEL_SWITCH_COUNT;
+		param.delay_start_ms = delay_start_ms;
+		param.flag = 0;
+		param.mode = CHANNEL_SWITCH_MODE_NORMAL;
+		_os_mem_cpy(d, &(param.new_chan_def), &(sta_wr->chandef),
+			    sizeof(struct rtw_chan_def));
+		pstatus = rtw_phl_ecsa_start(phl_info,
+					     ap_wr,
+					     &param);
+		if(pstatus == RTW_PHL_STATUS_SUCCESS)
+			PHL_INFO("%s: ECSA start OK!\n", __FUNCTION__);
+		else
+			PHL_INFO("%s: ECSA start fail!\n", __FUNCTION__);
+	}
+#endif /* CONFIG_PHL_ECSA */
+}
+
+void
+phl_mr_check_ecsa_cancel(struct phl_info_t *phl_info,
+			 struct rtw_wifi_role_t *wrole)
+{
+#ifdef CONFIG_PHL_ECSA
+	enum rtw_phl_status pstatus = RTW_PHL_STATUS_SUCCESS;
+	struct rtw_phl_com_t *phl_com = phl_info->phl_com;
+	struct mr_ctl_t *mr_ctl = phlcom_to_mr_ctrl(phl_com);
+	struct hw_band_ctl_t *band_ctrl = &(mr_ctl->band_ctrl[wrole->hw_band]);
+
+	if(band_ctrl->op_mode != MR_OP_MCC)
+		return;
+	if(band_ctrl->op_type != MR_OP_TYPE_STATION_AP)
+		return;
+
+	pstatus = rtw_phl_ecsa_cancel(phl_info, wrole);
+	if(pstatus == RTW_PHL_STATUS_SUCCESS)
+		PHL_INFO("%s: ECSA cancel OK!\n", __FUNCTION__);
+	else
+		PHL_INFO("%s: ECSA cancel fail!\n", __FUNCTION__);
+#endif /* CONFIG_PHL_ECSA */
 }
