@@ -127,6 +127,81 @@ rtw_phl_set_ch_bw(struct rtw_wifi_role_t *wifi_role,
 	return RTW_PHL_STATUS_SUCCESS;
 }
 
+#ifdef CONFIG_CMD_DISP
+struct setch_param {
+	struct rtw_wifi_role_t *wrole;
+	struct rtw_chan_def chdef;
+	bool do_rfk;
+};
+
+enum rtw_phl_status
+phl_cmd_set_ch_bw_hdl(struct phl_info_t *phl_info, u8 *param)
+{
+	struct setch_param *ch_param = (struct setch_param *)param;
+
+	return rtw_phl_set_ch_bw(ch_param->wrole,
+	                         ch_param->chdef.chan,
+	                         ch_param->chdef.bw,
+	                         ch_param->chdef.offset,
+	                         ch_param->do_rfk);
+}
+
+static void _phl_set_ch_bw_done(void *drv_priv, u8 *cmd, u32 cmd_len, enum rtw_phl_status status)
+{
+	if (cmd) {
+		_os_kmem_free(drv_priv, cmd, cmd_len);
+		cmd = NULL;
+		PHL_INFO("%s.....\n", __func__);
+	}
+}
+
+enum rtw_phl_status
+rtw_phl_cmd_set_ch_bw(struct rtw_wifi_role_t *wifi_role,
+                      struct rtw_chan_def *chdef,
+                      bool do_rfk,
+                      enum phl_cmd_type cmd_type,
+                      u32 cmd_timeout)
+{
+	struct phl_info_t *phl_info = wifi_role->phl_com->phl_priv;
+	void *drv = wifi_role->phl_com->drv_priv;
+	enum rtw_phl_status psts = RTW_PHL_STATUS_FAILURE;
+	struct setch_param *param = NULL;
+	u32 param_len;
+
+	if (cmd_type == PHL_CMD_DIRECTLY) {
+		psts = rtw_phl_set_ch_bw(wifi_role,
+		                         chdef->chan,
+		                         chdef->bw,
+		                         chdef->offset,
+		                         do_rfk);
+		goto _exit;
+	}
+
+	param_len = sizeof(struct setch_param);
+	param = _os_kmem_alloc(drv, param_len);
+	if (param == NULL) {
+		PHL_ERR("%s: alloc param failed!\n", __func__);
+		goto _exit;
+	}
+	param->wrole = wifi_role;
+	_os_mem_cpy(drv, &param->chdef, chdef, sizeof(struct rtw_chan_def));
+	param->do_rfk = do_rfk;
+
+	psts = phl_cmd_enqueue(phl_info,
+	                       wifi_role->hw_band,
+	                       MSG_EVT_SWCH_START,
+	                       (u8 *)param,
+	                       param_len,
+	                       _phl_set_ch_bw_done,
+	                       cmd_type,
+	                       cmd_timeout);
+	if ((false == is_cmd_enqueue(psts)) && (RTW_PHL_STATUS_SUCCESS != psts))
+		_os_kmem_free(drv, param, param_len);
+_exit:
+	return psts;
+}
+#endif /*CONFIG_CMD_DISP*/
+
 #if 0 // NEO mark off first
 
 u8 rtw_phl_get_cur_ch(struct rtw_wifi_role_t *wifi_role)
@@ -1049,3 +1124,88 @@ u8 rtw_phl_get_center_ch(u8 ch,
 	return cch;
 }
 
+/*
+ * Refer to 80211 spec Annex E Table E-4 Global operating classes
+ * Handle 2.4G/5G Bandwidth 20/40/80/160
+ */
+u8
+rtw_phl_get_operating_class(
+	struct rtw_chan_def chan_def
+)
+{
+	u8 operating_class = 0;
+
+	if(chan_def.bw == CHANNEL_WIDTH_20){
+		if(chan_def.chan <= 13)
+			operating_class = 81;
+		else if(chan_def.chan ==14)
+			operating_class = 82;
+		else if(chan_def.chan >= 36 && chan_def.chan <= 48)
+			operating_class = 115;
+		else if(chan_def.chan >= 52 && chan_def.chan <= 64)
+			operating_class = 118;
+		else if(chan_def.chan >= 100 && chan_def.chan <= 144)
+			operating_class = 121;
+		else if(chan_def.chan >= 149 && chan_def.chan <= 169)
+			operating_class = 125;
+		else
+			PHL_WARN("%s: Undefined channel (%d)\n", __FUNCTION__, chan_def.chan);
+	}
+	else if(chan_def.bw == CHANNEL_WIDTH_40){
+		if(chan_def.offset == CHAN_OFFSET_UPPER){
+			if(chan_def.chan >= 1 && chan_def.chan <= 9)
+				operating_class = 83;
+			else if(chan_def.chan == 36 || chan_def.chan == 44)
+				operating_class = 116;
+			else if(chan_def.chan == 52 || chan_def.chan == 60)
+				operating_class = 119;
+			else if(chan_def.chan == 100 || chan_def.chan == 108 ||
+				chan_def.chan == 116 || chan_def.chan == 124 ||
+				chan_def.chan == 132 || chan_def.chan == 140)
+				operating_class = 122;
+			else if(chan_def.chan == 149 || chan_def.chan == 157)
+				operating_class = 126;
+			else
+				PHL_WARN("%s: Undefined channel (%d)\n", __FUNCTION__, chan_def.chan);
+		}
+		else if(chan_def.offset == CHAN_OFFSET_UPPER){
+			if(chan_def.chan >= 5 && chan_def.chan <= 13)
+				operating_class = 84;
+			else if(chan_def.chan == 40 || chan_def.chan == 48)
+				operating_class = 117;
+			else if(chan_def.chan == 56 || chan_def.chan == 64)
+				operating_class = 120;
+			else if(chan_def.chan == 104 || chan_def.chan == 112 ||
+				chan_def.chan == 120 || chan_def.chan == 128 ||
+				chan_def.chan == 136 || chan_def.chan == 144)
+				operating_class = 123;
+			else if(chan_def.chan == 153 || chan_def.chan == 161)
+				operating_class = 127;
+			else
+				PHL_WARN("%s: Undefined channel (%d)\n", __FUNCTION__, chan_def.chan);
+		}
+		else{
+			PHL_WARN("%s: Invalid offset(%d)\n",
+				 __FUNCTION__, chan_def.offset);
+		}
+	}
+	else if(chan_def.bw == CHANNEL_WIDTH_80){
+		if(chan_def.center_ch == 42 || chan_def.center_ch == 58 ||
+		   chan_def.center_ch == 106 || chan_def.center_ch == 122 ||
+		   chan_def.center_ch == 138 || chan_def.center_ch == 155)
+			operating_class = 128;
+		else
+			PHL_WARN("%s: Undefined channel (%d)\n", __FUNCTION__, chan_def.center_ch);
+	}
+	else if(chan_def.bw == CHANNEL_WIDTH_160){
+		if(chan_def.center_ch == 50 || chan_def.center_ch == 114)
+			operating_class = 129;
+		else
+			PHL_WARN("%s: Undefined channel (%d)\n", __FUNCTION__, chan_def.center_ch);
+	}
+	else{
+		PHL_WARN("%s: Not handle bandwidth (%d)\n", __FUNCTION__, chan_def.bw);
+	}
+
+	return operating_class;
+}
