@@ -216,9 +216,7 @@ void phl_update_tx_stats(struct rtw_stats *stats, struct rtw_xmit_req *tx_req)
 	}
 }
 
-// TODO : NEO : mark off first
-
-#if 0
+#if 0 // NEO : mark off first
 
 void phl_tx_statistics(struct phl_info_t *phl_info, struct rtw_xmit_req *tx_req)
 {
@@ -242,7 +240,7 @@ dev_stat:
 	phl_update_tx_stats(phl_stats, tx_req);
 }
 
-#endif
+#endif // if 0 NEO 
 
 
 static void _phl_free_phl_tring_list(void *phl,
@@ -1476,9 +1474,7 @@ phl_tx_watchdog(struct phl_info_t *phl_info)
 {
 	struct phl_hci_trx_ops *trx_ops = phl_info->hci_trx_ops;
 	struct rtw_stats *phl_stats = &phl_info->phl_com->phl_stats;
-	struct rtw_phl_stainfo_t *sta = NULL;
 
-	/* hana_todo: update traffic info of each station */
 	phl_tx_traffic_upd(phl_stats);
 	trx_ops->tx_watchdog(phl_info);
 }

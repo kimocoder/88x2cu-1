@@ -712,8 +712,7 @@ ps_fail:
 sound_fail:
 	phl_scan_deinit(phl_info);
 scan_fail:
-// NEO
-//	phl_btc_deinit(phl_info);
+	phl_btc_deinit(phl_info);
 btc_fail:
 	phl_ser_deinit(phl_info);
 ser_fail:
@@ -726,8 +725,7 @@ static void phl_fsm_module_deinit(struct phl_info_t *phl_info)
 {
 	phl_sound_deinit(phl_info);
 	phl_scan_deinit(phl_info);
-	// NEO
-	//phl_btc_deinit(phl_info);
+	phl_btc_deinit(phl_info);
 	phl_ser_deinit(phl_info);
 	phl_cmd_deinit(phl_info);
 	phl_ps_deinit(phl_info);
@@ -751,11 +749,9 @@ static enum rtw_phl_status phl_fsm_module_start(struct phl_info_t *phl_info)
 	if (phl_status != RTW_PHL_STATUS_SUCCESS)
 		goto ser_fail;
 
-#if 0 // NEO
 	phl_status = phl_btc_start(phl_info->btc_obj);
 	if (phl_status != RTW_PHL_STATUS_SUCCESS)
 		goto btc_fail;
-#endif // if 0 NEO
 
 	phl_status = phl_fsm_start_fsm(phl_info->scan_fsm);
 	if (phl_status != RTW_PHL_STATUS_SUCCESS)
@@ -1369,7 +1365,6 @@ void rtw_phl_stop(void *phl)
 {
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 
-	phl_datapath_stop(phl_info);
 	//rtw_hal_disable_interrupt(phl_info->phl_com, phl_info->hal);
 	phl_module_stop(phl_info);
 #ifdef DBG_PHL_MR
@@ -1381,6 +1376,9 @@ void rtw_phl_stop(void *phl)
 	phl_fsm_stop(phl_info);
 #endif /* CONFIG_FSM */
 	rtw_hal_g6_stop(phl_info->phl_com, phl_info->hal);
+	phl_datapath_stop(phl_info);
+
+	phl_info->phl_com->dev_state = 0;
 }
 
 #if 0 // NEO mark off first
@@ -1390,131 +1388,192 @@ enum rtw_phl_status phl_wow_start(struct phl_info_t *phl_info, struct rtw_phl_st
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_FAILURE;
 #ifdef CONFIG_WOWLAN
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_FAILURE;
-	enum mlme_state s_mstat = sta->wrole->mstate;
-	struct phl_hci_trx_ops *trx_ops = phl_info->hci_trx_ops;
 	struct phl_wow_info *wow_info = phl_to_wow_info(phl_info);
-	u8 nlo_exist = phl_wow_nlo_exist(phl_info);
 
-	wow_info->enter_wow = false;
-	wow_info->func_en = false;
+#ifdef CONFIG_SYNC_INTERRUPT
+	struct rtw_phl_evt_ops *evt_ops = &phl_info->phl_com->evt_ops;
+#endif /* CONFIG_SYNC_INTERRUPT */
 
-	PHL_TRACE(COMP_PHL_WOW, _PHL_INFO_, "[wow] %s enter with sta state(%d)\n.", __func__, s_mstat);
+	PHL_TRACE(COMP_PHL_WOW, _PHL_INFO_, "[wow] %s enter with sta state(%d)\n.", __func__, sta->wrole->mstate);
 
-	do {
+	phl_wow_decide_op_mode(wow_info, sta);
+
+	if (wow_info->op_mode == RTW_WOW_OP_PWR_DOWN) {
+		phl_cmd_role_suspend(phl_info);
+		rtw_phl_stop(phl_info);
+		/* since control path stopped after rtw_phl_stop,
+		   below action don't have to migrate to general module*/
+		hstatus = rtw_hal_set_wowlan(phl_info->phl_com, phl_info->hal, true);
+		if (RTW_HAL_STATUS_SUCCESS != hstatus)
+			PHL_WARN("[wow] rtw_hal_set_wowlan failed, status(%u)\n", hstatus);
+		pstatus = RTW_PHL_STATUS_SUCCESS;
+	} else {
 		/* stop all active features */
 		pstatus = phl_module_stop(phl_info);
 		if (RTW_PHL_STATUS_SUCCESS != pstatus) {
 			PHL_ERR("[wow] phl_module_stop failed.\n");
-			break;
+			goto end;
 		}
-
+		/* since control path stopped after phl_module_stop,
+		   below action don't have to migrate to general module*/
 #ifdef CONFIG_FSM
 		pstatus = phl_fsm_module_stop(phl_info);
 		if (RTW_PHL_STATUS_SUCCESS != pstatus) {
 			PHL_ERR("[wow] phl_fsm_module_stop failed.\n");
-			break;
+			goto end;
 		}
 
 		pstatus = phl_fsm_stop(phl_info);
 		if (RTW_PHL_STATUS_SUCCESS != pstatus) {
 			PHL_ERR("[wow] phl_fsm_stop failed.\n");
-			break;
+			goto end;
 		}
-#endif /* CONFIG_FSM */
-		pstatus = phl_wow_init_precfg(phl_info);
+#endif
+		hstatus = rtw_hal_set_wowlan(phl_info->phl_com, phl_info->hal, true);
+		if (RTW_HAL_STATUS_SUCCESS != hstatus)
+			PHL_WARN("[wow] rtw_hal_set_wowlan failed, status(%u)\n", hstatus);
+		pstatus = phl_wow_init_precfg(wow_info);
 		if (RTW_PHL_STATUS_SUCCESS != pstatus) {
 			PHL_ERR("[wow] phl_wow_init_precfg failed.\n");
-			break;
+			goto end;
 		}
 
-		/* check mlme state */
-		if (s_mstat == MLME_NO_LINK && !nlo_exist) {
-			/* currently do nothing */
-		} else if (s_mstat == MLME_LINKED || nlo_exist) {
-
-			hstatus = rtw_hal_wow_start(phl_info->phl_com, phl_info->hal, sta);
-			if (RTW_HAL_STATUS_SUCCESS != hstatus) {
-				pstatus = RTW_PHL_STATUS_FAILURE;
-				break;
-			}
-
-			pstatus = phl_wow_func_en(phl_info, sta);
-			if (RTW_PHL_STATUS_SUCCESS != pstatus)
-				break;
-
-			wow_info->func_en = true;
-
-		} else {
+		hstatus = rtw_hal_wow_init(phl_info->phl_com, phl_info->hal, sta);
+		if (RTW_HAL_STATUS_SUCCESS != hstatus) {
 			pstatus = RTW_PHL_STATUS_FAILURE;
-			break;
+			goto end;
+		}
+
+		pstatus = phl_wow_func_en(wow_info);
+		if (RTW_PHL_STATUS_SUCCESS != pstatus)
+			goto end;
+
+		/* power saving */
+		phl_wow_ps_pctl_cfg(wow_info, true);
+
+		pstatus = phl_wow_init_postcfg(wow_info);
+		if (RTW_PHL_STATUS_SUCCESS != pstatus) {
+			PHL_ERR("[wow] phl_wow_init_postcfg failed.\n");
+			goto end;
 		}
 
 		/* power saving */
-		phl_wow_pwr_cfg(phl_info, sta, true);
-
-		pstatus = phl_wow_init_postcfg(phl_info);
-		if (RTW_PHL_STATUS_SUCCESS != pstatus) {
-			PHL_ERR("[wow] phl_wow_init_postcfg failed!!!\n");
-			break;
-		}
-
-		wow_info->enter_wow = true;
+		phl_wow_ps_pwr_cfg(wow_info, true);
 
 		pstatus = RTW_PHL_STATUS_SUCCESS;
-	} while (0);
+	}
 
-
+end:
 	if (RTW_PHL_STATUS_SUCCESS != pstatus) {
-		PHL_ERR("[wow] %s : error entering wowlan!\n", __func__);
-		rtw_hal_g6_stop(phl_info->phl_com, phl_info->hal);
-		phl_datapath_stop(phl_info);
+		#ifdef CONFIG_SYNC_INTERRUPT
+		evt_ops->set_interrupt_caps(phl_to_drvpriv(phl_info), false);
+		#else
 		rtw_hal_disable_interrupt(phl_info->phl_com, phl_info->hal);
-		wow_info->enter_wow = false;
+		#endif /* CONFIG_SYNC_INTERRUPT */
+		rtw_hal_stop(phl_info->phl_com, phl_info->hal);
+		phl_datapath_stop(phl_info);
+		wow_info->op_mode = RTW_WOW_OP_PWR_DOWN;
+		PHL_ERR("[wow] %s fail, set op_mode %d!\n", __func__, wow_info->op_mode);
 	} else {
 		PHL_TRACE(COMP_PHL_WOW, _PHL_INFO_,
-			"[wow] %s success, set enter_wow with func enabled(%d).\n", __func__, wow_info->func_en);
+			"[wow] %s success, with func_en %d, op_mode %d.\n",
+			__func__, wow_info->func_en, wow_info->op_mode);
 	}
 
 	return pstatus;
 #else
-
 	return RTW_PHL_STATUS_SUCCESS;
 #endif /* CONFIG_WOWLAN */
 }
 
-void phl_wow_stop(struct phl_info_t *phl_info, struct rtw_phl_stainfo_t *sta)
+static void _wow_stop_reinit(struct phl_info_t *phl_info)
+{
+	enum rtw_phl_status pstatus = RTW_PHL_STATUS_FAILURE;
+
+	PHL_WARN("%s : reset hw!\n", __func__);
+	rtw_hal_hal_deinit(phl_info->phl_com, phl_info->hal);
+	phl_datapath_stop(phl_info);
+	pstatus = rtw_phl_start(phl_info);
+	if (pstatus)
+		PHL_ERR("%s : rtw_phl_start fail!\n", __func__);
+	phl_cmd_role_recover(phl_info);
+
+}
+
+void phl_wow_stop(struct phl_info_t *phl_info, struct rtw_phl_stainfo_t *sta, u8 *hw_reinit)
 {
 #ifdef CONFIG_WOWLAN
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_FAILURE;
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_FAILURE;
-	enum mlme_state s_mstat = sta->wrole->mstate;
-	u8 nlo_exist = phl_wow_nlo_exist(phl_info);
 	struct phl_wow_info *wow_info = phl_to_wow_info(phl_info);
+	u8 reset = 0;
 
-	/* leave power saving */
-	/* phl_wow_pwr_cfg(phl_info, sta, false); */
+	if (rtw_hal_get_pwr_state(phl_info->hal, &wow_info->mac_pwr)
+		!= RTW_HAL_STATUS_SUCCESS)
+		return;
 
-	phl_module_start(phl_info);
+	PHL_TRACE(COMP_PHL_WOW, _PHL_INFO_, "%s enter with mac power %d\n.",
+			  __func__, wow_info->mac_pwr);
 
-	phl_wow_deinit_precfg(phl_info);
-
-	if (wow_info->func_en == false) {
-		/* currently do nothing */
-	} else if (wow_info->func_en == true) {
-
-		phl_wow_func_dis(phl_info, sta);
-
-		hstatus = rtw_hal_wow_stop(phl_info->phl_com, phl_info->hal, sta);
-		if (hstatus)
-			PHL_ERR("%s : wowlan stop fail!\n", __func__);
+	if (wow_info->mac_pwr != RTW_MAC_PWR_OFF) {
+		/* leave clock/power gating */
+		pstatus = phl_ps_force_hw_leave_low_pwr(phl_info);
+		if (RTW_PHL_STATUS_SUCCESS != pstatus) {
+			PHL_ERR("[wow] HW leave power saving failed.\n");
+			_wow_stop_reinit(phl_info);
+			*hw_reinit = true;
+			return;
+		}
 	}
 
-	phl_wow_deinit_postcfg(phl_info);
+	hstatus = rtw_hal_set_wowlan(phl_info->phl_com, phl_info->hal, false);
+	if (RTW_HAL_STATUS_SUCCESS != hstatus) {
+		PHL_WARN("[wow] rtw_hal_set_wowlan failed, status(%u)\n", hstatus);
+	}
 
+	if (wow_info->mac_pwr == RTW_MAC_PWR_OFF) {
+		if (wow_info->op_mode == RTW_WOW_OP_PWR_DOWN) {
+			pstatus = rtw_phl_start(phl_info);
+			phl_cmd_role_recover(phl_info);
+			*hw_reinit = true;
+		} else {
+			PHL_WARN("[wow] enter suspend with wow enabled but mac is power down\n");
+			_wow_stop_reinit(phl_info);
+			*hw_reinit = true;
+		}
+	} else if (wow_info->mac_pwr == RTW_MAC_PWR_ON ||
+			   wow_info->mac_pwr == RTW_MAC_PWR_LPS) {
+
+		phl_wow_handle_wake_rsn(wow_info, &reset);
+		if (reset) {
+			_wow_stop_reinit(phl_info);
+			*hw_reinit = true;
+			return;
+		}
+
+		phl_wow_deinit_precfg(wow_info);
+
+		rtw_hal_fw_dbg_dump(phl_info->hal, false);
+
+		/* leave power saving */
+		phl_wow_ps_pctl_cfg(wow_info, false);
+
+		phl_wow_func_dis(wow_info);
+
+		hstatus = rtw_hal_wow_deinit(phl_info->phl_com, phl_info->hal, sta);
+		if (hstatus)
+			PHL_ERR("%s : rtw_hal_wow_deinit failed.\n", __func__);
+
+		phl_module_start(phl_info);
 #ifdef CONFIG_FSM
-	phl_fsm_start(phl_info);
-	phl_fsm_module_start(phl_info);
-#endif /* CONFIG_FSM */
+		phl_fsm_start(phl_info);
+		phl_fsm_module_start(phl_info);
+#endif
+		phl_wow_deinit_postcfg(wow_info);
+		*hw_reinit = false;
+	} else {
+		PHL_ERR("%s : unexpected mac pwr state %d.\n", __func__, wow_info->mac_pwr);
+	}
 
 #endif /* CONFIG_WOWLAN */
 }
@@ -1525,10 +1584,13 @@ enum rtw_phl_status rtw_phl_radio_on(void *phl)
 	struct phl_hci_trx_ops *ops = phl_info->hci_trx_ops;
 	enum rtw_phl_status phl_status = RTW_PHL_STATUS_FAILURE;
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_SUCCESS;
+#ifdef CONFIG_SYNC_INTERRUPT
+	struct rtw_phl_evt_ops *evt_ops = &phl_info->phl_com->evt_ops;
+#endif /* CONFIG_SYNC_INTERRUPT */
 
-	ops->trx_resume(phl_info, PHL_REQ_PAUSE_TX|PHL_REQ_PAUSE_RX);
+	ops->trx_resume(phl_info, PHL_REQ_PAUSE_TX | PHL_REQ_PAUSE_RX);
 
-	rtw_hal_set_default_var(phl_info->hal);
+	rtw_hal_set_default_var(phl_info->hal, INTR_MASK_OPT_HAL_INIT);
 
 	hal_status = rtw_hal_start(phl_info->phl_com, phl_info->hal);
 	if (hal_status == RTW_HAL_STATUS_MAC_INIT_FAILURE) {
@@ -1545,8 +1607,12 @@ enum rtw_phl_status rtw_phl_radio_on(void *phl)
 		goto error_hal_start;
 	}
 
-	phl_role_recover(phl);
+	phl_cmd_role_recover(phl_info);
+#ifdef CONFIG_SYNC_INTERRUPT
+	evt_ops->set_interrupt_caps(phl_to_drvpriv(phl_info), true);
+#else
 	rtw_hal_enable_interrupt(phl_info->phl_com, phl_info->hal);
+#endif /* CONFIG_SYNC_INTERRUPT */
 
 	return RTW_PHL_STATUS_SUCCESS;
 error_hal_start:
@@ -1558,10 +1624,17 @@ enum rtw_phl_status rtw_phl_radio_off(void *phl)
 {
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	struct phl_hci_trx_ops *ops = phl_info->hci_trx_ops;
+#ifdef CONFIG_SYNC_INTERRUPT
+	struct rtw_phl_evt_ops *evt_ops = &phl_info->phl_com->evt_ops;
+#endif /* CONFIG_SYNC_INTERRUPT */
 
+#ifdef CONFIG_SYNC_INTERRUPT
+	evt_ops->set_interrupt_caps(phl_to_drvpriv(phl_info), false);
+#else
 	rtw_hal_disable_interrupt(phl_info->phl_com, phl_info->hal);
-	phl_role_suspend(phl_info);
-	rtw_hal_g6_stop(phl_info->phl_com, phl_info->hal);
+#endif /* CONFIG_SYNC_INTERRUPT */
+	phl_cmd_role_suspend(phl_info);
+	rtw_hal_stop(phl_info->phl_com, phl_info->hal);
 	ops->trx_reset(phl_info);
 
 	return RTW_PHL_STATUS_SUCCESS;
@@ -1571,22 +1644,27 @@ enum rtw_phl_status rtw_phl_suspend(void *phl, struct rtw_phl_stainfo_t *sta, u8
 {
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_SUCCESS;
-
-	FUNCIN();
-
-	PHL_TRACE(COMP_PHL_WOW, _PHL_INFO_, "%s enter with wow_en(%d)\n.", __func__, wow_en);
-
-
-	/* Leave Power Saving */
 #ifdef CONFIG_WOWLAN
+	struct phl_wow_info *wow_info = phl_to_wow_info(phl_info);
+#endif
+
+	PHL_INFO("%s enter with wow_en(%d)\n.", __func__, wow_en);
+#ifdef CONFIG_WOWLAN
+	/* leave all power saving */
+	pstatus = phl_ps_leave_cmd_sync(phl_info, &wow_info->ps_token, PHL_PS_NTFY_TYPE_WOWLAN);
+	if (RTW_PHL_STATUS_SUCCESS != pstatus) {
+		PHL_ERR("[wow] phl_ps_leave_cmd_sync failed.\n");
+	}
+
+
 	if (wow_en) {
 		pstatus = phl_wow_start(phl_info, sta);
 	} else {
-		phl_role_suspend(phl_info);
+		phl_cmd_role_suspend(phl_info);
 		rtw_phl_stop(phl);
 	}
 #else
-	phl_role_suspend(phl_info);
+	phl_cmd_role_suspend(phl_info);
 	rtw_phl_stop(phl);
 #endif
 
@@ -1599,43 +1677,31 @@ enum rtw_phl_status rtw_phl_resume(void *phl, struct rtw_phl_stainfo_t *sta, u8 
 {
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_SUCCESS;
-	struct phl_hci_trx_ops *trx_ops = phl_info->hci_trx_ops;
 #ifdef CONFIG_WOWLAN
 	struct phl_wow_info *wow_info = phl_to_wow_info(phl_info);
 #endif
 
-	FUNCIN();
-
 #ifdef CONFIG_WOWLAN
-	rtw_hal_get_pwr_state(phl_info->hal, &wow_info->mac_pwr);
-
-	PHL_TRACE(COMP_PHL_WOW, _PHL_INFO_, "%s enter with mac power %s\n.",
-			  __func__, (wow_info->mac_pwr == 1) ? "on" : "off");
-
-	if (wow_info->mac_pwr && wow_info->enter_wow) {
-		phl_wow_stop(phl_info, sta);
-		*hw_reinit = false;
+	if (wow_info->op_mode != RTW_WOW_OP_NONE) {
+		phl_wow_stop(phl_info, sta, hw_reinit);
 	} else {
 		pstatus = rtw_phl_start(phl);
-		if (wow_info->enter_wow) {
-			PHL_WARN("enter suspend with wow enabled but mac is power down\n");
-			phl_role_suspend(phl_info);
-		}
-		phl_role_recover(phl_info);
+		phl_cmd_role_recover(phl_info);
 		*hw_reinit = true;
 	}
 	#if defined(RTW_WKARD_WOW_L2_PWR) && defined(CONFIG_PCI_HCI)
-	rtw_hal_set_l2_leave(phl_info->hal);
+	phl_cmd_set_l2_leave(phl_info);
 	#endif
-	phl_record_wow_stat(phl_info);
-	phl_reset_wow_info(phl_info);
+	phl_record_wow_stat(wow_info);
+	phl_reset_wow_info(wow_info);
+	phl_ps_leave_cmd_cancel(phl_info, wow_info->ps_token);
 #else
 	pstatus = rtw_phl_start(phl);
-	phl_role_recover(phl_info);
+	phl_cmd_role_recover(phl_info);
 	*hw_reinit = true;
 #endif
 
-	FUNCOUT_WSTS(pstatus);
+	PHL_INFO("%s exit with hw_reinit %d.\n.", __func__, *hw_reinit);
 
 	return pstatus;
 }
@@ -1649,7 +1715,7 @@ enum rtw_phl_status rtw_phl_reset(void *phl)
 	if(rtw_phl_is_init_completed(phl_info))
 		phl_status = RTW_PHL_STATUS_SUCCESS;
 
-	rtw_hal_g6_stop(phl_info->phl_com, phl_info->hal);
+	rtw_hal_stop(phl_info->phl_com, phl_info->hal);
 
 	ops->trx_reset(phl_info);
 	ops->trx_resume(phl_info, PHL_REQ_PAUSE_TX|PHL_REQ_PAUSE_RX);
@@ -2198,19 +2264,5 @@ rtw_phl_bfee_ctrl(void *phl, struct rtw_wifi_role_t *wrole, bool ctrl)
 	return pstatus;
 }
 #endif
-
-enum rtw_phl_status
-rtw_phl_beacon_stop(void *phl, struct rtw_wifi_role_t *wrole, u8 stop)
-{
-	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	enum rtw_phl_status pstatus = RTW_PHL_STATUS_SUCCESS;
-	enum rtw_hal_status hstatus = RTW_HAL_STATUS_SUCCESS;
-
-	hstatus = rtw_hal_beacon_stop(phl_info->hal, wrole, stop);
-	if (hstatus != RTW_HAL_STATUS_SUCCESS)
-		pstatus = RTW_PHL_STATUS_FAILURE;
-
-	return pstatus;
-}
 
 #endif
