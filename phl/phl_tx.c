@@ -129,6 +129,15 @@ void phl_dump_tx_stats(struct rtw_stats *stats)
 		  stats->last_tx_time_ms);
 }
 
+void phl_dump_h2c_pool_stats(struct phl_h2c_pkt_pool *h2c_pkt_pool)
+{
+	PHL_INFO("[h2c_stats] idle cmd %d, idle data %d, idle ldata %d, busy h2c %d.\n",
+				h2c_pkt_pool->idle_h2c_pkt_cmd_list.cnt,
+				h2c_pkt_pool->idle_h2c_pkt_data_list.cnt,
+				h2c_pkt_pool->idle_h2c_pkt_ldata_list.cnt,
+				h2c_pkt_pool->busy_h2c_pkt_list.cnt);
+}
+
 void phl_reset_tx_stats(struct rtw_stats *stats)
 {
 	stats->tx_byte_uni = 0;
@@ -139,6 +148,38 @@ void phl_reset_tx_stats(struct rtw_stats *stats)
 	stats->txtp.last_calc_time_ms = 0;
 	stats->tx_traffic.lvl = RTW_TFC_IDLE;
 	stats->tx_traffic.sts = 0;
+}
+
+void
+phl_tx_traffic_upd(struct rtw_stats *sts)
+{
+	u32 tp_k = 0, tp_m = 0;
+	enum rtw_tfc_lvl tx_tfc_lvl = RTW_TFC_IDLE;
+	tp_k = sts->tx_tp_kbits;
+	tp_m = sts->tx_tp_kbits >> 10;
+
+	if (tp_m >= TX_HIGH_TP_THRES_MBPS)
+		tx_tfc_lvl = RTW_TFC_HIGH;
+	else if (tp_m >= TX_MID_TP_THRES_MBPS)
+		tx_tfc_lvl = RTW_TFC_MID;
+	else if (tp_m >= TX_LOW_TP_THRES_MBPS)
+		tx_tfc_lvl = RTW_TFC_LOW;
+	else if (tp_k >= TX_ULTRA_LOW_TP_THRES_KBPS)
+		tx_tfc_lvl = RTW_TFC_ULTRA_LOW;
+	else
+		tx_tfc_lvl = RTW_TFC_IDLE;
+
+	if (sts->tx_traffic.lvl > tx_tfc_lvl) {
+		sts->tx_traffic.sts = (TRAFFIC_CHANGED | TRAFFIC_DECREASE);
+		sts->tx_traffic.lvl = tx_tfc_lvl;
+	} else if (sts->tx_traffic.lvl < tx_tfc_lvl) {
+		sts->tx_traffic.sts = (TRAFFIC_CHANGED | TRAFFIC_INCREASE);
+		sts->tx_traffic.lvl = tx_tfc_lvl;
+	} else if (sts->tx_traffic.sts &
+		(TRAFFIC_CHANGED | TRAFFIC_INCREASE | TRAFFIC_DECREASE)) {
+		sts->tx_traffic.sts &= ~(TRAFFIC_CHANGED | TRAFFIC_INCREASE |
+					 TRAFFIC_DECREASE);
+	}
 }
 
 void phl_update_tx_stats(struct rtw_stats *stats, struct rtw_xmit_req *tx_req)
@@ -346,17 +387,15 @@ void phl_free_deferred_tx_ring(struct phl_info_t *phl_info)
 
 	ring_list = & phl_info->t_ring_free_list;
 
-	if (list_empty(ring_list))
-		return;
-
 	_os_spinlock(drv_priv, &phl_info->t_ring_free_list_lock, _bh, NULL);
 
-	phl_list_for_loop_safe(phl_tring_list, t, struct rtw_phl_tring_list,
+	if (list_empty(ring_list) == false) {
+		phl_list_for_loop_safe(phl_tring_list, t, struct rtw_phl_tring_list,
 					ring_list, list) {
-		list_del(&phl_tring_list->list);
-		_phl_free_phl_tring_list(phl_info, phl_tring_list);
+		    list_del(&phl_tring_list->list);
+		    _phl_free_phl_tring_list(phl_info, phl_tring_list);
+		}
 	}
-
 	_os_spinunlock(drv_priv, &phl_info->t_ring_free_list_lock, _bh, NULL);
 }
 
@@ -529,6 +568,10 @@ void _phl_sort_ring_by_tid(struct phl_ring_status *ring_sts,
 		list_add_tail(&ring_sts->list,
 			      &tx_plan->sorted_ring);
 	} else if (ring_sts->ring_ptr->tid == 2) {
+	    if (list_empty(&tx_plan->sorted_ring)) {
+		list_add_tail(&ring_sts->list,
+			      &tx_plan->sorted_ring);
+	    } else {
 		last_sts = list_last_entry(&tx_plan->sorted_ring,
 				struct phl_ring_status, list);
 		if (1 == last_sts->ring_ptr->tid) {
@@ -539,6 +582,7 @@ void _phl_sort_ring_by_tid(struct phl_ring_status *ring_sts,
 			list_add_tail(&ring_sts->list,
 				      &tx_plan->sorted_ring);
 		}
+	    }
 	} else {
 		list_add(&ring_sts->list,
 			 &tx_plan->sorted_ring);
@@ -938,7 +982,10 @@ struct rtw_h2c_pkt *phl_query_idle_h2c_pkt(struct phl_info_t *phl_info, u8 type)
 				h2c_type);
 		break;
 	}
-	/*PHL_INFO("phl_query_idle_h2c_pkt => remaining %d.(type %d).\n", *idle_cnt,h2c_type);*/
+	PHL_TRACE(COMP_PHL_DBG, _PHL_DEBUG_,
+		  "phl_query_idle_h2c_pkt => remaining %d (type %d).\n",
+		  *idle_cnt, h2c_type);
+
 	h2c_pkt = dequeue_h2c_pkt(phl_info, queue);
 
 	return h2c_pkt;
@@ -1425,38 +1472,6 @@ fail:
 #endif
 
 void
-_phl_tx_traffic_upd(struct rtw_stats *sts)
-{
-	u32 tp_k = 0, tp_m = 0;
-	enum rtw_tfc_lvl tx_tfc_lvl = RTW_TFC_IDLE;
-	tp_k = sts->tx_tp_kbits;
-	tp_m = sts->tx_tp_kbits >> 10;
-
-	if (tp_m >= TX_HIGH_TP_THRES_MBPS)
-		tx_tfc_lvl = RTW_TFC_HIGH;
-	else if (tp_m >= TX_MID_TP_THRES_MBPS)
-		tx_tfc_lvl = RTW_TFC_MID;
-	else if (tp_m >= TX_LOW_TP_THRES_MBPS)
-		tx_tfc_lvl = RTW_TFC_LOW;
-	else if (tp_k >= TX_ULTRA_LOW_TP_THRES_KBPS)
-		tx_tfc_lvl = RTW_TFC_ULTRA_LOW;
-	else
-		tx_tfc_lvl = RTW_TFC_IDLE;
-
-	if (sts->tx_traffic.lvl > tx_tfc_lvl) {
-		sts->tx_traffic.sts = (TRAFFIC_CHANGED | TRAFFIC_DECREASE);
-		sts->tx_traffic.lvl = tx_tfc_lvl;
-	} else if (sts->tx_traffic.lvl < tx_tfc_lvl) {
-		sts->tx_traffic.sts = (TRAFFIC_CHANGED | TRAFFIC_INCREASE);
-		sts->tx_traffic.lvl = tx_tfc_lvl;
-	} else if (sts->tx_traffic.sts &
-		(TRAFFIC_CHANGED | TRAFFIC_INCREASE | TRAFFIC_DECREASE)) {
-		sts->tx_traffic.sts &= ~(TRAFFIC_CHANGED | TRAFFIC_INCREASE |
-					 TRAFFIC_DECREASE);
-	}
-}
-
-void
 phl_tx_watchdog(struct phl_info_t *phl_info)
 {
 	struct phl_hci_trx_ops *trx_ops = phl_info->hci_trx_ops;
@@ -1464,6 +1479,6 @@ phl_tx_watchdog(struct phl_info_t *phl_info)
 	struct rtw_phl_stainfo_t *sta = NULL;
 
 	/* hana_todo: update traffic info of each station */
-	_phl_tx_traffic_upd(phl_stats);
+	phl_tx_traffic_upd(phl_stats);
 	trx_ops->tx_watchdog(phl_info);
 }
