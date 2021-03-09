@@ -84,6 +84,38 @@ void phl_reset_rx_stats(struct rtw_stats *stats)
 	stats->rx_traffic.sts = 0;
 }
 
+void
+phl_rx_traffic_upd(struct rtw_stats *sts)
+{
+	u32 tp_k = 0, tp_m = 0;
+	enum rtw_tfc_lvl rx_tfc_lvl = RTW_TFC_IDLE;
+	tp_k = sts->rx_tp_kbits;
+	tp_m = sts->rx_tp_kbits >> 10;
+
+	if (tp_m >= RX_HIGH_TP_THRES_MBPS)
+		rx_tfc_lvl = RTW_TFC_HIGH;
+	else if (tp_m >= RX_MID_TP_THRES_MBPS)
+		rx_tfc_lvl = RTW_TFC_MID;
+	else if (tp_m >= RX_LOW_TP_THRES_MBPS)
+		rx_tfc_lvl = RTW_TFC_LOW;
+	else if (tp_k >= RX_ULTRA_LOW_TP_THRES_KBPS)
+		rx_tfc_lvl = RTW_TFC_ULTRA_LOW;
+	else
+		rx_tfc_lvl = RTW_TFC_IDLE;
+
+	if (sts->rx_traffic.lvl > rx_tfc_lvl) {
+		sts->rx_traffic.sts = (TRAFFIC_CHANGED | TRAFFIC_DECREASE);
+		sts->rx_traffic.lvl = rx_tfc_lvl;
+	} else if (sts->rx_traffic.lvl < rx_tfc_lvl) {
+		sts->rx_traffic.sts = (TRAFFIC_CHANGED | TRAFFIC_INCREASE);
+		sts->rx_traffic.lvl = rx_tfc_lvl;
+	} else if (sts->rx_traffic.sts &
+		(TRAFFIC_CHANGED | TRAFFIC_INCREASE | TRAFFIC_DECREASE)) {
+		sts->rx_traffic.sts &= ~(TRAFFIC_CHANGED | TRAFFIC_INCREASE |
+					 TRAFFIC_DECREASE);
+	}
+}
+
 void phl_update_rx_stats(struct rtw_stats *stats, struct rtw_recv_pkt *rx_pkt)
 {
 	u32 diff_t = 0, cur_time = _os_get_cur_time_ms();
@@ -302,6 +334,14 @@ void _phl_indic_new_rxpkt(struct phl_info_t *phl_info)
 #endif
 }
 
+void _phl_record_rx_stats(struct rtw_recv_pkt *recvpkt)
+{
+	if(NULL == recvpkt)
+		return;
+	if (recvpkt->tx_sta)
+		recvpkt->tx_sta->stats.rx_rate = recvpkt->mdata.rx_rate;
+}
+
 enum rtw_phl_status _phl_add_rx_pkt(struct phl_info_t *phl_info,
 				    struct rtw_phl_rx_pkt *phl_rx)
 {
@@ -351,9 +391,121 @@ enum rtw_phl_status _phl_add_rx_pkt(struct phl_info_t *phl_info,
 out:
 	_os_spinunlock(drv, &phl_info->rx_ring_lock, _bh, NULL);
 
+	if(pstatus == RTW_PHL_STATUS_SUCCESS)
+		_phl_record_rx_stats(recvpkt);
+
 	FUNCOUT_WSTS(pstatus);
 
 	return pstatus;
+}
+
+void
+phl_sta_ps_enter(struct phl_info_t *phl_info, struct rtw_phl_stainfo_t *sta,
+                 struct rtw_wifi_role_t *role)
+{
+	void *d = phl_to_drvpriv(phl_info);
+	/* enum rtw_hal_status hal_status; */
+	struct rtw_phl_evt_ops *ops = &phl_info->phl_com->evt_ops;
+
+	_os_atomic_set(d, &sta->ps_sta, 1);
+
+	PHL_TRACE(COMP_PHL_PS, _PHL_INFO_,
+	          "STA %02X:%02X:%02X:%02X:%02X:%02X enters PS mode, AID=%u, macid=%u, sta=0x%p\n",
+	          sta->mac_addr[0], sta->mac_addr[1], sta->mac_addr[2],
+	          sta->mac_addr[3], sta->mac_addr[4], sta->mac_addr[5],
+	          sta->aid, sta->macid, sta);
+
+	/* TODO: comment out because beacon may stop if we do this frequently */
+	/* hal_status = rtw_hal_set_macid_pause(phl_info->hal, */
+	/*                                         sta->macid, true); */
+	/* if (RTW_HAL_STATUS_SUCCESS != hal_status) { */
+	/*         PHL_WARN("%s(): failed to pause macid tx, macid=%u\n", */
+	/*                  __FUNCTION__, sta->macid); */
+	/* } */
+
+	if (ops->ap_ps_sta_ps_change)
+		ops->ap_ps_sta_ps_change(d, role->id, sta->mac_addr, true);
+}
+
+void
+phl_sta_ps_exit(struct phl_info_t *phl_info, struct rtw_phl_stainfo_t *sta,
+                struct rtw_wifi_role_t *role)
+{
+	void *d = phl_to_drvpriv(phl_info);
+	/* enum rtw_hal_status hal_status; */
+	struct rtw_phl_evt_ops *ops = &phl_info->phl_com->evt_ops;
+
+	PHL_TRACE(COMP_PHL_PS, _PHL_INFO_,
+	          "STA %02X:%02X:%02X:%02X:%02X:%02X leaves PS mode, AID=%u, macid=%u, sta=0x%p\n",
+	          sta->mac_addr[0], sta->mac_addr[1], sta->mac_addr[2],
+	          sta->mac_addr[3], sta->mac_addr[4], sta->mac_addr[5],
+	          sta->aid, sta->macid, sta);
+
+	_os_atomic_set(d, &sta->ps_sta, 0);
+
+	/* TODO: comment out because beacon may stop if we do this frequently */
+	/* hal_status = rtw_hal_set_macid_pause(phl_info->hal, */
+	/*                                         sta->macid, false); */
+	/* if (RTW_HAL_STATUS_SUCCESS != hal_status) { */
+	/*         PHL_WARN("%s(): failed to resume macid tx, macid=%u\n", */
+	/*                  __FUNCTION__, sta->macid); */
+	/* } */
+
+	if (ops->ap_ps_sta_ps_change)
+		ops->ap_ps_sta_ps_change(d, role->id, sta->mac_addr, false);
+}
+
+void
+phl_rx_handle_sta_process(struct phl_info_t *phl_info,
+                          struct rtw_phl_rx_pkt *rx)
+{
+	struct rtw_r_meta_data *m = &rx->r.mdata;
+	struct rtw_wifi_role_t *role = NULL;
+	struct rtw_phl_stainfo_t *sta = NULL;
+	void *d = phl_to_drvpriv(phl_info);
+
+	if (!phl_info->phl_com->dev_sw_cap.ap_ps)
+		return;
+
+	if (m->addr_cam_vld) {
+		sta = rtw_phl_get_stainfo_by_macid(phl_info, m->macid);
+		if (sta && sta->wrole)
+			role = sta->wrole;
+	}
+
+	if (!sta) {
+		role = phl_get_wrole_by_addr(phl_info, m->mac_addr);
+		if (role)
+			sta = rtw_phl_get_stainfo_by_addr(phl_info,
+			                                  role, m->ta);
+	}
+
+	if (!role || !sta)
+		return;
+
+	rx->r.tx_sta = sta;
+	rx->r.rx_role = role;
+
+	PHL_TRACE(COMP_PHL_PS, _PHL_DEBUG_,
+	          "ap-ps: more_frag=%u, frame_type=%u, role_type=%d, pwr_bit=%u, seq=%u\n",
+	          m->more_frag, m->frame_type, role->type, m->pwr_bit, m->seq);
+
+	/*
+	 * Change STA PS state based on the PM bit in frame control
+	 */
+	if (!m->more_frag &&
+	    (m->frame_type == RTW_FRAME_TYPE_DATA ||
+	     m->frame_type == RTW_FRAME_TYPE_CTRL) &&
+	    (role->type == PHL_RTYPE_AP ||
+	     role->type == PHL_RTYPE_P2P_GO)) {
+		if (_os_atomic_read(d, &sta->ps_sta)) {
+			if (!m->pwr_bit)
+				phl_sta_ps_exit(phl_info, sta, role);
+		} else {
+			if (m->pwr_bit)
+				phl_sta_ps_enter(phl_info, sta, role);
+		}
+	}
 }
 
 void
@@ -366,6 +518,8 @@ phl_handle_rx_frame_list(struct phl_info_t *phl_info,
 
 	phl_list_for_loop_safe(pos, n, struct rtw_phl_rx_pkt, frames, list) {
 		list_del(&pos->list);
+		// NEO
+		//phl_rx_handle_sta_process(phl_info, pos);
 		status = _phl_add_rx_pkt(phl_info, pos);
 		if (RTW_PHL_STATUS_RESOURCE == status) {
 			hci_trx_ops->recycle_rx_pkt(phl_info, pos);
@@ -649,40 +803,38 @@ static bool phl_manage_sta_reorder_buf(struct phl_info_t *phl_info,
 }
 
 enum rtw_phl_status phl_rx_reorder(struct phl_info_t *phl_info,
-									struct rtw_phl_rx_pkt *phl_rx,
-									_os_list *frames)
+                                   struct rtw_phl_rx_pkt *phl_rx,
+                                   _os_list *frames)
 {
 	/* ref wil_rx_reorder() and ieee80211_rx_reorder_ampdu() */
 
 	void *drv_priv = phl_to_drvpriv(phl_info);
 	struct rtw_r_meta_data *meta = &phl_rx->r.mdata;
 	u16 tid = meta->tid;
-	struct rtw_wifi_role_t *wrole;
 	struct rtw_phl_stainfo_t *sta = NULL;
 	struct phl_tid_ampdu_rx *r;
 	struct phl_hci_trx_ops *hci_trx_ops = phl_info->hci_trx_ops;
 
-	/* Remove FCS if is is appended
-	 * ToDo: handle more then one in pkt_list
+	/*
+	 * Remove FCS if is is appended
+	 * TODO: handle more than one in pkt_list
 	 */
-	do {
-		if (!phl_info->phl_com->append_fcs)
-			break;
-		/* Only last MSDU of A-MSDU includes FCS.
-		 * ToDo:
-		 * If A-MSDU cut processing is in HAL, should only deduct FCS
-		 * from length of last one of pkt_list. For such case,
+	if (phl_info->phl_com->append_fcs) {
+		/*
+		 * Only last MSDU of A-MSDU includes FCS.
+		 * TODO: If A-MSDU cut processing is in HAL, should only deduct
+		 * FCS from length of last one of pkt_list. For such case,
 		 * phl_rx->r should have pkt_list length.
 		 */
-		if (meta->amsdu_cut && !meta->last_msdu)
-			break;
-		if (phl_rx->r.pkt_list[0].length <= 4) {
-			PHL_ERR("%s, pkt_list[0].length(%d) too short\n",
-			__func__, phl_rx->r.pkt_list[0].length);
-			goto drop_frame;
-		} else
-			phl_rx->r.pkt_list[0].length -= 4;
-	} while (0);
+		  if (!(meta->amsdu_cut && !meta->last_msdu)) {
+			  if (phl_rx->r.pkt_list[0].length <= 4) {
+				  PHL_ERR("%s, pkt_list[0].length(%d) too short\n",
+				          __func__, phl_rx->r.pkt_list[0].length);
+				  goto drop_frame;
+			  }
+			  phl_rx->r.pkt_list[0].length -= 4;
+		  }
+	}
 
 	if (meta->bc || meta->mc)
 		goto dont_reorder;
@@ -697,58 +849,34 @@ enum rtw_phl_status phl_rx_reorder(struct phl_info_t *phl_info,
 
 	/* if the mpdu is fragmented, don't reorder */
 	if (meta->more_frag || meta->frag_num) {
-		PHL_TRACE(COMP_PHL_RECV, _PHL_ERR_, "Receive QoS Data with more_frag=%u, frag_num=%u\n",
-				meta->more_frag, meta->frag_num);
+		PHL_TRACE(COMP_PHL_RECV, _PHL_ERR_,
+		          "Receive QoS Data with more_frag=%u, frag_num=%u\n",
+		          meta->more_frag, meta->frag_num);
 		goto dont_reorder;
 	}
 
-	RTW_INFO("%s NEO force to NOT reorder first\n", __func__);
-	goto dont_reorder;
-
 	/* Use MAC ID from address CAM if this packet is address CAM matched */
-	while (meta->addr_cam_vld) {
-		struct rtw_recv_pkt *rx = &phl_rx->r;
-		rx->tx_sta = rtw_phl_get_stainfo_by_macid(phl_info,
-							 meta->macid);
-		if (rx->tx_sta == NULL) {
-			PHL_TRACE(COMP_PHL_RECV, _PHL_WARNING_,
-				  "No STA info w. matched A%d M%d\n",
-				  meta->addr_cam, meta->macid);
-			break;
-		}
+	if (meta->addr_cam_vld)
+		sta = rtw_phl_get_stainfo_by_macid(phl_info, meta->macid);
 
-		rx->rx_role = rx->tx_sta->wrole;
-		if (rx->rx_role == NULL) {
-			PHL_TRACE(COMP_PHL_RECV, _PHL_WARNING_,
-			          "No RX role in STA of M%d\n", meta->macid);
-			rx->tx_sta = NULL;
-			break;
-		}
-		sta = rx->tx_sta;
-		wrole = rx->rx_role;
-		/* ToDo: Check match to self and BMC */
-		break;
-	}
 	/* Otherwise, search STA by TA */
-	if (sta == NULL) {
+	if (!sta || !sta->wrole) {
+		struct rtw_wifi_role_t *wrole;
 		wrole = phl_get_wrole_by_addr(phl_info, meta->mac_addr);
-
-		if (wrole == NULL) {
-			PHL_TRACE(COMP_PHL_RECV, _PHL_ERR_,
-			          "Failed to get wrole for reordering, drop frame\n");
-			goto drop_frame;
+		if (wrole)
+			sta = rtw_phl_get_stainfo_by_addr(phl_info,
+			                                  wrole, meta->ta);
+		if (!wrole || !sta) {
+			PHL_TRACE(COMP_PHL_RECV, _PHL_WARNING_,
+			          "%s(): stainfo or wrole not found, cam=%u, macid=%u\n",
+			          __FUNCTION__, meta->addr_cam, meta->macid);
+			goto dont_reorder;
 		}
-
-		/* TODO: a hash table search would be more prefferable on rx path */
-		sta = rtw_phl_get_stainfo_by_addr(phl_info, wrole, meta->ta);
-		if (!sta) {
-			PHL_ERR("Failed to get sta of %pM for reordering, drop frame\n",
-			        meta->ta);
-			goto drop_frame;
-		}
-		phl_rx->r.tx_sta = sta;
-		phl_rx->r.rx_role = wrole;
 	}
+
+	phl_rx->r.tx_sta = sta;
+	phl_rx->r.rx_role = sta->wrole;
+
 	rtw_hal_set_sta_rx_sts(sta, false, meta);
 
 	if (tid >= ARRAY_SIZE(sta->tid_rx)) {
@@ -781,7 +909,6 @@ dont_reorder:
 	list_add_tail(&phl_rx->list, frames);
 	return RTW_PHL_STATUS_SUCCESS;
 }
-
 
 u8 phl_check_recv_ring_resource(struct phl_info_t *phl_info)
 {
@@ -865,38 +992,6 @@ void phl_event_indicator(void *context)
 
 }
 
-void
-_phl_rx_traffic_upd(struct rtw_stats *sts)
-{
-	u32 tp_k = 0, tp_m = 0;
-	enum rtw_tfc_lvl rx_tfc_lvl = RTW_TFC_IDLE;
-	tp_k = sts->rx_tp_kbits;
-	tp_m = sts->rx_tp_kbits >> 10;
-
-	if (tp_m >= RX_HIGH_TP_THRES_MBPS)
-		rx_tfc_lvl = RTW_TFC_HIGH;
-	else if (tp_m >= RX_MID_TP_THRES_MBPS)
-		rx_tfc_lvl = RTW_TFC_MID;
-	else if (tp_m >= RX_LOW_TP_THRES_MBPS)
-		rx_tfc_lvl = RTW_TFC_LOW;
-	else if (tp_k >= RX_ULTRA_LOW_TP_THRES_KBPS)
-		rx_tfc_lvl = RTW_TFC_ULTRA_LOW;
-	else
-		rx_tfc_lvl = RTW_TFC_IDLE;
-
-	if (sts->rx_traffic.lvl > rx_tfc_lvl) {
-		sts->rx_traffic.sts = (TRAFFIC_CHANGED | TRAFFIC_DECREASE);
-		sts->rx_traffic.lvl = rx_tfc_lvl;
-	} else if (sts->rx_traffic.lvl < rx_tfc_lvl) {
-		sts->rx_traffic.sts = (TRAFFIC_CHANGED | TRAFFIC_INCREASE);
-		sts->rx_traffic.lvl = rx_tfc_lvl;
-	} else if (sts->rx_traffic.sts &
-		(TRAFFIC_CHANGED | TRAFFIC_INCREASE | TRAFFIC_DECREASE)) {
-		sts->rx_traffic.sts &= ~(TRAFFIC_CHANGED | TRAFFIC_INCREASE |
-					 TRAFFIC_DECREASE);
-	}
-}
-
 void _phl_rx_statistics_reset(struct phl_info_t *phl_info)
 {
 	RTW_ERR("NEO TODO %s\n", __func__);
@@ -931,7 +1026,7 @@ phl_rx_watchdog(struct phl_info_t *phl_info)
 	struct rtw_stats *phl_stats = &phl_info->phl_com->phl_stats;
 
 	/* hana_todo: update traffic info of each station */
-	_phl_rx_traffic_upd(phl_stats);
+	phl_rx_traffic_upd(phl_stats);
 	_phl_rx_statistics_reset(phl_info);
 }
 
@@ -1073,6 +1168,42 @@ void rtw_phl_rx_bar(void *phl, struct rtw_phl_stainfo_t *sta, u8 tid, u16 seq)
 out:
 	_os_spinunlock(drv_priv, &sta->tid_rx_lock, _bh, NULL);
 }
+
+#if 0 // NEO
+enum rtw_phl_status
+rtw_phl_enter_mon_mode(void *phl, struct rtw_wifi_role_t *wrole)
+{
+	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
+	enum rtw_hal_status status;
+
+	status = rtw_hal_enter_mon_mode(phl_info->hal, wrole->hw_band);
+	if (status != RTW_HAL_STATUS_SUCCESS) {
+		PHL_TRACE(COMP_PHL_RECV, _PHL_ERR_,
+		          "%s(): rtw_hal_enter_mon_mode() failed, status=%d",
+		          __FUNCTION__, status);
+		return RTW_PHL_STATUS_FAILURE;
+	}
+
+	return RTW_PHL_STATUS_SUCCESS;
+}
+
+enum rtw_phl_status
+rtw_phl_leave_mon_mode(void *phl, struct rtw_wifi_role_t *wrole)
+{
+	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
+	enum rtw_hal_status status;
+
+	status = rtw_hal_leave_mon_mode(phl_info->hal, wrole->hw_band);
+	if (status != RTW_HAL_STATUS_SUCCESS) {
+		PHL_TRACE(COMP_PHL_RECV, _PHL_ERR_,
+		          "%s(): rtw_hal_leave_mon_mode() failed, status=%d",
+		          __FUNCTION__, status);
+		return RTW_PHL_STATUS_FAILURE;
+	}
+
+	return RTW_PHL_STATUS_SUCCESS;
+}
+#endif // if 0 NEO
 
 #ifdef CONFIG_PHL_RX_PSTS_PER_PKT
 void
@@ -1428,5 +1559,5 @@ phl_rx_proc_ppdu_sts(struct phl_info_t *phl_info, struct rtw_phl_rx_pkt *phl_rx)
 		}
 	}
 #endif
-#endif
+#endif // if 0 NEO
 }
