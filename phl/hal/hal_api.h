@@ -498,6 +498,9 @@ rtw_hal_bf_set_fix_mode(void *hal, bool mu, bool he);
 enum rtw_hal_status
 rtw_hal_bf_get_entry_snd_sts(void *entry);
 
+void rtw_hal_beamform_set_vht_gid(void *hal, u8 band,
+		struct rtw_phl_gid_pos_tbl *tbl);
+
 /******************************************************************************
  *
  * BTC APIs

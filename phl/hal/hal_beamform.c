@@ -1211,3 +1211,17 @@ hal_bf_set_mu_sta_fw(void *hal, struct rtw_phl_stainfo_t *sta)
 #endif // if 0
 
 
+void rtw_hal_beamform_set_vht_gid(void *hal, u8 band,
+				  struct rtw_phl_gid_pos_tbl *tbl)
+{
+	RTW_INFO("%s NEO TODO\n", __func__);
+#if 0 // NEO
+	PHL_TRACE(COMP_PHL_DBG, _PHL_INFO_, "--> %s()\n", __func__);
+	if (RTW_HAL_STATUS_SUCCESS !=
+		rtw_hal_mac_bfee_set_vht_gid(hal, band, tbl)) {
+		PHL_INFO("%s : Error to set VHT GID Position to MAC !!! \n",
+			 __func__);
+	}
+	PHL_TRACE(COMP_PHL_DBG, _PHL_INFO_, "<-- %s()\n", __func__);
+#endif // if 0 NEO
+}

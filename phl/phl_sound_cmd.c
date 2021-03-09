@@ -123,9 +123,7 @@ _phl_snd_cmd_module_msg_msg_hdlr_post(struct phl_info_t *phl,
 			break;
 		}
 
-		//NEO
-		RTW_INFO("%s TODO rtw_hal_beamform_set_vht_gid\n", __func__);
-		//rtw_hal_beamform_set_vht_gid(phl->hal, msg->band_idx, gid_tbl);
+		rtw_hal_beamform_set_vht_gid(phl->hal, msg->band_idx, gid_tbl);
 		mstatus = MDL_RET_SUCCESS;
 	}
 	break;

@@ -15,6 +15,8 @@
  *
  *****************************************************************************/
 #include "phl_headers.h"
+
+#ifdef CONFIG_FSM
 #include "phl_fsm.h"
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
@@ -193,3 +195,5 @@ int phl_cmd_do_job(struct _cmd_obj *pcmd, void *param)
 	}
 	return rtn;
 }
+#endif /*CONFIG_FSM*/
+
