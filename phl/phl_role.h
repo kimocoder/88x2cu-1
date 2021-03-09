@@ -15,8 +15,10 @@
 #ifndef _PHL_ROLE_H_
 #define _PHL_ROLE_H_
 
+#ifdef CONFIG_CMD_DISP
 enum rtw_phl_status
 phl_register_mrc_module(struct phl_info_t *phl_info);
+#endif
 
 struct rtw_wifi_role_t *
 phl_get_wrole_by_ridx(struct phl_info_t *phl_info, u8 rold_idx);
@@ -30,9 +32,15 @@ phl_role_notify(struct phl_info_t *phl_info, struct rtw_wifi_role_t *wrole);
 #ifdef RTW_WKARD_RADIO_IPS_FLOW
 enum rtw_phl_status
 phl_role_recover(struct phl_info_t *phl_info);
-
+enum rtw_phl_status
+phl_cmd_role_recover(struct phl_info_t *phl_info);
 enum rtw_phl_status
 phl_role_suspend(struct phl_info_t *phl_info);
+enum rtw_phl_status
+phl_cmd_role_suspend(struct phl_info_t *phl_info);
+#else
+#define phl_cmd_role_recover(_phl_info) (RTW_PHL_STATUS_SUCCESS)
+#define phl_cmd_role_suspend(_phl_info) (RTW_PHL_STATUS_SUCCESS)
 #endif
 
 #ifdef RTW_WKARD_LPS_ROLE_CONFIG
@@ -45,6 +53,21 @@ void phl_role_suspend_unused_role(struct phl_info_t *phl_info,
 #ifdef RTW_PHL_BCN
 enum rtw_phl_status
 rtw_phl_free_bcn_entry(void *phl, struct rtw_wifi_role_t *wrole);
+#ifdef CONFIG_CMD_DISP
+enum rtw_phl_status
+phl_cmd_issue_bcn_hdl(struct phl_info_t *phl_info, u8 *param);
+enum rtw_phl_status
+phl_cmd_stop_bcn_hdl(struct phl_info_t *phl_info, u8 *param);
+#endif
+#endif
+
+#ifdef CONFIG_CMD_DISP
+enum rtw_phl_status
+phl_wifi_role_start_hdl(struct phl_info_t *phl_info, u8 *param);
+enum rtw_phl_status
+phl_wifi_role_chg_hdl(struct phl_info_t *phl_info, u8 *param);
+enum rtw_phl_status
+phl_wifi_role_stop_hdl(struct phl_info_t *phl_info, u8 *param);
 #endif
 
 #endif  /*_PHL_ROLE_H_*/

@@ -21,11 +21,7 @@
  * timeout value 0 has a different meaning on Windows and Linux.  See the
  * implementation of _os_event_wait().
  */
-#ifdef PHL_PLATFORM_WINDOWS
 #define PHL_REORDER_TIMER_SYNC_TO_MS 50
-#else
-#define PHL_REORDER_TIMER_SYNC_TO_MS 0 /* no wait */
-#endif
 
 void phl_tid_ampdu_rx_free(struct phl_tid_ampdu_rx *r);
 void phl_free_rx_reorder(struct phl_info_t *phl_info, struct rtw_phl_stainfo_t *sta);
