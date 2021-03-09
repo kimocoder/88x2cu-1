@@ -560,6 +560,7 @@ u32 rtw_hal_btc_process_c2h(void *hal, u8 cls, u8 func, u16 len, u8 *buf)
 	struct rtw_hal_com_t *hal_com = h->hal_com;
 	struct btc_fw_msg *fmsg = &hal_com->btc_msg;
 
+#ifdef CONFIG_BTCOEX
 	if (len && len < RTW_PHL_BTC_FWINFO_BUF) {
 		if (cls == BTC_CLASS_FEV && func == BTC_FEV_BT_INFO)
 			_copy_btmsg(hal_com, &fmsg->btinfo, len, buf);
@@ -572,7 +573,7 @@ u32 rtw_hal_btc_process_c2h(void *hal, u8 cls, u8 func, u16 len, u8 *buf)
 		PHL_INFO("[BTC], %s, Invalid c2h packet len : %d \n",
 				__func__, len);
 	}
-
+#endif
 	return 0;
 }
 

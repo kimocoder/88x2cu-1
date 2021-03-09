@@ -262,8 +262,8 @@ struct phl_info_t {
 	void *ser_fsm;
 	void *ser_obj;
 
-	void *btc_fsm;
-	void *btc_obj;
+	//void *btc_fsm;
+	//void *btc_obj;
 
 	void *snd_fsm;
 //#endif /*CONFIG_FSM*/

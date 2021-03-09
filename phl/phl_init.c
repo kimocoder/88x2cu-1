@@ -137,7 +137,8 @@ static void phl_msg_entry(void* priv, struct phl_msg *msg)
 			phl_msg_hub_power_mgnt_evt_hdlr(phl_info, msg);
 			break;
 		case PHL_MDL_BTC:
-			rtw_phl_btc_hub_msg_hdl(phl_info, msg);
+			//NEO
+			//rtw_phl_btc_hub_msg_hdl(phl_info, msg);
 			break;
 		default:
 			break;
@@ -547,6 +548,7 @@ static void phl_ser_deinit(struct phl_info_t *phl_info)
 	phl_info->ser_fsm = NULL;
 }
 
+#if 0 // NEO
 static enum rtw_phl_status phl_btc_init(struct phl_info_t *phl_info)
 {
 	if (phl_info->btc_fsm != NULL)
@@ -577,6 +579,7 @@ static void phl_btc_deinit(struct phl_info_t *phl_info)
 	phl_btc_destory_fsm(phl_info->btc_fsm);
 	phl_info->btc_fsm = NULL;
 }
+#endif // if 0 NEO
 
 static enum rtw_phl_status phl_scan_init(struct phl_info_t *phl_info)
 {
@@ -701,11 +704,13 @@ static enum rtw_phl_status phl_fsm_module_init(struct phl_info_t *phl_info)
 		goto ser_fail;
 	}
 
+#if 0 // NEO
 	phl_status = phl_btc_init(phl_info);
 	if (phl_status != RTW_PHL_STATUS_SUCCESS) {
 		PHL_ERR("phl_btc_init failed\n");
 		goto btc_fail;
 	}
+#endif // if 0 NEO
 
 	phl_status = phl_scan_init(phl_info);
 	if (phl_status != RTW_PHL_STATUS_SUCCESS) {
@@ -732,7 +737,8 @@ ps_fail:
 sound_fail:
 	phl_scan_deinit(phl_info);
 scan_fail:
-	phl_btc_deinit(phl_info);
+// NEO
+//	phl_btc_deinit(phl_info);
 btc_fail:
 	phl_ser_deinit(phl_info);
 ser_fail:
@@ -745,7 +751,8 @@ static void phl_fsm_module_deinit(struct phl_info_t *phl_info)
 {
 	phl_sound_deinit(phl_info);
 	phl_scan_deinit(phl_info);
-	phl_btc_deinit(phl_info);
+	// NEO
+	//phl_btc_deinit(phl_info);
 	phl_ser_deinit(phl_info);
 	phl_cmd_deinit(phl_info);
 	phl_ps_deinit(phl_info);
@@ -834,9 +841,11 @@ static enum rtw_phl_status phl_fsm_module_start(struct phl_info_t *phl_info)
 	if (phl_status != RTW_PHL_STATUS_SUCCESS)
 		goto ser_fail;
 
+#if 0 // NEO
 	phl_status = phl_btc_start(phl_info->btc_obj);
 	if (phl_status != RTW_PHL_STATUS_SUCCESS)
 		goto btc_fail;
+#endif // if 0 NEO
 
 	phl_status = phl_fsm_start_fsm(phl_info->scan_fsm);
 	if (phl_status != RTW_PHL_STATUS_SUCCESS)
@@ -862,7 +871,8 @@ snd_fail:
 ps_fail:
 	phl_fsm_stop_fsm(phl_info->scan_fsm);
 scan_fail:
-	phl_fsm_stop_fsm(phl_info->btc_fsm);
+// NEO
+//	phl_fsm_stop_fsm(phl_info->btc_fsm);
 btc_fail:
 	phl_fsm_stop_fsm(phl_info->ser_fsm);
 ser_fail:
@@ -877,7 +887,8 @@ static enum rtw_phl_status phl_fsm_module_stop(struct phl_info_t *phl_info)
 
 	phl_fsm_stop_fsm(phl_info->snd_fsm);
 	phl_fsm_stop_fsm(phl_info->scan_fsm);
-	phl_fsm_stop_fsm(phl_info->btc_fsm);
+// NEO
+//	phl_fsm_stop_fsm(phl_info->btc_fsm);
 	phl_fsm_stop_fsm(phl_info->ser_fsm);
 	phl_fsm_cmd_stop(phl_info);
 	phl_ps_fsm_stop(phl_info);

@@ -2845,7 +2845,7 @@ u8 rtw_sitesurvey_cmd(_adapter *padapter, struct sitesurvey_parm *pparm)
 
 	RTW_INFO("%s NEO TODO\n", __func__);
 
-#if 1 // NEO G6
+#if 0 // NEO G6
 	if (pparm == NULL) {
 		tmp_parm = rtw_zmalloc(sizeof(struct sitesurvey_parm));
 		if (tmp_parm == NULL) {
@@ -2893,7 +2893,8 @@ u8 rtw_sitesurvey_cmd(_adapter *padapter, struct sitesurvey_parm *pparm)
 	default:
 		RTW_INFO("%s NEO RTW_SCAN_NORMAL\n", __func__);
 		phl_param->ops = &scan_ops_cb;
-		phl_param->back_op_mode = SCAN_BKOP_CNT;
+		//phl_param->back_op_mode = SCAN_BKOP_CNT;
+		phl_param->back_op_mode = SCAN_BKOP_NONE;
 		phl_param->back_op_ch_cnt = 3;
 		phl_param->back_op_ch_dur_ms = SURVEY_TO;
 		break;
@@ -2919,7 +2920,9 @@ _err_param:
 	if (tmp_parm)
 		rtw_mfree(tmp_parm, sizeof(*tmp_parm));
 _err_exit:
+
 #else // NEO
+
 #ifdef CONFIG_LPS
 	if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE)
 		rtw_lps_ctrl_wk_cmd(padapter, LPS_CTRL_SCAN, 0);

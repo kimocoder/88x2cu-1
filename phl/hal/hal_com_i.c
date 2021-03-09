@@ -19,7 +19,10 @@
 enum rtw_hal_status rtw_hal_notify_scan_start(void *hinfo, enum phl_phy_idx phy_idx)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_SUCCESS;
+
+	RTW_INFO("%s NEO DO\n", __func__);
 #ifdef CONFIG_BTCOEX
+aa
 	enum band_type band;
 	struct hal_info_t *hal_info = (struct hal_info_t *)hinfo;
 

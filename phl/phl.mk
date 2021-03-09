@@ -80,9 +80,9 @@ _PHL_FILES += $(phl_path)phl_fsm.o \
 		$(phl_path)phl_cmd_fsm.o \
 		$(phl_path)phl_cmd_job.o \
 		$(phl_path)phl_ser_fsm.o \
-		$(phl_path)phl_btc_fsm.o \
 		$(phl_path)phl_scan_fsm.o \
 		$(phl_path)phl_sound_fsm.o
+#		$(phl_path)phl_btc_fsm.o \
 
 ifeq ($(CONFIG_FSM), y)
 _PHL_FILES += $(phl_path)phl_fsm.o \
