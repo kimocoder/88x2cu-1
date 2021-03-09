@@ -22,17 +22,13 @@ phl_macid_ctrl_init(struct phl_info_t *phl);
 enum rtw_phl_status
 phl_macid_ctrl_deinit(struct phl_info_t *phl);
 
-u16
-rtw_phl_get_macid_max_num(void *phl);
+u16 rtw_phl_get_macid_max_num(void *phl);
 
-u16 
-rtw_phl_wrole_bcmc_id_get(void *phl, struct rtw_wifi_role_t *wrole);
+u16 rtw_phl_wrole_bcmc_id_get(void *phl, struct rtw_wifi_role_t *wrole);
 
-u8 
-rtw_phl_macid_is_bmc(void *phl, u16 macid);
+u8 rtw_phl_macid_is_bmc(void *phl, u16 macid);
 
-u8 
-rtw_phl_macid_is_used(void *phl, u16 macid);
+u8 rtw_phl_macid_is_used(void *phl, u16 macid);
 
 static inline bool
 phl_macid_is_valid(struct phl_info_t *phl_info, u16 macid)
@@ -47,25 +43,25 @@ phl_stainfo_ctrl_init(struct phl_info_t *phl_info);
 enum rtw_phl_status
 phl_stainfo_ctrl_deinie(struct phl_info_t *phl_info);
 
-enum rtw_phl_status
-phl_alloc_stainfo_hw(struct phl_info_t *phl_info, struct rtw_phl_stainfo_t *sta);
-
-enum rtw_phl_status
-phl_free_stainfo_hw(struct phl_info_t *phl_info, struct rtw_phl_stainfo_t *sta);
-
 #ifdef DBG_PHL_STAINFO
-void phl_dump_stactrl(const char *caller, const int line, bool show_caller,
-						struct phl_info_t *phl_info);
+void phl_dump_stactrl(const char *caller,
+                      const int line,
+                      bool show_caller,
+                      struct phl_info_t *phl_info);
 #define PHL_DUMP_STACTRL(_phl_info) phl_dump_stactrl(__FUNCTION__, __LINE__, false, _phl_info);
 #define PHL_DUMP_STACTRL_EX(_phl_info) phl_dump_stactrl(__FUNCTION__, __LINE__, true, _phl_info);
 
-void phl_dump_stainfo_all(const char *caller, const int line, bool show_caller,
-				struct phl_info_t *phl_info);
+void phl_dump_stainfo_all(const char *caller,
+                          const int line, bool show_caller,
+                          struct phl_info_t *phl_info);
 #define PHL_DUMP_STAINFO(_phl_info) phl_dump_stainfo_all(__FUNCTION__, __LINE__, false, _phl_info);
 #define PHL_DUMP_STAINFO_EX(_phl_info) phl_dump_stainfo_all(__FUNCTION__, __LINE__, true, _phl_info);
 
-void phl_dump_stainfo_per_role(const char *caller, const int line, bool show_caller,
-				struct phl_info_t *phl_info, struct rtw_wifi_role_t *wrole);
+void phl_dump_stainfo_per_role(const char *caller,
+                               const int line,
+                               bool show_caller,
+                               struct phl_info_t *phl_info,
+                               struct rtw_wifi_role_t *wrole);
 #define PHL_DUMP_ROLE_STAINFO(_phl_info, wrole) phl_dump_stainfo_per_role(__FUNCTION__, __LINE__, false, _phl_info, wrole);
 #define PHL_DUMP_ROLE_STAINFO_EX(_phl_info, wrole) phl_dump_stainfo_per_role(__FUNCTION__, __LINE__, true, _phl_info, wrole);
 #else
@@ -79,24 +75,44 @@ void phl_dump_stainfo_per_role(const char *caller, const int line, bool show_cal
 #define PHL_DUMP_ROLE_STAINFO_EX(_phl_info, wrole)
 #endif
 /*********** phl stainfo section ***********/
+/*WIFI sta_info management section*/
 struct rtw_phl_stainfo_t *
-rtw_phl_alloc_stainfo(void *phl, u8 *sta_addr,
-			   struct rtw_wifi_role_t *wrole);
+phl_alloc_stainfo_sw(struct phl_info_t *phl_info,
+                     u8 *sta_addr,
+                     struct rtw_wifi_role_t *wrole);
 
 enum rtw_phl_status
-rtw_phl_free_stainfo(void *phl, struct rtw_phl_stainfo_t *sta);
+phl_alloc_stainfo_hw(struct phl_info_t *phl_info, struct rtw_phl_stainfo_t *sta);
 
 enum rtw_phl_status
-rtw_phl_free_stainfo_hw(void *phl, struct rtw_phl_stainfo_t *sta);
+phl_free_stainfo_sw(struct phl_info_t *phl_info, struct rtw_phl_stainfo_t *sta);
 
+enum rtw_phl_status
+phl_free_stainfo_hw(struct phl_info_t *phl_info, struct rtw_phl_stainfo_t *sta);
 
+enum rtw_phl_status
+rtw_phl_cmd_alloc_stainfo(void *phl,
+						struct rtw_phl_stainfo_t **sta,
+						u8 *sta_addr,
+						struct rtw_wifi_role_t *wrole,
+						bool alloc, bool only_hw,
+						enum phl_cmd_type cmd_type,
+						u32 cmd_timeout);
+
+enum rtw_phl_status
+phl_wifi_role_free_stainfo_hw(struct phl_info_t *phl_info,
+						struct rtw_wifi_role_t *wrole);
+enum rtw_phl_status
+phl_wifi_role_free_stainfo_sw(struct phl_info_t *phl_info,
+				struct rtw_wifi_role_t *role);
 enum rtw_phl_status
 phl_wifi_role_free_stainfo(struct phl_info_t *phl_info,
-					struct rtw_wifi_role_t *role);
+                           struct rtw_wifi_role_t *role);
 
+#ifdef CONFIG_CMD_DISP
 enum rtw_phl_status
-rtw_phl_update_media_status(void *phl, struct rtw_phl_stainfo_t *sta,
-			u8 *sta_addr, bool is_connect);
+phl_update_media_status_hdl(struct phl_info_t *phl_info, u8 *param);
+#endif
 
 struct rtw_phl_stainfo_t *
 rtw_phl_get_stainfo_by_macid(void *phl, u16 macid);
@@ -111,14 +127,24 @@ rtw_phl_get_stainfo_self(void *phl, struct rtw_wifi_role_t *wrole);
 void
 rtw_phl_stainfo_link_notify(void *phl, struct rtw_wifi_role_t *wrole, bool add, u16 macid);
 
+#ifdef CONFIG_CMD_DISP
 enum rtw_phl_status
-rtw_phl_alloc_stainfo_hw(void *phl, struct rtw_phl_stainfo_t *sta);
+phl_cmd_change_stainfo_hdl(struct phl_info_t *phl_info, u8 *param);
+#endif
 
 enum rtw_phl_status
-phl_change_stainfo(struct phl_info_t *phl_info, struct rtw_phl_stainfo_t *sta,
-				enum phl_upd_mode mode);
+phl_change_stainfo(struct phl_info_t *phl_info,
+                   struct rtw_phl_stainfo_t *sta,
+                   enum phl_upd_mode mode);
 void
 phl_sta_trx_tfc_upd(struct phl_info_t *phl_info);
 
-#endif	/*_PHL_STA_H_*/
+#ifdef CONFIG_CMD_DISP
+enum rtw_phl_status
+phl_cmd_set_key_hdl(struct phl_info_t *phl_info, u8 *param);
+enum rtw_phl_status
+phl_cmd_alloc_stainfo_hdl(struct phl_info_t *phl_info, u8 *param);
+#endif /* CONFIG_CMD_DISP */
+
+#endif  /*_PHL_STA_H_*/
 

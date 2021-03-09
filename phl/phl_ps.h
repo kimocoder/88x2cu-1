@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright(c) 2019 Realtek Corporation.
+ * Copyright(c) 2019 - 2020 Realtek Corporation.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -12,13 +12,15 @@
  * more details.
  *
  *****************************************************************************/
-#ifndef _PHL_ACS_H_
-#define _PHL_ACS_H_
+#ifndef __PHL_PS_H__
+#define __PHL_PS_H__
 
-/* avoid clm/nhm result not ready when scan done */
-#define MONITOR_TIME_TOLERANCE 15
+#ifdef CONFIG_PS
 
-void phl_acs_mntr_trigger(struct phl_info_t *phl_info, u8 ch_idx, u16 channel, u16 monitor_time);
-void phl_acs_mntr_result(struct phl_info_t *phl_info);
+#else
 
-#endif /*_PHL_ACS_H_*/
+
+#endif /*CONFIG_PS */
+
+#endif /* __PHL_PS_H__ */
+

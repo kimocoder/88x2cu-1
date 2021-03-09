@@ -849,10 +849,9 @@ static bool _phl_self_stainfo_chk(struct phl_info_t *phl_info,
 }
 
 enum rtw_phl_status
-rtw_phl_free_stainfo_sw(void *phl, struct rtw_phl_stainfo_t *sta)
+phl_free_stainfo_sw(struct phl_info_t *phl_info, struct rtw_phl_stainfo_t *sta)
 {
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_FAILURE;
-	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	struct stainfo_ctl_t *sta_ctrl = phl_to_sta_ctrl(phl_info);
 	struct rtw_wifi_role_t *wrole = NULL;
 	void *drv = phl_to_drvpriv(phl_info);
@@ -879,7 +878,7 @@ rtw_phl_free_stainfo_sw(void *phl, struct rtw_phl_stainfo_t *sta)
 
 	pstatus = _phl_free_stainfo_sw(phl_info, sta);
 	if (pstatus != RTW_PHL_STATUS_SUCCESS) {
-		PHL_ERR("macid(%d) phl_free_stainfo failed\n", sta->macid);
+		PHL_ERR("macid(%d) _phl_free_stainfo_sw failed\n", sta->macid);
 	}
 
 	pstatus = phl_stainfo_enqueue(phl_info, &sta_ctrl->free_sta_queue, sta);
@@ -889,6 +888,15 @@ _exit:
 	PHL_DUMP_STACTRL_EX(phl_info);
 	FUNCOUT();
 	return pstatus;
+}
+
+enum rtw_phl_status
+rtw_phl_free_stainfo_sw(void *phl, struct rtw_phl_stainfo_t *sta)
+{
+	enum rtw_phl_status pstatus = RTW_PHL_STATUS_FAILURE;
+	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
+
+	return phl_free_stainfo_sw(phl_info, sta);
 }
 
 enum rtw_phl_status
@@ -944,7 +952,6 @@ rtw_phl_free_stainfo(void *phl, struct rtw_phl_stainfo_t *sta)
 	return pstatus;
 }
 
-
 static enum rtw_phl_status
 _phl_alloc_stainfo_sw(struct phl_info_t *phl_info,struct rtw_phl_stainfo_t *sta)
 {
@@ -992,10 +999,10 @@ static void _phl_sta_set_default_value(struct phl_info_t *phl_info,
 }
 
 struct rtw_phl_stainfo_t *
-rtw_phl_alloc_stainfo_sw(void *phl, u8 *sta_addr,
-			struct rtw_wifi_role_t *wrole)
+phl_alloc_stainfo_sw(struct phl_info_t *phl_info,
+                     u8 *sta_addr,
+                     struct rtw_wifi_role_t *wrole)
 {
-	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	struct stainfo_ctl_t *sta_ctrl = phl_to_sta_ctrl(phl_info);
 	struct rtw_phl_stainfo_t *phl_sta = NULL;
 	void *drv = phl_to_drvpriv(phl_info);
@@ -1033,7 +1040,7 @@ rtw_phl_alloc_stainfo_sw(void *phl, u8 *sta_addr,
 	phl_sta->wrole = wrole;
 
 	if (_phl_alloc_stainfo_sw(phl_info, phl_sta) != RTW_PHL_STATUS_SUCCESS) {
-		PHL_ERR("_phl_alloc_stainfo failed\n");
+		PHL_ERR("_phl_alloc_stainfo_sw failed\n");
 		goto error_alloc_sta;
 	}
 	_phl_sta_set_default_value(phl_info, phl_sta);
@@ -1052,6 +1059,15 @@ error_alloc_sta:
 	PHL_DUMP_STACTRL_EX(phl_info);
 	FUNCOUT();
 	return phl_sta;
+}
+
+struct rtw_phl_stainfo_t *
+rtw_phl_alloc_stainfo_sw(void *phl, u8 *sta_addr,
+			struct rtw_wifi_role_t *wrole)
+{
+	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
+
+	return phl_alloc_stainfo_sw(phl_info, sta_addr, wrole);
 }
 
 enum rtw_phl_status

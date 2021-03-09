@@ -12,13 +12,18 @@
  * more details.
  *
  *****************************************************************************/
-#ifndef _PHL_ACS_H_
-#define _PHL_ACS_H_
+#ifndef _PHL_NOTIFY_H_
+#define _PHL_NOTIFY_H_
 
-/* avoid clm/nhm result not ready when scan done */
-#define MONITOR_TIME_TOLERANCE 15
+#ifdef CONFIG_CMD_DISP
+enum rtw_phl_status
+rtw_phl_cmd_notify(struct rtw_phl_com_t *phl_com,
+                   enum phl_msg_evt_id event,
+                   u8 hw_idx);
 
-void phl_acs_mntr_trigger(struct phl_info_t *phl_info, u8 ch_idx, u16 channel, u16 monitor_time);
-void phl_acs_mntr_result(struct phl_info_t *phl_info);
+enum rtw_phl_status
+phl_notify_cmd_hdl(struct phl_info_t *phl_info, u8 *param);
+#endif /* CONFIG_CMD_DISP */
 
-#endif /*_PHL_ACS_H_*/
+#endif /*_PHL_NOTIFY_H_*/
+

@@ -12,13 +12,10 @@
  * more details.
  *
  *****************************************************************************/
-#ifndef _PHL_ACS_H_
-#define _PHL_ACS_H_
+#ifndef _PHL_BTC_DISPATCH_H_
+#define _PHL_BTC_DISPATCH_H_
 
-/* avoid clm/nhm result not ready when scan done */
-#define MONITOR_TIME_TOLERANCE 15
+enum rtw_phl_status phl_register_btc_module(struct phl_info_t *phl_info);
 
-void phl_acs_mntr_trigger(struct phl_info_t *phl_info, u8 ch_idx, u16 channel, u16 monitor_time);
-void phl_acs_mntr_result(struct phl_info_t *phl_info);
 
-#endif /*_PHL_ACS_H_*/
+#endif /* _PHL_BTC_DISPATCH_H_ */

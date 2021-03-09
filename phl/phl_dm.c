@@ -1,6 +1,7 @@
+
 /******************************************************************************
  *
- * Copyright(c) 2019 Realtek Corporation.
+ * Copyright(c) 2020 Realtek Corporation.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -12,13 +13,20 @@
  * more details.
  *
  *****************************************************************************/
-#ifndef _PHL_ACS_H_
-#define _PHL_ACS_H_
+#define _PHL_DM_C_
+#include "phl_headers.h"
 
-/* avoid clm/nhm result not ready when scan done */
-#define MONITOR_TIME_TOLERANCE 15
+void rtw_phl_set_edcca_mode(void *phl, enum rtw_edcca_mode mode)
+{
+	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 
-void phl_acs_mntr_trigger(struct phl_info_t *phl_info, u8 ch_idx, u16 channel, u16 monitor_time);
-void phl_acs_mntr_result(struct phl_info_t *phl_info);
+	PHL_INFO("[Cert], set phl_com edcca_mode : %d !! \n", mode);
+	phl_info->phl_com->edcca_mode = mode;
+}
 
-#endif /*_PHL_ACS_H_*/
+enum rtw_edcca_mode rtw_phl_get_edcca_mode(void *phl)
+{
+	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
+
+	return phl_info->phl_com->edcca_mode;
+}

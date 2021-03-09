@@ -112,7 +112,15 @@ enum {
 	BTC_MODE_NORMAL,
 	BTC_MODE_WL,
 	BTC_MODE_BT,
+	BTC_MODE_WLOFF,
 	BTC_MODE_MAX
+};
+
+enum {
+	BTC_RFCTRL_WL_OFF,
+	BTC_RFCTRL_WL_ON,
+	BTC_RFCTRL_FW_CTRL,
+	BTC_RFCTRL_MAX
 };
 
 struct rtw_phl_btc_ops {

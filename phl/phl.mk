@@ -35,40 +35,6 @@ _PHL_FILES := $(phl_path)phl_init.o \
 		$(phl_path)phl_msg_hub.o \
 		$(phl_path)phl_sound.o
 
-#_PHL_FILES := $(phl_path)phl_init.o \
-			$(phl_path)phl_debug.o \
-			$(phl_path)phl_tx.o \
-			$(phl_path)phl_rx.o \
-			$(phl_path)phl_rx_agg.o \
-			$(phl_path)phl_api_drv.o \
-			$(phl_path)phl_role.o \
-			$(phl_path)phl_sta.o \
-			$(phl_path)phl_mr.o \
-			$(phl_path)phl_sec.o \
-			$(phl_path)phl_chan.o \
-			$(phl_path)phl_sw_cap.o \
-			$(phl_path)phl_util.o \
-			$(phl_path)phl_pkt_ofld.o \
-			$(phl_path)phl_connect.o \
-			$(phl_path)phl_chan_info.o \
-			$(phl_path)phl_wow.o\
-			$(phl_path)phl_dm.o \
-			$(phl_path)phl_chnlplan.o \
-			$(phl_path)phl_country.o \
-			$(phl_path)phl_regulation.o \
-			$(phl_path)phl_led.o \
-			$(phl_path)phl_trx_mit.o \
-			$(phl_path)phl_acs.o \
-			$(phl_path)phl_mcc.o \
-			$(phl_path)phl_ecsa.o \
-			$(phl_path)test/phl_dbg_cmd.o \
-			$(phl_path)test/phl_ps_dbg_cmd.o \
-			$(phl_path)phl_msg_hub.o \
-			$(phl_path)phl_sound.o \
-			$(phl_path)phl_twt.o \
-			$(phl_path)phl_notify.o \
-			$(phl_path)phl_sound_cmd.o
-
 ifeq ($(CONFIG_POWER_SAVE), y)
 _PHL_FILES += $(phl_path)phl_lps.o \
 						$(phl_path)phl_ips.o \

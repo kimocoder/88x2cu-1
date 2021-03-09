@@ -12,13 +12,17 @@
  * more details.
  *
  *****************************************************************************/
-#ifndef _PHL_ACS_H_
-#define _PHL_ACS_H_
+#ifndef _PHL_VERSION_H_
+#define _PHL_VERSION_H_
 
-/* avoid clm/nhm result not ready when scan done */
-#define MONITOR_TIME_TOLERANCE 15
+/*major-minor-hotfix-[branchid + hotfix]*/
+#define PHL_VERSION(a, b, c, d) (((a) << 48) + ((b) << 32) + ((c) << 16) + (d))
 
-void phl_acs_mntr_trigger(struct phl_info_t *phl_info, u8 ch_idx, u16 channel, u16 monitor_time);
-void phl_acs_mntr_result(struct phl_info_t *phl_info);
+#define PHL_MAJOR_VER	0001
+#define PHL_MINOR_VER	0014
+#define PHL_HOTFIX_VER	0000
+#define PHL_BRANCH_IDX	0000
 
-#endif /*_PHL_ACS_H_*/
+#define PHL_VER_CODE	PHL_VERSION(PHL_MAJOR_VER, PHL_MINOR_VER, PHL_HOTFIX_VER, PHL_BRANCH_IDX)
+
+#endif /*_PHL_VERSION_H_*/

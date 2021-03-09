@@ -251,7 +251,7 @@ struct phl_info_t {
 	void *cmd_que;
 	void *hal;
 
-//#ifdef CONFIG_FSM
+#ifdef CONFIG_FSM
 	void *fsm_root;
 	void *cmd_fsm;
 	void *cmd_obj;
@@ -262,11 +262,11 @@ struct phl_info_t {
 	void *ser_fsm;
 	void *ser_obj;
 
-	//void *btc_fsm;
-	//void *btc_obj;
+	void *btc_fsm;
+	void *btc_obj;
 
 	void *snd_fsm;
-//#endif /*CONFIG_FSM*/
+#endif /*CONFIG_FSM*/
 	void *snd_obj;
 
 	void *ps_fsm;
