@@ -1087,7 +1087,7 @@ __phl_alloc_stainfo(struct phl_info_t *phl,
 	struct rtw_phl_stainfo_t *alloc_sta = NULL;
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_FAILURE;
 
-	alloc_sta = rtw_phl_alloc_stainfo_sw(phl, sta_addr, wrole);
+	alloc_sta = phl_alloc_stainfo_sw(phl, sta_addr, wrole);
 	if (alloc_sta == NULL) {
 		PHL_ERR("%s can't alloc stainfo\n", __func__);
 		*sta = alloc_sta;
@@ -1097,7 +1097,7 @@ __phl_alloc_stainfo(struct phl_info_t *phl,
 	if (alloc_sta->active == false) {
 		pstatus = phl_alloc_stainfo_hw(phl, alloc_sta);
 		if (pstatus != RTW_PHL_STATUS_SUCCESS) {
-			PHL_ERR("rtw_phl_alloc_stainfo_hw failed\n");
+			PHL_ERR("phl_alloc_stainfo_hw failed\n");
 			goto _err_alloc_sta_hw;
 		}
 	}
@@ -1111,7 +1111,7 @@ __phl_alloc_stainfo(struct phl_info_t *phl,
 	return RTW_PHL_STATUS_SUCCESS;
 
 _err_alloc_sta_hw:
-	rtw_phl_free_stainfo_sw(phl, alloc_sta);
+	phl_free_stainfo_sw(phl, alloc_sta);
 	*sta = alloc_sta = NULL;
 _exit:
 	return RTW_PHL_STATUS_FAILURE;
@@ -1304,7 +1304,8 @@ phl_wifi_role_free_stainfo(struct phl_info_t *phl_info,
 			phl_free_stainfo_hw(phl_info, phl_sta);
 			_phl_free_stainfo_sw(phl_info, phl_sta);
 			phl_stainfo_enqueue(phl_info,
-					&sta_ctrl->free_sta_queue, phl_sta);
+					    &sta_ctrl->free_sta_queue,
+					    phl_sta);
 		}
 	} while(phl_sta != NULL);
 
@@ -1335,11 +1336,10 @@ _phl_media_sta_notify(struct phl_info_t *phl_info,
  * @phl: see phl_info_t
  * @stainfo: information is updated through phl_station_info
  */
-enum rtw_phl_status
-rtw_phl_update_media_status(void *phl, struct rtw_phl_stainfo_t *sta,
+static enum rtw_phl_status
+phl_update_media_status(struct phl_info_t *phl_info, struct rtw_phl_stainfo_t *sta,
 			u8 *sta_addr, bool is_connect)
 {
-	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	struct rtw_wifi_role_t *wrole = sta->wrole;
 	void *drv = phl_to_drvpriv(phl_info);
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_FAILURE;
@@ -1402,6 +1402,89 @@ _exit:
 	return pstatus;
 }
 
+#ifdef CONFIG_CMD_DISP
+struct sta_media_param {
+	struct rtw_phl_stainfo_t *sta;
+	u8 sta_addr[MAC_ALEN];
+	bool is_connect;
+};
+
+enum rtw_phl_status
+phl_update_media_status_hdl(struct phl_info_t *phl_info, u8 *param)
+{
+	struct sta_media_param *media_sts = (struct sta_media_param *)param;
+
+	return phl_update_media_status(phl_info,
+			media_sts->sta, media_sts->sta_addr, media_sts->is_connect);
+}
+
+void phl_update_media_status_done(void *drv_priv, u8 *cmd, u32 cmd_len,
+						enum rtw_phl_status status)
+{
+	if (cmd) {
+		_os_kmem_free(drv_priv, cmd, cmd_len);
+		cmd = NULL;
+	}
+}
+#endif
+
+enum rtw_phl_status
+rtw_phl_cmd_update_media_status(void *phl,
+                                struct rtw_phl_stainfo_t *sta,
+                                u8 *sta_addr,
+                                bool is_connect,
+                                enum phl_cmd_type cmd_type,
+                                u32 cmd_timeout)
+{
+#ifdef CONFIG_CMD_DISP
+	enum rtw_phl_status psts = RTW_PHL_STATUS_FAILURE;
+	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
+	void *drv = phl_to_drvpriv(phl_info);
+	struct rtw_wifi_role_t *wrole = NULL;
+	struct sta_media_param *sta_ms = NULL;
+	u32 sta_ms_len = 0;
+
+	if (cmd_type == PHL_CMD_DIRECTLY) {
+		psts = phl_update_media_status(phl_info, sta, sta_addr, is_connect);
+		goto _exit;
+	}
+
+	sta_ms_len = sizeof(struct sta_media_param);
+	sta_ms = _os_kmem_alloc(drv, sta_ms_len);
+	if (sta_ms == NULL) {
+		PHL_ERR("%s: alloc sta media status param failed!\n", __func__);
+		psts = RTW_PHL_STATUS_RESOURCE;
+		goto _exit;
+	}
+	_os_mem_set(drv, sta_ms, 0, sta_ms_len);
+	sta_ms->sta = sta;
+	sta_ms->is_connect = is_connect;
+	if (is_connect && sta_addr)
+		_os_mem_cpy(drv, sta_ms->sta_addr, sta_addr, MAC_ALEN);
+
+	wrole = sta->wrole;
+
+	psts = phl_cmd_enqueue(phl_info,
+	                       wrole->hw_band,
+	                       MSG_EVT_STA_MEDIA_STATUS_UPT,
+	                       (u8*)sta_ms,
+	                       sta_ms_len,
+	                       phl_update_media_status_done,
+	                       cmd_type,
+	                       cmd_timeout);
+	if ((false == is_cmd_enqueue(psts)) && (RTW_PHL_STATUS_SUCCESS != psts))
+		_os_kmem_free(drv, sta_ms, sta_ms_len);
+
+_exit:
+	return psts;
+#else
+	PHL_TRACE(COMP_PHL_DBG, _PHL_INFO_, "%s: not support cmd to update media status\n",
+	          __func__);
+
+	return phl_update_media_status((struct phl_info_t *)phl, sta, sta_addr, is_connect);
+#endif
+}
+
 /**
  * This function is called once station info changed
  * (BW/NSS/RAMASK/SEC/ROLE/MACADDR........)
@@ -1434,11 +1517,10 @@ phl_change_stainfo(struct phl_info_t *phl_info, struct rtw_phl_stainfo_t *sta,
  * @chg_id: see enum sta_chg_id
  * @param: change param for stainfo
  */
-enum rtw_phl_status
-rtw_phl_change_stainfo(void *phl,
-	struct rtw_phl_stainfo_t *sta, enum sta_chg_id chg_id, void *param)
+static enum rtw_phl_status
+_change_stainfo(struct phl_info_t *phl_info,
+	struct rtw_phl_stainfo_t *sta, enum sta_chg_id chg_id, u8 *chg_info, u8 chg_info_len)
 {
-	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	enum phl_upd_mode mode = PHL_UPD_STA_INFO_CHANGE;
 
 	switch (chg_id) {
@@ -1453,7 +1535,11 @@ rtw_phl_change_stainfo(void *phl,
 	}
 		break;
 	case STA_CHG_SEC_MODE:
-		sta->sec_mode = *((u8*)param);
+		sta->sec_mode = *((u8*)chg_info);
+		break;
+	case STA_CHG_MBSSID:
+		sta->addr_sel = 1;
+		sta->addr_msk = *((u8*)chg_info);
 		break;
 	case STA_CHG_MAX:
 		PHL_TRACE(COMP_PHL_DBG, _PHL_DEBUG_, "rtw_phl_change_stainfo(): Unsupported case:%d, please check it\n",
@@ -1468,6 +1554,131 @@ rtw_phl_change_stainfo(void *phl,
 	return phl_change_stainfo(phl_info, sta, mode);
 }
 
+#ifdef CONFIG_CMD_DISP
+struct sta_chg_param {
+	struct rtw_phl_stainfo_t *sta;
+	enum sta_chg_id id;
+	u8 *info;
+	u8 info_len;
+};
+
+enum rtw_phl_status
+phl_cmd_change_stainfo_hdl(struct phl_info_t *phl_info, u8 *param)
+{
+	struct sta_chg_param *sta_param = (struct sta_chg_param *)param;
+
+	return _change_stainfo(phl_info,
+			sta_param->sta, sta_param->id,
+			sta_param->info, sta_param->info_len);
+}
+
+static void
+_phl_cmd_change_stainfo_done(void *drv_priv, u8 *cmd, u32 cmd_len,
+						enum rtw_phl_status status)
+{
+	struct sta_chg_param *sta_chg_info = NULL;
+
+	if (cmd == NULL || cmd_len == 0) {
+		PHL_ERR("%s buf == NULL || buf_len == 0\n", __func__);
+		_os_warn_on(1);
+		return;
+	}
+
+	sta_chg_info = (struct sta_chg_param *)cmd;
+	PHL_INFO("%s - id:%d .....\n", __func__, sta_chg_info->id);
+
+	if (sta_chg_info->info && sta_chg_info->info_len > 0)
+		_os_kmem_free(drv_priv, sta_chg_info->info, sta_chg_info->info_len);
+
+	_os_kmem_free(drv_priv, cmd, cmd_len);
+	cmd = NULL;
+}
+
+static enum rtw_phl_status
+_phl_cmd_change_stainfo(struct phl_info_t *phl_info,
+	struct rtw_phl_stainfo_t *sta, enum sta_chg_id chg_id,
+	u8 *chg_info, u8 chg_info_len,
+	enum phl_cmd_type cmd_type, u32 cmd_timeout)
+{
+	void *drv = phl_to_drvpriv(phl_info);
+	enum rtw_phl_status psts = RTW_PHL_STATUS_FAILURE;
+	struct rtw_wifi_role_t *wrole = sta->wrole;
+	struct sta_chg_param *param = NULL;
+	u8 param_len = 0;
+
+	if (cmd_type == PHL_CMD_DIRECTLY) {
+		psts = _change_stainfo(phl_info, sta, chg_id, chg_info, chg_info_len);
+		goto _exit;
+	}
+
+	param_len = sizeof(struct sta_chg_param);
+	param = _os_kmem_alloc(drv, param_len);
+	if (param == NULL) {
+		PHL_ERR("%s: alloc param failed!\n", __func__);
+		psts = RTW_PHL_STATUS_RESOURCE;
+		goto _exit;
+	}
+
+	_os_mem_set(drv, param, 0, param_len);
+	param->sta = sta;
+	param->id = chg_id;
+	param->info_len = chg_info_len;
+
+	if (chg_info_len > 0) {
+		param->info = _os_kmem_alloc(drv, chg_info_len);
+		if (param->info == NULL) {
+			PHL_ERR("%s: alloc param->info failed!\n", __func__);
+			psts = RTW_PHL_STATUS_RESOURCE;
+			goto _err_info;
+		}
+
+		_os_mem_set(drv, param->info, 0, chg_info_len);
+		_os_mem_cpy(drv, param->info, chg_info, chg_info_len);
+	} else {
+		param->info = NULL;
+	}
+
+	psts = phl_cmd_enqueue(phl_info,
+	                       wrole->hw_band,
+	                       MSG_EVT_STA_CHG_STAINFO,
+	                       (u8 *)param,
+	                       param_len,
+	                       _phl_cmd_change_stainfo_done,
+	                       cmd_type,
+	                       cmd_timeout);
+	if ((false == is_cmd_enqueue(psts)) && (RTW_PHL_STATUS_SUCCESS != psts))
+		goto _err_cmd;
+
+	return psts;
+_err_cmd:
+	if (param->info)
+		_os_kmem_free(drv, param->info, param->info_len);
+_err_info:
+	if (param)
+		_os_kmem_free(drv, param, param_len);
+_exit:
+	return psts;
+}
+#endif
+
+enum rtw_phl_status
+rtw_phl_cmd_change_stainfo(void *phl,
+	struct rtw_phl_stainfo_t *sta, enum sta_chg_id chg_id,
+	u8 *chg_info, u8 chg_info_len,
+	enum phl_cmd_type cmd_type, u32 cmd_timeout)
+{
+	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
+
+#ifdef CONFIG_CMD_DISP
+	return _phl_cmd_change_stainfo(phl_info, sta, chg_id, chg_info, chg_info_len,
+		cmd_type, cmd_timeout);
+#else
+	PHL_TRACE(COMP_PHL_DBG, _PHL_INFO_, "%s: not support alloc stainfo cmd\n",
+				__func__);
+
+	return _change_stainfo(phl_info, sta, chg_id, chg_info, chg_info_len);
+#endif /* CONFIG_CMD_DISP */
+}
 /**
  * This function updates tx/rx traffic status of each active station info
  */
@@ -1610,6 +1821,41 @@ void rtw_phl_stainfo_link_notify(void *phl, struct rtw_wifi_role_t *wrole, bool 
 	#endif
 }
 
+enum rtw_phl_status
+rtw_phl_query_rainfo(void *phl, struct rtw_phl_stainfo_t *phl_sta,
+		     enum rtw_data_rate *auto_rate, enum channel_width *bw,
+		     enum rtw_gi_ltf *gi_ltf)
+{
+	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
+	enum rtw_phl_status phl_sts = RTW_PHL_STATUS_FAILURE;
+
+	do {
+		if (NULL == phl_sta) {
+			PHL_TRACE(COMP_PHL_XMIT, _PHL_ERR_,
+				  "%s : phl_sta is NULL\n",
+				  __func__);
+			break;
+		}
+
+		if (NULL == auto_rate || NULL == bw || NULL == gi_ltf) {
+			PHL_TRACE(COMP_PHL_XMIT, _PHL_ERR_,
+				  "%s : Input parameter is NULL\n",
+				  __func__);
+			break;
+		}
+
+		if (RTW_HAL_STATUS_SUCCESS ==
+		    rtw_hal_query_rainfo(phl_info->hal, phl_sta->hal_sta,
+					 auto_rate, bw, gi_ltf)) {
+			phl_sts = RTW_PHL_STATUS_SUCCESS;
+			break;
+		} else {
+			break;
+		}
+	} while (false);
+
+	return phl_sts;
+}
 
 #endif // if 0 NEO
 
