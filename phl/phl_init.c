@@ -481,6 +481,7 @@ static enum rtw_phl_status phl_set_hci_ops(struct phl_info_t *phl_info)
 }
 
 
+#ifdef CONFIG_FSM
 static enum rtw_phl_status phl_cmd_init(struct phl_info_t *phl_info)
 {
 	enum rtw_phl_status status = RTW_PHL_STATUS_SUCCESS;
@@ -548,7 +549,6 @@ static void phl_ser_deinit(struct phl_info_t *phl_info)
 	phl_info->ser_fsm = NULL;
 }
 
-#if 0 // NEO
 static enum rtw_phl_status phl_btc_init(struct phl_info_t *phl_info)
 {
 	if (phl_info->btc_fsm != NULL)
@@ -579,7 +579,6 @@ static void phl_btc_deinit(struct phl_info_t *phl_info)
 	phl_btc_destory_fsm(phl_info->btc_fsm);
 	phl_info->btc_fsm = NULL;
 }
-#endif // if 0 NEO
 
 static enum rtw_phl_status phl_scan_init(struct phl_info_t *phl_info)
 {
@@ -655,30 +654,6 @@ static enum rtw_phl_status phl_fsm_init(struct phl_info_t *phl_info)
 		return RTW_PHL_STATUS_FAILURE;
 
 	return RTW_PHL_STATUS_SUCCESS;
-}
-
-static enum rtw_phl_status phl_test_modeule_init(struct phl_info_t *phl_info)
-{
-	if (rtw_test_module_alloc(phl_info))
-		return RTW_PHL_STATUS_SUCCESS;
-	return RTW_PHL_STATUS_FAILURE;
-}
-
-static void phl_test_modeule_deinit(struct phl_info_t *phl_info)
-{
-	rtw_test_module_free(phl_info->phl_com);
-}
-
-static enum rtw_phl_status phl_test_modeule_start(struct phl_info_t *phl_info)
-{
-	if (rtw_test_module_init(phl_info->phl_com))
-		return RTW_PHL_STATUS_SUCCESS;
-	return RTW_PHL_STATUS_FAILURE;
-}
-
-static void phl_test_modeule_stop(struct phl_info_t *phl_info)
-{
-	rtw_test_module_deinit(phl_info->phl_com);
 }
 
 static void phl_fsm_deinit(struct phl_info_t *phl_info)
@@ -758,6 +733,102 @@ static void phl_fsm_module_deinit(struct phl_info_t *phl_info)
 	phl_ps_deinit(phl_info);
 }
 
+static enum rtw_phl_status phl_fsm_start(struct phl_info_t *phl_info)
+{
+	return phl_fsm_start_root(phl_info->fsm_root);
+}
+
+static enum rtw_phl_status phl_fsm_stop(struct phl_info_t *phl_info)
+{
+	return phl_fsm_stop_root(phl_info->fsm_root);
+}
+
+static enum rtw_phl_status phl_fsm_module_start(struct phl_info_t *phl_info)
+{
+	enum rtw_phl_status phl_status = RTW_PHL_STATUS_SUCCESS;
+
+	phl_status = phl_fsm_start_fsm(phl_info->ser_fsm);
+	if (phl_status != RTW_PHL_STATUS_SUCCESS)
+		goto ser_fail;
+
+#if 0 // NEO
+	phl_status = phl_btc_start(phl_info->btc_obj);
+	if (phl_status != RTW_PHL_STATUS_SUCCESS)
+		goto btc_fail;
+#endif // if 0 NEO
+
+	phl_status = phl_fsm_start_fsm(phl_info->scan_fsm);
+	if (phl_status != RTW_PHL_STATUS_SUCCESS)
+		goto scan_fail;
+
+	phl_status = phl_ps_fsm_start(phl_info);
+	if (phl_status != RTW_PHL_STATUS_SUCCESS)
+		goto ps_fail;
+
+	phl_status = phl_cmd_start(phl_info->cmd_obj);
+	if (phl_status != RTW_PHL_STATUS_SUCCESS)
+		goto cmd_fail;
+
+	phl_status = phl_fsm_start_fsm(phl_info->snd_fsm);
+	if (phl_status != RTW_PHL_STATUS_SUCCESS)
+		goto snd_fail;
+
+	return phl_status;
+
+snd_fail:
+	phl_fsm_stop_fsm(phl_info->cmd_fsm);
+	phl_ps_fsm_stop(phl_info);
+ps_fail:
+	phl_fsm_stop_fsm(phl_info->scan_fsm);
+scan_fail:
+	phl_fsm_stop_fsm(phl_info->btc_fsm);
+btc_fail:
+	phl_fsm_stop_fsm(phl_info->ser_fsm);
+ser_fail:
+	phl_fsm_cmd_stop(phl_info);
+cmd_fail:
+	return phl_status;
+}
+
+static enum rtw_phl_status phl_fsm_module_stop(struct phl_info_t *phl_info)
+{
+	enum rtw_phl_status phl_status = RTW_PHL_STATUS_SUCCESS;
+
+	phl_fsm_stop_fsm(phl_info->snd_fsm);
+	phl_fsm_stop_fsm(phl_info->scan_fsm);
+	phl_fsm_stop_fsm(phl_info->btc_fsm);
+	phl_fsm_stop_fsm(phl_info->ser_fsm);
+	phl_fsm_cmd_stop(phl_info);
+	phl_ps_fsm_stop(phl_info);
+
+	return phl_status;
+}
+#endif /* CONFIG_FSM */
+
+static enum rtw_phl_status phl_test_modeule_init(struct phl_info_t *phl_info)
+{
+	if (rtw_test_module_alloc(phl_info))
+		return RTW_PHL_STATUS_SUCCESS;
+	return RTW_PHL_STATUS_FAILURE;
+}
+
+static void phl_test_modeule_deinit(struct phl_info_t *phl_info)
+{
+	rtw_test_module_free(phl_info->phl_com);
+}
+
+static enum rtw_phl_status phl_test_modeule_start(struct phl_info_t *phl_info)
+{
+	if (rtw_test_module_init(phl_info->phl_com))
+		return RTW_PHL_STATUS_SUCCESS;
+	return RTW_PHL_STATUS_FAILURE;
+}
+
+static void phl_test_modeule_stop(struct phl_info_t *phl_info)
+{
+	rtw_test_module_deinit(phl_info->phl_com);
+}
+
 static enum rtw_phl_status phl_module_init(struct phl_info_t *phl_info)
 {
 	enum rtw_phl_status phl_status = RTW_PHL_STATUS_SUCCESS;
@@ -823,79 +894,6 @@ static void phl_module_deinit(struct phl_info_t *phl_info)
 	phl_msg_hub_deinit(phl_info);
 }
 
-static enum rtw_phl_status phl_fsm_start(struct phl_info_t *phl_info)
-{
-	return phl_fsm_start_root(phl_info->fsm_root);
-}
-
-static enum rtw_phl_status phl_fsm_stop(struct phl_info_t *phl_info)
-{
-	return phl_fsm_stop_root(phl_info->fsm_root);
-}
-
-static enum rtw_phl_status phl_fsm_module_start(struct phl_info_t *phl_info)
-{
-	enum rtw_phl_status phl_status = RTW_PHL_STATUS_SUCCESS;
-
-	phl_status = phl_fsm_start_fsm(phl_info->ser_fsm);
-	if (phl_status != RTW_PHL_STATUS_SUCCESS)
-		goto ser_fail;
-
-#if 0 // NEO
-	phl_status = phl_btc_start(phl_info->btc_obj);
-	if (phl_status != RTW_PHL_STATUS_SUCCESS)
-		goto btc_fail;
-#endif // if 0 NEO
-
-	phl_status = phl_fsm_start_fsm(phl_info->scan_fsm);
-	if (phl_status != RTW_PHL_STATUS_SUCCESS)
-		goto scan_fail;
-
-	phl_status = phl_ps_fsm_start(phl_info);
-	if (phl_status != RTW_PHL_STATUS_SUCCESS)
-		goto ps_fail;
-
-	phl_status = phl_cmd_start(phl_info->cmd_obj);
-	if (phl_status != RTW_PHL_STATUS_SUCCESS)
-		goto cmd_fail;
-
-	phl_status = phl_fsm_start_fsm(phl_info->snd_fsm);
-	if (phl_status != RTW_PHL_STATUS_SUCCESS)
-		goto snd_fail;
-
-	return phl_status;
-
-snd_fail:
-	phl_fsm_stop_fsm(phl_info->cmd_fsm);
-	phl_ps_fsm_stop(phl_info);
-ps_fail:
-	phl_fsm_stop_fsm(phl_info->scan_fsm);
-scan_fail:
-// NEO
-//	phl_fsm_stop_fsm(phl_info->btc_fsm);
-btc_fail:
-	phl_fsm_stop_fsm(phl_info->ser_fsm);
-ser_fail:
-	phl_fsm_cmd_stop(phl_info);
-cmd_fail:
-	return phl_status;
-}
-
-static enum rtw_phl_status phl_fsm_module_stop(struct phl_info_t *phl_info)
-{
-	enum rtw_phl_status phl_status = RTW_PHL_STATUS_SUCCESS;
-
-	phl_fsm_stop_fsm(phl_info->snd_fsm);
-	phl_fsm_stop_fsm(phl_info->scan_fsm);
-// NEO
-//	phl_fsm_stop_fsm(phl_info->btc_fsm);
-	phl_fsm_stop_fsm(phl_info->ser_fsm);
-	phl_fsm_cmd_stop(phl_info);
-	phl_ps_fsm_stop(phl_info);
-
-	return phl_status;
-}
-
 static enum rtw_phl_status phl_module_start(struct phl_info_t *phl_info)
 {
 	enum rtw_phl_status phl_status = RTW_PHL_STATUS_SUCCESS;
@@ -939,6 +937,7 @@ static enum rtw_phl_status phl_module_stop(struct phl_info_t *phl_info)
 
 	return phl_status;
 }
+
 
 static enum rtw_phl_status phl_var_init(struct phl_info_t *phl_info)
 {
@@ -1024,6 +1023,7 @@ enum rtw_phl_status rtw_phl_init(void *drv_priv, void **phl,
 		goto error_set_hci_ops;
 	}
 
+#ifdef CONFIG_FSM
 	phl_status = phl_fsm_init(phl_info);
 	if (phl_status != RTW_PHL_STATUS_SUCCESS) {
 		PHL_ERR("phl_fsm_init failed\n");
@@ -1036,6 +1036,7 @@ enum rtw_phl_status rtw_phl_init(void *drv_priv, void **phl,
 		PHL_ERR("phl_fsm_module_init failed\n");
 		goto error_fsm_module_init;
 	}
+#endif /* CONFIG_FSM */
 
 	hal_status = rtw_hal_init(drv_priv, phl_info->phl_com,
 					&(phl_info->hal), ic_info->ic_id);
@@ -1124,11 +1125,13 @@ error_hal_var_init:
 error_hal_read_chip_info:
 	rtw_hal_deinit(phl_info->phl_com, phl_info->hal);
 error_hal_init:
+#ifdef CONFIG_FSM
 	phl_fsm_module_deinit(phl_info);
 error_fsm_module_init:
 	phl_fsm_deinit(phl_info);
 error_fsm_init:
 	/* Do nothing */
+#endif /* CONFIG_FSM */
 error_set_hci_ops:
 	phl_hci_deinit(phl_info, phl_info->hci);
 error_hci_init:
@@ -1156,10 +1159,12 @@ void rtw_phl_deinit(void *phl)
 		/*deinit mr_ctrl, wifi_role[]*/
 		phl_module_deinit(phl_info);
 		phl_mr_ctrl_deinit(phl_info);
-		phl_var_deinit(phl_info);
 		rtw_hal_deinit(phl_info->phl_com, phl_info->hal);
+		phl_var_deinit(phl_info);
+		#ifdef CONFIG_FSM
 		phl_fsm_module_deinit(phl_info);
 		phl_fsm_deinit(phl_info);
+		#endif /* CONFIG_FSM */
 		phl_hci_deinit(phl_info, phl_info->hci);
 		phl_com_deinit(phl_info, phl_info->phl_com);
 		phl_regulation_deinit(drv_priv, phl_info);
@@ -1318,6 +1323,7 @@ enum rtw_phl_status rtw_phl_start(void *phl)
 		goto error_hal_start;
 	}
 
+#ifdef CONFIG_FSM
 	/* start FSM framework */
 	phl_status = phl_fsm_start(phl_info);
 	if (phl_status != RTW_PHL_STATUS_SUCCESS)
@@ -1327,7 +1333,7 @@ enum rtw_phl_status rtw_phl_start(void *phl)
 	phl_status = phl_fsm_module_start(phl_info);
 	if (phl_status != RTW_PHL_STATUS_SUCCESS)
 		goto error_phl_fsm_module_start;
-
+#endif /* CONFIG_FSM */
 	/* start modules */
 	phl_status = phl_module_start(phl_info);
 	if (phl_status != RTW_PHL_STATUS_SUCCESS)
@@ -1348,10 +1354,12 @@ enum rtw_phl_status rtw_phl_start(void *phl)
 error_phl_datapath_start:
 	phl_module_stop(phl_info);
 error_phl_module_start:
+#ifdef CONFIG_FSM
 	phl_fsm_module_stop(phl_info);
 error_phl_fsm_module_start:
 	phl_fsm_stop(phl_info);
 error_phl_fsm_start:
+#endif /* CONFIG_FSM */
 	rtw_hal_g6_stop(phl_info->phl_com, phl_info->hal);
 error_hal_start:
 	return phl_status;
@@ -1367,8 +1375,11 @@ void rtw_phl_stop(void *phl)
 #ifdef DBG_PHL_MR
 	phl_mr_info_dbg(phl_info);
 #endif
+
+#ifdef CONFIG_FSM
 	phl_fsm_module_stop(phl_info);
 	phl_fsm_stop(phl_info);
+#endif /* CONFIG_FSM */
 	rtw_hal_g6_stop(phl_info->phl_com, phl_info->hal);
 }
 
@@ -1397,6 +1408,7 @@ enum rtw_phl_status phl_wow_start(struct phl_info_t *phl_info, struct rtw_phl_st
 			break;
 		}
 
+#ifdef CONFIG_FSM
 		pstatus = phl_fsm_module_stop(phl_info);
 		if (RTW_PHL_STATUS_SUCCESS != pstatus) {
 			PHL_ERR("[wow] phl_fsm_module_stop failed.\n");
@@ -1408,7 +1420,7 @@ enum rtw_phl_status phl_wow_start(struct phl_info_t *phl_info, struct rtw_phl_st
 			PHL_ERR("[wow] phl_fsm_stop failed.\n");
 			break;
 		}
-
+#endif /* CONFIG_FSM */
 		pstatus = phl_wow_init_precfg(phl_info);
 		if (RTW_PHL_STATUS_SUCCESS != pstatus) {
 			PHL_ERR("[wow] phl_wow_init_precfg failed.\n");
@@ -1499,8 +1511,10 @@ void phl_wow_stop(struct phl_info_t *phl_info, struct rtw_phl_stainfo_t *sta)
 
 	phl_wow_deinit_postcfg(phl_info);
 
+#ifdef CONFIG_FSM
 	phl_fsm_start(phl_info);
 	phl_fsm_module_start(phl_info);
+#endif /* CONFIG_FSM */
 
 #endif /* CONFIG_WOWLAN */
 }

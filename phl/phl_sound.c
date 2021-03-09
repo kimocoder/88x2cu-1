@@ -55,6 +55,7 @@ enum rtw_phl_status _phl_snd_init_snd_grp(
 
 	return status;
 }
+#ifdef CONFIG_FSM
 /* For EXTERNAL application to create Sound object */
 /* @fsm: FSM main structure which created by phl_snd_new_fsm()
  * @phl_info: private data structure to invoke hal/phl function
@@ -105,6 +106,7 @@ enum rtw_phl_status phl_snd_new_obj(
 	FUNCOUT();
 	return status;
 }
+#endif /* CONFIG_FSM */
 
 /* PHL SOUND EXTERNAL APIs */
 /* get sounding in progress */
@@ -132,6 +134,7 @@ u8 rtw_phl_snd_chk_in_progress(void *phl)
 enum rtw_phl_status
 rtw_phl_sound_start(void *phl, u8 wrole_idx, u8 st_dlg_tkn, u8 period, u8 test_flag)
 {
+#ifdef CONFIG_FSM
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	struct phl_sound_obj *snd = (struct phl_sound_obj *)phl_info->snd_obj;
 	struct phl_snd_start_req snd_req;
@@ -150,17 +153,20 @@ rtw_phl_sound_start(void *phl, u8 wrole_idx, u8 st_dlg_tkn, u8 period, u8 test_f
 		snd_req.bypass_sts_chk = false; /* Default False */
 
 	return phl_snd_fsm_ev_start_func(phl, &snd_req);
+#else
+	return RTW_PHL_STATUS_FAILURE;
+#endif
 }
 
 enum rtw_phl_status
 rtw_phl_sound_down_ev(void *phl)
 {
-	enum rtw_phl_status status = RTW_PHL_STATUS_SUCCESS;
+	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	struct phl_sound_obj *snd = (struct phl_sound_obj *)phl_info->snd_obj;
-	
+#ifdef CONFIG_FSM	
 	status = phl_snd_fsm_ev_c2h_snd_down(phl);
-
+#endif
 	return status;
 }
 
@@ -168,7 +174,11 @@ rtw_phl_sound_down_ev(void *phl)
 enum rtw_phl_status
 rtw_phl_sound_abort(void *phl)
 {
+#ifdef CONFIG_FSM
 	return phl_snd_fsm_ev_abort(phl);
+#else
+	return RTW_PHL_STATUS_FAILURE;
+#endif
 }
 
 /* set fixed mode parameters APIs*/

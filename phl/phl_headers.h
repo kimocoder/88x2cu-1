@@ -60,7 +60,7 @@
 
 #include "phl_ps_api.h"
 
-//#ifdef CONFIG_FSM
+#ifdef CONFIG_FSM
 #include "phl_fsm.h"
 #include "phl_cmd_fsm.h"
 #include "phl_cmd_job.h"
@@ -69,9 +69,10 @@
 #include "phl_btc_fsm.h"
 #include "phl_sound_fsm.h"
 #include "phl_ps_fsm.h"
-//#endif /*CONFIG_FSM*/
+#endif /*CONFIG_FSM*/
 
 #include "phl_sound_cmd.h"
+#include "phl_cmd_ser.h"
 
 #include "phl_pkt_ofld.h"
 #include "test/phl_dbg_cmd.h"

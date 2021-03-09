@@ -12,20 +12,20 @@
  * more details.
  *
  *****************************************************************************/
-#ifndef __PHL_SCAN_FSM_H__
-#define __PHL_SCAN_FSM_H__
+#ifndef __PHL_CMD_SER_H__
+#define __PHL_CMD_SER_H__
 
-/* fsm private struct */
-struct fsm_root;
-struct fsm_main;
+#ifndef CONFIG_FSM
+enum rtw_phl_status phl_ser_event_notify(void *phl, u8 *p_ntfy);
+enum rtw_phl_status phl_fw_watchdog_timeout_notify(void *phl);
+enum rtw_phl_status rtw_phl_ser_dump_ple_buffer(void *phl);
+#endif
 
-/* scan fsm init api */
-struct fsm_main *phl_scan_new_fsm(struct fsm_root *fsm_m,
-	struct phl_info_t *phl_info);
-void phl_scan_destory_fsm(struct fsm_main *fsm);
-struct scan_obj *phl_scan_new_obj(struct fsm_main *fsm,
-	struct phl_info_t *phl_info);
-void phl_scan_destory_obj(struct scan_obj *pscan);
-bool phl_fsm_should_stop(struct fsm_main *fsm);
+enum rtw_phl_status phl_ser_send_msg(void *phl, enum RTW_PHL_SER_NOTIFY_EVENT notify);
 
-#endif /* __PHL_SCAN_FSM_H__ */
+#ifdef CONFIG_PHL_CMD_SER
+enum rtw_phl_status
+phl_register_ser_module(struct phl_info_t *phl_info);
+#endif
+
+#endif /* __PHL_CMD_SER_H__ */
