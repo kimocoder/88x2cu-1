@@ -440,5 +440,25 @@ _exit:
 	return psts;
 }
 
+enum rtw_phl_status
+rtw_phl_cmd_enqueue(void *phl,
+                    enum phl_band_idx band_idx,
+                    enum phl_msg_evt_id evt_id,
+                    u8 *cmd_buf,
+                    u32 cmd_len,
+                    void (*core_cmd_complete)(void *priv, u8 *cmd, u32 cmd_len, enum rtw_phl_status status),
+                    enum phl_cmd_type cmd_type,
+                    u32 cmd_timeout)
+{
+	return phl_cmd_enqueue((struct phl_info_t *)phl,
+	                       band_idx,
+	                       evt_id,
+	                       cmd_buf,
+	                       cmd_len,
+	                       core_cmd_complete,
+	                       cmd_type,
+	                       cmd_timeout);
+}
+
 #endif /*CONFIG_CMD_DISP*/
 
