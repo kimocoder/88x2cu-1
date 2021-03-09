@@ -2584,10 +2584,20 @@ static void scan_channel_list_filled(_adapter *padapter,
 u8 rtw_sitesurvey_cmd(_adapter *padapter, struct sitesurvey_parm *pparm)
 {
 	u8 res = _FAIL;
+	u8 i;
+	u32 scan_timeout_ms;
+	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
+	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
+	struct rtw_phl_scan_param *phl_param = NULL;
+	struct rtw_ieee80211_channel ch[RTW_CHANNEL_SCAN_AMOUNT] = {0};
+	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
+	struct sitesurvey_parm *tmp_parm = NULL;
+
 	struct cmd_obj *cmd;
 	struct sitesurvey_parm	*psurveyPara;
-	struct cmd_priv	*pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
-	struct mlme_priv	*pmlmepriv = &padapter->mlmepriv;
+	struct cmd_priv	*pcmdpriv = &dvobj->cmdpriv;
+
+	RTW_INFO("%s NEO TODO\n", __func__);
 
 #ifdef CONFIG_LPS
 	if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE)
