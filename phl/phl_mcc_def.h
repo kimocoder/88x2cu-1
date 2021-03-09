@@ -16,12 +16,18 @@
 #define _PHL_MCC_DEF_H_
 /* MCC definition for public usage */
 #ifdef CONFIG_MCC_SUPPORT
-aa
-#define TU 1024 /* Time Unit (TU): 1024 us*/
 
 struct phl_com_mcc_info {
 	struct rtw_phl_mcc_ops ops;
 };
+
+#ifdef RTW_WKARD_GO_BT_TS_ADJUST_VIA_NOA
+enum rtw_phl_status rtw_phl_mcc_go_bt_coex_enable(struct phl_info_t *phl,
+				struct rtw_wifi_role_t *cur_role, u16 bt_slot);
+
+enum rtw_phl_status rtw_phl_mcc_go_bt_coex_disable(struct phl_info_t *phl,
+				struct rtw_wifi_role_t *spec_role);
+#endif /*RTW_WKARD_GO_BT_TS_ADJUST_VIA_NOA*/
 
 void rtw_phl_mcc_watchdog(struct phl_info_t *phl, u8 band_idx);
 

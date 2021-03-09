@@ -155,11 +155,10 @@ struct phl_snd_ops
 };
 
 struct phl_sound_obj {
-	//NEO
-	//#ifdef CONFIG_FSM
+	#ifdef CONFIG_FSM
 	struct fsm_main *fsm;
 	struct fsm_obj *fsm_obj;
-	//#endif  /*CONFIG_FSM*/
+	#endif
 	struct phl_sound_param snd_param;
 	struct phl_snd_ops ops;
 
@@ -177,13 +176,12 @@ struct phl_sound_obj {
 	u8 msg_busy;
 
 };
-//NEO
-//#ifdef CONFIG_FSM
+#ifdef CONFIG_FSM
 enum rtw_phl_status phl_snd_new_obj(
 	struct fsm_main *fsm,
 	struct phl_info_t *phl_info);
 
-//#endif /*CONFIG_FSM*/
+#endif
 /* phl sounding intern api*/
 enum rtw_phl_status phl_snd_func_snd_init(struct phl_info_t *phl_info);
 

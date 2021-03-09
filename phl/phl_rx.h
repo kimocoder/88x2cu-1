@@ -43,13 +43,13 @@ void phl_event_indicator(void *context);
 enum rtw_phl_status rtw_phl_start_rx_process(void *phl);
 
 
-#ifdef PHL_RX_BATCH_IND
 void _phl_indic_new_rxpkt(struct phl_info_t *phl_info);
-#endif
+
 void
 phl_handle_rx_frame_list(struct phl_info_t *phl_info,
                          _os_list *frames);
 void phl_sta_rx_reorder_timer_expired(void *t);
+void phl_rx_traffic_upd(struct rtw_stats *sts);
 void phl_rx_watchdog(struct phl_info_t *phl_info);
 
 #ifdef CONFIG_PHL_RX_PSTS_PER_PKT

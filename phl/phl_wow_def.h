@@ -15,6 +15,14 @@
 #ifndef _PHL_WOW_DEF_H_
 #define _PHL_WOW_DEF_H_
 
+enum rtw_wow_op_mode {
+	RTW_WOW_OP_NONE = 0,
+	RTW_WOW_OP_PWR_DOWN,
+	RTW_WOW_OP_DISCONNECT_STBY,
+	RTW_WOW_OP_CONNECT_STBY,
+	RTW_WOW_OP_MAX = 0xF
+};
+
 enum rtw_wow_wake_reason {
 	RTW_WOW_RSN_UNKNOWN = 0,
 	RTW_WOW_RSN_RX_PAIRWISEKEY,
@@ -49,6 +57,11 @@ enum rtw_wow_wake_reason {
 	RTW_WOW_RSN_AP_OFFLOAD_WAKEUP, /* 30 */
 	RTW_WOW_RSN_DMAC_ERROR_OCCURRED,
 	RTW_WOW_RSN_EXCEPTION_OCCURRED,
+	RTW_WOW_RSN_L0_TO_L1_ERROR_OCCURRED,
+	RTW_WOW_RSN_ASSERT_OCCURRED,
+	RTW_WOW_RSN_L2_ERROR_OCCURRED, /* 35 */
+	RTW_WOW_RSN_WDT_TIMEOUT_WAKE,
+	RTW_WOW_RSN_RX_ACTION,
 	RTW_WOW_RSN_CLK_32K_UNLOCK,
 	RTW_WOW_RSN_CLK_32K_LOCK,
 	RTW_WOW_RSN_MAX = 0xFF
@@ -140,6 +153,10 @@ struct rtw_gtk_ofld_info {
 	u8 sa_query_id;
 };
 
+#define MAX_WOW_PATTERN_SIZE_BIT 128
+#define MAX_WOW_PATTERN_SIZE_BYTE 16
+#define MAX_WOW_PATTERN_SIZE_DWORD 4
+
 struct rtw_wowcam_upd_info {
 	u8 rw;
 	u8 wow_cam_idx;
@@ -153,6 +170,9 @@ struct rtw_wowcam_upd_info {
 	u8 bc;
 
 	u8 valid;
+	u8 ptrn[MAX_WOW_PATTERN_SIZE_BIT];
+	u32 ptrn_len;
+	u8 mask[MAX_WOW_PATTERN_SIZE_BYTE];
 };
 
 #define MAX_WOW_CAM_NUM 18
@@ -202,6 +222,10 @@ struct rtw_wow_wake_info {
 };
 
 struct rtw_aoac_report {
+	/* status check */
+	u8 rpt_ok;
+
+	/* report from fw */
 	u8 rpt_ver;
 	u8 sec_type;
 	u8 key_idx;

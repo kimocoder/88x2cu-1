@@ -50,11 +50,39 @@ rtw_phl_get_stainfo_by_macid(void *phl, u16 macid);
 /* For hal wow use */
 void rtw_phl_pkt_ofld_reset_all_entry(struct rtw_phl_com_t *phl_com);
 
+
 bool rtw_phl_query_regulation_info(void *phl, struct rtw_regulation_info *info);
 bool rtw_phl_regulation_query_ch(void *phl, u8 channel,
 				struct rtw_regulation_channel *ch);
 u8 rtw_phl_get_center_ch(u8 ch,
 	enum channel_width bw, enum chan_offset offset);
+
+void rtw_phl_btc_send_cmd(struct rtw_phl_com_t *phl_com,
+				u8 *buf, u32 len, u16 ev_id);
+
+#ifdef CONFIG_PHL_CHANNEL_INFO
+/* Channel info queue operation*/
+u32 rtw_phl_get_chaninfo_idle_number(void *drvpriv, struct rtw_phl_com_t *phl_com);
+u32 rtw_phl_get_chaninfo_busy_number(void *drvpriv, struct rtw_phl_com_t *phl_com);
+struct chan_info_t *rtw_phl_query_idle_chaninfo(void *drvpriv, struct rtw_phl_com_t *phl_com);
+
+struct chan_info_t *rtw_phl_query_busy_chaninfo(void *drvpriv, struct rtw_phl_com_t *phl_com);
+
+struct chan_info_t *rtw_phl_query_busy_chaninfo_latest(void *drvpriv, struct rtw_phl_com_t *phl_com);
+
+void rtw_phl_enqueue_idle_chaninfo(void *drvpriv, struct rtw_phl_com_t *phl_com,
+				struct chan_info_t *chan_info_pkt);
+
+struct chan_info_t * rtw_phl_recycle_busy_chaninfo(void *drvpriv, struct rtw_phl_com_t *phl_com,
+				struct chan_info_t *chan_info_pkt);
+#endif /* CONFIG_PHL_CHANNEL_INFO */
+
+#ifdef CONFIG_CMD_DISP
+enum rtw_phl_status
+rtw_phl_cmd_notify(struct rtw_phl_com_t *phl_com,
+                   enum phl_msg_evt_id event,
+                   u8 hw_idx);
+#endif /* CONFIG_CMD_DISP */
 
 #endif /* _PHL_API_DRV_H_ */
 

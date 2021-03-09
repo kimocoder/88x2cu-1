@@ -738,9 +738,8 @@ static __inline void os_enable_usb_out_pipes(void *drv_priv)
 
 static __inline void os_disable_usb_out_pipes(void *drv_priv)
 {
-	RTW_ERR("NEO %s - rtw_usb_write_port_cancel : TODO\n");
-	/* Free bulkout urb */
-	//rtw_usb_write_port_cancel(drv_priv);
+    /* Free bulkout urb */
+    rtw_usb_write_port_cancel(drv_priv);
 }
 
 static __inline u8 os_in_token_alloc(void *drv_priv)

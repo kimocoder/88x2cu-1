@@ -30,6 +30,23 @@ enum rtw_phl_status rtw_phl_connect_prepare(void *phl,
 					    u8 *addr);
 
 /**
+ * rtw_phl_connect_linked() - update media status
+ * @phl:	struct phl_info_t *
+ * @wrole:	struct rtw_wifi_role_t *
+ * @sta:	struct rtw_phl_stainfo_t *
+ * @sta_addr:	target mac address
+ *
+ * Do all necessary hardware setting for linked.
+ *
+ * Return RTW_PHL_STATUS_SUCCESS for success, otherwise fail.
+ */
+enum rtw_phl_status
+rtw_phl_connect_linked(void *phl,
+                       struct rtw_wifi_role_t *wrole,
+                       struct rtw_phl_stainfo_t *sta,
+                       u8 *sta_addr);
+
+/**
  * rtw_phl_connected() - Config hardware setting for connected
  * @phl:	struct phl_info_t *
  * @wrole:	struct rtw_wifi_role_t *
@@ -57,9 +74,7 @@ enum rtw_phl_status rtw_phl_ap_started(void *phl,
 enum rtw_phl_status rtw_phl_ap_stop(void *phl,
 				      struct rtw_wifi_role_t *wrole);
 
-enum rtw_phl_status rtw_phl_ap_started(void *phl,
-				      struct rtw_wifi_role_t *wrole);
-enum rtw_phl_status rtw_phl_ap_stop(void *phl,
+enum rtw_phl_status rtw_phl_ibss_started(void *phl,
 				      struct rtw_wifi_role_t *wrole);
 
 

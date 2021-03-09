@@ -47,6 +47,7 @@ enum regulation_rsn {
 	REGU_RSN_11D,
 	REGU_RSN_REGISTRY,
 	REGU_RSN_LOCATION,
+	REGU_RSN_MANUAL,
 	REGU_RSN_MAX
 };
 
@@ -95,6 +96,7 @@ struct rtw_regulation_info {
 	u8 regulation_5g;
 	u8 chplan_ver;
 	u8 country_ver;
+	u16 capability;
 };
 
 struct rtw_regulation_country_chplan {

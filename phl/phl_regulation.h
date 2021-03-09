@@ -43,7 +43,7 @@ struct rtw_regulation_chplan_group {
 #define MAX_HISTORY_NUM 20
 
 #define INVALID_DOMAIN_CODE 0xff
-#define INVALID_RD_INDEX 0xff
+#define INVALID_CHDEF 0xff
 
 struct rtw_domain {
 	u8 code;
@@ -63,10 +63,12 @@ struct rtw_regulation {
 	struct rtw_domain domain;
 	char country[2];
 	u8 support_mode;
-	u8 rd_idx2g; /* 2ghz regulatory domain index */
+
+	u8 ch_idx2g; /* 2ghz chdef index */
 	u8 regulation_2g;
-	u8 rd_idx5g; /* 5ghz regulatory domain index */
+	u8 ch_idx5g; /* 5ghz chdef index */
 	u8 regulation_5g;
+
 	struct rtw_regulation_chplan_group chplan[FREQ_GROUP_MAX];
 };
 

@@ -265,13 +265,12 @@ struct phl_info_t {
 	void *btc_fsm;
 	void *btc_obj;
 
-	void *snd_fsm;
-#endif /*CONFIG_FSM*/
-	void *snd_obj;
-
 	void *ps_fsm;
 	void *ps_obj;
 
+	void *snd_fsm;
+#endif /*CONFIG_FSM*/
+	void *snd_obj;
 	void *led_ctrl;
 
 	void *ecsa_ctrl;

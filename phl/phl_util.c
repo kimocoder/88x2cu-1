@@ -103,7 +103,7 @@ u8 pq_search_node(void *d, struct phl_queue *q, _os_list **obj,
 		  enum lock_type type, bool bdel, void *priv,
 		  u8 (*search_fun)(void *d, void *obj, void *priv))
 {
-	_os_spinlockfg sp_flags;
+	_os_spinlockfg sp_flags = 0;
 	_os_list *newobj = NULL;
 	bool bhit = false;
 

@@ -125,6 +125,13 @@ enum rtw_phl_status phl_mr_watchdog(struct phl_info_t *phl_info);
 u8 rtw_phl_mr_get_opch_list(void *phl, struct rtw_wifi_role_t *wifi_role,
 			    struct rtw_chan_def *chdef_list, u8 list_size);
 
+void
+phl_mr_check_ecsa(struct phl_info_t *phl_info,
+		  struct rtw_wifi_role_t *wrole);
+
+void
+phl_mr_check_ecsa_cancel(struct phl_info_t *phl_info,
+			 struct rtw_wifi_role_t *wrole);
 #ifdef DBG_PHL_MR
 enum rtw_phl_status phl_mr_info_dbg(struct phl_info_t *phl_info);
 

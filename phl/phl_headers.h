@@ -59,6 +59,7 @@
 #include "phl_sound.h"
 
 #include "phl_ps_api.h"
+#include "phl_btc.h"
 
 #ifdef CONFIG_FSM
 #include "phl_fsm.h"
@@ -82,7 +83,12 @@
 #include "phl_led.h"
 #include "phl_trx_mit.h"
 #include "phl_mcc_def.h"
+#include "phl_notify.h"
 #include "phl_cmd_general.h"
+#include "phl_cmd_btc.h"
+#include "phl_twt.h"
+#include "phl_ecsa_export.h"
+#include "phl_ecsa.h"
 
 #ifdef CONFIG_PHL_CHANNEL_INFO
 #include "phl_chan_info.h"

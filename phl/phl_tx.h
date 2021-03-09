@@ -70,7 +70,12 @@ u16 phl_calc_avail_wptr(u16 rptr, u16 wptr, u16 bndy);
 void phl_dump_sorted_ring(_os_list *sorted_ring);
 void phl_dump_tx_plan(_os_list *sta_list);
 void phl_dump_t_fctrl_result(_os_list *t_fctrl_result);
+void phl_tx_traffic_upd(struct rtw_stats *sts);
 void phl_tx_watchdog(struct phl_info_t *phl_info);
 void phl_reset_tx_stats(struct rtw_stats *stats);
+void phl_dump_h2c_pool_stats(struct phl_h2c_pkt_pool *h2c_pkt_pool);
+
+enum rtw_phl_status
+phl_cmd_cfg_ampdu_hdl(struct phl_info_t *phl_info, u8 *param);
 
 #endif	/* __PHL_TX_H_ */

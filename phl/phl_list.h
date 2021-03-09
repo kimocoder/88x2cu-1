@@ -60,7 +60,6 @@ enum list_pos {
 };
 
 #ifndef PHL_PLATFORM_LINUX
-aa
 /**
  * container_of - cast a member of a structure out to the containing structure
  * @ptr:        the pointer to the member.
