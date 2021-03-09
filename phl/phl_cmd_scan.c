@@ -661,6 +661,7 @@ enum phl_mdl_ret_code _phl_cmd_scan_req_acquired(
 	struct phl_msg msg = {0};
 	struct phl_msg_attribute attr = {0};
 
+	RTW_INFO("%s NEO do\n", __func__);
 	FUNCIN();
 
 	param->start_time = _os_get_cur_time_ms();

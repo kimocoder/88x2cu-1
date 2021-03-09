@@ -2549,6 +2549,252 @@ static u32 rtw_scan_timeout_decision(_adapter *padapter)
 
 #endif // NEO PHL_ARCH
 
+
+#if 1 // NEO will take off soon
+/* remain on channel priv */
+#define ROCH_CH_READY	0x1
+
+struct scan_priv {
+	_adapter *padapter;
+
+	/* for remain on channel callback */
+	struct wireless_dev *wdev;
+	struct ieee80211_channel channel;
+	u8 channel_type;
+	unsigned int duration;
+	u64 cookie;
+
+	u8 restore_ch;
+
+	u8 roch_step;
+#ifdef CONFIG_RTW_80211K
+	u32 rrm_token;	/* 80211k use it to identify caller */
+#endif
+};
+
+#ifdef CONFIG_CMD_SCAN
+static struct rtw_phl_scan_param *_alloc_phl_param(_adapter *adapter, u8 scan_ch_num)
+{
+	struct rtw_phl_scan_param *phl_param = NULL;
+	struct scan_priv *scan_priv = NULL;
+
+	if (scan_ch_num == 0) {
+		RTW_ERR("%s scan_ch_num = 0\n", __func__);
+		goto _err_exit;
+	}
+	/*create mem of PHL Scan parameter*/
+	phl_param = rtw_zmalloc(sizeof(*phl_param));
+	if (phl_param == NULL) {
+		RTW_ERR("%s alloc phl_param fail\n", __func__);
+		goto _err_exit;
+	}
+
+	scan_priv = rtw_zmalloc(sizeof(*scan_priv));
+	if (scan_priv == NULL) {
+		RTW_ERR("%s alloc scan_priv fail\n", __func__);
+		goto _err_scanpriv;
+	}
+	scan_priv->padapter = adapter;
+	phl_param->priv = scan_priv;
+	phl_param->wifi_role = adapter->phl_role;
+	phl_param->back_op_mode = SCAN_BKOP_NONE;
+
+	phl_param->ch_sz = sizeof(struct phl_scan_channel) * (scan_ch_num + 1);
+	phl_param->ch = rtw_zmalloc(phl_param->ch_sz);
+	if (phl_param->ch == NULL) {
+		RTW_ERR("%s: alloc phl scan ch fail\n", __func__);
+		goto _err_param_ch;
+	}
+
+	return phl_param;
+
+_err_param_ch:
+	if (scan_priv)
+		rtw_mfree(scan_priv, sizeof(*scan_priv));
+_err_scanpriv:
+	if (phl_param)
+		rtw_mfree(phl_param, sizeof(*phl_param));
+_err_exit:
+	rtw_warn_on(1);
+	return phl_param;
+}
+
+static u8 _free_phl_param(_adapter *adapter, struct rtw_phl_scan_param *phl_param)
+{
+	u8 res = _FAIL;
+
+	if (!phl_param)
+		return res;
+
+	if (phl_param->ch)
+		rtw_mfree(phl_param->ch, phl_param->ch_sz); 
+	if (phl_param->priv)
+		rtw_mfree(phl_param->priv, sizeof(struct scan_priv));
+	rtw_mfree(phl_param, sizeof(struct rtw_phl_scan_param));
+
+	res = _SUCCESS;
+	return res;
+}
+#endif /*CONFIG_CMD_SCAN*/
+
+static int scan_complete_cb(void *priv, struct rtw_phl_scan_param *param)
+{
+	struct scan_priv *scan_priv = (struct scan_priv *)priv;
+	_adapter *padapter = scan_priv->padapter;
+	struct	mlme_priv *pmlmepriv = &padapter->mlmepriv;
+	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
+	bool acs = _FALSE;
+	int ret = _FAIL;
+
+	RTW_INFO("%s NEO DO\n", __func__);
+
+	if (!rtw_is_adapter_up(padapter))
+		goto _exit;
+
+	mlmeext_set_scan_state(pmlmeext, SCAN_DISABLE);
+
+	report_surveydone_event(padapter, acs, RTW_CMDF_DIRECTLY);
+	ret = _SUCCESS;
+
+_exit:
+	RTW_INFO(FUNC_ADPT_FMT" takes %d ms to scan %d/%d channels\n",
+			FUNC_ADPT_ARG(padapter), param->total_scan_time,
+			#ifdef CONFIG_CMD_SCAN
+			param->ch_idx,
+			#else
+			param->ch_idx + 1,
+			#endif
+			param->ch_num);
+	_rtw_scan_abort_check(padapter, __func__);
+
+#ifdef CONFIG_CMD_SCAN
+	_free_phl_param(padapter, param);
+	pmlmeext->sitesurvey_res.scan_param = NULL;
+#else
+	rtw_mfree(scan_priv, sizeof(*scan_priv));
+#endif
+
+	return ret;
+}
+
+static int scan_start_cb(void *priv, struct rtw_phl_scan_param *param)
+{
+	struct scan_priv *scan_priv = (struct scan_priv *)priv;
+	_adapter *padapter = scan_priv->padapter;
+	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
+
+	RTW_INFO("%s NEO DO\n", __func__);
+
+	pmlmeext->sitesurvey_res.bss_cnt = 0;
+	//TODO remove
+	mlmeext_set_scan_state(pmlmeext, SCAN_PROCESS);
+	#ifdef CONFIG_CMD_SCAN
+	pmlmeext->sitesurvey_res.scan_param = param;
+	#endif
+	return 0;
+}
+
+static int scan_ch_ready_cb(void *priv, struct rtw_phl_scan_param *param)
+{
+	struct scan_priv *scan_priv = (struct scan_priv *)priv;
+	_adapter *padapter = scan_priv->padapter;
+
+	RTW_INFO("%s ch:%d\n", __func__, param->scan_ch->channel);
+	return 0;
+}
+
+static int scan_issue_pbreq_cb(void *priv, struct rtw_phl_scan_param *param)
+{
+	struct scan_priv *scan_priv = (struct scan_priv *)priv;
+	_adapter *padapter = scan_priv->padapter;
+	NDIS_802_11_SSID ssid;
+	int i;
+
+	RTW_INFO("%s NEO DO\n", __func__);
+
+	/* active scan behavior */
+	if (padapter->registrypriv.wifi_spec)
+		issue_probereq(padapter, NULL, NULL);
+	else
+		issue_probereq_ex(padapter, NULL, NULL, 0, 0, 0, 0);
+
+	issue_probereq(padapter, NULL, NULL);
+
+	for (i = 0; i < param->ssid_num; i++) {
+		if (param->ssid[i].ssid_len == 0)
+			continue;
+
+		ssid.SsidLength = param->ssid[i].ssid_len;
+		_rtw_memcpy(ssid.Ssid, &param->ssid[i].ssid, ssid.SsidLength);
+		/* IOT issue,
+		 * Send one probe req without WPS IE,
+		 * when not wifi_spec
+		 */
+		if (padapter->registrypriv.wifi_spec)
+			issue_probereq(padapter, &ssid, NULL);
+		else
+			issue_probereq_ex(padapter, &ssid, NULL, 0, 0, 0, 0);
+
+		issue_probereq(padapter, &ssid, NULL);
+	}
+	return 0;
+}
+
+static inline void _ps_announce(_adapter *adapter, bool ps)
+{
+	RTW_INFO(FUNC_ADPT_FMT" issue_null(%d)\n", FUNC_ADPT_ARG(adapter), ps);
+	if (MLME_IS_STA(adapter)) {
+		if (is_client_associated_to_ap(adapter) == _TRUE) {
+			/*issue_nulldata(adapter, NULL, ps, 3, 500);*/
+			issue_nulldata(adapter, NULL, ps, 1, 0);
+		}
+	}
+	#ifdef CONFIG_RTW_MESH
+	else if (MLME_IS_MESH(adapter)) {
+		rtw_mesh_ps_annc(adapter, ps);
+	}
+	#endif
+}
+
+u8 scan_issu_null_data_cb(void *priv, u8 ridx, bool ps)
+{
+	#ifdef CONFIG_CMD_SCAN
+	struct dvobj_priv *obj = (struct dvobj_priv *)priv;
+	#else
+	struct scan_priv *scan_priv = (struct scan_priv *)priv;
+	_adapter *padapter = scan_priv->padapter;
+	struct dvobj_priv *obj = adapter_to_dvobj(padapter);
+	#endif
+	_adapter *iface = NULL;
+
+	RTW_INFO("%s NEO DO\n", __func__);
+
+	if (ridx >= CONFIG_IFACE_NUMBER) {
+		RTW_ERR("%s ridx:%d invalid\n", __func__, ridx);
+		rtw_warn_on(1);
+		goto _error;
+	}
+
+	iface = obj->padapters[ridx];
+	if (!rtw_is_adapter_up(iface))
+		goto _error;
+
+	_ps_announce(iface, ps);
+
+	return _SUCCESS;
+_error:
+	return _FAIL;
+}
+
+static struct rtw_phl_scan_ops scan_ops_cb = {
+	.scan_start = scan_start_cb,
+	.scan_ch_ready = scan_ch_ready_cb,
+	.scan_complete = scan_complete_cb,
+	.scan_issue_pbreq = scan_issue_pbreq_cb,
+	.scan_issue_null_data = scan_issu_null_data_cb
+};
+#endif // if 1 NEO
+
 /*
 rtw_sitesurvey_cmd(~)
 	### NOTE:#### (!!!!)
@@ -2599,6 +2845,81 @@ u8 rtw_sitesurvey_cmd(_adapter *padapter, struct sitesurvey_parm *pparm)
 
 	RTW_INFO("%s NEO TODO\n", __func__);
 
+#if 1 // NEO G6
+	if (pparm == NULL) {
+		tmp_parm = rtw_zmalloc(sizeof(struct sitesurvey_parm));
+		if (tmp_parm == NULL) {
+			RTW_ERR("%s alloc tmp_parm fail\n", __func__);
+			goto _err_exit;
+		}
+		rtw_init_sitesurvey_parm(padapter, tmp_parm);
+		pparm = tmp_parm;
+	}
+
+	/* backup original ch list */
+	_rtw_memcpy(ch, pparm->ch,
+		sizeof(struct rtw_ieee80211_channel) * pparm->ch_num);
+
+	if (pparm->duration == 0)
+		pparm->duration = SURVEY_TO; /* ms */
+
+	/*create mem of PHL Scan parameter*/
+	phl_param = _alloc_phl_param(padapter, pparm->ch_num);
+	if (phl_param == NULL) {
+		RTW_ERR("%s alloc phl_param fail\n", __func__);
+		goto _err_param;
+	}
+
+	/* STEP_1 transfer from rtw_channel_list to phl_channel_list */
+	scan_channel_list_filled(padapter, phl_param, pparm);
+
+	/* STEP_2 copy the ssid info to phl param */
+	for (i = 0; i < phl_param->ssid_num; ++i) {
+		phl_param->ssid[i].ssid_len = pparm->ssid[i].SsidLength;
+		_rtw_memcpy(&phl_param->ssid[i].ssid, &pparm->ssid[i].Ssid, phl_param->ssid[i].ssid_len);
+	}
+
+	RTW_INFO("%s NEO scan_type:%d\n", __func__, pparm->scan_type);
+
+	/* STEP_3 set ops according to scan_type */
+	switch (pparm->scan_type) {
+	#ifdef CONFIG_P2P
+	case RTW_SCAN_P2P:
+		phl_param->ops = &scan_ops_p2p_cb;
+		break;
+	#endif
+
+	case RTW_SCAN_NORMAL:
+	default:
+		RTW_INFO("%s NEO RTW_SCAN_NORMAL\n", __func__);
+		phl_param->ops = &scan_ops_cb;
+		phl_param->back_op_mode = SCAN_BKOP_CNT;
+		phl_param->back_op_ch_cnt = 3;
+		phl_param->back_op_ch_dur_ms = SURVEY_TO;
+		break;
+	}
+
+	set_fwstate(pmlmepriv, WIFI_UNDER_SURVEY);
+
+	if (rtw_phl_cmd_scan_request(dvobj->phl, phl_param, true) != RTW_PHL_STATUS_SUCCESS) {
+		RTW_ERR("%s request scan_cmd failed\n", __func__);
+		_clr_fwstate_(pmlmepriv, WIFI_UNDER_SURVEY);
+		goto _err_req_param;
+	}
+
+	//pmlmeext->sitesurvey_res.scan_param = phl_param;
+	//rtw_free_network_queue(padapter, _FALSE);
+
+	RTW_INFO("%s NEO after rtw_phl_cmd_scan_request\n", __func__);
+
+
+_err_req_param:
+	_free_phl_param(padapter, phl_param);
+_err_param:
+	if (tmp_parm)
+		rtw_mfree(tmp_parm, sizeof(*tmp_parm));
+_err_exit:
+#else // NEO
 #ifdef CONFIG_LPS
 	if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE)
 		rtw_lps_ctrl_wk_cmd(padapter, LPS_CTRL_SCAN, 0);
@@ -2646,7 +2967,7 @@ u8 rtw_sitesurvey_cmd(_adapter *padapter, struct sitesurvey_parm *pparm)
 		_clr_fwstate_(pmlmepriv, WIFI_UNDER_SURVEY);
 	}
 
-
+#endif // NEO
 	return res;
 }
 #else /*!CONFIG_CMD_SCAN*/

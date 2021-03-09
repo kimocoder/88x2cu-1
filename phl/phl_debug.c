@@ -21,6 +21,7 @@ u32 phl_log_components = COMP_PHL_DBG |
 			 COMP_PHL_MAC |
 			 COMP_PHL_XMIT |
 			 COMP_PHL_PSTS |
+			 COMP_PHL_CMDDISP |
 			 COMP_PHL_WOW | 0;
 
 //			 COMP_PHL_RECV |
