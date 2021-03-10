@@ -26,6 +26,7 @@
 enum _CMD_SCAN_STATE {
 	CMD_SCAN_ACQUIRE = BIT0,
 	CMD_SCAN_STARTED = BIT1,
+	CMD_SCAN_DF_IO = BIT2, /* Disable Function : IO */
 };
 
 static void _cmd_scan_timer(void* role);
@@ -305,7 +306,8 @@ void _cmd_scan_end(
 	_os_cancel_timer(drv, &param->scan_timer);
 	_os_release_timer(drv, &param->scan_timer);
 
-	if(TEST_STATUS_FLAG(param->state, CMD_SCAN_STARTED))
+	if(TEST_STATUS_FLAG(param->state, CMD_SCAN_STARTED) &&
+	   !TEST_STATUS_FLAG(param->state, CMD_SCAN_DF_IO) )
 	{
 		rtw_hal_scan_set_rxfltr_by_mode(phl_info->hal, wifi_role->hw_band,
 						false, &param->fltr_mode);
@@ -324,6 +326,8 @@ void _cmd_abort_notify_cb(
 {
 	struct rtw_phl_scan_param *param = (struct rtw_phl_scan_param *)msg->inbuf;
 
+	if(IS_MSG_CANNOT_IO(msg->msg_id))
+		SET_STATUS_FLAG(param->state, CMD_SCAN_DF_IO);
 	_cmd_scan_end(drv, param);
 }
 
@@ -367,10 +371,13 @@ void _cmd_abort_notify(void *dispr, void *drv,
 			PHL_ERR("%s :: [Abort] dispr_send_msg failed (0x%X)\n",
 				__func__, pstatus);
 
-			if(pstatus == RTW_PHL_STATUS_UNEXPECTED_ERROR) {
+			/*
+			cmd_scan can't recongine CANNOT_IO state in this situation.
+			Comment out RTW_PHL_STATUS_UNEXPECTED_ERROR */
+			/* if(pstatus == RTW_PHL_STATUS_UNEXPECTED_ERROR) */
 				/* driver is going to unload, clean resource only */
 				CLEAR_STATUS_FLAG(param->state, CMD_SCAN_STARTED);
-			}
+
 			_cmd_abort_notify_cb(drv, &msg);
 		}
 	}
@@ -423,6 +430,9 @@ enum phl_mdl_ret_code _cmd_scan_fail_ev_hdlr(
 			pstatus = phl_disp_eng_free_token(phl_info, idx, &param->token);
 			if(pstatus == RTW_PHL_STATUS_SUCCESS)
 			{
+				if(IS_MSG_CANNOT_IO(msg->msg_id))
+					SET_STATUS_FLAG(param->state, CMD_SCAN_DF_IO);
+
 				_cmd_scan_end(d, param);
 
 				SET_MSG_MDL_ID_FIELD(nextmsg.msg_id, PHL_FG_MDL_SCAN);
@@ -661,7 +671,7 @@ enum phl_mdl_ret_code _phl_cmd_scan_req_acquired(
 	struct phl_msg msg = {0};
 	struct phl_msg_attribute attr = {0};
 
-	RTW_INFO("%s NEO do\n", __func__);
+	RTW_INFO("%s NEO DO\n", __func__);
 	FUNCIN();
 
 	param->start_time = _os_get_cur_time_ms();

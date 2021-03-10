@@ -727,7 +727,7 @@ void phl_record_wow_stat(struct phl_wow_info *wow_info)
 	wow_stat->wake_rsn = wow_info->wake_rsn;
 	wow_stat->err.deinit = wow_info->err.deinit;
 
-	if (wow_info->aoac_info.rpt_ok == 0)
+	if (wow_info->aoac_info.rpt_fail)
 		++wow_stat->aoac_rpt_fail_cnt;
 }
 
@@ -953,7 +953,7 @@ enum rtw_phl_status phl_wow_init_postcfg(struct phl_wow_info *wow_info)
 	pstatus = _init_postcfg_set_rxfltr(phl_info);
 
 	/* reset trx */
-	trx_ops->trx_reset(phl_info);
+	trx_ops->trx_reset(phl_info, PHL_CTRL_TX|PHL_CTRL_RX);
 
 	return pstatus;
 }
@@ -996,8 +996,9 @@ static void _phl_handle_aoac_rpt_action(struct phl_wow_info *wow_info, bool rx_r
 				_phl_indic_wake_sec_upd(wow_info, aoac_report_get_ok, rx_ready);
 			}
 
-			wow_info->aoac_info.rpt_ok = aoac_report_get_ok;
 			phase_0_ok = false;
+
+			wow_info->aoac_info.rpt_fail = (aoac_report_get_ok == false) ? true : false;
 		}
 	}
 }
@@ -1097,7 +1098,7 @@ enum rtw_phl_status phl_wow_deinit_precfg(struct phl_wow_info *wow_info)
 	_phl_handle_aoac_rpt_action(wow_info, false);
 
 	/* resume sw rx */
-	trx_ops->trx_resume(phl_info, PHL_REQ_PAUSE_RX);
+	trx_ops->trx_resume(phl_info, PHL_CTRL_RX);
 
 	_deinit_precfg_set_intr(phl_info);
 
@@ -1162,7 +1163,7 @@ enum rtw_phl_status phl_wow_deinit_postcfg(struct phl_wow_info *wow_info)
 	FUNCIN();
 
 	/* resume sw tx */
-	trx_ops->trx_resume(phl_info, PHL_REQ_PAUSE_TX);
+	trx_ops->trx_resume(phl_info, PHL_CTRL_TX);
 	/* enable ppdu sts */
 	rtw_hal_ppdu_sts_cfg(phl_info->hal, wow_info->sta->wrole->hw_band, true);
 

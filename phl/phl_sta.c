@@ -1823,8 +1823,7 @@ void rtw_phl_stainfo_link_notify(void *phl, struct rtw_wifi_role_t *wrole, bool 
 
 enum rtw_phl_status
 rtw_phl_query_rainfo(void *phl, struct rtw_phl_stainfo_t *phl_sta,
-		     enum rtw_data_rate *auto_rate, enum channel_width *bw,
-		     enum rtw_gi_ltf *gi_ltf)
+		     struct rtw_phl_rainfo *ra_info)
 {
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	enum rtw_phl_status phl_sts = RTW_PHL_STATUS_FAILURE;
@@ -1837,7 +1836,7 @@ rtw_phl_query_rainfo(void *phl, struct rtw_phl_stainfo_t *phl_sta,
 			break;
 		}
 
-		if (NULL == auto_rate || NULL == bw || NULL == gi_ltf) {
+		if (NULL == ra_info) {
 			PHL_TRACE(COMP_PHL_XMIT, _PHL_ERR_,
 				  "%s : Input parameter is NULL\n",
 				  __func__);
@@ -1846,7 +1845,7 @@ rtw_phl_query_rainfo(void *phl, struct rtw_phl_stainfo_t *phl_sta,
 
 		if (RTW_HAL_STATUS_SUCCESS ==
 		    rtw_hal_query_rainfo(phl_info->hal, phl_sta->hal_sta,
-					 auto_rate, bw, gi_ltf)) {
+					 ra_info)) {
 			phl_sts = RTW_PHL_STATUS_SUCCESS;
 			break;
 		} else {

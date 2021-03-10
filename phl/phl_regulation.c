@@ -21,13 +21,54 @@ extern const struct chdef_2ghz chdef2g[MAX_CHDEF_2GHZ];
 extern const struct chdef_5ghz chdef5g[MAX_CHDEF_5GHZ];
 extern const struct country_domain_mapping cdmap[MAX_COUNTRY_NUM];
 
+/*
+ * @ Function description
+ *	Convert 2 ghz channels from bit definition and then fill to
+ *	struct rtw_regulation_channel *ch array[] and
+ *	*ch_cnt will also be calculated.
+ *
+ * @ parameter
+ *	*rg : internal regulatory information
+ *	*ch_cnt : final converted 2ghz channel numbers.
+ *	*rch : converted channels will be filled here.
+ *	ch : 2 ghz bit difinitions
+ *	passive : 2 ghz passive bit difinitions
+ *
+ */
+static void _convert_ch2g(struct rtw_regulation *rg, u32 *ch_cnt,
+	struct rtw_regulation_channel *rch, u16 ch, u16 passive)
+{
+	u8 i = 0, property = 0;
+	u32 shift = 0, cnt = 0;
+
+	PHL_INFO("[REGU], convert 2 ghz channels\n");
+
+	for (i = 0; i < MAX_CH_NUM_2GHZ; i++) {
+		property = 0;
+		shift = (1 << i);
+		if (ch & shift) {
+			rch[*ch_cnt].channel = (u8)(i + 1);
+
+			if (passive & shift)
+				property |= CH_PASSIVE;
+
+			rch[*ch_cnt].property = property;
+			(*ch_cnt)++;
+			PHL_INFO("[REGU], ch: %d%s\n", (i + 1),
+			((property & CH_PASSIVE) ? ", passive" : " " ));
+			cnt++;
+		}
+	}
+
+	PHL_INFO("[REGU], converted channels : %d\n", cnt);
+}
+
 static enum rtw_regulation_status _chnlplan_update_2g(
 		struct rtw_regulation *rg, const struct freq_plan *f)
 {
 	const struct chdef_2ghz *chdef = NULL;
 	struct rtw_regulation_chplan_group *plan = NULL;
-	u16 i = 0, ch = 0, passive = 0, idx = INVALID_CHDEF;
-	u32 shift = 0;
+	u16 i = 0, ch = 0, passive = 0;
 
 	if (!f)
 		return REGULATION_FAILURE;
@@ -49,27 +90,11 @@ static enum rtw_regulation_status _chnlplan_update_2g(
 	rg->regulation_2g = f->regulation;
 
 	plan = &rg->chplan[FREQ_GROUP_2GHZ];
-
 	plan->cnt = 0;
-
 	ch = ((chdef->support_ch[1] << 8) | (chdef->support_ch[0]));
 	passive = ((chdef->passive[1] << 8) | (chdef->passive[0]));
+	_convert_ch2g(rg, &plan->cnt, plan->ch, ch, passive);
 
-	PHL_INFO("[REGU], Update 2 GHz channel plan\n");
-	for (i = 0; i < MAX_CH_NUM_2GHZ; i++) {
-		plan->ch[i].channel = 0;
-		plan->ch[i].property = 0;
-		shift = (1 << i);
-		if (ch & shift) {
-			plan->ch[plan->cnt].channel = (u8)(i + 1);
-			if (passive & shift)
-				plan->ch[i].property |= CH_PASSIVE;
-			plan->cnt++;
-			PHL_INFO("[REGU], channel = %d, %s\n", (i + 1),
-				((passive & shift) ? "passive" : "active" ));
-
-		}
-	}
 	PHL_INFO("[REGU], 2 GHz, total channel = %d\n", plan->cnt);
 
 	return REGULATION_SUCCESS;
@@ -120,16 +145,68 @@ static void _get_5ghz_ch_info(const struct chdef_5ghz *chdef,
 	}
 }
 
+/*
+ * @ Function description
+ *	Convert 5 ghz channels from bit definition and then fill to
+ *	struct rtw_regulation_channel *ch array[] and
+ *	*ch_cnt will also be calculated.
+ *
+ * @ parameter
+ *	band_5g : 1~4 (5g band-1 ~ 5g band-4)
+ *	*rg : internal regulatory information
+ *	*ch_cnt : final converted 2ghz channel numbers.
+ *	*rch : converted channels will be filled here.
+ *	ch : 5 ghz bnad channel bit difinitions
+ *	passive : 5 ghz band passive bit difinitions
+ *	dfs : 5 ghz band dfs bit difinitions
+ *	max_num : maximum channel numbers of the 5 ghz band.
+ *	ch_start : start channel index of the 5 ghz band.
+ */
+static void _convert_ch5g(u8 band_5g, struct rtw_regulation *rg,
+			u32 *ch_cnt, struct rtw_regulation_channel *rch,
+			u16 ch, u16 passive, u16 dfs, u8 max_num, u8 ch_start)
+{
+	u16 i = 0;
+	u32 shift = 0;
+	u8 property = 0;
+	u32 cnt = 0;
+
+	PHL_INFO("[REGU], convert 5ghz band-%d channels, from %d, ch=0x%x, passive = 0x%x, dfs=0x%x \n",
+			band_5g, ch_start, ch, passive, dfs);
+
+	for (i = 0; i < max_num; i++) {
+		shift = (1 << i);
+		if (ch & shift) {
+			property = 0;
+			rch[*ch_cnt].channel = (u8)(ch_start + (i * 4));
+
+			if (passive & shift)
+				property |= CH_PASSIVE;
+			if (dfs & shift)
+				property |= CH_DFS;
+
+			rch[*ch_cnt].property = property;
+			PHL_INFO("[REGU], ch: %d%s%s \n",
+				rch[*ch_cnt].channel,
+				((property & CH_PASSIVE) ? ", passive" : ""),
+				((property & CH_DFS) ? ", dfs" : ""));
+			(*ch_cnt)++;
+			cnt++;
+		}
+	}
+
+	PHL_INFO("[REGU], converted channels : %d\n", cnt);
+}
+
 static enum rtw_regulation_status _chnlplan_update_5g(
 		struct rtw_regulation *rg, const struct freq_plan *f)
 {
 	const struct chdef_5ghz *chdef = NULL;
 	struct rtw_regulation_chplan_group *plan = NULL;
-	struct rtw_regulation_channel *rch = NULL;
 	u8 group = FREQ_GROUP_5GHZ_BAND1;
 	u8 max_num = 0, ch_start = 0;
-	u16 i = 0, j = 0, ch = 0, passive = 0, dfs = 0;
-	u32 shift = 0, total = 0;
+	u16 i = 0, ch = 0, passive = 0, dfs = 0;
+	u32 total = 0;
 
 	if (!f)
 		return REGULATION_FAILURE;
@@ -154,38 +231,10 @@ static enum rtw_regulation_status _chnlplan_update_5g(
 		group = (u8)(i + FREQ_GROUP_5GHZ_BAND1);
 		plan = &rg->chplan[group];
 		plan->cnt = 0;
-
-		rch = plan->ch;
 		_get_5ghz_ch_info(chdef, group,
 			&ch, &passive, &dfs, &max_num, &ch_start);
-
-		PHL_INFO("[REGU], Update 5GHz band-%d, ch=0x%x, %s, dfs=0x%x, max_num=%d, start ch=%d\n",
-				(i + 1), ch, (passive ? "passive" : "active"),
-				dfs, max_num, ch_start);
-
-		for (j = 0; j < max_num; j++) {
-			rch[j].channel = 0;
-			rch[j].property = 0;
-			shift = (1 << j);
-
-			if (ch & shift) {
-				rch[plan->cnt].channel =
-					(u8)(ch_start + (j * 4));
-
-				if (passive & shift)
-					rch[plan->cnt].property |= CH_PASSIVE;
-				if (dfs & shift)
-					rch[plan->cnt].property |= CH_DFS;
-				PHL_INFO("[REGU], ch=%d, property = 0x%x, %s, dfs=%d \n",
-					(ch_start + (j * 4)),
-					rch[plan->cnt].property,
-					((passive & shift) ?
-					"passive" : "active" ),
-					((dfs & shift) ? 1 : 0 ));
-				plan->cnt++;
-			}
-		}
-		PHL_INFO("[REGU], band-%d, channel = %d\n", (i + 1), plan->cnt);
+		_convert_ch5g((u8)(i + 1), rg, &plan->cnt, plan->ch,
+			ch, passive, dfs, max_num, ch_start);
 		total += plan->cnt;
 	}
 
@@ -205,7 +254,7 @@ static enum rtw_regulation_status _regulatory_domain_update(
 	plan_5g = &rdmap[did].freq_5g;
 
 	rg->domain.code = rdmap[did].domain_code;
-		rg->domain.reason = reason;
+	rg->domain.reason = reason;
 	status = _chnlplan_update_2g(rg, plan_2g);
 		if (status != REGULATION_SUCCESS)
 			return status;
@@ -401,11 +450,11 @@ static void _display_chplan(struct rtw_regulation_chplan *plan)
 	u16 i = 0;
 
 	for (i = 0; i < plan->cnt; i++) {
-		PHL_INFO("[REGU], %d - channel=%d, %s, dfs=%d \n",
+		PHL_INFO("[REGU], %d, ch: %d%s%s\n",
 			(i + 1), plan->ch[i].channel,
 			((plan->ch[i].property & CH_PASSIVE) ?
-				"passive" : "active"),
-			((plan->ch[i].property & CH_DFS) ? 1 : 0));
+						", passive" : ""),
+			((plan->ch[i].property & CH_DFS) ? ", dfs" : ""));
 	}
 }
 
@@ -418,9 +467,119 @@ static void _history_log(struct rtw_regulation *rg, u8 domain, u8 reason)
 		rg->history_cnt = 0;
 }
 
+
+static void _get_5ghz_udef_ch_info(struct rtw_user_def_chplan *udef,
+	u8 group, u16 *ch, u16 *passive, u16 *dfs, u8 *max_num, u8 *ch_start)
+{
+	switch (group) {
+	case FREQ_GROUP_5GHZ_BAND1:
+		*ch = (u16)udef->ch5g & 0xf;
+		*passive = (u16)udef->passive5g & 0xf;
+		*dfs = (u16)udef->dfs5g & 0xf;
+		*max_num = MAX_CH_NUM_BAND1;
+		*ch_start = 36;
+		break;
+	case FREQ_GROUP_5GHZ_BAND2:
+		*ch = (u16)((udef->ch5g & 0xf0) >> 4);
+		*passive = (u16)((udef->passive5g & 0xf0) >> 4);
+		*dfs = (u16)((udef->dfs5g & 0xf0) >> 4);
+		*max_num = MAX_CH_NUM_BAND2;
+		*ch_start = 52;
+		break;
+	case FREQ_GROUP_5GHZ_BAND3:
+		*ch = (u16)((udef->ch5g & 0xfff00) >> 8);
+		*passive = (u16)((udef->passive5g & 0xfff00) >> 8);
+		*dfs = (u16)((udef->dfs5g & 0xfff00) >> 8);
+		*max_num = MAX_CH_NUM_BAND3;
+		*ch_start = 100;
+		break;
+	case FREQ_GROUP_5GHZ_BAND4:
+		*ch = (u16)((udef->ch5g & 0xff00000) >> 20);
+		*passive = (u16)((udef->passive5g & 0xff00000) >> 20);
+		*dfs = (u16)((udef->dfs5g & 0xff00000) >> 20);
+		*max_num = MAX_CH_NUM_BAND4;
+		*ch_start = 149;
+		break;
+	default:
+		*ch = 0;
+		*passive = 0;
+		*dfs = 0;
+		*max_num = 0;
+		*ch_start = 0;
+		break;
+	}
+}
+
 /*
  * @ Function description
- *	Set regulation domain code
+ *	Set user defined channel plans
+ *
+ * @ parameter
+ *	struct rtw_user_def_chplan *udef : user defined channels, bit definition
+ *
+ * @ return :
+ *	true : if set successfully
+ *	false : failed to set
+ *
+ */
+bool rtw_phl_set_user_def_chplan(void *phl, struct rtw_user_def_chplan *udef)
+{
+	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
+	struct rtw_regulation *rg = NULL;
+	struct rtw_regulation_chplan_group *plan = NULL;
+	u8 max_num = 0, ch_start = 0;
+	u16 ch = 0, passive = 0, dfs = 0;
+	u8 group = FREQ_GROUP_5GHZ_BAND1;
+	void *d = NULL;
+	u32 i = 0;
+
+	if (!phl || !udef)
+		return false;
+
+	rg = &phl_info->regulation;
+	if (!rg->init)
+		return false;
+
+	if (rg->domain.code != RSVD_DOMAIN) {
+		PHL_INFO("[REGU], Only reserved domain can set udef channel plan \n");
+		return false;
+	}
+
+	PHL_INFO("[REGU], set udef channel plan, ch2g:0x%x, ch5g:0x%x\n",
+			udef->ch2g, udef->ch5g);
+
+	d = phl_to_drvpriv(phl_info);
+	_os_spinlock(d, &rg->lock, _bh, NULL);
+
+	/* 2 ghz */
+	plan = &rg->chplan[FREQ_GROUP_2GHZ];
+	plan->cnt = 0;
+	ch = udef->ch2g;
+	passive = udef->passive2g;
+	_convert_ch2g(rg, &plan->cnt, plan->ch, ch, passive);
+
+	PHL_INFO("[REGU], 2 GHz, total channel = %d\n", plan->cnt);
+
+	/* 5 ghz */
+	for (i = 0; i < 4; i++) {
+		group = (u8)(i + FREQ_GROUP_5GHZ_BAND1);
+		plan = &rg->chplan[group];
+		plan->cnt = 0;
+		_get_5ghz_udef_ch_info(udef, group,
+			&ch, &passive, &dfs, &max_num, &ch_start);
+		_convert_ch5g((u8)(i + 1), rg, &plan->cnt, plan->ch,
+			ch, passive, dfs, max_num, ch_start);
+	}
+
+	_os_spinunlock(d, &rg->lock, _bh, NULL);
+
+	return true;
+}
+
+
+/*
+ * @ Function description
+ *	Check if domain is valid or not
  *
  * @ parameter
  *	domain : domain code to query
@@ -432,6 +591,9 @@ static void _history_log(struct rtw_regulation *rg, u8 domain, u8 reason)
  */
 bool rtw_phl_valid_regulation_domain(u8 domain)
 {
+	if (domain == RSVD_DOMAIN)
+		return true;
+
 	if (_domain_index(domain) >= MAX_RD_MAP_NUM)
 		return false;
 
@@ -440,7 +602,7 @@ bool rtw_phl_valid_regulation_domain(u8 domain)
 
 /*
  * @ Function description
- *	Set regulation domain code
+ *	Set regulatory domain code
  *
  * @ parameter
  *	phl : struct phl_info_t *
@@ -482,7 +644,12 @@ bool rtw_phl_regulation_set_domain(void *phl, u8 domain,
 
 	_history_log(rg, domain, reason);
 
-	status = _regulatory_domain_update(rg, did, reason);
+	if (domain == RSVD_DOMAIN) {
+		rg->domain.code = RSVD_DOMAIN;
+		rg->domain.reason = reason;
+		status = REGULATION_SUCCESS;
+	} else
+		status = _regulatory_domain_update(rg, did, reason);
 
 	if (status == REGULATION_SUCCESS)
 		rg->valid = true;
@@ -531,6 +698,9 @@ bool rtw_phl_regulation_set_country(void *phl, char *country,
 	d = phl_to_drvpriv(phl_info);
 	rg = &phl_info->regulation;
 	if (!rg->init)
+		return false;
+
+	if (rg->domain.code == RSVD_DOMAIN)
 		return false;
 
 	for (i = 0; i < MAX_COUNTRY_NUM; i++) {
@@ -655,7 +825,7 @@ bool rtw_phl_regulation_query_chplan(
 	_os_spinunlock(d, &rg->lock, _bh, NULL);
 
 	if (status == REGULATION_SUCCESS) {
-		/*_display_chplan(plan);*/
+		/* _display_chplan(plan); */
 		return true;
 	}
 	else
@@ -696,6 +866,9 @@ bool rtw_phl_query_specific_chplan(void *phl, u8 domain,
 		return false;
 	plan->cnt = 0;
 
+	PHL_INFO("[REGU], query specific channel plan for domain : 0x%x!!\n",
+			domain);
+
 	if (!rtw_phl_valid_regulation_domain(domain))
 		return false;
 
@@ -729,19 +902,7 @@ bool rtw_phl_query_specific_chplan(void *phl, u8 domain,
 			(chdef2->support_ch[0]));
 		passive = ((chdef2->passive[1] << 8) |
 			(chdef2->passive[0]));
-
-		for (i = 0; i < MAX_CH_NUM_2GHZ; i++) {
-			plan->ch[i].channel = 0;
-			plan->ch[i].property = 0;
-			shift = (1 << i);
-			if (ch & shift) {
-				plan->ch[i].channel = (u8)(i + 1);
-				plan->cnt++;
-				if (passive & shift)
-					plan->ch[i].property |=
-						CH_PASSIVE;
-			}
-		}
+		_convert_ch2g(rg, &plan->cnt, plan->ch, ch, passive);
 	}
 
 	/* 5ghz */
@@ -750,26 +911,14 @@ bool rtw_phl_query_specific_chplan(void *phl, u8 domain,
 			group = (u8)(i + FREQ_GROUP_5GHZ_BAND1);
 			_get_5ghz_ch_info(chdef5, group, &ch, &passive, &dfs,
 						&max_num, &ch_start);
-
-			for (j = 0; j < max_num; j++) {
-				shift = (1 << j);
-				if (ch & shift) {
-					/* clear first */
-					plan->ch[plan->cnt].property = 0;
-					plan->ch[plan->cnt].channel =
-						(u8)(ch_start + (j * 4));
-
-					if (passive & shift)
-						plan->ch[plan->cnt].property |=
-								CH_PASSIVE;
-					if (dfs & shift)
-						plan->ch[plan->cnt].property |=
-								CH_DFS;
-					plan->cnt++;
-				}
-			}
+			_convert_ch5g((u8)(i + 1), rg, &plan->cnt, plan->ch,
+				ch, passive, dfs, max_num, ch_start);
 		}
 	}
+
+	PHL_INFO("[REGU], query specific channel plan for domain : 0x%x, total channels : %d !!\n",
+			domain, plan->cnt);
+	_display_chplan(plan);
 
 	return true;
 }

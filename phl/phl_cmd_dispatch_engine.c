@@ -568,6 +568,36 @@ void dispr_ctrl_sema_up(struct phl_info_t *phl_info)
 			&(phl_info->disp_eng.dispr_ctrl_sema));
 }
 #endif
+enum rtw_phl_status phl_disp_eng_set_msg_disp_seq(struct phl_info_t *phl,
+							struct phl_msg_attribute *attr,
+							struct msg_self_def_seq *seq)
+{
+#ifdef CONFIG_CMD_DISP_SUPPORT_CUSTOM_SEQ
+	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
+	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
+	void* dispr = NULL;
+
+	status = _disp_eng_get_dispr_by_idx(phl, HW_BAND_0, &dispr);
+	if (RTW_PHL_STATUS_SUCCESS != status)
+		return status;
+
+	return dispr_set_dispatch_seq(dispr, attr, seq);
+#else
+	return RTW_PHL_STATUS_FAILURE;
+#endif
+}
+enum rtw_phl_status rtw_phl_set_msg_disp_seq(void *phl,
+						struct phl_msg_attribute *attr,
+						struct msg_self_def_seq* seq)
+{
+	return phl_disp_eng_set_msg_disp_seq(phl, attr, seq);
+}
+
+u8 phl_disp_query_mdl_id(struct phl_info_t *phl, void *bk_mdl)
+{
+	return disp_query_mdl_id(phl, bk_mdl);
+}
+
 #else
 enum rtw_phl_status rtw_phl_set_bk_module_info(void *phl, u8 band_idx,
 		enum phl_module_id id, struct phl_module_op_info *op_info)
@@ -681,4 +711,16 @@ enum rtw_phl_status phl_disp_eng_notify_dev_io_status(struct phl_info_t *phl, u8
 {
 	return RTW_PHL_STATUS_FAILURE;
 }
+enum rtw_phl_status rtw_phl_set_msg_disp_seq(void *phl,
+						struct phl_msg_attribute *attr,
+						struct msg_self_def_seq* seq)
+{
+	return RTW_PHL_STATUS_FAILURE;
+}
+
+u8 phl_disp_query_mdl_id(struct phl_info_t *phl, void *bk_mdl)
+{
+	return PHL_MDL_ID_MAX;
+}
+
 #endif

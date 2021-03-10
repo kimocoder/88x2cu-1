@@ -786,10 +786,9 @@ void phl_pkt_ofld_deinit(struct phl_info_t *phl_info)
 #if 0 //NEO
 
 /* For EXTERNAL application to reset all entry */
-void phl_pkt_ofld_reset_all_entry(void *phl)
+void phl_pkt_ofld_reset_all_entry(struct phl_info_t *phl_info)
 {
-	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct pkt_ofld_obj *ofld_obj = phl_info->phl_com->pkt_ofld;
+	struct pkt_ofld_obj *ofld_obj = phl_info->pkt_ofld;
 	struct pkt_ofld_entry *pos = NULL;
 	void *d = phl_to_drvpriv(phl_info);
 
@@ -808,10 +807,9 @@ void phl_pkt_ofld_reset_all_entry(void *phl)
  * @phl: refer to rtw_phl_com_t
  * @macid: the mac id of STA
  */
-enum rtw_phl_status phl_pkt_ofld_add_entry(void *phl, u8 macid)
+enum rtw_phl_status phl_pkt_ofld_add_entry(struct phl_info_t *phl_info, u16 macid)
 {
-	struct rtw_phl_com_t *phl_com = (struct rtw_phl_com_t *)phl;
-	struct pkt_ofld_obj *ofld_obj = phl_com->pkt_ofld;
+	struct pkt_ofld_obj *ofld_obj = phl_info->pkt_ofld;
 	void *d = phl_to_drvpriv(ofld_obj->phl_info);
 	struct pkt_ofld_entry *entry = NULL;
 
@@ -845,10 +843,9 @@ enum rtw_phl_status phl_pkt_ofld_add_entry(void *phl, u8 macid)
  * @phl: refer to rtw_phl_com_t
  * @macid: the mac id of STA
 */
-enum rtw_phl_status phl_pkt_ofld_del_entry(void *phl, u8 macid)
+enum rtw_phl_status phl_pkt_ofld_del_entry(struct phl_info_t *phl_info, u16 macid)
 {
-	struct rtw_phl_com_t *phl_com = (struct rtw_phl_com_t *)phl;
-	struct pkt_ofld_obj *ofld_obj = phl_com->pkt_ofld;
+	struct pkt_ofld_obj *ofld_obj = phl_info->pkt_ofld;
 	void *d = phl_to_drvpriv(ofld_obj->phl_info);
 	struct pkt_ofld_entry *entry = NULL;
 
@@ -885,11 +882,11 @@ enum rtw_phl_status phl_pkt_ofld_del_entry(void *phl, u8 macid)
  * @token: The identifier (return to caller)
  * @req_name: The function name of caller
 */
-enum rtw_phl_status rtw_phl_pkt_ofld_request(void *phl, u8 macid, u8 type,
+enum rtw_phl_status
+phl_pkt_ofld_request(struct phl_info_t *phl_info, u16 macid, u8 type,
 		u32 *token, const char *req_name, void *buf)
 {
-	struct rtw_phl_com_t *phl_com = (struct rtw_phl_com_t *)phl;
-	struct pkt_ofld_obj *ofld_obj = phl_com->pkt_ofld;
+	struct pkt_ofld_obj *ofld_obj = phl_info->pkt_ofld;
 	void *d = phl_to_drvpriv(ofld_obj->phl_info);
 	struct pkt_ofld_entry *entry = NULL;
 	struct pkt_ofld_req *req = NULL;
@@ -940,11 +937,10 @@ enum rtw_phl_status rtw_phl_pkt_ofld_request(void *phl, u8 macid, u8 type,
  * @type: The type of packet
  * @token: The identifier to get the request to be canceled
 */
-enum rtw_phl_status rtw_phl_pkt_ofld_cancel(void *phl, u8 macid,
-					u8 type, u32 *token)
+enum rtw_phl_status phl_pkt_ofld_cancel(struct phl_info_t *phl_info,
+					u16 macid, u8 type, u32 *token)
 {
-	struct rtw_phl_com_t *phl_com = (struct rtw_phl_com_t *)phl;
-	struct pkt_ofld_obj *ofld_obj = phl_com->pkt_ofld;
+	struct pkt_ofld_obj *ofld_obj = phl_info->pkt_ofld;
 	void *d = phl_to_drvpriv(ofld_obj->phl_info);
 	struct pkt_ofld_entry *entry = NULL;
 	struct pkt_ofld_req *req = NULL;
@@ -991,10 +987,9 @@ enum rtw_phl_status rtw_phl_pkt_ofld_cancel(void *phl, u8 macid,
 /* For EXTERNAL application to show current info (expose)
  * @phl: refer to rtw_phl_com_t
 */
-void phl_pkt_ofld_show_info(void *phl)
+void phl_pkt_ofld_show_info(struct phl_info_t *phl_info)
 {
-	struct rtw_phl_com_t *phl_com = (struct rtw_phl_com_t *)phl;
-	struct pkt_ofld_obj *ofld_obj = phl_com->pkt_ofld;
+	struct pkt_ofld_obj *ofld_obj = phl_info->pkt_ofld;
 	void *d = phl_to_drvpriv(ofld_obj->phl_info);
 
 	_os_mutex_lock(d, &ofld_obj->mux);
@@ -1009,10 +1004,9 @@ void phl_pkt_ofld_show_info(void *phl)
  * @macid: the mac id of STA
  * @type: The type of packet
 */
-u8 rtw_phl_pkt_ofld_get_id(void *phl, u8 macid, u8 type)
+u8 phl_pkt_ofld_get_id(struct phl_info_t *phl_info, u16 macid, u8 type)
 {
-	struct rtw_phl_com_t *phl_com = (struct rtw_phl_com_t *)phl;
-	struct pkt_ofld_obj *ofld_obj = phl_com->pkt_ofld;
+	struct pkt_ofld_obj *ofld_obj = phl_info->pkt_ofld;
 	void *d = phl_to_drvpriv(ofld_obj->phl_info);
 	struct pkt_ofld_entry *entry = NULL;
 	struct pkt_ofld_info *pkt_info = NULL;
@@ -1041,7 +1035,6 @@ u8 rtw_phl_pkt_ofld_get_id(void *phl, u8 macid, u8 type)
 
 	return pkt_info->id;
 }
-
 #endif // if 0
 
 const char *phl_get_pkt_ofld_str(enum pkt_ofld_type type)

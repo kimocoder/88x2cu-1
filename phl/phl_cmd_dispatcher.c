@@ -32,6 +32,15 @@
 #define IS_EXCL_MDL(_obj, _mdl) ((_obj)->exclusive_mdl == (_mdl))
 #define SET_EXCL_MDL(_obj, _mdl) ((_obj)->exclusive_mdl = (_mdl))
 #define CLEAR_EXCL_MDL(_obj) ((_obj)->exclusive_mdl = PHL_MDL_ID_MAX)
+#define STOP_DISPATCH_MSG(_ret) \
+	((_ret) != MDL_RET_SUCCESS && (_ret) != MDL_RET_IGNORE)
+
+#ifdef CONFIG_CMD_DISP_SUPPORT_CUSTOM_SEQ
+#define SET_MDL_HANDLE( _obj, _mdl_id, _handle) \
+	((_obj)->mdl_info[(_mdl_id)].handle = (void*)(_handle))
+#define GET_MDL_HANDLE( _obj, _mdl_id) \
+	((_obj)->mdl_info[(_mdl_id)].handle)
+#endif
 
 enum phl_msg_status {
 	MSG_STATUS_ENQ = BIT0,
@@ -94,7 +103,11 @@ struct phl_bk_module {
 	void *priv;
 	struct phl_bk_module_ops ops;
 };
-
+#ifdef CONFIG_CMD_DISP_SUPPORT_CUSTOM_SEQ
+struct dispr_msg_attr {
+	struct msg_self_def_seq self_def_seq;
+};
+#endif
 /**
  * phl_dispr_msg_ex - phl msg extension,
  * @status: contain mgnt status flags, refer to enum phl_msg_status
@@ -115,6 +128,9 @@ struct phl_dispr_msg_ex {
 	u8 postmap[MODL_MASK_LEN];
 	struct msg_completion_routine completion;
 	struct phl_bk_module *module; /* module handle which assign in msg_id*/
+#ifdef CONFIG_CMD_DISP_SUPPORT_CUSTOM_SEQ
+	struct dispr_msg_attr *attr;
+#endif
 };
 
 /**
@@ -144,7 +160,9 @@ struct phl_cmd_token_req_ex {
 
 struct mdl_mgnt_info {
 	u16 pending_evt_id;
-	//void* handle;
+#ifdef CONFIG_CMD_DISP_SUPPORT_CUSTOM_SEQ
+	void* handle;
+#endif
 };
 
 /**
@@ -199,6 +217,12 @@ enum rtw_phl_status send_dev_io_status_change(struct cmd_dispatcher *obj, u8 all
 void _notify_dispr_controller(struct cmd_dispatcher *obj, struct phl_dispr_msg_ex *ex);
 static u8 dispr_enqueue_token_op_info(struct cmd_dispatcher *obj, struct phl_token_op_info *op_info,
 			    	enum token_op_type type, u8 data);
+
+#ifdef CONFIG_CMD_DISP_SUPPORT_CUSTOM_SEQ
+static void free_dispr_attr(void *d, struct dispr_msg_attr **dispr_attr);
+static enum phl_mdl_ret_code run_self_def_seq(struct cmd_dispatcher *obj, struct phl_dispr_msg_ex *ex,
+			enum phl_bk_module_priority priority, u8 pre_prot_phase);
+#endif
 
 inline static
 enum phl_bk_module_priority _get_mdl_priority(enum phl_module_id id)
@@ -268,6 +292,9 @@ static u8 pop_front_idle_msg(struct cmd_dispatcher *obj,
 		_os_mem_set(d, (*msg)->premap, 0, MODL_MASK_LEN);
 		_os_mem_set(d, (*msg)->postmap, 0, MODL_MASK_LEN);
 		_os_mem_set(d, &((*msg)->msg), 0, sizeof(struct phl_msg));
+#ifdef CONFIG_CMD_DISP_SUPPORT_CUSTOM_SEQ
+		(*msg)->attr = NULL;
+#endif
 		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s: remain cnt(%d)\n", __FUNCTION__, obj->msg_idle_q.cnt);
 		return true;
 	} else {
@@ -293,6 +320,9 @@ static void push_back_idle_msg(struct cmd_dispatcher *obj,
 	if(GET_CUR_PENDING_EVT(obj, MSG_MDL_ID_FIELD(ex->msg.msg_id)) == MSG_EVT_ID_FIELD(ex->msg.msg_id))
 		SET_CUR_PENDING_EVT(obj, MSG_MDL_ID_FIELD(ex->msg.msg_id), MSG_EVT_MAX);
 	ex->msg.msg_id = 0;
+#ifdef CONFIG_CMD_DISP_SUPPORT_CUSTOM_SEQ
+	free_dispr_attr(d, &(ex->attr));
+#endif
 	pq_push(d, &(obj->msg_idle_q), &(ex->list), _tail, _bh);
 }
 
@@ -669,6 +699,9 @@ void deregister_cur_cmd_req(struct cmd_dispatcher *obj, u8 notify)
 			req->abort(obj, req->priv);
 			CLEAR_STATUS_FLAG(obj->cur_cmd_req->status, REQ_STATUS_LAST_PERMIT);
 		}
+#ifdef CONFIG_CMD_DISP_SUPPORT_CUSTOM_SEQ
+		SET_MDL_HANDLE(obj, obj->cur_cmd_req->req.module_id, NULL);
+#endif
 		push_back_idle_req(obj, obj->cur_cmd_req);
 		_os_atomic_set(d, &(obj->token_cnt),
 			       _os_atomic_read(d, &(obj->token_cnt))-1);
@@ -697,8 +730,12 @@ u8 register_cur_cmd_req(struct cmd_dispatcher *obj,
 		deregister_cur_cmd_req(obj, false);
 		return false;
 	}
-	else
+	else {
+#ifdef CONFIG_CMD_DISP_SUPPORT_CUSTOM_SEQ
+		SET_MDL_HANDLE(obj, req->req.module_id, req);
+#endif
 		return true;
+	}
 }
 
 void cancel_all_cmd_req(struct cmd_dispatcher *obj)
@@ -907,6 +944,9 @@ u8 bk_module_start(struct cmd_dispatcher *obj, struct phl_bk_module *module)
 
 	if (module->ops.start((void*)obj, module->priv) == MDL_RET_SUCCESS) {
 		SET_STATUS_FLAG(module->status, MDL_STARTED);
+#ifdef CONFIG_CMD_DISP_SUPPORT_CUSTOM_SEQ
+		SET_MDL_HANDLE(obj, module->id, module);
+#endif
 		return true;
 	} else {
 		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_ERR_,
@@ -920,6 +960,9 @@ u8 bk_module_stop(struct cmd_dispatcher *obj, struct phl_bk_module *module)
 	if (!TEST_STATUS_FLAG(module->status, MDL_STARTED))
 		return false;
 	CLEAR_STATUS_FLAG(module->status, MDL_STARTED);
+#ifdef CONFIG_CMD_DISP_SUPPORT_CUSTOM_SEQ
+	SET_MDL_HANDLE(obj, module->id, NULL);
+#endif
 	if (module->ops.stop((void*)obj, module->priv) == MDL_RET_SUCCESS) {
 		return true;
 	} else {
@@ -1009,9 +1052,14 @@ void msg_pre_phase_hdl(struct cmd_dispatcher *obj, struct phl_dispr_msg_ex *ex)
 		priority = _get_mdl_priority(owner_id);
 
 	for (i = PHL_MDL_PRI_MAX - 1 ; i >= PHL_MDL_PRI_ROLE ; i--) {
-		if (priority == i && _chk_bitmap_bit(obj->bitmap, owner_id)) {
+#ifdef CONFIG_CMD_DISP_SUPPORT_CUSTOM_SEQ
+		ret = run_self_def_seq(obj, ex, i, true);
+		if (STOP_DISPATCH_MSG(ret))
+			return;
+#endif
+		if (priority == i && _chk_bitmap_bit(ex->premap, owner_id)) {
 			ret = feed_mdl_msg(obj, ex->module, ex);
-			if (ret == MDL_RET_FAIL || ret == MDL_RET_PENDING)
+			if (STOP_DISPATCH_MSG(ret))
 				return;
 		}
 		q = &(obj->module_q[(u8)i]);
@@ -1025,7 +1073,7 @@ void msg_pre_phase_hdl(struct cmd_dispatcher *obj, struct phl_dispr_msg_ex *ex)
 			    !TEST_STATUS_FLAG(mdl->status, MDL_STARTED))
 				continue;
 			ret = feed_mdl_msg(obj, mdl, ex);
-			if (ret == MDL_RET_FAIL || ret == MDL_RET_PENDING)
+			if (STOP_DISPATCH_MSG(ret))
 				return;
 		} while(pq_get_next(d, q, node, &node, _bh));
 	}
@@ -1046,9 +1094,14 @@ void msg_post_phase_hdl(struct cmd_dispatcher *obj, struct phl_dispr_msg_ex *ex)
 		priority = _get_mdl_priority(owner_id);
 
 	for (i = PHL_MDL_PRI_ROLE ; i < PHL_MDL_PRI_MAX ; i++) {
-		if (priority == i && _chk_bitmap_bit(obj->bitmap, owner_id)) {
+#ifdef CONFIG_CMD_DISP_SUPPORT_CUSTOM_SEQ
+		ret = run_self_def_seq(obj, ex, i, false);
+		if (STOP_DISPATCH_MSG(ret))
+			return;
+#endif
+		if (priority == i && _chk_bitmap_bit(ex->postmap, owner_id)) {
 			ret = feed_mdl_msg(obj, ex->module, ex);
-			if (ret == MDL_RET_FAIL || ret == MDL_RET_PENDING)
+			if (STOP_DISPATCH_MSG(ret))
 				return;
 		}
 		q = &(obj->module_q[(u8)i]);
@@ -1060,7 +1113,7 @@ void msg_post_phase_hdl(struct cmd_dispatcher *obj, struct phl_dispr_msg_ex *ex)
 			    !TEST_STATUS_FLAG(mdl->status, MDL_STARTED))
 				continue;
 			ret = feed_mdl_msg(obj, mdl, ex);
-			if (ret == MDL_RET_FAIL || ret == MDL_RET_PENDING)
+			if (STOP_DISPATCH_MSG(ret))
 				return;
 		} while(pq_get_next(d, q, node, &node, _bh));
 	}
@@ -1852,14 +1905,17 @@ dispr_send_msg(void *dispr,
 	u8 module_id = MSG_MDL_ID_FIELD(msg->msg_id); /* msg src */
 	u32 req_status = 0;
 	u8 cur_req_id = get_cur_cmd_req_id(obj, &req_status);
+	enum rtw_phl_status sts = RTW_PHL_STATUS_FAILURE;
 
 	if (!TEST_STATUS_FLAG(obj->status, DISPR_STARTED)) {
-		return RTW_PHL_STATUS_UNEXPECTED_ERROR;
+		sts = RTW_PHL_STATUS_UNEXPECTED_ERROR;
+		goto err;
 	}
 
 	if(attr && attr->notify.id_arr == NULL && attr->notify.len) {
 		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_ERR_, "%s attribute err\n",__FUNCTION__);
-		return RTW_PHL_STATUS_INVALID_PARAM;
+		sts = RTW_PHL_STATUS_INVALID_PARAM;
+		goto err;
 	}
 
 	if (!IS_DISPR_CTRL(module_id) &&
@@ -1869,12 +1925,14 @@ dispr_send_msg(void *dispr,
 	     (cur_req_id == PHL_MDL_ID_MAX && !TEST_STATUS_FLAG(req_status,REQ_STATUS_LAST_PERMIT)))) {
 		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_ERR_,
 			"%s module not allow to send\n", __FUNCTION__);
-		return RTW_PHL_STATUS_INVALID_PARAM;
+		sts = RTW_PHL_STATUS_INVALID_PARAM;
+		goto err;
 	}
 
 	if (!pop_front_idle_msg(obj, &msg_ex)) {
 		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_ERR_, "%s idle msg empty\n", __FUNCTION__);
-		return RTW_PHL_STATUS_RESOURCE;
+		sts = RTW_PHL_STATUS_RESOURCE;
+		goto err;
 	}
 
 	if (msg_hdl)
@@ -1884,6 +1942,10 @@ dispr_send_msg(void *dispr,
 
 	set_msg_bitmap(obj, msg_ex, module_id);
 	if (attr) {
+#ifdef CONFIG_CMD_DISP_SUPPORT_CUSTOM_SEQ
+		msg_ex->attr = (struct dispr_msg_attr *)attr->dispr_attr;
+		attr->dispr_attr = NULL;
+#endif
 		set_msg_custom_bitmap(obj, msg_ex, attr->opt,
 			       attr->notify.id_arr, attr->notify.len, module_id);
 		if (attr->completion.completion) {
@@ -1914,7 +1976,8 @@ dispr_send_msg(void *dispr,
 			"%s msg not allow since cur req is going to unload\n", __FUNCTION__);
 		SET_MSG_INDC_FIELD(msg_ex->msg.msg_id, MSG_INDC_FAIL);
 		push_back_idle_msg(obj, msg_ex);
-		return RTW_PHL_STATUS_FAILURE;
+		sts = RTW_PHL_STATUS_FAILURE;
+		goto exit;
 	}
 
 	if (TEST_STATUS_FLAG(msg_ex->status, MSG_STATUS_OWNER_REQ) &&
@@ -1935,6 +1998,13 @@ dispr_send_msg(void *dispr,
 		*msg_hdl = GEN_VALID_HDL(msg_ex->idx);
 	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s, msg_id:0x%x\n", __FUNCTION__, msg->msg_id);
 	return RTW_PHL_STATUS_SUCCESS;
+err:
+#ifdef CONFIG_CMD_DISP_SUPPORT_CUSTOM_SEQ
+	if(attr)
+		free_dispr_attr(d,(struct dispr_msg_attr **) &(attr->dispr_attr));
+#endif
+exit:
+	return sts;
 }
 
 enum rtw_phl_status dispr_cancel_msg(void *dispr, u32 *msg_hdl)
@@ -2186,6 +2256,19 @@ void dispr_share_thread_stop_post_hdl(void *dispr)
 {
 	dispr_thread_stop_post_hdl((struct cmd_dispatcher *)dispr);
 }
+
+u8 disp_query_mdl_id(struct phl_info_t *phl, void *bk_mdl)
+{
+	struct phl_bk_module *mdl = NULL;
+
+	if (bk_mdl != NULL) {
+		mdl = (struct phl_bk_module *)bk_mdl;
+		return mdl->id;
+	} else {
+		return PHL_MDL_ID_MAX;
+	}
+}
+
 void send_bk_msg_phy_on(struct cmd_dispatcher *obj)
 {
 	struct phl_msg msg = {0};
@@ -2216,4 +2299,140 @@ enum rtw_phl_status send_dev_io_status_change(struct cmd_dispatcher *obj, u8 all
 	SET_MSG_EVT_ID_FIELD(msg.msg_id, event);
 	return dispr_send_msg((void*)obj, &msg, &attr, NULL);
 }
+
+#ifdef CONFIG_CMD_DISP_SUPPORT_CUSTOM_SEQ
+enum phl_mdl_ret_code loop_through_map(struct cmd_dispatcher *obj, struct phl_dispr_msg_ex *ex,
+					enum phl_bk_module_priority priority, struct msg_notify_map *map, u8 pre_prot_phase)
+{
+	u8 i = 0;
+	struct phl_bk_module *mdl = NULL;
+	enum phl_mdl_ret_code ret = MDL_RET_IGNORE;
+	u8 *bitmap = (pre_prot_phase == true) ? (ex->premap) : (ex->postmap);
+
+	for (i = 0 ; i < map->len; i++) {
+		if (map->id_arr[i] >= PHL_FG_MDL_START) {
+			PHL_TRACE(COMP_PHL_CMDDISP, _PHL_WARNING_,
+			"%s, cmd req does not take precedence over bk module\n", __FUNCTION__);
+			continue;
+		}
+		mdl = (struct phl_bk_module *)GET_MDL_HANDLE(obj, map->id_arr[i]);
+		if (mdl == NULL || !_chk_bitmap_bit(bitmap, mdl->id))
+			continue;
+		/*only allow sequence rearrange for modules at the same priority*/
+		if ( _get_mdl_priority(mdl->id) != priority)
+			continue;
+		ret = feed_mdl_msg(obj, mdl, ex);
+		if (STOP_DISPATCH_MSG(ret))
+			return ret;
+	}
+	return ret;
+}
+
+static enum phl_mdl_ret_code run_self_def_seq(struct cmd_dispatcher *obj, struct phl_dispr_msg_ex *ex,
+					enum phl_bk_module_priority priority, u8 pre_prot_phase)
+{
+	struct msg_notify_map *map = NULL;
+	enum phl_mdl_ret_code ret = MDL_RET_IGNORE;
+	struct msg_dispatch_seq* seq = NULL;
+
+	if (ex->attr == NULL)
+		return ret;
+	/*MANDATORY modules cannot change dispatch order*/
+	if (pre_prot_phase == true)
+		seq = &(ex->attr->self_def_seq.pre_prot_phase);
+	else
+		seq = &(ex->attr->self_def_seq.post_prot_phase);
+
+	return loop_through_map(obj, ex, priority, &(seq->map[priority]), pre_prot_phase);
+}
+void reset_self_def_seq(void *d, struct msg_self_def_seq* self_def_seq)
+{
+	u8 i = 0;
+	u8 cnt = 0;
+	struct msg_dispatch_seq *seq = (struct msg_dispatch_seq *)self_def_seq;
+
+	while (cnt++ < 2) {
+		for (i = 0; i < PHL_MDL_PRI_MAX; i++) {
+			if (seq->map[i].len)
+				_os_kmem_free(d, seq->map[i].id_arr, seq->map[i].len);
+			seq->map[i].id_arr = NULL;
+			seq->map[i].len = 0;
+		}
+		seq++;
+	}
+
+}
+
+u8 copy_self_def_seq(void *d, struct msg_self_def_seq* self_def_dest, struct msg_self_def_seq* self_def_src)
+{
+	u8 i = 0;
+	u8 cnt = 0;
+	struct msg_dispatch_seq *dest = (struct msg_dispatch_seq *)self_def_dest;
+	struct msg_dispatch_seq *src = (struct msg_dispatch_seq *)self_def_src;
+
+	while (cnt++ < 2) {
+		for (i = 0; i < PHL_MDL_PRI_MAX; i++) {
+			if (src->map[i].len) {
+				dest->map[i].id_arr = _os_kmem_alloc(d, src->map[i].len);
+				if (dest->map[i].id_arr == NULL)
+					return false;
+				dest->map[i].len = src->map[i].len;
+				_os_mem_cpy(d, dest->map[i].id_arr, src->map[i].id_arr, dest->map[i].len);
+			}
+		}
+		dest++;
+		src++;
+	}
+	return true;
+}
+
+inline static u8 alloc_dispr_attr(void *d, struct phl_msg_attribute *attr)
+{
+	if (attr->dispr_attr == NULL)
+		attr->dispr_attr = _os_kmem_alloc(d, sizeof(struct dispr_msg_attr));
+	if (attr->dispr_attr != NULL)
+		_os_mem_set(d, attr->dispr_attr, sizeof(struct dispr_msg_attr));
+	return (attr->dispr_attr == NULL) ? (false) : (true);
+}
+
+enum rtw_phl_status dispr_set_dispatch_seq(void *dispr, struct phl_msg_attribute *attr,
+							struct msg_self_def_seq* seq)
+{
+	struct cmd_dispatcher *obj = (struct cmd_dispatcher *)dispr;
+	void *d = phl_to_drvpriv(obj->phl_info);
+	struct dispr_msg_attr *dispr_attr = NULL;
+
+	if (attr == NULL || seq == NULL)
+		return RTW_PHL_STATUS_INVALID_PARAM;
+
+	if (alloc_dispr_attr(d, attr) == false)
+		goto err_attr_alloc;
+
+	dispr_attr = attr->dispr_attr;
+	reset_self_def_seq(d, &(dispr_attr->self_def_seq));
+
+	if (copy_self_def_seq(d, &(dispr_attr->self_def_seq), seq) == false)
+		goto err_seq_copy;
+	return RTW_PHL_STATUS_SUCCESS;
+err_seq_copy:
+	free_dispr_attr(d, &(attr->dispr_attr));
+err_attr_alloc:
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_WARNING_,
+			"%s, err\n", __FUNCTION__);
+	return RTW_PHL_STATUS_RESOURCE;
+}
+
+static void free_dispr_attr(void *d, struct dispr_msg_attr **dispr_attr)
+{
+	struct dispr_msg_attr *attr = NULL;
+
+	if (dispr_attr == NULL || *dispr_attr == NULL)
+		return;
+	PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "%s\n", __FUNCTION__);
+	attr = *dispr_attr;
+	reset_self_def_seq(d, &(attr->self_def_seq));
+	_os_kmem_free(d, attr, sizeof(struct dispr_msg_attr));
+	*dispr_attr = NULL;
+}
+#endif
 #endif
