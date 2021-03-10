@@ -33,7 +33,8 @@ _PHL_FILES := $(phl_path)phl_init.o \
 		$(phl_path)phl_wow.o \
 		$(phl_path)phl_led.o \
 		$(phl_path)phl_msg_hub.o \
-		$(phl_path)phl_sound.o
+		$(phl_path)phl_sound.o \
+		$(phl_path)phl_notify.o
 
 ifeq ($(CONFIG_POWER_SAVE), y)
 _PHL_FILES += $(phl_path)phl_lps.o \

@@ -614,8 +614,6 @@ phl_role_notify(struct phl_info_t *phl_info, struct rtw_wifi_role_t *wrole)
 #endif // if 0
 }
 
-#if 0 // NEO TODO
-
 /**
  * This function is called once wifi info changed
  * (see enum wr_chg_id)
@@ -636,6 +634,10 @@ phl_wifi_role_change(struct phl_info_t *phl_info,
 	enum phl_upd_mode mode = PHL_UPD_ROLE_MAX;
 	void *drv = phl_to_drvpriv(phl_info);
 
+#if 1 // NEO
+	RTW_ERR("%s NEO TODO\n", __func__);
+	return pstate;
+#else // NEO
 	switch (chg_id) {
 	case WR_CHG_TYPE:
 	{
@@ -776,6 +778,7 @@ phl_wifi_role_change(struct phl_info_t *phl_info,
 				__func__, chg_id);
 		break;
 	};
+#endif // NEO
 	return pstate;
 }
 
@@ -792,7 +795,12 @@ phl_wifi_role_chg_hdl(struct phl_info_t *phl_info, u8 *param)
 {
 	struct wr_chg_param *wr_chg = (struct wr_chg_param *)param;
 
+#if 1 // NEO
+	RTW_INFO("%s NEO TODO\n", __func__);
+	return RTW_PHL_STATUS_FAILURE;
+#else // NEO
 	return phl_wifi_role_change(phl_info, wr_chg->wrole, wr_chg->id, wr_chg->info);
+#endif // NEO
 }
 
 void phl_wifi_role_chg_done(void *drv_priv, u8 *cmd, u32 cmd_len,
@@ -899,8 +907,6 @@ rtw_phl_wifi_role_change(void *phl,
 {
 	return phl_wifi_role_change((struct phl_info_t *)phl, wrole, chg_id, chg_info);
 }
-
-#endif // if 0 NEO
 
 enum rtw_phl_status
 _phl_wifi_role_stop(struct phl_info_t *phl_info, struct rtw_wifi_role_t *wrole)
@@ -1029,12 +1035,14 @@ error_register_bk:
 }
 
 #endif /* CONFIG_CMD_DISP */
-#if 0 //NEO
 
 #ifdef RTW_WKARD_RADIO_IPS_FLOW
 enum rtw_phl_status
 phl_role_recover(struct phl_info_t *phl_info)
 {
+#if 1 // NEO TODO
+	RTW_INFO("%s NEO TODO\n", __func__);
+#else // NEO
 	u8 role_idx;
 	struct rtw_wifi_role_t *wrole;
 	struct rtw_phl_stainfo_t *sta;
@@ -1064,7 +1072,7 @@ phl_role_recover(struct phl_info_t *phl_info)
 			return RTW_PHL_STATUS_FAILURE;
 		}
 	}
-
+#endif // NEO
 	return RTW_PHL_STATUS_SUCCESS;
 }
 
@@ -1089,6 +1097,9 @@ phl_cmd_role_recover(struct phl_info_t *phl_info)
 enum rtw_phl_status
 phl_role_suspend(struct phl_info_t *phl_info)
 {
+#if 1 // NEO TODO
+	RTW_INFO("%s NEO TODO\n", __func__);
+#else // NEO
 	u8 role_idx;
 	struct rtw_wifi_role_t *wrole;
 	struct rtw_phl_stainfo_t *sta;
@@ -1111,7 +1122,7 @@ phl_role_suspend(struct phl_info_t *phl_info)
 			return RTW_PHL_STATUS_FAILURE;
 		}
 	}
-
+#endif // NEO
 	return RTW_PHL_STATUS_SUCCESS;
 }
 enum rtw_phl_status
@@ -1134,6 +1145,7 @@ phl_cmd_role_suspend(struct phl_info_t *phl_info)
 }
 #endif
 
+#if 0 //NEO
 #ifdef RTW_WKARD_LPS_ROLE_CONFIG
 void phl_role_recover_unused_role(struct phl_info_t *phl_info,
 	struct rtw_wifi_role_t *cur_wrole)

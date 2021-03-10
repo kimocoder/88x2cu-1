@@ -211,15 +211,28 @@ u8 rtw_phl_get_cur_ch(struct rtw_wifi_role_t *wifi_role)
 	return rtw_hal_get_cur_ch(phl_info->hal, wifi_role->hw_band);
 }
 
-enum rtw_phl_status
-rtw_phl_dfs_hw_tx_pause(struct rtw_wifi_role_t *wifi_role, bool tx_pause)
+rtw_phl_get_cur_hal_chdef(struct rtw_wifi_role_t *wifi_role,
+					struct rtw_chan_def *cur_chandef)
+{
+	struct phl_info_t *phl_info = wifi_role->phl_com->phl_priv;
+
+	rtw_hal_get_cur_chdef(phl_info->hal, wifi_role->hw_band, cur_chandef);
+	return RTW_PHL_STATUS_SUCCESS;
+}
+#endif // if 0 NEO
+
+static enum rtw_phl_status
+_dfs_hw_tx_pause(struct rtw_wifi_role_t *wifi_role, bool tx_pause)
 {
 
 	struct phl_info_t *phl_info = wifi_role->phl_com->phl_priv;
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_FAILURE;
 
+#if 1 // NEO
+	RTW_ERR("%s NEO TODO\n", __func__);
+#else // NEO
 	hstatus = rtw_hal_dfs_pause_tx(phl_info->hal, wifi_role->hw_band, tx_pause);
-
+#endif // NEO
 	if (RTW_HAL_STATUS_SUCCESS == hstatus) {
 		return RTW_PHL_STATUS_SUCCESS;
 	} else {
@@ -227,6 +240,72 @@ rtw_phl_dfs_hw_tx_pause(struct rtw_wifi_role_t *wifi_role, bool tx_pause)
 		return RTW_PHL_STATUS_FAILURE;
 	}
 }
+
+#ifdef CONFIG_CMD_DISP
+struct dfs_txpause_param {
+	struct rtw_wifi_role_t *wrole;
+	bool pause;
+};
+
+enum rtw_phl_status
+phl_cmd_dfs_tx_pause_hdl(struct phl_info_t *phl_info, u8 *param)
+{
+	struct dfs_txpause_param *dfs = (struct dfs_txpause_param *)param;
+
+	PHL_INFO("%s(), dfs param, wrole = %p, pause = %d\n",
+			__func__, dfs->wrole, dfs->pause);
+
+	return _dfs_hw_tx_pause(dfs->wrole, dfs->pause);
+}
+
+static void _phl_dfs_tx_pause_done(void *drv_priv, u8 *cmd, u32 cmd_len, enum rtw_phl_status status)
+{
+	if (cmd) {
+		_os_kmem_free(drv_priv, cmd, cmd_len);
+		cmd = NULL;
+		PHL_INFO("%s.....\n", __func__);
+	}
+}
+#endif /*CONFIG_CMD_DISP*/
+
+enum rtw_phl_status
+rtw_phl_cmd_dfs_tx_pause(struct rtw_wifi_role_t *wifi_role, bool pause,
+                      		enum phl_cmd_type cmd_type, u32 cmd_timeout)
+{
+#ifdef CONFIG_CMD_DISP
+	struct phl_info_t *phl_info = wifi_role->phl_com->phl_priv;
+	void *drv = wifi_role->phl_com->drv_priv;
+	enum rtw_phl_status psts = RTW_PHL_STATUS_FAILURE;
+	struct dfs_txpause_param *param = NULL;
+	u32 param_len;
+
+	param_len = sizeof(struct dfs_txpause_param);
+	param = _os_kmem_alloc(drv, param_len);
+	if (param == NULL) {
+		PHL_ERR("%s: alloc param failed!\n", __func__);
+		goto _exit;
+	}
+	param->wrole = wifi_role;
+	param->pause = pause;
+
+	psts = phl_cmd_enqueue(phl_info,
+			wifi_role->hw_band,
+			MSG_EVT_DFS_PAUSE_TX,
+			(u8 *)param, param_len,
+			_phl_dfs_tx_pause_done,
+			cmd_type, cmd_timeout);
+	if (!is_cmd_enqueue(psts) && (RTW_PHL_STATUS_SUCCESS != psts))
+		_os_kmem_free(drv, param, param_len);
+_exit:
+	return psts;
+#else
+	PHL_ERR("%s(), CONFIG_CMD_DISP need to be enabled for MSG_EVT_DFS_PAUSE_TX \n",__func__);
+
+	return RTW_PHL_STATUS_FAILURE;
+#endif
+}
+
+#if 0 // NEO mark off first
 #ifdef CONFIG_DBCC_SUPPORT
 enum rtw_phl_status
 rtw_phl_dbcc_test(void *phl, enum dbcc_test_id id, void *param)

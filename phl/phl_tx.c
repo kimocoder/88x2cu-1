@@ -1449,16 +1449,19 @@ enum rtw_phl_status rtw_phl_recycle_tx_buf(void *phl, u8 *tx_buf_ptr)
 }
 
 
-#if 0 // TODO NEO mark off first
-enum rtw_phl_status
-rtw_phl_cfg_tx_ampdu(void *phl, struct rtw_phl_stainfo_t *sta)
+static enum rtw_phl_status
+_phl_cfg_tx_ampdu(void *phl, struct rtw_phl_stainfo_t *sta)
 {
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	enum rtw_phl_status psts = RTW_PHL_STATUS_FAILURE;
 	enum rtw_hal_status hsts = RTW_HAL_STATUS_FAILURE;
 	void *drv_priv = phl_to_drvpriv(phl_info);
 
+#if 1 // NEO
+	RTW_ERR("%s NEO TODO\n", __func__);
+#else // NEO
 	hsts = rtw_hal_cfg_tx_ampdu(phl_info->hal, sta);
+#endif // NEO
 	if (RTW_HAL_STATUS_SUCCESS != hsts)
 		goto fail;
 
@@ -1467,6 +1470,18 @@ rtw_phl_cfg_tx_ampdu(void *phl, struct rtw_phl_stainfo_t *sta)
 fail:
 	return RTW_PHL_STATUS_FAILURE;
 }
+
+#ifdef CONFIG_CMD_DISP
+enum rtw_phl_status
+phl_cmd_cfg_ampdu_hdl(struct phl_info_t *phl_info, u8 *param)
+{
+	struct rtw_phl_stainfo_t *sta = (struct rtw_phl_stainfo_t *)param;
+
+	PHL_INFO(" %s(), sta = %p !\n", __func__, sta);
+
+	return _phl_cfg_tx_ampdu(phl_info, sta);
+}
+#endif
 
 enum rtw_phl_status
 rtw_phl_cmd_cfg_ampdu(void *phl,
@@ -1494,7 +1509,6 @@ rtw_phl_cmd_cfg_ampdu(void *phl,
 	return sts;
 #endif
 }
-#endif // if 0 NEO
 
 void
 phl_tx_watchdog(struct phl_info_t *phl_info)
@@ -1506,7 +1520,6 @@ phl_tx_watchdog(struct phl_info_t *phl_info)
 	trx_ops->tx_watchdog(phl_info);
 }
 
-#if 0 // NEO 
 enum rtw_phl_status
 _phl_poll_hw_tx_done(void)
 {
@@ -1523,6 +1536,7 @@ _phl_hw_tx_resume(void)
 	return RTW_PHL_STATUS_FAILURE;
 }
 
+#if 0 // NEO 
 enum rtw_phl_status
 _phl_sw_tx_resume(struct phl_info_t *phl_info, struct phl_data_ctl_t *ctl)
 {

@@ -35,8 +35,11 @@ phl_notify_cmd_hdl(struct phl_info_t *phl_info, u8 *param)
 {
 	struct cmd_notify_param *cmd_notify = (struct cmd_notify_param *)param;
 
+#if 1 // NEO
+	RTW_ERR("%s NEO TODO\n", __func__);
+#else // NEO
 	rtw_hal_notification(phl_info->hal, cmd_notify->event, cmd_notify->hw_idx);
-
+#endif // NEO
 	return RTW_PHL_STATUS_SUCCESS;
 }
 

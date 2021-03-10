@@ -52,6 +52,7 @@ struct phl_cmd_obj {
 	struct phl_cmd_sync cmd_sync;
 };
 
+
 #define DBG_CMD_SYNC
 
 #ifdef DBG_CMD_SYNC
@@ -166,47 +167,136 @@ static enum rtw_phl_status
 _phl_cmd_general_pre_phase_msg_hdlr(struct phl_info_t *phl_info, void *dispr,
 				    struct phl_msg *msg)
 {
-	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
 	enum phl_msg_evt_id evt_id = MSG_EVT_ID_FIELD(msg->msg_id);
+	enum rtw_phl_status psts = RTW_PHL_STATUS_FAILURE;
+	struct phl_cmd_obj *phl_cmd = NULL;
+
+	phl_cmd = (struct phl_cmd_obj *)msg->inbuf;
 
 	switch (evt_id) {
-
-#if 0 //NEO
-	case MSG_EVT_PCIE_TRX_MIT:
-		phl_evt_pcie_trx_mit_hdlr(phl_info, msg);
-		break;
-#endif
-
+	case MSG_EVT_NONE:
+		/* fall through */
 	default:
+		psts = RTW_PHL_STATUS_SUCCESS;
 		break;
 	}
 
-	if (RTW_PHL_STATUS_SUCCESS != status)
-		return RTW_PHL_STATUS_FAILURE;
-
-	return RTW_PHL_STATUS_SUCCESS;
+	return psts;
 }
 
 static enum rtw_phl_status
 _phl_cmd_general_post_phase_msg_hdlr(struct phl_info_t *phl_info, void *dispr,
 				     struct phl_msg *msg)
 {
-	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
+	enum rtw_phl_status psts = RTW_PHL_STATUS_FAILURE;
 	enum phl_msg_evt_id evt_id = MSG_EVT_ID_FIELD(msg->msg_id);
+	struct phl_cmd_obj *phl_cmd = NULL;
+
+	phl_cmd = (struct phl_cmd_obj *)msg->inbuf;
 
 	switch (evt_id) {
+	case MSG_EVT_SWCH_START:
+		psts = phl_cmd_set_ch_bw_hdl(phl_info, phl_cmd->buf);
+	break;
 
-	case MSG_EVT_NONE:
-		break;
+	#if defined(CONFIG_PCI_HCI) && defined(PCIE_TRX_MIT_EN)
+	case MSG_EVT_PCIE_TRX_MIT:
+		psts = phl_evt_pcie_trx_mit_hdlr(phl_info, phl_cmd->buf);
+	break;
+	#endif
+
+	case MSG_EVT_WATCHDOG:
+		psts = phl_watchdog_cmd_hdl(phl_info);
+	break;
+
+#if defined(CONFIG_USB_HCI)
+	case MSG_EVT_FORCE_USB_SW:
+		psts = phl_force_usb_switch(phl_info, *(u32*)(phl_cmd->buf));
+	break;
+	case MSG_EVT_GET_USB_SPEED:
+		psts = phl_get_cur_usb_speed(phl_info, (u32*)(phl_cmd->buf));
+	break;
+	case MSG_EVT_GET_USB_SW_ABILITY:
+		psts = phl_get_usb_support_ability(phl_info, (u32*)(phl_cmd->buf));
+	break;
+#endif
+	case MSG_EVT_CFG_AMPDU:
+		psts = phl_cmd_cfg_ampdu_hdl(phl_info, phl_cmd->buf);
+	break;
+
+	case MSG_EVT_DFS_PAUSE_TX:
+		psts = phl_cmd_dfs_tx_pause_hdl(phl_info, phl_cmd->buf);
+	break;
+
+	case MSG_EVT_ROLE_RECOVER:
+		psts = phl_role_recover(phl_info);
+	break;
+	case MSG_EVT_ROLE_SUSPEND:
+		psts = phl_role_suspend(phl_info);
+	break;
+
+#if defined(CONFIG_PCI_HCI)
+	case MSG_EVT_HAL_SET_L2_LEAVE:
+		if (rtw_hal_set_l2_leave(phl_info->hal) == RTW_HAL_STATUS_SUCCESS)
+			psts = RTW_PHL_STATUS_SUCCESS;
+	break;
+#endif
+
+	case MSG_EVT_NOTIFY_HAL:
+		psts = phl_notify_cmd_hdl(phl_info, phl_cmd->buf);
+	break;
+
+	case MSG_EVT_ISSUE_BCN:
+#ifdef RTW_PHL_BCN
+		psts = phl_cmd_issue_bcn_hdl(phl_info, phl_cmd->buf);
+#endif
+	break;
+	case MSG_EVT_STOP_BCN:
+#ifdef RTW_PHL_BCN
+		psts = phl_cmd_stop_bcn_hdl(phl_info, phl_cmd->buf);
+#endif
+	break;
+
+	case MSG_EVT_SEC_KEY:
+		psts = phl_cmd_set_key_hdl(phl_info, phl_cmd->buf);
+	break;
+
+	case MSG_EVT_ROLE_START:
+		psts = phl_wifi_role_start_hdl(phl_info, phl_cmd->buf);
+	break;
+
+	case MSG_EVT_ROLE_CHANGE:
+		psts = phl_wifi_role_chg_hdl(phl_info, phl_cmd->buf);
+	break;
+
+	case MSG_EVT_ROLE_STOP:
+		psts = phl_wifi_role_stop_hdl(phl_info, phl_cmd->buf);
+	break;
+
+	case MSG_EVT_STA_INFO_CTRL:
+		psts = phl_cmd_alloc_stainfo_hdl(phl_info, phl_cmd->buf);
+	break;
+
+	case MSG_EVT_STA_MEDIA_STATUS_UPT:
+		psts = phl_update_media_status_hdl(phl_info, phl_cmd->buf);
+	break;
+
+	case MSG_EVT_CFG_CHINFO:
+#ifdef CONFIG_PHL_CHANNEL_INFO
+		psts = phl_cmd_cfg_chinfo_hdl(phl_info, phl_cmd->buf);
+#endif
+	break;
+
+	case MSG_EVT_STA_CHG_STAINFO:
+		psts = phl_cmd_change_stainfo_hdl(phl_info, phl_cmd->buf);
+	break;
 
 	default:
-		break;
+		psts = RTW_PHL_STATUS_SUCCESS;
+	break;
 	}
 
-	if (RTW_PHL_STATUS_SUCCESS != status)
-		return RTW_PHL_STATUS_FAILURE;
-
-	return RTW_PHL_STATUS_SUCCESS;
+	return psts;
 }
 
 static enum phl_mdl_ret_code _phl_cmd_general_init(void *phl, void *dispr,
@@ -216,7 +306,10 @@ static enum phl_mdl_ret_code _phl_cmd_general_init(void *phl, void *dispr,
 	return MDL_RET_SUCCESS;
 }
 
-static void _phl_cmd_general_deinit(void *dispr, void *priv) {}
+static void _phl_cmd_general_deinit(void *dispr, void *priv)
+{
+
+}
 
 static enum phl_mdl_ret_code _phl_cmd_general_start(void *dispr, void *priv)
 {
@@ -226,8 +319,7 @@ static enum phl_mdl_ret_code _phl_cmd_general_start(void *dispr, void *priv)
 	if (RTW_PHL_STATUS_SUCCESS != phl_dispr_get_idx(dispr, &dispr_idx))
 		return MDL_RET_FAIL;
 
-	//NEO
-	#if 0
+	#if defined(CONFIG_PCI_HCI) && defined(PCIE_TRX_MIT_EN)
 	if (RTW_PHL_STATUS_SUCCESS !=
 	    phl_pcie_trx_mit_start(phl_info, dispr_idx))
 		return MDL_RET_FAIL;
@@ -259,6 +351,12 @@ static enum phl_mdl_ret_code _phl_cmd_general_msg_hdlr(void *dispr, void *priv,
 	if (MSG_MDL_ID_FIELD(msg->msg_id) != PHL_MDL_GENERAL)
 		return MDL_RET_IGNORE;
 
+	/*
+	 * GENERAL is optional module, msg pass through mandatory module,
+	 * optional module, and wifi role(protocol). So msg shall be handled
+	 * at post phase to make sure that wifi role is at valid state
+	 * if the msg is relative to wifi role(protocol)
+	 */
 	if (IS_MSG_IN_PRE_PHASE(msg->msg_id))
 		status =
 		    _phl_cmd_general_pre_phase_msg_hdlr(phl_info, dispr, msg);
@@ -290,9 +388,9 @@ enum rtw_phl_status phl_register_cmd_general(struct phl_info_t *phl_info)
 {
 	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
 	struct phl_cmd_dispatch_engine *disp_eng = &(phl_info->disp_eng);
+	struct phl_bk_module_ops bk_ops;
 	u8 band_idx = 0;
 
-	struct phl_bk_module_ops bk_ops;
 	bk_ops.init = _phl_cmd_general_init;
 	bk_ops.deinit = _phl_cmd_general_deinit;
 	bk_ops.start = _phl_cmd_general_start;
@@ -301,18 +399,14 @@ enum rtw_phl_status phl_register_cmd_general(struct phl_info_t *phl_info)
 	bk_ops.set_info = _phl_cmd_general_set_info;
 	bk_ops.query_info = _phl_cmd_general_query_info;
 
-	status = RTW_PHL_STATUS_SUCCESS;
 	for (band_idx = 0; band_idx < disp_eng->phy_num; band_idx++) {
-
-		if (RTW_PHL_STATUS_SUCCESS !=
-		    phl_disp_eng_register_module(phl_info, band_idx,
-						 PHL_MDL_GENERAL, &bk_ops)) {
-
+		status = phl_disp_eng_register_module(phl_info, band_idx,
+						 PHL_MDL_GENERAL, &bk_ops);
+		if (status != RTW_PHL_STATUS_SUCCESS) {
 			PHL_ERR(
 			    "%s register MDL_GENRAL in cmd disp failed :%d\n",
 			    __func__, band_idx + 1);
-
-			status = RTW_PHL_STATUS_FAILURE;
+			break;
 		}
 	}
 
@@ -344,6 +438,8 @@ static void _phl_cmd_complete(void *priv, struct phl_msg *msg)
 	struct phl_cmd_obj *phl_cmd = (struct phl_cmd_obj *)msg->inbuf;
 	enum phl_cmd_sts csts = PHL_CMD_DONE_UNKNOWN;
 	enum rtw_phl_status pstst = RTW_PHL_STATUS_SUCCESS;
+	u32 try_cnt = 0;
+	u32 start = _os_get_cur_time_ms();
 
 	PHL_DBG("%s evt_id:%d\n", __func__, phl_cmd->evt_id);
 
@@ -363,21 +459,18 @@ static void _phl_cmd_complete(void *priv, struct phl_msg *msg)
 	if (phl_cmd->cmd_complete)
 		phl_cmd->cmd_complete(drv, phl_cmd->buf, phl_cmd->buf_len, pstst);
 
-	if (phl_cmd->is_cmd_wait) {
-		#define PHL_MAX_SCHEDULE_TIMEOUT 100000
-		u32 try_cnt = 0;
-		u32 start = _os_get_cur_time_ms();
 
-		do {
-			if (_os_atomic_read(drv, &(phl_cmd->ref_cnt)) == 1)
-				break;
-			_os_sleep_ms(drv, 10);
-			try_cnt++;
-			if (try_cnt == 50)
-				PHL_ERR("F-%s, L-%d polling is_cmd_wait to false\n",
-							__FUNCTION__, __LINE__);
-		} while (phl_get_passing_time_ms(start) < PHL_MAX_SCHEDULE_TIMEOUT);
-	}
+	#define PHL_MAX_SCHEDULE_TIMEOUT 100000
+	do {
+		if (_os_atomic_read(drv, &(phl_cmd->ref_cnt)) == 1)
+			break;
+		_os_sleep_ms(drv, 10);
+		try_cnt++;
+		if (try_cnt == 50)
+			PHL_ERR("F-%s, L-%d polling is_cmd_wait to false\n",
+						__FUNCTION__, __LINE__);
+	} while (phl_get_passing_time_ms(start) < PHL_MAX_SCHEDULE_TIMEOUT);
+
 
 	_phl_cmd_obj_free(phl_info, phl_cmd);
 }
@@ -419,19 +512,18 @@ phl_cmd_enqueue(struct phl_info_t *phl_info,
 
 	if (cmd_type == PHL_CMD_WAIT) {
 		phl_cmd->is_cmd_wait = true;
-		_os_atomic_set(drv, &phl_cmd->ref_cnt, 0);
 		_phl_cmd_sync_init(phl_info, evt_id, &phl_cmd->cmd_sync, cmd_timeout);
 	}
+	_os_atomic_set(drv, &phl_cmd->ref_cnt, 0);
 
 	psts = phl_disp_eng_send_msg(phl_info, &msg, &attr, NULL);
 	if (psts == RTW_PHL_STATUS_SUCCESS) {
-		if (phl_cmd->is_cmd_wait == true) {
+		if (phl_cmd->is_cmd_wait == true)
 			psts = _phl_cmd_wait(phl_info, &phl_cmd->cmd_sync);
-			/*ref_cnt++ for cmd wait done*/
-			_os_atomic_inc(drv, &phl_cmd->ref_cnt);
-		} else {
+	 	else
 			psts = RTW_PHL_STATUS_SUCCESS;
-		}
+		/*ref_cnt++ for cmd wait done*/
+		_os_atomic_inc(drv, &phl_cmd->ref_cnt);
 	} else {
 		PHL_ERR("%s send msg failed\n", __func__);
 		_phl_cmd_obj_free(phl_info, phl_cmd);
