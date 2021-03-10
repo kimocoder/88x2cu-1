@@ -55,6 +55,7 @@ u16 hal_calc_avail_wptr(u16 rptr, u16 wptr, u16 bndy)
 
 	return avail_wptr;
 }
+#endif // if 0 NEO
 
 /**
  * rtw_hal_tx_chnl_mapping - query hw tx dma channel mapping to the sw xmit ring
@@ -69,6 +70,9 @@ u16 hal_calc_avail_wptr(u16 rptr, u16 wptr, u16 bndy)
 u8 rtw_hal_tx_chnl_mapping(void *hal, u16 macid,
 			   enum rtw_phl_ring_cat cat, u8 band)
 {
+#if 1 // NEO
+	return (u8)cat;
+#else // NEO
 	struct hal_info_t *hal_info = (struct hal_info_t *)hal;
 	struct hal_trx_ops *trx_ops = hal_info->trx_ops;
 	u8 tx_chnl = 0;
@@ -76,8 +80,10 @@ u8 rtw_hal_tx_chnl_mapping(void *hal, u16 macid,
 	tx_chnl = trx_ops->map_hw_tx_chnl(macid, cat, band);
 
 	return tx_chnl;
+#endif // NEO
 }
 
+#if 0  // NEO mark off first
 /**
  * rtw_hal_get_fwcmd_queue_idx - get idx of fwcmd queue
  * @hal: see struct hal_info_t

@@ -223,7 +223,7 @@ struct rtw_wow_wake_info {
 
 struct rtw_aoac_report {
 	/* status check */
-	u8 rpt_ok;
+	u8 rpt_fail;
 
 	/* report from fw */
 	u8 rpt_ver;

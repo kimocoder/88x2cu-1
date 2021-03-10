@@ -88,6 +88,10 @@ enum rtw_phl_status phl_disp_eng_free_token(struct phl_info_t *phl, u8 band_idx,
 enum rtw_phl_status phl_disp_eng_notify_dev_io_status(struct phl_info_t *phl, u8 band_idx,
 								enum phl_module_id mdl_id,bool allow_io);
 
+enum rtw_phl_status phl_disp_eng_set_msg_disp_seq(struct phl_info_t *phl,
+							struct phl_msg_attribute *attr,
+							struct msg_self_def_seq *seq);
+u8 phl_disp_query_mdl_id(struct phl_info_t *phl, void *bk_mdl);
 #ifdef CONFIG_CMD_DISP
 /* following functions are only used inside phl_cmd_dispatch_eng.c */
 enum rtw_phl_status dispr_init(struct phl_info_t *phl, void **dispr, u8 idx);
@@ -135,12 +139,16 @@ void dispr_share_thread_leave_hdl(void *dispr);
 void dispr_share_thread_stop_prior_hdl(void *dispr);
 void dispr_share_thread_stop_post_hdl(void *dispr);
 
+enum rtw_phl_status dispr_set_dispatch_seq(void *dispr, struct phl_msg_attribute *attr,
+							struct msg_self_def_seq* seq);
+
 /*ollowing functions are called inside phl_cmd_dispatcher.c */
 #define IS_DISPR_CTRL(_mdl_id) ((_mdl_id) < PHL_BK_MDL_ROLE_START)
 #define disp_eng_is_solo_thread_mode(_phl) \
 	((_phl)->disp_eng.thread_mode == SOLO_THREAD_MODE)
 void disp_eng_notify_share_thread(struct phl_info_t *phl, void *dispr);
 void dispr_ctrl_hook_ops(void *dispr, struct phl_bk_module_ops *ops);
+u8 disp_query_mdl_id(struct phl_info_t *phl, void *bk_mdl);
 #ifdef CONFIG_CMD_DISP_SOLO_MODE
 void dispr_ctrl_sema_down(struct phl_info_t *phl);
 void dispr_ctrl_sema_up(struct phl_info_t *phl);

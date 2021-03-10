@@ -15,6 +15,8 @@
 #ifndef _PHL_REGULATION_DEF_H_
 #define _PHL_REGULATION_DEF_H_
 
+#define RSVD_DOMAIN 0x1a
+
 #define MAX_CH_NUM_2GHZ 14
 
 #define MAX_CH_NUM_BAND1 4 /* 36, 40, 44, 48 */
@@ -22,7 +24,7 @@
 #define MAX_CH_NUM_BAND3 12 /* 100, 104, 108, 112,
 				116, 120, 124, 128,
 				132, 136, 140, 144 */
-#define MAX_CH_NUM_BAND4 5 /* 149, 153, 157, 161, 165 */
+#define MAX_CH_NUM_BAND4 8 /* 149, 153, 157, 161, 165, 169, 173, 177 */
 #define MAX_CH_NUM_5GHZ (MAX_CH_NUM_BAND1 + MAX_CH_NUM_BAND2 +\
 				MAX_CH_NUM_BAND3 + MAX_CH_NUM_BAND4)
 
@@ -31,7 +33,7 @@
 #define CH_5GHZ_BAND1(_ch_) (((_ch_ >= 36) && (_ch_ <= 48)) ? true : false)
 #define CH_5GHZ_BAND2(_ch_) (((_ch_ >= 52) && (_ch_ <= 64)) ? true : false)
 #define CH_5GHZ_BAND3(_ch_) (((_ch_ >= 100) && (_ch_ <= 144)) ? true : false)
-#define CH_5GHZ_BAND4(_ch_) (((_ch_ >= 149) && (_ch_ <= 165)) ? true : false)
+#define CH_5GHZ_BAND4(_ch_) (((_ch_ >= 149) && (_ch_ <= 177)) ? true : false)
 
 #define SUPPORT_11A BIT(0)
 #define SUPPORT_11B BIT(1)
@@ -110,6 +112,21 @@ struct rtw_regulation_country_chplan {
 	* bit4: accept 11ac
 	* bit5: accept 11ax
 	*/
+};
+
+struct rtw_user_def_chplan {
+	u16 ch2g; /* bit0 ~ bit13 : ch1~ch14 */
+	u16 passive2g; /* bit0 ~ bit13 : ch1~ch14, if value = 1, means passive for that channel */
+
+	/* 5g channels.
+	 * bit0~7 : ch 36/40/44/48/52/56/60/64
+	 * bit8~15 : ch 100/104/108/112/116/120/124/128
+	 * bit16~23 : ch 132/136/140/144/149/153/157/161
+	 * bit24~27 : ch 165/169/173/177
+	 */
+	u32 ch5g;
+	u32 passive5g;
+	u32 dfs5g;
 };
 
 /*

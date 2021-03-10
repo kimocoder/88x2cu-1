@@ -78,4 +78,8 @@ void phl_dump_h2c_pool_stats(struct phl_h2c_pkt_pool *h2c_pkt_pool);
 enum rtw_phl_status
 phl_cmd_cfg_ampdu_hdl(struct phl_info_t *phl_info, u8 *param);
 
+enum rtw_phl_status
+phl_data_ctrler(struct phl_info_t *phl_info, struct phl_data_ctl_t *ctl,
+		struct phl_msg *msg);
+
 #endif	/* __PHL_TX_H_ */

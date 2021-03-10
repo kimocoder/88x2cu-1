@@ -226,6 +226,7 @@ exit:
 
 }
 
+
 void _phl_fill_tx_meta_data_usb(struct rtw_t_meta_data *mdata,
 					u16 packet_len)
 {
@@ -237,7 +238,6 @@ void _phl_fill_tx_meta_data_usb(struct rtw_t_meta_data *mdata,
 	mdata->bk = 1;
 	mdata->ampdu_en = 0;
 }
-
 
 /*	[SD7_Ref] HalUsbInMpdu	*/
 enum rtw_phl_status _phl_in_token_usb(struct phl_info_t *phl_info, u8 pipe_idx)
@@ -289,8 +289,6 @@ enum rtw_phl_status _phl_in_token_usb(struct phl_info_t *phl_info, u8 pipe_idx)
 	return RTW_PHL_STATUS_SUCCESS;
 }
 
-
-
 enum rtw_phl_status _phl_rx_start_usb(struct phl_info_t *phl_info)
 {
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_SUCCESS;
@@ -333,7 +331,6 @@ enum rtw_phl_status _phl_rx_start_usb(struct phl_info_t *phl_info)
 }
 
 
-
 void _phl_rx_stop_usb(struct phl_info_t *phl_info)
 {
 	void *drv = phl_to_drvpriv(phl_info);
@@ -355,14 +352,17 @@ static void _phl_rx_deferred_in_token(void *phl)
 
 	PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_, "[5] %s:: ==>\n",
 							__FUNCTION__);
+
 	/* [1] Check driver/nic state*/
 
 	/* [2] Check in token num*/
 	pstatus = _phl_rx_start_usb(phl_info);
 
 	// set timer again
-	if(pstatus == RTW_PHL_STATUS_RESOURCE)
+	if(pstatus == RTW_PHL_STATUS_RESOURCE){
+		_phl_indic_new_rxpkt(phl_info);
 		_os_set_timer(drv, &rx_buf_ring->deferred_timer, 10);
+	}
 }
 
 /* [SD7_Ref] : HalUsbAllocInResource */
@@ -522,6 +522,9 @@ void phl_rx_handle_normal(struct phl_info_t *phl_info,
 
 	INIT_LIST_HEAD(&frames);
 
+	if (phl_rx->r.mdata.rx_rate <= RTW_DATA_RATE_HE_NSS4_MCS11)
+		phl_info->phl_com->phl_stats.rx_rate_nmr[phl_rx->r.mdata.rx_rate]++;
+
 	pstatus = phl_rx_reorder(phl_info, phl_rx, &frames);
 	if (pstatus == RTW_PHL_STATUS_SUCCESS)
 		phl_handle_rx_frame_list(phl_info, &frames);
@@ -626,6 +629,7 @@ _phl_prepare_tx_usb(struct phl_info_t *phl_info, struct rtw_xmit_req *tx_req,
 					PHL_WARN("tx recycle fail\n");
 			}
 		}
+
 	} while (false);
 	return pstatus;
 }
@@ -655,7 +659,7 @@ void phl_req_tx_stop_usb(struct phl_info_t *phl_info)
 {
 	void *drv = phl_to_drvpriv(phl_info);
 
-	_os_atomic_set(drv, &phl_info->phl_tx_status,
+	_os_atomic_set(drv, &phl_info->phl_sw_tx_sts,
 		PHL_TX_STATUS_STOP_INPROGRESS);
 }
 
@@ -663,14 +667,14 @@ void phl_tx_stop_usb(struct phl_info_t *phl_info)
 {
 	void *drv = phl_to_drvpriv(phl_info);
 
-	_os_atomic_set(drv, &phl_info->phl_tx_status, PHL_TX_STATUS_SW_PAUSE);
+	_os_atomic_set(drv, &phl_info->phl_sw_tx_sts, PHL_TX_STATUS_SW_PAUSE);
 }
 
 void phl_req_rx_stop_usb(struct phl_info_t *phl_info)
 {
 	void *drv = phl_to_drvpriv(phl_info);
 
-	_os_atomic_set(drv, &phl_info->phl_rx_status,
+	_os_atomic_set(drv, &phl_info->phl_sw_rx_sts,
 		PHL_RX_STATUS_STOP_INPROGRESS);
 }
 
@@ -678,7 +682,7 @@ void phl_rx_stop_usb(struct phl_info_t *phl_info)
 {
 	void *drv = phl_to_drvpriv(phl_info);
 
-	_os_atomic_set(drv, &phl_info->phl_rx_status, PHL_RX_STATUS_SW_PAUSE);
+	_os_atomic_set(drv, &phl_info->phl_sw_rx_sts, PHL_RX_STATUS_SW_PAUSE);
 }
 
 bool phl_is_tx_sw_pause_usb(struct phl_info_t *phl_info)
@@ -686,7 +690,7 @@ bool phl_is_tx_sw_pause_usb(struct phl_info_t *phl_info)
 	void *drvpriv = phl_to_drvpriv(phl_info);
 
 	if (PHL_TX_STATUS_SW_PAUSE == _os_atomic_read(drvpriv,
-		&phl_info->phl_tx_status))
+		&phl_info->phl_sw_tx_sts))
 		return true;
 	else
 		return false;
@@ -697,7 +701,7 @@ bool phl_is_rx_sw_pause_usb(struct phl_info_t *phl_info)
 	void *drvpriv = phl_to_drvpriv(phl_info);
 
 	if (PHL_RX_STATUS_SW_PAUSE == _os_atomic_read(drvpriv,
-		&phl_info->phl_rx_status))
+		&phl_info->phl_sw_rx_sts))
 		return true;
 	else
 		return false;
@@ -706,21 +710,21 @@ bool phl_is_rx_sw_pause_usb(struct phl_info_t *phl_info)
 void phl_tx_resume_usb(struct phl_info_t *phl_info)
 {
 	void *drv = phl_to_drvpriv(phl_info);
-	_os_atomic_set(drv, &phl_info->phl_tx_status, PHL_TX_STATUS_RUNNING);
+	_os_atomic_set(drv, &phl_info->phl_sw_tx_sts, PHL_TX_STATUS_RUNNING);
 }
 
 void phl_rx_resume_usb(struct phl_info_t *phl_info)
 {
 	void *drv = phl_to_drvpriv(phl_info);
-	_os_atomic_set(drv, &phl_info->phl_rx_status, PHL_RX_STATUS_RUNNING);
+	_os_atomic_set(drv, &phl_info->phl_sw_rx_sts, PHL_RX_STATUS_RUNNING);
 }
 
 void phl_trx_resume_usb(struct phl_info_t *phl_info, u8 type)
 {
-	if (PHL_REQ_PAUSE_TX & type)
+	if (PHL_CTRL_TX & type)
 		phl_tx_resume_usb(phl_info);
 
-	if (PHL_REQ_PAUSE_RX & type)
+	if (PHL_CTRL_RX & type)
 		phl_rx_resume_usb(phl_info);
 }
 
@@ -734,15 +738,20 @@ void phl_reset_rx_usb(struct phl_info_t *phl_info)
 
 }
 
-void phl_trx_reset_usb(struct phl_info_t *phl_info)
+void phl_trx_reset_usb(struct phl_info_t *phl_info, u8 type)
 {
 	struct rtw_phl_com_t *phl_com = phl_info->phl_com;
 	struct rtw_stats *phl_stats = &phl_com->phl_stats;
 
-	phl_reset_tx_usb(phl_info);
-	phl_reset_rx_usb(phl_info);
-	phl_reset_tx_stats(phl_stats);
-	phl_reset_rx_stats(phl_stats);
+	if (PHL_CTRL_TX & type) {
+		phl_reset_tx_usb(phl_info);
+		phl_reset_tx_stats(phl_stats);
+	}
+
+	if (PHL_CTRL_RX & type) {
+		phl_reset_rx_usb(phl_info);
+		phl_reset_rx_stats(phl_stats);
+	}
 }
 
 static void _phl_tx_flow_ctrl_usb(struct phl_info_t *phl_info,
@@ -877,15 +886,15 @@ static enum rtw_phl_status _phl_handle_xmit_ring_usb(struct phl_info_t *phl_info
 	u8 agg_cnt = 0;
 	u8 dma_ch = tring->dma_ch;
 	u8 type = 0;
+	u8 is_dummy = false;
+	u8 trasc_agg_cnt = 0;
 	u32 wd_len = 0;
 	u32 bulk_size = phl_info->hci->usb_bulkout_size;
+	u32 last_idx = IDX_NONE;
 #ifdef CONFIG_PHL_USB_TX_AGGREGATION
 	u8 agg_en = 1;
-	u8 trasc_agg_cnt = 0;
 	u8 trasc_idx = 0;
 	u8 shift_offset = GET_SHIFT_OFFSET(bulk_size);
-	u32 last_idx = IDX_NONE;
-	u8 is_dummy = false;
 	u8 max_bulkout_wd_num = rtw_hal_get_max_bulkout_wd_num(phl_info->hal);
 #endif
 	void *drv_priv = phl_to_drvpriv(phl_info);
@@ -911,12 +920,10 @@ static enum rtw_phl_status _phl_handle_xmit_ring_usb(struct phl_info_t *phl_info
 			wd_len = MAX_WD_LEN;
 		else
 			wd_len = MAX_WD_BODY_LEN;
-#ifdef CONFIG_PHL_USB_TX_AGGREGATION
 		if(last_idx != IDX_NONE && agg_cnt == (u8)last_idx && is_dummy) {
 			tx_req->mdata.usb_pkt_ofst = 1;
 			wd_len += PKT_OFFSET_DUMMY;
 		}
-#endif
 #ifdef CONFIG_PHL_USB_TX_PADDING_CHK
 		if (_ALIGN(wd_len + tx_req->total_len,
 		    8) + tx_len > (bus_cap->tx_buf_size - PKT_OFFSET_DUMMY))
@@ -965,13 +972,12 @@ static enum rtw_phl_status _phl_handle_xmit_ring_usb(struct phl_info_t *phl_info
 			_os_atomic_set(drv_priv, &tring->phl_idx, rptr);
 
 			agg_cnt++;
+			trasc_agg_cnt++;
 
 			if (type != RTW_PHL_PKT_TYPE_DATA)
 				break;
 
 #ifdef CONFIG_PHL_USB_TX_AGGREGATION
-			trasc_agg_cnt++;
-
 			/* chip only allow a limited number of WD
 			 * placed inside per bulk transaction.
 			 * */
@@ -1011,17 +1017,16 @@ static enum rtw_phl_status _phl_handle_xmit_ring_usb(struct phl_info_t *phl_info
 	if (pstatus == RTW_PHL_STATUS_SUCCESS) {
 		tx_buf_data = tx_buf->buffer;
 #ifdef CONFIG_PHL_USB_TX_PADDING_CHK
-aa
 		if( ! (tx_len % bulk_size) )
 			PHL_ERR("%s: no padding dummy\n", __func__);
 #endif
 #ifdef CONFIG_PHL_USB_TX_AGGREGATION
-aa
 		/*PHL_INFO("%s, agg_cnt = %d\n", __func__, agg_cnt);*/
 		if (agg_en && type == RTW_PHL_PKT_TYPE_DATA && agg_cnt > 1)
 			rtw_hal_usb_tx_agg_cfg(phl_info->hal, tx_buf_data, agg_cnt);
 #endif
-		bulk_id = rtw_hal_get_bulkout_id(phl_info->hal, tx_req->mdata.q_sel, 0);
+		bulk_id = rtw_hal_get_bulkout_id(phl_info->hal,
+			dma_ch, 0);
 		pstatus = os_usb_tx(phl_to_drvpriv(phl_info),
 			(u8 *)tx_buf, bulk_id, tx_len, tx_buf_data);
 	}
@@ -1063,7 +1068,7 @@ static void _phl_tx_callback_usb(void *context)
 	INIT_LIST_HEAD(&sta_list);
 	/* for the pause PHL Tx handshake with USB SER */
 	if (PHL_TX_STATUS_SW_PAUSE == _os_atomic_read(drvpriv,
-		&phl_info->phl_tx_status))
+		&phl_info->phl_sw_tx_sts))
 		return;
 
 	if (true == phl_check_xmit_ring_resource(phl_info, &sta_list)) {
@@ -1091,7 +1096,7 @@ static void _phl_tx_callback_usb(void *context)
 
 	/* for the pause PHL Tx handshake with USB SER */
 	if (PHL_TX_STATUS_STOP_INPROGRESS ==
-		_os_atomic_read(drvpriv, &phl_info->phl_tx_status))
+		_os_atomic_read(drvpriv, &phl_info->phl_sw_tx_sts))
 		phl_tx_stop_usb(phl_info);
 
 	phl_free_deferred_tx_ring(phl_info);
@@ -1117,7 +1122,7 @@ static void _phl_rx_callback_usb(void *context)
 #if 0
 		/* for the pause PHL Rx handshake with USB SER */
 		if (PHL_RX_STATUS_STOP_INPROGRESS ==
-			_os_atomic_read(drvpriv, &phl_info->phl_rx_status))
+			_os_atomic_read(drvpriv, &phl_info->phl_sw_rx_sts))
 			phl_rx_stop_usb(phl_info);
 #endif
 
@@ -1126,7 +1131,6 @@ static void _phl_rx_callback_usb(void *context)
 		}
 	} while (false);
 }
-
 
 enum rtw_phl_status phl_trx_init_usb(struct phl_info_t *phl_info)
 {
@@ -1187,17 +1191,15 @@ enum rtw_phl_status phl_trx_init_usb(struct phl_info_t *phl_info)
 
 		os_enable_usb_out_pipes(phl_to_drvpriv(phl_info));
 		os_enable_usb_in_pipes(phl_to_drvpriv(phl_info));
+
 	} while (false);
 
-	if (RTW_PHL_STATUS_SUCCESS != pstatus) {
-		RTW_ERR("%s do phl_trx_deinit_usb()\n", __func__);
+	if (RTW_PHL_STATUS_SUCCESS != pstatus)
 		phl_trx_deinit_usb(phl_info);
-	}
 
 	FUNCOUT_WSTS(pstatus);
 	return pstatus;
 }
-
 
 /* phl_trx_start_usb */
 enum rtw_phl_status phl_trx_cfg_usb(struct phl_info_t *phl_info)
@@ -1205,7 +1207,6 @@ enum rtw_phl_status phl_trx_cfg_usb(struct phl_info_t *phl_info)
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_SUCCESS;
 
 #ifdef CONFIG_PHL_USB_RX_AGGREGATION
-aa
 	rtw_hal_usb_rx_agg_cfg(phl_info->hal, PHL_RX_AGG_DEFAULT,
 		0, 0, 0, 0, 0);
 #endif
@@ -1257,7 +1258,7 @@ phl_pend_rxbuf_usb(struct phl_info_t *phl_info, void *rxobj, u32 inbuf_len, u8 s
 #if 0
 	/* for the pause PHL Rx handshake with USB SER */
 	if (PHL_RX_STATUS_SW_PAUSE == _os_atomic_read(drv,
-		&phl_info->phl_rx_status))
+		&phl_info->phl_sw_rx_sts))
 		return RTW_PHL_STATUS_SUCCESS;
 #endif
 
@@ -1331,14 +1332,10 @@ struct rtw_phl_rx_pkt *phl_get_single_rx(struct phl_info_t *phl_info,
 	bool brel = true, balloc = false;
 	_os_spinlockfg sp_flags;
 
-
 	//initialize for compiler
 	pkt_buf = rx_buf->buffer;
 	pkt_buf_end = rx_buf->buffer + rx_buf->transfer_len;
 	transfer_len = (s32)rx_buf->transfer_len;
-
-	//RTW_INFO("%s : NEO buf:%p, len=%d\n", __func__, pkt_buf, transfer_len);
-	//print_hex_dump(KERN_INFO, "rx: ", DUMP_PREFIX_OFFSET, 16, 1, pkt_buf, transfer_len, 1);
 
 	do {
 		balloc = false;
@@ -1359,7 +1356,6 @@ struct rtw_phl_rx_pkt *phl_get_single_rx(struct phl_info_t *phl_info,
 							phl_rx);
 
 		if (RTW_HAL_STATUS_SUCCESS != hstatus) {
-			RTW_ERR("%s NEO rtw_hal_handle_rx_buffer failed: %d\n", __func__, hstatus);
 			phl_release_phl_rx(phl_info, phl_rx);
 			phl_rx = NULL;
 			pstatus = RTW_PHL_STATUS_FAILURE;
@@ -1369,7 +1365,6 @@ struct rtw_phl_rx_pkt *phl_get_single_rx(struct phl_info_t *phl_info,
 				PHL_ASSERT("[3] %s:: [Notice] one of ampdu damaged\n", __FUNCTION__);
 			break;
 		}
-
 
 		pkt_offset = (s32)(phl_rx->r.pkt_list[0].vir_addr - pkt_buf) + phl_rx->r.pkt_list[0].length;
 
@@ -1460,6 +1455,7 @@ void rtw_phl_post_in_complete(void *phl, void *rxobj, u32 inbuf_len, u8 status_c
 		rtw_phl_start_rx_process(phl);
 }
 
+
 static void phl_rx_process_usb(struct phl_info_t *phl_info,
 							struct rtw_phl_rx_pkt *phl_rxhead)
 {
@@ -1481,7 +1477,6 @@ static void phl_rx_process_usb(struct phl_info_t *phl_info,
 		case RTW_RX_TYPE_WIFI:
 			// phl_recycle_rx_buf would in phl_rx_handle_normal or core_rx.
 #ifdef CONFIG_PHL_RX_PSTS_PER_PKT
-aa
 			if (false == phl_rx_proc_wait_phy_sts(phl_info, phl_rx)) {
 				PHL_TRACE(COMP_PHL_PSTS, _PHL_DEBUG_,
 					  "phl_rx_proc_wait_phy_sts() return false \n");
@@ -1539,14 +1534,12 @@ static enum rtw_phl_status phl_rx_usb(struct phl_info_t *phl_info)
 		else
 			break;
 
-		//RTW_INFO("%s NEO pipe_idx=%d\n", __func__, rx_buf->pipe_idx);
-		//print_hex_dump(KERN_INFO, "phl_rx_usb: ", DUMP_PREFIX_OFFSET, 16, 1, rx_buf->buffer, rx_buf->transfer_len, 1);
-
 		switch(rx_buf->pipe_idx){
 			case WLAN_IN_MPDU_PIPE_IDX:
 			{
 				/* phl_rx maybe single or link-list */
 				phl_rx = phl_get_single_rx(phl_info, rx_buf);
+
 				if(phl_rx)
 				{
 					phl_rx_process_usb(phl_info, phl_rx);
@@ -1569,6 +1562,7 @@ static enum rtw_phl_status phl_rx_usb(struct phl_info_t *phl_info)
 		}
 
 	}
+
 	return RTW_PHL_STATUS_SUCCESS;
 }
 
@@ -1576,7 +1570,7 @@ enum rtw_phl_status phl_pltfm_tx_usb(struct phl_info_t *phl_info,
 									void *pkt)
 {
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_FAILURE;
-	
+
 	RTW_ERR("NEO TODO %s\n", __func__);
 #if 0 // NEO TODO
 	struct rtw_h2c_pkt *h2c_pkt = (struct rtw_h2c_pkt *)pkt;
@@ -1718,9 +1712,8 @@ static struct phl_hci_trx_ops ops= {
 	.tx_watchdog = phl_tx_watchdog_usb
 };
 
-enum rtw_phl_status phl_hook_trx_ops_usb(void *phl)
+enum rtw_phl_status phl_hook_trx_ops_usb(struct phl_info_t *phl_info)
 {
-	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_FAILURE;
 
 	if (NULL != phl_info) {
@@ -1733,7 +1726,6 @@ enum rtw_phl_status phl_hook_trx_ops_usb(void *phl)
 
 u8 rtw_phl_usb_tx_ep_id(void *phl, u16 macid, u8 tid, u8 band)
 {
-#if 0 // NEO TODO 
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	u8 dma_ch = 0;
 	u8 bulk_id = 0;
@@ -1742,8 +1734,150 @@ u8 rtw_phl_usb_tx_ep_id(void *phl, u16 macid, u8 tid, u8 band)
 	bulk_id = rtw_hal_get_bulkout_id(phl_info->hal,
 			dma_ch, 0);
 	return bulk_id;
-#else
-	RTW_ERR("%s : TODO for rtw_hal_tx_chnl_mapping\n", __func__);
-	return 0;
-#endif
 }
+
+enum rtw_phl_status
+phl_force_usb_switch(struct phl_info_t *phl_info, u32 speed)
+{
+
+	if(speed <= RTW_USB_SPEED_HIGH)
+		rtw_hal_force_usb_switch(phl_info->hal, USB_2_0);
+	else if(speed < RTW_USB_SPEED_MAX)
+		rtw_hal_force_usb_switch(phl_info->hal, USB_3_0);
+	PHL_INFO("%s (%d) !!\n", __FUNCTION__, speed);
+
+	return RTW_PHL_STATUS_SUCCESS;
+}
+#ifdef CONFIG_CMD_DISP
+enum rtw_phl_status
+rtw_phl_cmd_force_usb_switch(void *phl, u32 speed,
+				enum phl_band_idx band_idx,
+				enum phl_cmd_type cmd_type, u32 cmd_timeout)
+{
+	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
+	enum rtw_phl_status psts = RTW_PHL_STATUS_FAILURE;
+	u32 usb_speed = speed;
+
+	if (cmd_type == PHL_CMD_DIRECTLY)
+		psts = phl_force_usb_switch(phl_info, usb_speed);
+	else {
+		psts = phl_cmd_enqueue(phl_info,
+		                       band_idx,
+		                       MSG_EVT_FORCE_USB_SW,
+		                       (u8*)&usb_speed,
+		                       sizeof(u32),
+		                       NULL,
+		                       PHL_CMD_WAIT,
+		                       0);
+		if (is_cmd_failure(psts)) {
+			PHL_ERR("%s : cmd fail (0x%x)!\n", __func__, psts);
+			psts = RTW_PHL_STATUS_FAILURE;
+		}
+		else
+			psts = RTW_PHL_STATUS_SUCCESS;
+	}
+	return psts;
+}
+#else /*for FSM*/
+enum rtw_phl_status
+rtw_phl_cmd_force_usb_switch(void *phl, u32 speed,
+				enum phl_band_idx band_idx,
+				enum phl_cmd_type cmd_type, u32 cmd_timeout)
+{
+	return phl_force_usb_switch((struct phl_info_t *)phl, speed);
+}
+#endif /*CONFIG_CMD_DISP*/
+
+enum rtw_phl_status
+rtw_phl_cmd_get_usb_speed(void *phl, u32* speed,
+				enum phl_band_idx band_idx,
+				enum phl_cmd_type cmd_type, u32 cmd_timeout)
+{
+	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
+	enum rtw_phl_status psts = RTW_PHL_STATUS_FAILURE;
+
+#ifdef CONFIG_CMD_DISP
+	psts = phl_cmd_enqueue(phl_info,
+				band_idx,
+				MSG_EVT_GET_USB_SPEED,
+				(u8*)speed,
+				sizeof(u32),
+				NULL,
+				PHL_CMD_WAIT,
+				0);
+	if (is_cmd_failure(psts)) {
+		PHL_ERR("%s : cmd fail (0x%x)!\n", __func__, psts);
+		psts = RTW_PHL_STATUS_FAILURE;
+	}
+	else
+		psts = RTW_PHL_STATUS_SUCCESS;
+#else
+	psts = phl_get_cur_usb_speed(phl_info, speed);
+#endif
+	return psts;
+}
+enum rtw_phl_status
+rtw_phl_cmd_get_usb_support_ability(void *phl, u32* ability,
+				enum phl_band_idx band_idx,
+				enum phl_cmd_type cmd_type, u32 cmd_timeout)
+{
+	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
+	enum rtw_phl_status psts = RTW_PHL_STATUS_FAILURE;
+
+#ifdef CONFIG_CMD_DISP
+	psts = phl_cmd_enqueue(phl_info,
+				band_idx,
+				MSG_EVT_GET_USB_SW_ABILITY,
+				(u8*)ability,
+				sizeof(u32),
+				NULL,
+				PHL_CMD_WAIT,
+				0);
+	if (is_cmd_failure(psts)) {
+		PHL_ERR("%s : cmd fail (0x%x)!\n", __func__, psts);
+		psts = RTW_PHL_STATUS_FAILURE;
+	}
+	else
+		psts = RTW_PHL_STATUS_SUCCESS;
+#else
+	psts = phl_get_usb_support_ability(phl_info, ability);
+#endif
+	return psts;
+}
+
+enum rtw_phl_status phl_get_cur_usb_speed(struct phl_info_t *phl_info, u32 *speed)
+{
+	u32 mode = rtwl_hal_get_cur_usb_mode(phl_info->hal);
+	struct hci_info_t *hci = phl_info->hci;
+
+	switch(mode) {
+		case USB_1_1:
+			*speed = RTW_USB_SPEED_FULL;
+			hci->usb_bulkout_size = USB_FULL_SPEED_BULK_SIZE;
+			break;
+		case USB_2_0:
+			*speed = RTW_USB_SPEED_HIGH;
+			hci->usb_bulkout_size = USB_HIGH_SPEED_BULK_SIZE;
+			break;
+		case USB_3_0:
+			*speed = RTW_USB_SPEED_SUPER;
+			hci->usb_bulkout_size = USB_SUPER_SPEED_BULK_SIZE;
+			break;
+		default:
+			*speed = RTW_USB_SPEED_UNKNOWN;
+			break;
+	}
+	PHL_PRINT("%s (%d) bulk size(%d) !!\n", __FUNCTION__, *speed,
+					phl_info->hci->usb_bulkout_size);
+
+	return RTW_PHL_STATUS_SUCCESS;
+}
+enum rtw_phl_status
+phl_get_usb_support_ability(struct phl_info_t *phl_info, u32 *ability)
+{
+	*ability = rtwl_hal_get_usb_support_ability(phl_info->hal);
+	/* refer enum rtw_usb_sw_ability for definition of ability */
+	PHL_INFO("%s (%d) !!\n", __FUNCTION__, *ability);
+	return RTW_PHL_STATUS_SUCCESS;
+}
+

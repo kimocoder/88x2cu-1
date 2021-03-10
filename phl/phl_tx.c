@@ -1314,7 +1314,7 @@ void rtw_phl_tx_resume(void *phl)
 	struct phl_hci_trx_ops *hci_trx_ops = phl_info->hci_trx_ops;
 
 	/* Resume SW Tx */
-	hci_trx_ops->trx_resume(phl_info, PHL_REQ_PAUSE_TX);
+	hci_trx_ops->trx_resume(phl_info, PHL_CTRL_TX);
 }
 
 
@@ -1467,7 +1467,34 @@ rtw_phl_cfg_tx_ampdu(void *phl, struct rtw_phl_stainfo_t *sta)
 fail:
 	return RTW_PHL_STATUS_FAILURE;
 }
+
+enum rtw_phl_status
+rtw_phl_cmd_cfg_ampdu(void *phl,
+			struct rtw_wifi_role_t *wrole,
+			struct rtw_phl_stainfo_t *sta,
+			enum phl_cmd_type cmd_type,
+			u32 cmd_timeout)
+{
+	enum rtw_phl_status sts = RTW_PHL_STATUS_FAILURE;
+#ifdef CONFIG_CMD_DISP
+	sts = phl_cmd_enqueue(phl,
+			wrole->hw_band,
+			MSG_EVT_CFG_AMPDU,
+			(u8 *)sta, 0,
+			NULL,
+			cmd_type, cmd_timeout);
+	if (is_cmd_failure(sts))
+		sts = RTW_PHL_STATUS_FAILURE;
+	else
+		sts = RTW_PHL_STATUS_SUCCESS;
+	return sts;
+#else
+	PHL_ERR("%s : CONFIG_CMD_DISP need to be enabled for MSG_EVT_CFG_AMPDU !! \n", __func__);
+
+	return sts;
 #endif
+}
+#endif // if 0 NEO
 
 void
 phl_tx_watchdog(struct phl_info_t *phl_info)
@@ -1478,3 +1505,416 @@ phl_tx_watchdog(struct phl_info_t *phl_info)
 	phl_tx_traffic_upd(phl_stats);
 	trx_ops->tx_watchdog(phl_info);
 }
+
+#if 0 // TODO NEO mark off first
+enum rtw_phl_status
+_phl_poll_hw_tx_done(void)
+{
+	PHL_TRACE(COMP_PHL_XMIT, _PHL_ERR_, "[DATA_CTRL] Polling hw tx done is not supported now\n");
+
+	return RTW_PHL_STATUS_FAILURE;
+}
+
+enum rtw_phl_status
+_phl_hw_tx_resume(void)
+{
+	PHL_TRACE(COMP_PHL_XMIT, _PHL_ERR_, "[DATA_CTRL] Resume hw tx not is supported now\n");
+
+	return RTW_PHL_STATUS_FAILURE;
+}
+
+enum rtw_phl_status
+_phl_sw_tx_resume(struct phl_info_t *phl_info, struct phl_data_ctl_t *ctl)
+{
+	enum rtw_phl_status sts = RTW_PHL_STATUS_FAILURE;
+	struct phl_hci_trx_ops *ops = phl_info->hci_trx_ops;
+
+	if (ctl->id != phl_info->pause_tx_id) {
+		PHL_WARN("[DATA_CTRL] module %d resume sw tx fail, sw tx is paused by module %d\n",
+			 ctl->id, phl_info->pause_tx_id);
+		return sts;
+	}
+
+	ops->trx_resume(phl_info, PHL_CTRL_TX);
+	phl_info->pause_tx_id = PHL_MDL_ID_MAX;
+
+	sts = rtw_phl_tx_req_notify(phl_info);
+
+	return sts;
+}
+
+void
+_phl_sw_tx_rst(struct phl_info_t *phl_info)
+{
+	struct phl_hci_trx_ops *ops = phl_info->hci_trx_ops;
+
+	ops->trx_reset(phl_info, PHL_CTRL_TX);
+}
+
+enum rtw_phl_status
+_phl_sw_tx_pause(struct phl_info_t *phl_info, struct phl_data_ctl_t *ctl,
+		 bool rst_sw)
+{
+	enum rtw_phl_status sts = RTW_PHL_STATUS_FAILURE;
+	struct phl_hci_trx_ops *ops = phl_info->hci_trx_ops;
+	void *drv = phl_to_drvpriv(phl_info);
+	u32 i = 0;
+
+	if (PHL_TX_STATUS_SW_PAUSE ==
+	    _os_atomic_read(drv, &phl_info->phl_sw_tx_sts)) {
+		PHL_TRACE(COMP_PHL_XMIT, _PHL_INFO_,
+			  "[DATA_CTRL] SW tx has been paused by module(%d)\n",
+			  phl_info->pause_tx_id);
+
+		PHL_TRACE(COMP_PHL_XMIT, _PHL_INFO_,
+			  "[DATA_CTRL] Update pause sw tx id to module(%d)\n",
+			  ctl->id);
+		phl_info->pause_tx_id = ctl->id;
+		sts = RTW_PHL_STATUS_SUCCESS;
+		return sts;
+	}
+
+	if (PHL_TX_STATUS_STOP_INPROGRESS ==
+	    _os_atomic_read(drv, &phl_info->phl_sw_tx_sts)) {
+		PHL_TRACE(COMP_PHL_XMIT, _PHL_INFO_,
+			  "[DATA_CTRL] SW tx has been requested to pause by module(%d)\n",
+			  phl_info->pause_tx_id);
+
+		PHL_TRACE(COMP_PHL_XMIT, _PHL_INFO_,
+			  "[DATA_CTRL] Update pause sw tx id to module(%d)\n",
+			  ctl->id);
+		phl_info->pause_tx_id = ctl->id;
+		sts = RTW_PHL_STATUS_SUCCESS;
+		return sts;
+	}
+
+	/* requset sw tx to stop */
+	ops->req_tx_stop(phl_info);
+
+	/* notify sw tx one last time, and poll if it receviced the stop request
+           and paused itself */
+	if (RTW_PHL_STATUS_SUCCESS == rtw_phl_tx_req_notify(phl_info)) {
+
+		for (i = 0; i < POLL_SW_TX_PAUSE_CNT; i++) {
+
+			if (true == ops->is_tx_pause(phl_info)) {
+				phl_info->pause_tx_id = ctl->id;
+				sts = RTW_PHL_STATUS_SUCCESS;
+				break;
+			}
+			_os_delay_ms(drv, POLL_SW_TX_PAUSE_MS);
+		}
+
+		if (RTW_PHL_STATUS_SUCCESS != sts) {
+			phl_info->pause_tx_id = ctl->id;
+			sts = RTW_PHL_STATUS_CMD_TIMEOUT;
+			PHL_TRACE(COMP_PHL_XMIT, _PHL_ERR_,
+				  "[DATA_CTRL] Module(%d) polling sw tx pause timeout (%d ms)!\n",
+				  ctl->id,
+				  (POLL_SW_TX_PAUSE_MS * POLL_SW_TX_PAUSE_CNT));
+		} else {
+			if (true == rst_sw) {
+				PHL_TRACE(COMP_PHL_XMIT, _PHL_WARNING_,
+					  "[DATA_CTRL] Pause Tx with reset is not supported now! requested by module(%d)\n",
+					  ctl->id);
+			}
+		}
+	} else {
+		PHL_TRACE(COMP_PHL_XMIT, _PHL_WARNING_, "[DATA_CTRL] Schedule sw tx process fail!\n");
+	}
+
+	return sts;
+}
+
+enum rtw_phl_status
+_phl_poll_hw_rx_done(void)
+{
+	PHL_TRACE(COMP_PHL_RECV, _PHL_ERR_, "[DATA_CTRL] Polling hw rx done is not supported now\n");
+
+	return RTW_PHL_STATUS_FAILURE;
+}
+
+enum rtw_phl_status
+_phl_hw_rx_resume(void)
+{
+	PHL_TRACE(COMP_PHL_RECV, _PHL_ERR_, "[DATA_CTRL] Resume hw rx not is supported now\n");
+
+	return RTW_PHL_STATUS_FAILURE;
+}
+
+enum rtw_phl_status
+_phl_sw_rx_resume(struct phl_info_t *phl_info, struct phl_data_ctl_t *ctl)
+{
+	enum rtw_phl_status sts = RTW_PHL_STATUS_FAILURE;
+	struct phl_hci_trx_ops *ops = phl_info->hci_trx_ops;
+
+	if (ctl->id != phl_info->pause_rx_id) {
+		PHL_WARN("[DATA_CTRL] module %d resume sw rx fail, sw rx is paused by module %d\n",
+			 ctl->id, phl_info->pause_rx_id);
+		return sts;
+	}
+
+	ops->trx_resume(phl_info, PHL_CTRL_RX);
+	phl_info->pause_rx_id = PHL_MDL_ID_MAX;
+
+	sts = rtw_phl_start_rx_process(phl_info);
+
+	return sts;
+}
+
+void
+_phl_sw_rx_rst(struct phl_info_t *phl_info)
+{
+	struct phl_hci_trx_ops *ops = phl_info->hci_trx_ops;
+
+	ops->trx_reset(phl_info, PHL_CTRL_RX);
+}
+
+enum rtw_phl_status
+_phl_sw_rx_pause(struct phl_info_t *phl_info, struct phl_data_ctl_t *ctl,
+		 bool rst_sw)
+{
+	enum rtw_phl_status sts = RTW_PHL_STATUS_FAILURE;
+	struct phl_hci_trx_ops *ops = phl_info->hci_trx_ops;
+	void *drv = phl_to_drvpriv(phl_info);
+	u32 i = 0;
+
+	if (PHL_RX_STATUS_SW_PAUSE ==
+	    _os_atomic_read(drv, &phl_info->phl_sw_rx_sts)) {
+		PHL_TRACE(COMP_PHL_RECV, _PHL_INFO_,
+			  "[DATA_CTRL] SW rx has been paused by module(%d)\n",
+			  phl_info->pause_rx_id);
+
+		PHL_TRACE(COMP_PHL_RECV, _PHL_INFO_,
+			  "[DATA_CTRL] Update pause sw rx id to module(%d)\n",
+			  ctl->id);
+		phl_info->pause_rx_id = ctl->id;
+		sts = RTW_PHL_STATUS_SUCCESS;
+		return sts;
+	}
+
+	if (PHL_RX_STATUS_STOP_INPROGRESS ==
+	    _os_atomic_read(drv, &phl_info->phl_sw_rx_sts)) {
+		PHL_TRACE(COMP_PHL_RECV, _PHL_INFO_,
+			  "[DATA_CTRL] SW rx has been requested to pause by module(%d)\n",
+			  phl_info->pause_rx_id);
+
+		PHL_TRACE(COMP_PHL_RECV, _PHL_INFO_,
+			  "[DATA_CTRL] Update pause sw rx id to module(%d)\n",
+			  ctl->id);
+		phl_info->pause_rx_id = ctl->id;
+		sts = RTW_PHL_STATUS_SUCCESS;
+		return sts;
+	}
+
+	/* requset sw rx to stop */
+	ops->req_rx_stop(phl_info);
+
+	/* notify sw rx one last time, and poll if it receviced the stop request
+           and paused itself */
+	if (RTW_PHL_STATUS_SUCCESS == rtw_phl_start_rx_process(phl_info)) {
+
+		for (i = 0; i < POLL_SW_RX_PAUSE_CNT; i++) {
+
+			if (true == ops->is_rx_pause(phl_info)) {
+				phl_info->pause_rx_id = ctl->id;
+				sts = RTW_PHL_STATUS_SUCCESS;
+				break;
+			}
+			_os_delay_ms(drv, POLL_SW_RX_PAUSE_MS);
+		}
+
+		if (RTW_PHL_STATUS_SUCCESS != sts) {
+			phl_info->pause_rx_id = ctl->id;
+			sts = RTW_PHL_STATUS_CMD_TIMEOUT;
+			PHL_TRACE(COMP_PHL_RECV, _PHL_ERR_,
+				  "[DATA_CTRL] Module(%d) polling sw rx pause timeout (%d ms)!\n",
+				  ctl->id,
+				  (POLL_SW_RX_PAUSE_MS * POLL_SW_RX_PAUSE_CNT));
+		} else {
+			if (true == rst_sw) {
+				PHL_TRACE(COMP_PHL_RECV, _PHL_WARNING_,
+					  "[DATA_CTRL] Pause Rx with reset is not supported now! requested by module(%d)\n",
+					  ctl->id);
+			}
+		}
+	} else {
+		PHL_TRACE(COMP_PHL_RECV, _PHL_WARNING_, "[DATA_CTRL] Schedule sw rx process fail!\n");
+	}
+
+	return sts;
+}
+
+enum rtw_phl_status
+_phl_hw_trx_rst_resume(struct phl_info_t *phl_info)
+{
+	void *drv = phl_to_drvpriv(phl_info);
+	u32 mac_err = 0;
+
+	if (false == _os_atomic_read(drv, &phl_info->is_hw_trx_pause)) {
+		PHL_TRACE(COMP_PHL_XMIT, _PHL_WARNING_, "[DATA_CTRL] HW T/Rx is not paused\n");
+	}
+
+	mac_err = rtw_hal_lv1_rcvy(phl_info->hal,
+				   RTW_PHL_SER_LV1_SER_RCVY_STEP_2);
+
+	if (0 != mac_err) {
+		PHL_TRACE(COMP_PHL_XMIT, _PHL_ERR_,
+		  "[DATA_CTRL] Reset and Resume HW T/Rx fail (mac_err = 0x%x)\n",
+			  mac_err);
+		return RTW_PHL_STATUS_FAILURE;
+	} else {
+		_os_atomic_set(drv, &phl_info->is_hw_trx_pause, false);
+		return RTW_PHL_STATUS_SUCCESS;
+	}
+}
+
+enum rtw_phl_status
+_phl_hw_trx_pause(struct phl_info_t *phl_info)
+{
+	void *drv = phl_to_drvpriv(phl_info);
+	u32 mac_err = 0;
+
+	if (true == _os_atomic_read(drv, &phl_info->is_hw_trx_pause)) {
+		PHL_TRACE(COMP_PHL_XMIT, _PHL_WARNING_, "[DATA_CTRL] HW T/Rx is already paused\n");
+	}
+
+	mac_err = rtw_hal_lv1_rcvy(phl_info->hal,
+				   RTW_PHL_SER_LV1_RCVY_STEP_1);
+
+	if (0 != mac_err) {
+		PHL_TRACE(COMP_PHL_XMIT, _PHL_ERR_,
+		  "[DATA_CTRL] Pause HW T/Rx fail (mac_err = 0x%x)\n",
+			  mac_err);
+		return RTW_PHL_STATUS_FAILURE;
+	} else {
+		_os_atomic_set(drv, &phl_info->is_hw_trx_pause, true);
+		return RTW_PHL_STATUS_SUCCESS;
+	}
+}
+
+enum rtw_phl_status
+_phl_trx_pause(struct phl_info_t *phl_info, struct phl_data_ctl_t *ctl)
+{
+	enum rtw_phl_status sts = RTW_PHL_STATUS_FAILURE;
+
+	do {
+		sts = _phl_sw_tx_pause(phl_info, ctl, false);
+		if (RTW_PHL_STATUS_SUCCESS != sts) {
+			PHL_TRACE(COMP_PHL_XMIT, _PHL_WARNING_, "[DATA_CTRL] Pause SW Tx fail in PHL_DATA_CTL_TRX_PAUSE!\n");
+			break;
+		}
+
+		sts = _phl_sw_rx_pause(phl_info, ctl, false);
+		if (RTW_PHL_STATUS_SUCCESS != sts) {
+			PHL_TRACE(COMP_PHL_RECV, _PHL_WARNING_, "[DATA_CTRL] Pause SW Rx fail in PHL_DATA_CTL_TRX_PAUSE!\n");
+			break;
+		}
+	} while (false);
+
+	return sts;
+}
+
+enum rtw_phl_status
+_phl_trx_pause_w_rst(struct phl_info_t *phl_info, struct phl_data_ctl_t *ctl,
+		     struct phl_msg *msg)
+{
+	enum rtw_phl_status sts = RTW_PHL_STATUS_FAILURE;
+	enum data_ctrl_err_code *err_sts = NULL;
+
+	if (msg->outbuf && msg->outlen == sizeof(*err_sts))
+		err_sts = (enum data_ctrl_err_code *)msg->outbuf;
+
+	do {
+		sts = _phl_sw_tx_pause(phl_info, ctl, false);
+		if (RTW_PHL_STATUS_SUCCESS != sts) {
+			if (err_sts) {
+				if (RTW_PHL_STATUS_CMD_TIMEOUT == sts)
+					*err_sts = CTRL_ERR_SW_TX_PAUSE_POLLTO;
+				else
+					*err_sts = CTRL_ERR_SW_TX_PAUSE_FAIL;
+			}
+			PHL_TRACE(COMP_PHL_XMIT, _PHL_WARNING_, "[DATA_CTRL] Pause SW Tx fail in PHL_DATA_CTL_TRX_PAUSE_W_RST!\n");
+			break;
+		}
+
+		sts = _phl_hw_trx_pause(phl_info);
+		if (RTW_PHL_STATUS_SUCCESS != sts) {
+			if (err_sts)
+				*err_sts = CTRL_ERR_HW_TRX_PAUSE_FAIL;
+			PHL_TRACE(COMP_PHL_XMIT, _PHL_WARNING_, "[DATA_CTRL] Pause HW T/Rx fail in PHL_DATA_CTL_TRX_PAUSE_W_RST!\n");
+			break;
+		}
+
+		sts = _phl_sw_rx_pause(phl_info, ctl, false);
+		if (RTW_PHL_STATUS_SUCCESS != sts) {
+			if (err_sts) {
+				if (RTW_PHL_STATUS_CMD_TIMEOUT == sts)
+					*err_sts = CTRL_ERR_SW_RX_PAUSE_POLLTO;
+				else
+					*err_sts = CTRL_ERR_SW_RX_PAUSE_FAIL;
+			}
+			PHL_TRACE(COMP_PHL_RECV, _PHL_WARNING_, "[DATA_CTRL] Pause SW Rx fail in PHL_DATA_CTL_TRX_PAUSE_W_RST!\n");
+			break;
+		}
+
+		_phl_sw_tx_rst(phl_info);
+		_phl_sw_rx_rst(phl_info);
+	} while (false);
+
+	return sts;
+}
+
+enum rtw_phl_status
+phl_data_ctrler(struct phl_info_t *phl_info, struct phl_data_ctl_t *ctl,
+		struct phl_msg *msg)
+{
+	enum rtw_phl_status sts = RTW_PHL_STATUS_FAILURE;
+
+	if (NULL == ctl) {
+		PHL_WARN("phl_tx_ctrler(): input ctl is NULL\n");
+		return RTW_PHL_STATUS_FAILURE;
+	}
+
+	switch (ctl->cmd) {
+	case PHL_DATA_CTL_HW_TRX_RST_RESUME:
+		sts = _phl_hw_trx_rst_resume(phl_info);
+		break;
+	case PHL_DATA_CTL_HW_TRX_PAUSE:
+		sts = _phl_hw_trx_pause(phl_info);
+		break;
+	case PHL_DATA_CTL_SW_TX_RESUME:
+		sts = _phl_sw_tx_resume(phl_info, ctl);
+		break;
+	case PHL_DATA_CTL_SW_RX_RESUME:
+		sts = _phl_sw_rx_resume(phl_info, ctl);
+		break;
+	case PHL_DATA_CTL_SW_TX_PAUSE:
+		sts = _phl_sw_tx_pause(phl_info, ctl, false);
+		break;
+ 	case PHL_DATA_CTL_SW_RX_PAUSE:
+		sts = _phl_sw_rx_pause(phl_info, ctl, false);
+		break;
+	case PHL_DATA_CTL_SW_TX_RESET:
+		_phl_sw_tx_rst(phl_info);
+		sts = RTW_PHL_STATUS_SUCCESS;
+		break;
+	case PHL_DATA_CTL_SW_RX_RESET:
+		_phl_sw_rx_rst(phl_info);
+		sts = RTW_PHL_STATUS_SUCCESS;
+		break;
+ 	case PHL_DATA_CTL_TRX_PAUSE:
+		sts = _phl_trx_pause(phl_info, ctl);
+		break;
+	case PHL_DATA_CTL_TRX_PAUSE_W_RST:
+		sts = _phl_trx_pause_w_rst(phl_info, ctl, msg);
+		break;
+	default:
+		PHL_TRACE(COMP_PHL_XMIT, _PHL_INFO_,
+			  "Unknown data control command(%d)!\n", ctl->cmd);
+		break;
+	}
+	return sts;
+}
+#endif // if 0 NEO
+

@@ -98,7 +98,7 @@ struct phl_hci_trx_ops {
 				   struct rtw_h2c_pkt *_h2c_pkt);
 	enum rtw_phl_status (*alloc_h2c_pkt_buf)(struct phl_info_t *phl_info,
 		struct rtw_h2c_pkt *_h2c_pkt, u32 buf_len);
-	void (*trx_reset)(struct phl_info_t *phl);
+	void (*trx_reset)(struct phl_info_t *phl, u8 type);
 	void (*trx_resume)(struct phl_info_t *phl, u8 type);
 	void (*req_tx_stop)(struct phl_info_t *phl);
 	void (*req_rx_stop)(struct phl_info_t *phl);
@@ -204,17 +204,38 @@ struct auto_chan_sel {
 };
 #endif
 
-#define PHL_TX_STATUS_IDLE 0
-#define PHL_TX_STATUS_RUNNING 1
-#define PHL_TX_STATUS_STOP_INPROGRESS 2
-#define PHL_TX_STATUS_SW_PAUSE 3
-#define PHL_RX_STATUS_IDLE 0
-#define PHL_RX_STATUS_RUNNING 1
-#define PHL_RX_STATUS_STOP_INPROGRESS 2
-#define PHL_RX_STATUS_SW_PAUSE 3
-#define PHL_REQ_PAUSE_TX BIT0
-#define PHL_REQ_PAUSE_RX BIT1
 
+enum phl_tx_status {
+	PHL_TX_STATUS_IDLE = 0,
+	PHL_TX_STATUS_RUNNING = 1,
+	PHL_TX_STATUS_STOP_INPROGRESS = 2,
+	PHL_TX_STATUS_SW_PAUSE = 3,
+	PHL_TX_STATUS_MAX = 0xFF
+};
+
+enum phl_rx_status {
+	PHL_RX_STATUS_IDLE = 0,
+	PHL_RX_STATUS_RUNNING = 1,
+	PHL_RX_STATUS_STOP_INPROGRESS = 2,
+	PHL_RX_STATUS_SW_PAUSE = 3,
+	PHL_RX_STATUS_MAX = 0xFF
+};
+
+enum data_ctrl_err_code {
+	CTRL_ERR_SW_TX_PAUSE_POLLTO = 1,
+	CTRL_ERR_SW_TX_PAUSE_FAIL = 2,
+	CTRL_ERR_SW_RX_PAUSE_POLLTO = 3,
+	CTRL_ERR_SW_RX_PAUSE_FAIL = 4,
+	CTRL_ERR_HW_TRX_PAUSE_FAIL = 5,
+	CTRL_ERR_MAX = 0xFF
+};
+
+#define PHL_CTRL_TX BIT0
+#define PHL_CTRL_RX BIT1
+#define POLL_SW_TX_PAUSE_CNT 100
+#define POLL_SW_TX_PAUSE_MS 1
+#define POLL_SW_RX_PAUSE_CNT 100
+#define POLL_SW_RX_PAUSE_MS 1
 
 struct phl_info_t {
 	struct g6_macid_ctl_t macid_ctrl;
@@ -227,8 +248,11 @@ struct phl_info_t {
 	struct rtw_phl_handler phl_rx_handler;
 	struct rtw_phl_handler phl_event_handler;
 	struct rtw_phl_rx_ring phl_rx_ring;
-	_os_atomic phl_tx_status;
-	_os_atomic phl_rx_status;
+	_os_atomic phl_sw_tx_sts;
+	_os_atomic phl_sw_rx_sts;
+	_os_atomic is_hw_trx_pause;
+	u8 pause_tx_id;
+	u8 pause_rx_id;
 	_os_lock t_ring_list_lock;
 	_os_lock rx_ring_lock;
 	_os_lock t_fctrl_result_lock;
@@ -238,7 +262,7 @@ struct phl_info_t {
 	_os_list t_ring_free_list;
 	void *ring_sts_pool;
 	void *rx_pkt_pool;
-	struct phl_h2c_pkt_pool  *h2c_pool;
+	struct phl_h2c_pkt_pool *h2c_pool;
 
 	struct hci_info_t *hci;
 	struct phl_hci_trx_ops *hci_trx_ops;
@@ -271,6 +295,7 @@ struct phl_info_t {
 	void *snd_fsm;
 #endif /*CONFIG_FSM*/
 	void *snd_obj;
+
 	void *led_ctrl;
 
 	void *ecsa_ctrl;

@@ -45,10 +45,15 @@ struct phl_usb_tx_buf_resource  {
 };
 
 
-
-
-
-
-enum rtw_phl_status phl_hook_trx_ops_usb(void *phl);
+enum rtw_phl_status
+phl_hook_trx_ops_usb(struct phl_info_t *phl_info);
+enum rtw_phl_status
+phl_force_usb_switch(struct phl_info_t *phl_info, u32 speed);
+/* refer enum rtw_usb_speed for definition of speed */
+enum rtw_phl_status
+phl_get_cur_usb_speed(struct phl_info_t *phl_info, u32 *speed);
+/* refer enum phl_usb_ability for definition of ability */
+enum rtw_phl_status
+phl_get_usb_support_ability(struct phl_info_t *phl_info, u32 *ability);
 
 #endif	/* _PHL_TRX_USB_H_ */
