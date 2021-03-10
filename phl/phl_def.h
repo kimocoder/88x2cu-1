@@ -492,6 +492,16 @@ enum phl_msg_evt_id {
 	MSG_EVT_STA_MEDIA_STATUS_UPT = 74,
 	MSG_EVT_CFG_CHINFO = 75,
 	MSG_EVT_STA_CHG_STAINFO = 76,
+	MSG_EVT_HW_TRX_RST_RESUME = 77,
+	MSG_EVT_HW_TRX_PAUSE = 78,
+	MSG_EVT_SW_TX_RESUME = 79,
+	MSG_EVT_SW_RX_RESUME = 80,
+	MSG_EVT_SW_TX_PAUSE = 81,
+	MSG_EVT_SW_RX_PAUSE = 82,
+	MSG_EVT_SW_TX_RESET = 83,
+	MSG_EVT_SW_RX_RESET = 84,
+	MSG_EVT_TRX_PAUSE = 85,
+	MSG_EVT_TRX_PAUSE_W_RST = 86,
 	/* dbg */
 	MSG_EVT_DBG_SIP_REG_DUMP = 120,
 	MSG_EVT_DBG_FULL_REG_DUMP = 121,
@@ -571,6 +581,20 @@ enum phl_bk_module_priority {
 	PHL_MDL_PRI_MAX
 };
 
+enum phl_data_ctl_cmd {
+	PHL_DATA_CTL_HW_TRX_RST_RESUME = 1,
+	PHL_DATA_CTL_HW_TRX_PAUSE = 2,
+	PHL_DATA_CTL_SW_TX_RESUME = 3,
+	PHL_DATA_CTL_SW_RX_RESUME = 4,
+	PHL_DATA_CTL_SW_TX_PAUSE = 5,
+	PHL_DATA_CTL_SW_RX_PAUSE = 6,
+	PHL_DATA_CTL_SW_TX_RESET = 7,
+	PHL_DATA_CTL_SW_RX_RESET = 8,
+	PHL_DATA_CTL_TRX_PAUSE = 9,
+	PHL_DATA_CTL_TRX_PAUSE_W_RST = 10,
+	PHL_DATA_CTL_MAX = 0xFF
+};
+
 /**
  * phl_msg - define a general msg format for PHL/CORE layer module to handle
  * one can easily extend additional mgnt info by encapsulating inside a file
@@ -607,7 +631,13 @@ struct msg_notify_map {
 	u8* id_arr;
 	u8 len;
 };
-
+struct msg_dispatch_seq {
+	struct msg_notify_map map[PHL_MDL_PRI_MAX];
+};
+struct msg_self_def_seq {
+	struct msg_dispatch_seq pre_prot_phase;
+	struct msg_dispatch_seq post_prot_phase;
+};
 struct msg_completion_routine {
 	void* priv;
 	void (*completion)(void* priv, struct phl_msg* msg);
@@ -623,6 +653,9 @@ struct phl_msg_attribute {
 	u8 opt;
 	struct msg_notify_map notify;
 	struct msg_completion_routine completion;
+#ifdef CONFIG_CMD_DISP_SUPPORT_CUSTOM_SEQ
+	void *dispr_attr;
+#endif
 };
 
 /**
@@ -704,6 +737,16 @@ struct phl_bk_module_ops {
 			struct phl_module_op_info* info);
 	enum phl_mdl_ret_code (*query_info)(void* dispr, void* priv,
 			struct phl_module_op_info* info);
+};
+
+/**
+ * phl_data_ctl_t - datapath control parameters for dispatcher controller
+ * @cmd: data path control command
+ * @id: module id which request data path control
+ */
+struct phl_data_ctl_t {
+	enum phl_data_ctl_cmd cmd;
+	enum phl_module_id id;
 };
 
 #define MSG_MDL_ID_FIELD(_msg_id) (((_msg_id) >> 16) & 0xFF)
@@ -907,6 +950,7 @@ struct protocol_cap_t {
 #define LOAD_RF_TXPWR_TRACK_FILE		BIT5
 #define LOAD_RF_TXPWR_LMT_FILE			BIT6
 #define LOAD_RF_TXPWR_LMT_RU_FILE		BIT7
+#define LOAD_BB_PHY_REG_GAIN_FILE		BIT8
 
 struct rtw_pcie_ltr_lat_ctrl {
 	enum rtw_pcie_bus_func_cap_t ctrl;
@@ -969,7 +1013,10 @@ struct bus_cap_t {
 	struct rtw_pcie_ltr_lat_ctrl ltr_idle;
 	u8 ltr_init_state;
 	u8 ltr_cur_state;
+	u32 ltr_last_trigger_time;
 	u8 ltr_sw_ctrl;
+	u32 ltr_sw_act_tri_cnt;
+	u32 ltr_sw_idle_tri_cnt;
 #elif defined (CONFIG_USB_HCI)
 	u32 tx_buf_size;
 	u32 tx_buf_num;
@@ -1211,6 +1258,7 @@ struct phy_sw_cap_t {
 	struct rtw_para_info_t mac_reg_info;
 	struct rtw_para_info_t bb_phy_reg_info;
 	struct rtw_para_info_t bb_phy_reg_mp_info;
+	struct rtw_para_info_t bb_phy_reg_gain_info;
 
 	struct rtw_para_info_t rf_radio_a_info;
 	struct rtw_para_info_t rf_radio_b_info;
@@ -1554,6 +1602,7 @@ struct rtw_phl_stainfo_t {
 #define HW_CAP_BFER_HE_MU BIT(9)
 #define HW_CAP_HE_NON_TB_CQI BIT(10)
 #define HW_CAP_HE_TB_CQI BIT(11)
+
 
 struct hal_spec_t {
 	char *ic_name;
@@ -2025,6 +2074,7 @@ struct rtw_phl_ppdu_sts_info {
 	struct rtw_phl_ppdu_sts_ent sts_ent[HW_BAND_MAX][PHL_MAX_PPDU_CNT];
 	u8 cur_rx_ppdu_cnt[HW_BAND_MAX];
 	bool en_ppdu_sts[HW_BAND_MAX];
+	bool latest_rx_is_psts[HW_BAND_MAX];
 #ifdef CONFIG_PHL_RX_PSTS_PER_PKT
 	bool en_psts_per_pkt;
 	bool psts_ampdu;
@@ -2607,6 +2657,19 @@ struct ps_ntfy_info {
 struct set_rf_ntfy_info {
 	enum rtw_rf_state state_to_set;
 	_os_event done;
+};
+
+/**
+ * rtw_phl_rainfo - structure use to query RA information
+ * from hal layer to core/phl layer
+ * @rate: current rate selected by RA, define by general definition enum rtw_data_rate
+ * @bw: current BW, define by general definition enum channel_width
+ * @gi_ltf: current gi_ltf, define by general definition enum rtw_gi_ltf
+ */
+struct rtw_phl_rainfo {
+	enum rtw_data_rate rate;
+	enum channel_width bw;
+	enum rtw_gi_ltf gi_ltf;
 };
 
 #endif /*_PHL_DEF_H_*/

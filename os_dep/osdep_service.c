@@ -1184,33 +1184,6 @@ inline void rtw_lock_traffic_suspend_timeout(u32 timeout_ms)
 	/* RTW_INFO("traffic lock timeout:%d\n", timeout_ms); */
 }
 
-inline void rtw_set_bit(int nr, unsigned long *addr)
-{
-#ifdef PLATFORM_LINUX
-	set_bit(nr, addr);
-#else
-	#error "TBD\n";
-#endif
-}
-
-inline void rtw_clear_bit(int nr, unsigned long *addr)
-{
-#ifdef PLATFORM_LINUX
-	clear_bit(nr, addr);
-#else
-	#error "TBD\n";
-#endif
-}
-
-inline int rtw_test_and_clear_bit(int nr, unsigned long *addr)
-{
-#ifdef PLATFORM_LINUX
-	return test_and_clear_bit(nr, addr);
-#else
-	#error "TBD\n";
-#endif
-}
-
 inline void ATOMIC_SET(ATOMIC_T *v, int i)
 {
 #ifdef PLATFORM_LINUX

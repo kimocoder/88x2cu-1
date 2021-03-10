@@ -103,12 +103,10 @@ static inline void _os_sleep_us(void *d, u32 us)
 {
 	rtw_usleep_os(us);
 }
-
 static inline u32 _os_get_cur_time_us(void)
 {
 	return rtw_systime_to_us(rtw_get_current_time());
 }
-
 static inline u32 _os_get_cur_time_ms(void)
 {
 	return rtw_systime_to_ms(rtw_get_current_time());
@@ -123,6 +121,10 @@ static inline u64 _os_division64(u64 x, u64 y)
 {
 	/*return do_div(x, y);*/
 	return rtw_division64(x, y);
+}
+static inline u32 _os_div_round_up(u32 x, u32 y)
+{
+	return RTW_DIV_ROUND_UP(x, y);
 }
 
 #ifdef CONFIG_PCI_HCI
@@ -346,7 +348,6 @@ static inline int _os_mem_cmp(void *d, const void *dest, const void *src, size_t
 
 	return memcmp(dest, src, size);
 }
-
 static inline void _os_init_timer(void *d, _os_timer *timer,
 		void (*call_back_func)(void *context), void *context,
 		const char *sz_id)
@@ -430,7 +431,11 @@ static __inline void _os_event_set(void *h, _os_event *event)
 	complete(event);
 }
 
-/* return value
+/*
+ * m_sec
+ * 	== 0 : wait for completion
+ * 	>  0 : wait for timeout or completion
+ * return value
  * 	0:timeout
  * 	otherwise:success
  */
@@ -438,10 +443,15 @@ static __inline int _os_event_wait(void *h, _os_event *event, u32 m_sec)
 {
 	unsigned long expire;
 
-	expire = msecs_to_jiffies(m_sec);
+	if (m_sec) {
+		expire = msecs_to_jiffies(m_sec);
 
-	if (expire > MAX_SCHEDULE_TIMEOUT)
+		if (expire > MAX_SCHEDULE_TIMEOUT)
+			expire = MAX_SCHEDULE_TIMEOUT;
+	}
+	else {
 		expire = MAX_SCHEDULE_TIMEOUT;
+	}
 
 	expire = wait_for_completion_timeout(event, expire);
 
@@ -498,15 +508,10 @@ static inline int _os_test_and_clear_bit(int nr, unsigned long *addr)
 {
 	return rtw_test_and_clear_bit(nr, addr);
 }
-
-// NEO : TODO
-#if 0
 static inline int _os_test_and_set_bit(int nr, unsigned long *addr)
 {
 	return rtw_test_and_set_bit(nr, addr);
 }
-#endif
-
 /* Atomic integer operations */
 static inline void _os_atomic_set(void *d, _os_atomic *v, int i)
 {
@@ -571,14 +576,11 @@ static inline u8 _os_tasklet_init(void *drv_priv, _os_tasklet *task,
 			 (unsigned long)task);
 	return 0;
 }
-
 static inline u8 _os_tasklet_deinit(void *drv_priv, _os_tasklet *task)
 {
 	rtw_tasklet_kill(task);
 	return 0;
 }
-
-
 static inline u8 _os_tasklet_schedule(void *drv_priv, _os_tasklet *task)
 {
 	#if 1
@@ -603,7 +605,6 @@ static __inline u8 _os_thread_init(	void *drv_priv, _os_thread *thread,
 
 	return RTW_PHL_STATUS_FAILURE;
 }
-
 static __inline u8 _os_thread_deinit(void *drv_priv, _os_thread *thread)
 {
 	if (CHK_THREAD_STATUS(thread, THREAD_STATUS_STARTED)) {
@@ -613,7 +614,6 @@ static __inline u8 _os_thread_deinit(void *drv_priv, _os_thread *thread)
 
 	return RTW_PHL_STATUS_SUCCESS;
 }
-
 static __inline enum rtw_phl_status _os_thread_schedule(void *drv_priv, _os_thread *thread)
 {
 	return RTW_PHL_STATUS_SUCCESS;
@@ -738,8 +738,8 @@ static __inline void os_enable_usb_out_pipes(void *drv_priv)
 
 static __inline void os_disable_usb_out_pipes(void *drv_priv)
 {
-    /* Free bulkout urb */
-    rtw_usb_write_port_cancel(drv_priv);
+	/* Free bulkout urb */
+	rtw_usb_write_port_cancel(drv_priv);
 }
 
 static __inline u8 os_in_token_alloc(void *drv_priv)
@@ -769,6 +769,7 @@ static __inline void os_disable_usb_in_pipes(void *drv_priv)
 	// Cancel Pending IN IRPs.
 	rtw_usb_read_port_cancel(drv_priv);
 }
+
 
 #endif /*CONFIG_USB_HCI*/
 

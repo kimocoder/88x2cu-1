@@ -165,8 +165,7 @@ rtw_phl_stainfo_link_notify(void *phl, struct rtw_wifi_role_t *wrole, bool add, 
 
 enum rtw_phl_status
 rtw_phl_query_rainfo(void *phl, struct rtw_phl_stainfo_t *phl_sta,
-		     enum rtw_data_rate *auto_rate, enum channel_width *bw,
-		     enum rtw_gi_ltf *gi_ltf);
+		     struct rtw_phl_rainfo *ra_info);
 
 /*macid management section, temporary for debuge*/
 u16
@@ -247,6 +246,9 @@ enum rtw_phl_status rtw_phl_set_bk_module_info(void *phl, u8 band_idx,
 		enum phl_module_id id,	struct phl_module_op_info* op_info);
 enum rtw_phl_status rtw_phl_query_bk_module_info(void *phl, u8 band_idx,
 		enum phl_module_id id,	struct phl_module_op_info* op_info);
+enum rtw_phl_status rtw_phl_set_msg_disp_seq(void *phl,
+						struct phl_msg_attribute *attr,
+						struct msg_self_def_seq* seq);
 
 /* BA session management */
 void rtw_phl_stop_rx_ba_session(void *phl, struct rtw_phl_stainfo_t *sta,
@@ -348,6 +350,7 @@ enum rtw_phl_status rtw_phl_query_chan_info(void *phl, u32 buf_len,
 void rtw_phl_set_edcca_mode(void *phl, enum rtw_edcca_mode mode);
 enum rtw_edcca_mode rtw_phl_get_edcca_mode(void *phl);
 
+bool rtw_phl_set_user_def_chplan(void *phl, struct rtw_user_def_chplan *udef);
 bool rtw_phl_valid_regulation_domain(u8 domain);
 bool rtw_phl_regulation_set_domain(void *phl, u8 domain,
 				       	enum regulation_rsn reason);
@@ -560,14 +563,25 @@ rtw_phl_snd_cmd_set_vht_gid(void *phl,
 			struct rtw_wifi_role_t *wrole,
 			struct rtw_phl_gid_pos_tbl *tbl);
 
+enum rtw_phl_status
+rtw_phl_snd_cmd_set_vht_gid(void *phl,
+			struct rtw_wifi_role_t *wrole,
+			struct rtw_phl_gid_pos_tbl *tbl);
+
 void rtw_phl_event_notify(void *phl, enum phl_msg_evt_id event,
 			struct rtw_wifi_role_t *wrole);
 void rtw_phl_notification(void *phl,
                           enum phl_msg_evt_id event,
                           struct rtw_wifi_role_t *wrole);
 
-//NEO : rtw_phl_cmd_force_usb_switch
-enum rtw_phl_status rtw_phl_force_usb_switch(void *phl, u32 speed);
+enum rtw_phl_status
+rtw_phl_cmd_force_usb_switch(void *phl, u32 speed,
+				enum phl_band_idx band_idx,
+				enum phl_cmd_type cmd_type, u32 cmd_timeout);
+//NEO
+enum rtw_phl_status
+rtw_phl_force_usb_switch(void *phl, u32 speed);
+
 enum rtw_phl_status
 rtw_phl_cmd_get_usb_speed(void *phl, u32* speed,
 				enum phl_band_idx band_idx,
@@ -576,5 +590,7 @@ enum rtw_phl_status
 rtw_phl_cmd_get_usb_support_ability(void *phl, u32* ability,
 				enum phl_band_idx band_idx,
 				enum phl_cmd_type cmd_type, u32 cmd_timeout);
+u8 rtw_phl_get_sta_mgnt_rssi(struct rtw_phl_stainfo_t *psta);
+
 #endif /*_PHL_API_H_*/
 

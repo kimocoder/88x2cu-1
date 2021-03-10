@@ -608,6 +608,10 @@ enum rtw_pcie_bus_func_cap_t {
 	 (_TYPE == RTW_FRAME_TYPE_ASOC_RESP) || \
 	 (_TYPE == RTW_FRAME_TYPE_ASOC_REQ)) ? true : false
 
+#define RTW_IS_BEACON_OR_PROBE_RESP_PKT(_TYPE) \
+	((_TYPE == RTW_FRAME_TYPE_BEACON) || \
+	 (_TYPE == RTW_FRAME_TYPE_PROBE_RESP)) ? true : false
+
 #define TU 1024 /* Time Unit (TU): 1024 us*/
 
 #endif /*_RTW_GENERAL_DEF_H_*/

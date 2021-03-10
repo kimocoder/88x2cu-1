@@ -658,9 +658,10 @@ extern void rtw_softap_lock_suspend(void);
 extern void rtw_softap_unlock_suspend(void);
 #endif
 
-extern void rtw_set_bit(int nr, unsigned long *addr);
-extern void rtw_clear_bit(int nr, unsigned long *addr);
-extern int rtw_test_and_clear_bit(int nr, unsigned long *addr);
+void rtw_set_bit(int nr, unsigned long *addr);
+void rtw_clear_bit(int nr, unsigned long *addr);
+int rtw_test_and_clear_bit(int nr, unsigned long *addr);
+int rtw_test_and_set_bit(int nr, unsigned long *addr);
 
 extern void ATOMIC_SET(ATOMIC_T *v, int i);
 extern int ATOMIC_READ(ATOMIC_T *v);

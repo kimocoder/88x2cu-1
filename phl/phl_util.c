@@ -165,7 +165,6 @@ u8 pq_insert(void *d, struct phl_queue *q, enum lock_type type, void *priv, _os_
 	_os_spinunlock(d, &q->lock, type, &sp_flags);
 	return true;
 }
-
 u32 phl_get_passing_time_us(u32 start)
 {
 	u32 now = _os_get_cur_time_us();
@@ -199,3 +198,22 @@ u32 phl_get_passing_time_ms(u32 start)
 
 	return pass;
 }
+
+#ifdef RTW_WKARD_DYNAMIC_LTR
+u32 phl_get_passing_performance_time_us(u32 start)
+{
+	u32 now = _os_get_performance_time_us();
+	u32 pass = 0;
+
+	if (now == start)
+		pass = 0;
+	else if (now > start)
+		/* -- start -- now -- */
+		pass = now - start;
+	else
+		/* -- now -- start -- */
+		pass = RTW_U32_MAX - start + now;
+
+	return pass;
+}
+#endif

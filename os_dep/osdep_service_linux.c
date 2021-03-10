@@ -362,6 +362,8 @@ inline void rtw_lock_traffic_suspend_timeout(u32 timeout_ms)
 	/* RTW_INFO("traffic lock timeout:%d\n", timeout_ms); */
 }
 
+#endif // if 0 NEO
+
 inline void rtw_set_bit(int nr, unsigned long *addr)
 {
 	set_bit(nr, addr);
@@ -380,6 +382,8 @@ inline int rtw_test_and_set_bit(int nr, unsigned long *addr)
 {
 	return test_and_set_bit(nr, addr);
 }
+
+#if 0 // NEO
 /*
 * Open a file with the specific @param path, @param flag, @param mode
 * @param fpp the pointer of struct file pointer to get struct file pointer while file opening is success
