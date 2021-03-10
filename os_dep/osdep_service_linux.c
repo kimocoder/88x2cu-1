@@ -15,7 +15,6 @@
 #define _OSDEP_SERVICE_LINUX_C_
 #include <drv_types.h>
 
-
 #ifdef DBG_MEMORY_LEAK
 ATOMIC_T _malloc_cnt = ATOMIC_INIT(0);
 ATOMIC_T _malloc_size = ATOMIC_INIT(0);
@@ -176,8 +175,6 @@ inline bool _rtw_time_after(systime a, systime b)
 {
 	return time_after(a, b);
 }
-
-#if 0 // NEO mark off first
 
 void rtw_sleep_schedulable(int ms)
 {
@@ -362,8 +359,6 @@ inline void rtw_lock_traffic_suspend_timeout(u32 timeout_ms)
 	/* RTW_INFO("traffic lock timeout:%d\n", timeout_ms); */
 }
 
-#endif // if 0 NEO
-
 inline void rtw_set_bit(int nr, unsigned long *addr)
 {
 	set_bit(nr, addr);
@@ -382,8 +377,6 @@ inline int rtw_test_and_set_bit(int nr, unsigned long *addr)
 {
 	return test_and_set_bit(nr, addr);
 }
-
-#if 0 // NEO
 /*
 * Open a file with the specific @param path, @param flag, @param mode
 * @param fpp the pointer of struct file pointer to get struct file pointer while file opening is success
@@ -448,6 +441,7 @@ static int readFile(struct file *fp, char *buf, int len)
 
 }
 
+#ifndef CONFIG_RTW_ANDROID
 static int writeFile(struct file *fp, char *buf, int len)
 {
 	int wlen = 0, sum = 0;
@@ -492,6 +486,7 @@ static int isDirReadable(const char *pathname, u32 *sz)
 
 	return kern_path(pathname, LOOKUP_FOLLOW, &path);
 }
+#endif /* CONFIG_RTW_ANDROID */
 
 /*
 * Test if the specifi @param path is a file and readable
@@ -587,6 +582,7 @@ static int retriveFromFile(const char *path, u8 *buf, u32 sz)
 	return ret;
 }
 
+#ifndef CONFIG_RTW_ANDROID
 /*
 * Open the file with @param path and wirte @param sz byte of data starting from @param buf into the file
 * @param path the path of the file to open and write
@@ -634,7 +630,6 @@ static int storeToFile(const char *path, u8 *buf, u32 sz)
 	return ret;
 }
 
-
 /*
 * Test if the specifi @param path is a direct and readable
 * @param path the path of the direct to test
@@ -647,6 +642,7 @@ int rtw_is_dir_readable(const char *path)
 	else
 		return _FALSE;
 }
+#endif /* CONFIG_RTW_ANDROID */
 
 /*
 * Test if the specifi @param path is a file and readable
@@ -689,6 +685,7 @@ int rtw_retrieve_from_file(const char *path, u8 *buf, u32 sz)
 	return ret >= 0 ? ret : 0;
 }
 
+#ifndef CONFIG_RTW_ANDROID
 /*
 * Open the file with @param path and wirte @param sz byte of data starting from @param buf into the file
 * @param path the path of the file to open and write
@@ -701,6 +698,7 @@ int rtw_store_to_file(const char *path, u8 *buf, u32 sz)
 	int ret = storeToFile(path, buf, sz);
 	return ret >= 0 ? ret : 0;
 }
+#endif /* CONFIG_RTW_ANDROID */
 
 struct net_device *rtw_alloc_etherdev_with_old_priv(int sizeof_priv, void *old_priv)
 {
@@ -768,8 +766,6 @@ RETURN:
 	return;
 }
 
-#if 0 // NEO mark off first 
-
 int rtw_change_ifname(_adapter *padapter, const char *ifname)
 {
 	struct dvobj_priv *dvobj;
@@ -830,8 +826,6 @@ error:
 
 }
 
-#endif // if 0
-
 #ifdef CONFIG_PLATFORM_SPRD
 #ifdef do_div
 	#undef do_div
@@ -862,5 +856,3 @@ inline u32 rtw_random32(void)
 	return random32();
 #endif
 }
-
-#endif // if 0 NEO
