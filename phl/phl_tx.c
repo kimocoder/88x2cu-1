@@ -1506,7 +1506,7 @@ phl_tx_watchdog(struct phl_info_t *phl_info)
 	trx_ops->tx_watchdog(phl_info);
 }
 
-#if 0 // TODO NEO mark off first
+#if 0 // NEO 
 enum rtw_phl_status
 _phl_poll_hw_tx_done(void)
 {
@@ -1864,6 +1864,7 @@ _phl_trx_pause_w_rst(struct phl_info_t *phl_info, struct phl_data_ctl_t *ctl,
 
 	return sts;
 }
+#endif // if 0 NEO
 
 enum rtw_phl_status
 phl_data_ctrler(struct phl_info_t *phl_info, struct phl_data_ctl_t *ctl,
@@ -1876,6 +1877,9 @@ phl_data_ctrler(struct phl_info_t *phl_info, struct phl_data_ctl_t *ctl,
 		return RTW_PHL_STATUS_FAILURE;
 	}
 
+	RTW_INFO("%s NEO TODO\n", __func__);
+	return RTW_PHL_STATUS_SUCCESS;
+#if 0 // NEO
 	switch (ctl->cmd) {
 	case PHL_DATA_CTL_HW_TRX_RST_RESUME:
 		sts = _phl_hw_trx_rst_resume(phl_info);
@@ -1915,6 +1919,6 @@ phl_data_ctrler(struct phl_info_t *phl_info, struct phl_data_ctl_t *ctl,
 		break;
 	}
 	return sts;
-}
 #endif // if 0 NEO
+}
 

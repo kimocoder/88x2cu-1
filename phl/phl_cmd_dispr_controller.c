@@ -34,6 +34,291 @@
  * non-dispr phl module : Data path (TX/Rx), etc
  * phl mgnt status : stop/surprise remove/cannot io
 */
+
+enum phl_mdl_ret_code _dispr_resume_io_ctrl(struct phl_info_t *phl_info,
+					    struct phl_msg *msg)
+{
+	enum phl_mdl_ret_code ret = MDL_RET_IGNORE;
+	enum rtw_phl_status sts = RTW_PHL_STATUS_FAILURE;
+	struct phl_data_ctl_t ctl = {0};
+
+	do {
+		ctl.cmd = PHL_DATA_CTL_SW_TX_RESUME;
+		ctl.id = MSG_MDL_ID_FIELD(msg->msg_id);
+		sts = phl_data_ctrler(phl_info, &ctl, msg);
+		if (RTW_PHL_STATUS_SUCCESS != sts) {
+			PHL_TRACE(COMP_PHL_XMIT, _PHL_WARNING_,
+				  "[DATA_CTRL] SW Tx paused by module(%d) resume fail by module(%d) with event(%d)\n",
+				  phl_info->pause_tx_id, ctl.id,
+				  MSG_EVT_ID_FIELD(msg->msg_id));
+			ret = MDL_RET_FAIL;
+			break;
+		}
+
+		ctl.cmd = PHL_DATA_CTL_SW_RX_RESUME;
+		ctl.id = MSG_MDL_ID_FIELD(msg->msg_id);
+		sts = phl_data_ctrler(phl_info, &ctl, msg);
+		if (RTW_PHL_STATUS_SUCCESS != sts) {
+			PHL_TRACE(COMP_PHL_RECV, _PHL_WARNING_,
+				  "[DATA_CTRL] SW Rx paused by module(%d) resume fail by module(%d) with event(%d)\n",
+				  phl_info->pause_rx_id, ctl.id,
+				  MSG_EVT_ID_FIELD(msg->msg_id));
+			ret = MDL_RET_FAIL;
+			break;
+		}
+
+		ret = MDL_RET_SUCCESS;
+	} while (false);
+
+	return ret;
+}
+
+
+enum phl_mdl_ret_code _dispr_cannot_io_ctrl(struct phl_info_t *phl_info,
+					    struct phl_msg *msg)
+{
+	enum phl_mdl_ret_code ret = MDL_RET_IGNORE;
+	enum rtw_phl_status sts = RTW_PHL_STATUS_FAILURE;
+	struct phl_data_ctl_t ctl = {0};
+
+	ctl.cmd = PHL_DATA_CTL_TRX_PAUSE;
+	ctl.id = MSG_MDL_ID_FIELD(msg->msg_id);
+	sts = phl_data_ctrler(phl_info, &ctl, msg);
+	if (RTW_PHL_STATUS_SUCCESS != sts) {
+		PHL_TRACE(COMP_PHL_XMIT, _PHL_WARNING_,
+			  "[DATA_CTRL] SW T/Rx pause fail by module(%d) with event(%d)\n",
+			  ctl.id, MSG_EVT_ID_FIELD(msg->msg_id));
+		ret = MDL_RET_FAIL;
+	} else {
+		ret = MDL_RET_SUCCESS;
+	}
+
+	return ret;
+}
+
+enum phl_mdl_ret_code _dispr_hw_trx_rst_resume_ctrl(struct phl_info_t *phl_info,
+						    struct phl_msg *msg)
+{
+	enum phl_mdl_ret_code ret = MDL_RET_IGNORE;
+	enum rtw_phl_status sts = RTW_PHL_STATUS_FAILURE;
+	struct phl_data_ctl_t ctl = {0};
+
+	ctl.cmd = PHL_DATA_CTL_HW_TRX_RST_RESUME;
+	ctl.id = MSG_MDL_ID_FIELD(msg->msg_id);
+	sts = phl_data_ctrler(phl_info, &ctl, msg);
+	if (RTW_PHL_STATUS_SUCCESS != sts) {
+		PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
+			  "[DATA_CTRL] HW T/Rx reset and resume fail by module(%d) with event(%d)\n",
+			  ctl.id, MSG_EVT_ID_FIELD(msg->msg_id));
+		ret = MDL_RET_FAIL;
+	} else {
+		ret = MDL_RET_SUCCESS;
+	}
+
+	return ret;
+}
+
+enum phl_mdl_ret_code _dispr_hw_trx_pause_ctrl(struct phl_info_t *phl_info,
+					       struct phl_msg *msg)
+{
+	enum phl_mdl_ret_code ret = MDL_RET_IGNORE;
+	enum rtw_phl_status sts = RTW_PHL_STATUS_FAILURE;
+	struct phl_data_ctl_t ctl = {0};
+
+	ctl.cmd = PHL_DATA_CTL_HW_TRX_PAUSE;
+	ctl.id = MSG_MDL_ID_FIELD(msg->msg_id);
+	sts = phl_data_ctrler(phl_info, &ctl, msg);
+	if (RTW_PHL_STATUS_SUCCESS != sts) {
+		PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
+			  "[DATA_CTRL] HW T/Rx pause fail by module(%d) with event(%d)\n",
+			  ctl.id, MSG_EVT_ID_FIELD(msg->msg_id));
+		ret = MDL_RET_FAIL;
+	} else {
+		ret = MDL_RET_SUCCESS;
+	}
+
+	return ret;
+}
+
+enum phl_mdl_ret_code _dispr_sw_tx_resume_ctrl(struct phl_info_t *phl_info,
+					       struct phl_msg *msg)
+{
+	enum phl_mdl_ret_code ret = MDL_RET_IGNORE;
+	enum rtw_phl_status sts = RTW_PHL_STATUS_FAILURE;
+	struct phl_data_ctl_t ctl = {0};
+
+	ctl.cmd = PHL_DATA_CTL_SW_TX_RESUME;
+	ctl.id = MSG_MDL_ID_FIELD(msg->msg_id);
+	sts = phl_data_ctrler(phl_info, &ctl, msg);
+	if (RTW_PHL_STATUS_SUCCESS != sts) {
+		PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
+			  "[DATA_CTRL] SW Tx paused by module(%d) resume fail by module(%d) with event(%d)\n",
+			  phl_info->pause_tx_id, ctl.id,
+			  MSG_EVT_ID_FIELD(msg->msg_id));
+		ret = MDL_RET_FAIL;
+	} else {
+		ret = MDL_RET_SUCCESS;
+	}
+
+	return ret;
+}
+
+enum phl_mdl_ret_code _dispr_sw_rx_resume_ctrl(struct phl_info_t *phl_info,
+					       struct phl_msg *msg)
+{
+	enum phl_mdl_ret_code ret = MDL_RET_IGNORE;
+	enum rtw_phl_status sts = RTW_PHL_STATUS_FAILURE;
+	struct phl_data_ctl_t ctl = {0};
+
+	ctl.cmd = PHL_DATA_CTL_SW_RX_RESUME;
+	ctl.id = MSG_MDL_ID_FIELD(msg->msg_id);
+	sts = phl_data_ctrler(phl_info, &ctl, msg);
+	if (RTW_PHL_STATUS_SUCCESS != sts) {
+		PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
+			  "[DATA_CTRL] SW Rx paused by module(%d) resume fail by module(%d) with event(%d)\n",
+			  phl_info->pause_rx_id, ctl.id,
+			  MSG_EVT_ID_FIELD(msg->msg_id));
+		ret = MDL_RET_FAIL;
+	} else {
+		ret = MDL_RET_SUCCESS;
+	}
+
+	return ret;
+}
+
+enum phl_mdl_ret_code _dispr_sw_tx_pause_ctrl(struct phl_info_t *phl_info,
+					      struct phl_msg *msg)
+{
+	enum phl_mdl_ret_code ret = MDL_RET_IGNORE;
+	enum rtw_phl_status sts = RTW_PHL_STATUS_FAILURE;
+	struct phl_data_ctl_t ctl = {0};
+
+	ctl.cmd = PHL_DATA_CTL_SW_TX_PAUSE;
+	ctl.id = MSG_MDL_ID_FIELD(msg->msg_id);
+	sts = phl_data_ctrler(phl_info, &ctl, msg);
+	if (RTW_PHL_STATUS_SUCCESS != sts) {
+		PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
+			  "[DATA_CTRL] SW Tx pause fail by module(%d) with event(%d)\n",
+			  ctl.id, MSG_EVT_ID_FIELD(msg->msg_id));
+		ret = MDL_RET_FAIL;
+	} else {
+		ret = MDL_RET_SUCCESS;
+	}
+
+	return ret;
+}
+
+enum phl_mdl_ret_code _dispr_sw_rx_pause_ctrl(struct phl_info_t *phl_info,
+					      struct phl_msg *msg)
+{
+	enum phl_mdl_ret_code ret = MDL_RET_IGNORE;
+	enum rtw_phl_status sts = RTW_PHL_STATUS_FAILURE;
+	struct phl_data_ctl_t ctl = {0};
+
+	ctl.cmd = PHL_DATA_CTL_SW_RX_PAUSE;
+	ctl.id = MSG_MDL_ID_FIELD(msg->msg_id);
+	sts = phl_data_ctrler(phl_info, &ctl, msg);
+	if (RTW_PHL_STATUS_SUCCESS != sts) {
+		PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
+			  "[DATA_CTRL] SW Rx pause fail by module(%d) with event(%d)\n",
+			  ctl.id, MSG_EVT_ID_FIELD(msg->msg_id));
+		ret = MDL_RET_FAIL;
+	} else {
+		ret = MDL_RET_SUCCESS;
+	}
+
+	return ret;
+}
+
+enum phl_mdl_ret_code _dispr_sw_tx_reset_ctrl(struct phl_info_t *phl_info,
+					      struct phl_msg *msg)
+{
+	enum phl_mdl_ret_code ret = MDL_RET_IGNORE;
+	enum rtw_phl_status sts = RTW_PHL_STATUS_FAILURE;
+	struct phl_data_ctl_t ctl = {0};
+
+	ctl.cmd = PHL_DATA_CTL_SW_TX_RESET;
+	ctl.id = MSG_MDL_ID_FIELD(msg->msg_id);
+	sts = phl_data_ctrler(phl_info, &ctl, msg);
+	if (RTW_PHL_STATUS_SUCCESS != sts) {
+		PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
+			  "[DATA_CTRL] SW Tx reset fail by module(%d) with event(%d)\n",
+			  ctl.id, MSG_EVT_ID_FIELD(msg->msg_id));
+		ret = MDL_RET_FAIL;
+	} else {
+		ret = MDL_RET_SUCCESS;
+	}
+
+	return ret;
+}
+
+enum phl_mdl_ret_code _dispr_sw_rx_reset_ctrl(struct phl_info_t *phl_info,
+					      struct phl_msg *msg)
+{
+	enum phl_mdl_ret_code ret = MDL_RET_IGNORE;
+	enum rtw_phl_status sts = RTW_PHL_STATUS_FAILURE;
+	struct phl_data_ctl_t ctl = {0};
+
+	ctl.cmd = PHL_DATA_CTL_SW_RX_RESET;
+	ctl.id = MSG_MDL_ID_FIELD(msg->msg_id);
+	sts = phl_data_ctrler(phl_info, &ctl, msg);
+	if (RTW_PHL_STATUS_SUCCESS != sts) {
+		PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
+			  "[DATA_CTRL] SW Rx reset fail by module(%d) with event(%d)\n",
+			  ctl.id, MSG_EVT_ID_FIELD(msg->msg_id));
+		ret = MDL_RET_FAIL;
+	} else {
+		ret = MDL_RET_SUCCESS;
+	}
+
+	return ret;
+}
+
+enum phl_mdl_ret_code _dispr_trx_pause_ctrl(struct phl_info_t *phl_info,
+					    struct phl_msg *msg)
+{
+	enum phl_mdl_ret_code ret = MDL_RET_IGNORE;
+	enum rtw_phl_status sts = RTW_PHL_STATUS_FAILURE;
+	struct phl_data_ctl_t ctl = {0};
+
+	ctl.cmd = PHL_DATA_CTL_TRX_PAUSE;
+	ctl.id = MSG_MDL_ID_FIELD(msg->msg_id);
+	sts = phl_data_ctrler(phl_info, &ctl, msg);
+	if (RTW_PHL_STATUS_SUCCESS != sts) {
+		PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
+			  "[DATA_CTRL] SW T/Rx pause fail by module(%d) with event(%d)\n",
+			  ctl.id, MSG_EVT_ID_FIELD(msg->msg_id));
+		ret = MDL_RET_FAIL;
+	} else {
+		ret = MDL_RET_SUCCESS;
+	}
+
+	return ret;
+}
+
+enum phl_mdl_ret_code _dispr_trx_pause_w_rst_ctrl(struct phl_info_t *phl_info,
+						  struct phl_msg *msg)
+{
+	enum phl_mdl_ret_code ret = MDL_RET_IGNORE;
+	enum rtw_phl_status sts = RTW_PHL_STATUS_FAILURE;
+	struct phl_data_ctl_t ctl = {0};
+
+	ctl.cmd = PHL_DATA_CTL_TRX_PAUSE_W_RST;
+	ctl.id = MSG_MDL_ID_FIELD(msg->msg_id);
+	sts = phl_data_ctrler(phl_info, &ctl, msg);
+	if (RTW_PHL_STATUS_SUCCESS != sts) {
+		PHL_TRACE(COMP_PHL_DBG, _PHL_WARNING_,
+			  "[DATA_CTRL] SW T/Rx pause with reset fail by module(%d) with event(%d)\n",
+			  ctl.id, MSG_EVT_ID_FIELD(msg->msg_id));
+		ret = MDL_RET_FAIL;
+	} else {
+		ret = MDL_RET_SUCCESS;
+	}
+
+	return ret;
+}
+
+
 enum phl_mdl_ret_code _dispr_ctrl_init(void *phl, void *dispr,
 						  void **priv)
 {
@@ -79,19 +364,13 @@ static enum phl_mdl_ret_code _internal_msg_hdlr(void *dispr, struct phl_info_t *
 	/* sender is controller itself */
 	switch (MSG_EVT_ID_FIELD(msg->msg_id)) {
 	case MSG_EVT_DEV_RESUME_IO:
-		ret = MDL_RET_SUCCESS;
-	break;
-
+		ret = _dispr_resume_io_ctrl(phl_info, msg);
+		break;
 	case MSG_EVT_DEV_CANNOT_IO:
-		ret = MDL_RET_SUCCESS;
-	break;
-
-	case MSG_EVT_TX_RESUME:
-		ret = MDL_RET_SUCCESS;
-	break;
-
+		ret = _dispr_cannot_io_ctrl(phl_info, msg);
+		break;
 	default:
-	break;
+		break;
 	}
 
 	return ret;
@@ -107,10 +386,42 @@ _external_msg_hdlr(void *dispr,
 
 	if (phl_com->dev_state & ~(RTW_DEV_WORKING)) {
 		PHL_TRACE(COMP_PHL_CMDDISP, _PHL_INFO_, "Controller: msg fail due to invalid device state\n");
+		return MDL_RET_FAIL;
+	}
 
-		ret = MDL_RET_FAIL;
-	} else {
-		ret = MDL_RET_SUCCESS;
+	switch (MSG_EVT_ID_FIELD(msg->msg_id)) {
+	case MSG_EVT_HW_TRX_RST_RESUME:
+		ret = _dispr_hw_trx_rst_resume_ctrl(phl_info, msg);
+		break;
+	case MSG_EVT_HW_TRX_PAUSE:
+		ret = _dispr_hw_trx_pause_ctrl(phl_info, msg);
+		break;
+	case MSG_EVT_SW_TX_RESUME:
+		ret = _dispr_sw_tx_resume_ctrl(phl_info, msg);
+		break;
+	case MSG_EVT_SW_RX_RESUME:
+		ret = _dispr_sw_rx_resume_ctrl(phl_info, msg);
+		break;
+	case MSG_EVT_SW_TX_PAUSE:
+		ret = _dispr_sw_tx_pause_ctrl(phl_info, msg);
+		break;
+	case MSG_EVT_SW_RX_PAUSE:
+		ret = _dispr_sw_rx_pause_ctrl(phl_info, msg);
+		break;
+	case MSG_EVT_SW_TX_RESET:
+		ret = _dispr_sw_tx_reset_ctrl(phl_info, msg);
+		break;
+	case MSG_EVT_SW_RX_RESET:
+		ret = _dispr_sw_rx_reset_ctrl(phl_info, msg);
+		break;
+	case MSG_EVT_TRX_PAUSE:
+		ret = _dispr_trx_pause_ctrl(phl_info, msg);
+		break;
+	case MSG_EVT_TRX_PAUSE_W_RST:
+		ret = _dispr_trx_pause_w_rst_ctrl(phl_info, msg);
+		break;
+	default:
+		break;
 	}
 
 	return ret;
