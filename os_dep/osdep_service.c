@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright(c) 2007 - 2017 Realtek Corporation.
+ * Copyright(c) 2007 - 2019 Realtek Corporation.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -12,20 +12,9 @@
  * more details.
  *
  *****************************************************************************/
-
-
 #define _OSDEP_SERVICE_C_
 
 #include <drv_types.h>
-
-#define RT_TAG	'1178'
-
-#ifdef DBG_MEMORY_LEAK
-#ifdef PLATFORM_LINUX
-atomic_t _malloc_cnt = ATOMIC_INIT(0);
-atomic_t _malloc_size = ATOMIC_INIT(0);
-#endif
-#endif /* DBG_MEMORY_LEAK */
 
 #ifdef CONFIG_HWSIM
 #include "rtw_hwsim_intf.h"
@@ -191,7 +180,7 @@ void rtw_mstat_update(const enum mstat_f flags, const MSTAT_STATUS status, u32 s
 }
 
 #ifndef SIZE_MAX
-	#define SIZE_MAX (~(size_t)0)
+#define SIZE_MAX (~(size_t)0)
 #endif
 
 struct mstat_sniff_rule {
@@ -582,7 +571,7 @@ void _rtw_deinit_queue(_queue *pqueue)
 	_rtw_spinlock_free(&(pqueue->lock));
 }
 
-u32	  _rtw_queue_empty(_queue	*pqueue)
+u32 _rtw_queue_empty(_queue	*pqueue)
 {
 	return rtw_is_list_empty(&(pqueue->queue));
 }
@@ -625,6 +614,7 @@ bool rtw_macaddr_is_larger(const u8 *a, const u8 *b)
 
 	return be16_to_cpu(*((u16 *)(a + 4))) > be16_to_cpu(*((u16 *)(b + 4)));
 }
+
 
 /*
 * Test if the specifi @param path is a readable file with valid size.
@@ -1164,5 +1154,4 @@ int hexstr2bin(const char *hex, u8 *buf, size_t len)
 	}
 	return 0;
 }
-
 
