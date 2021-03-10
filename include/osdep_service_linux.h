@@ -911,6 +911,71 @@ static inline int rtw_merge_string(char *dst, int dst_len, const char *src1, con
 /* Atomic integer operations */
 #define ATOMIC_T atomic_t
 
+/* Atomic integer operations */
+static inline void ATOMIC_SET(ATOMIC_T *v, int i)
+{
+	atomic_set(v, i);
+}
+
+static inline int ATOMIC_READ(ATOMIC_T *v)
+{
+	return atomic_read(v);
+}
+
+static inline void ATOMIC_ADD(ATOMIC_T *v, int i)
+{
+	atomic_add(i, v);
+}
+static inline void ATOMIC_SUB(ATOMIC_T *v, int i)
+{
+	atomic_sub(i, v);
+}
+
+static inline void ATOMIC_INC(ATOMIC_T *v)
+{
+	atomic_inc(v);
+}
+
+static inline void ATOMIC_DEC(ATOMIC_T *v)
+{
+	atomic_dec(v);
+}
+
+static inline int ATOMIC_ADD_RETURN(ATOMIC_T *v, int i)
+{
+	return atomic_add_return(i, v);
+}
+
+static inline int ATOMIC_SUB_RETURN(ATOMIC_T *v, int i)
+{
+	return atomic_sub_return(i, v);
+}
+
+static inline int ATOMIC_INC_RETURN(ATOMIC_T *v)
+{
+	return atomic_inc_return(v);
+}
+
+static inline int ATOMIC_DEC_RETURN(ATOMIC_T *v)
+{
+	return atomic_dec_return(v);
+}
+
+static inline bool ATOMIC_INC_UNLESS(ATOMIC_T *v, int u)
+{
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 15))
+	return atomic_add_unless(v, 1, u);
+#else
+	/* only make sure not exceed after this function */
+	if (ATOMIC_INC_RETURN(v) > u) {
+		ATOMIC_DEC(v);
+		return 0;
+	}
+	return 1;
+#endif
+}
+
+
 #define rtw_netdev_priv(netdev) (((struct rtw_netdev_priv_indicator *)netdev_priv(netdev))->priv)
 
 #define NDEV_FMT "%s"

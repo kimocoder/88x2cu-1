@@ -27,6 +27,15 @@ atomic_t _malloc_size = ATOMIC_INIT(0);
 #endif
 #endif /* DBG_MEMORY_LEAK */
 
+#ifdef CONFIG_HWSIM
+#include "rtw_hwsim_intf.h"
+inline int _rtw_netif_rx(_nic_hdl ndev, struct sk_buff *skb)
+{
+	skb->dev = ndev;
+	rtw_hwsim_medium_pre_netif_rx(skb);
+	return netif_rx(skb);
+}
+#endif /* CONFIG_HWSIM */
 
 u32 rtw_atoi(u8 *s)
 {
@@ -192,7 +201,7 @@ struct mstat_sniff_rule {
 };
 
 struct mstat_sniff_rule mstat_sniff_rules[] = {
-	{MSTAT_TYPE_PHY, 4097, SIZE_MAX},
+	{MSTAT_TYPE_VIR, 32, 32},
 };
 
 int mstat_sniff_rule_num = sizeof(mstat_sniff_rules) / sizeof(struct mstat_sniff_rule);
@@ -311,6 +320,20 @@ inline void dbg_rtw_mfree(void *pbuf, u32 sz, const enum mstat_f flags, const ch
 	);
 }
 
+inline void dbg_rtw_skb_mstat_aid(struct sk_buff *skb_head, const enum mstat_f flags, enum mstat_status status)
+{
+	unsigned int truesize = 0;
+	struct sk_buff *skb;
+
+	if (!skb_head)
+		return;
+
+	rtw_mstat_update(flags, status, skb_head->truesize);
+
+	skb_walk_frags(skb_head, skb)
+		rtw_mstat_update(flags, status, skb->truesize);
+}
+
 inline struct sk_buff *dbg_rtw_skb_alloc(unsigned int size, const enum mstat_f flags, const char *func, int line)
 {
 	struct sk_buff *skb;
@@ -340,13 +363,9 @@ inline void dbg_rtw_skb_free(struct sk_buff *skb, const enum mstat_f flags, cons
 	if (match_mstat_sniff_rules(flags, truesize))
 		RTW_INFO("DBG_MEM_ALLOC %s:%d %s, truesize=%u\n", func, line, __FUNCTION__, truesize);
 
-	_rtw_skb_free(skb);
+	dbg_rtw_skb_mstat_aid(skb, flags, MSTAT_FREE);
 
-	rtw_mstat_update(
-		flags
-		, MSTAT_FREE
-		, truesize
-	);
+	_rtw_skb_free(skb);
 }
 
 inline struct sk_buff *dbg_rtw_skb_copy(const struct sk_buff *skb, const enum mstat_f flags, const char *func, const int line)
@@ -577,7 +596,6 @@ u32 rtw_end_of_queue_search(_list *head, _list *plist)
 		return _FALSE;
 }
 
-
 /* the input parameter start use the same unit as returned by rtw_get_current_time */
 inline s32 _rtw_get_passing_time_ms(systime start)
 {
@@ -594,271 +612,6 @@ inline s32 _rtw_get_time_interval_ms(systime start, systime end)
 	return _rtw_systime_to_ms(end - start);
 }
 
-sysptime rtw_sptime_get(void)
-{
-	/* CLOCK_MONOTONIC */
-#ifdef PLATFORM_LINUX
-	#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 17, 0))
-	struct timespec64 cur;
-
-	ktime_get_ts64(&cur);
-	return timespec64_to_ktime(cur);
-	#else
-	struct timespec cur;
-
-	ktime_get_ts(&cur);
-	return timespec_to_ktime(cur);
-	#endif
-#else
-	#error "TBD\n"
-#endif
-}
-
-sysptime rtw_sptime_set(s64 secs, const u32 nsecs)
-{
-#ifdef PLATFORM_LINUX
-	return ktime_set(secs, nsecs);
-#else
-	#error "TBD\n"
-#endif
-}
-
-sysptime rtw_sptime_zero(void)
-{
-#ifdef PLATFORM_LINUX
-	return ktime_set(0, 0);
-#else
-	#error "TBD\n"
-#endif
-}
-
-/*
- *   cmp1  < cmp2: return <0
- *   cmp1 == cmp2: return 0
- *   cmp1  > cmp2: return >0
- */
-int rtw_sptime_cmp(const sysptime cmp1, const sysptime cmp2)
-{
-#ifdef PLATFORM_LINUX
-	#if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0))
-	return ktime_compare(cmp1, cmp2);
-	#else
-	if (cmp1.tv64 < cmp2.tv64)
-		return -1;
-	if (cmp1.tv64 > cmp2.tv64)
-		return 1;
-	return 0;
-	#endif
-#else
-	#error "TBD\n"
-#endif
-}
-
-bool rtw_sptime_eql(const sysptime cmp1, const sysptime cmp2)
-{
-#ifdef PLATFORM_LINUX
-	return rtw_sptime_cmp(cmp1, cmp2) == 0;
-#else
-	#error "TBD\n"
-#endif
-}
-
-bool rtw_sptime_is_zero(const sysptime sptime)
-{
-#ifdef PLATFORM_LINUX
-	return rtw_sptime_cmp(sptime, rtw_sptime_zero()) == 0;
-#else
-	#error "TBD\n"
-#endif
-}
-
-/*
- * sub = lhs - rhs, in normalized form
- */
-sysptime rtw_sptime_sub(const sysptime lhs, const sysptime rhs)
-{
-#ifdef PLATFORM_LINUX
-	return ktime_sub(lhs, rhs);
-#else
-	#error "TBD\n"
-#endif
-}
-
-/*
- * add = lhs + rhs, in normalized form
- */
-sysptime rtw_sptime_add(const sysptime lhs, const sysptime rhs)
-{
-#ifdef PLATFORM_LINUX
-	return ktime_add(lhs, rhs);
-#else
-	#error "TBD\n"
-#endif
-}
-
-s64 rtw_sptime_to_ms(const sysptime sptime)
-{
-#ifdef PLATFORM_LINUX
-	#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 35))
-	return ktime_to_ms(sptime);
-	#else
-	struct timeval tv = ktime_to_timeval(sptime);
-
-	return (s64) tv.tv_sec * MSEC_PER_SEC + tv.tv_usec / USEC_PER_MSEC;
-	#endif
-#else
-	#error "TBD\n"
-#endif
-}
-
-sysptime rtw_ms_to_sptime(u64 ms)
-{
-#ifdef PLATFORM_LINUX
-	return ns_to_ktime(ms * NSEC_PER_MSEC);
-#else
-	#error "TBD\n"
-#endif
-}
-
-s64 rtw_sptime_to_us(const sysptime sptime)
-{
-#ifdef PLATFORM_LINUX
-	#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 22))
-	return ktime_to_us(sptime);
-	#else
-	struct timeval tv = ktime_to_timeval(sptime);
-
-	return (s64) tv.tv_sec * USEC_PER_SEC + tv.tv_usec;
-	#endif
-#else
-	#error "TBD\n"
-#endif
-}
-
-sysptime rtw_us_to_sptime(u64 us)
-{
-#ifdef PLATFORM_LINUX
-	return ns_to_ktime(us * NSEC_PER_USEC);
-#else
-	#error "TBD\n"
-#endif
-}
-
-s64 rtw_sptime_to_ns(const sysptime sptime)
-{
-#ifdef PLATFORM_LINUX
-	return ktime_to_ns(sptime);
-#else
-	#error "TBD\n"
-#endif
-}
-
-sysptime rtw_ns_to_sptime(u64 ns)
-{
-#ifdef PLATFORM_LINUX
-	return ns_to_ktime(ns);
-#else
-	#error "TBD\n"
-#endif
-}
-
-s64 rtw_sptime_diff_ms(const sysptime start, const sysptime end)
-{
-	sysptime diff;
-
-	diff = rtw_sptime_sub(end, start);
-
-	return rtw_sptime_to_ms(diff);
-}
-
-s64 rtw_sptime_pass_ms(const sysptime start)
-{
-	sysptime cur, diff;
-
-	cur = rtw_sptime_get();
-	diff = rtw_sptime_sub(cur, start);
-
-	return rtw_sptime_to_ms(diff);
-}
-
-s64 rtw_sptime_diff_us(const sysptime start, const sysptime end)
-{
-	sysptime diff;
-
-	diff = rtw_sptime_sub(end, start);
-
-	return rtw_sptime_to_us(diff);
-}
-
-s64 rtw_sptime_pass_us(const sysptime start)
-{
-	sysptime cur, diff;
-
-	cur = rtw_sptime_get();
-	diff = rtw_sptime_sub(cur, start);
-
-	return rtw_sptime_to_us(diff);
-}
-
-s64 rtw_sptime_diff_ns(const sysptime start, const sysptime end)
-{
-	sysptime diff;
-
-	diff = rtw_sptime_sub(end, start);
-
-	return rtw_sptime_to_ns(diff);
-}
-
-s64 rtw_sptime_pass_ns(const sysptime start)
-{
-	sysptime cur, diff;
-
-	cur = rtw_sptime_get();
-	diff = rtw_sptime_sub(cur, start);
-
-	return rtw_sptime_to_ns(diff);
-}
-
-const char *_rtw_pwait_type_str[] = {
-	[RTW_PWAIT_TYPE_MSLEEP] = "MS",
-	[RTW_PWAIT_TYPE_USLEEP] = "US",
-	[RTW_PWAIT_TYPE_YIELD] = "Y",
-	[RTW_PWAIT_TYPE_MDELAY] = "MD",
-	[RTW_PWAIT_TYPE_UDELAY] = "UD",
-	[RTW_PWAIT_TYPE_NUM] = "unknown",
-};
-
-static void rtw_pwctx_yield(int us)
-{
-	rtw_yield_os();
-}
-
-static void (*const rtw_pwait_hdl[])(int)= {
-	[RTW_PWAIT_TYPE_MSLEEP] = rtw_msleep_os,
-	[RTW_PWAIT_TYPE_USLEEP] = rtw_usleep_os,
-	[RTW_PWAIT_TYPE_YIELD] = rtw_pwctx_yield,
-	[RTW_PWAIT_TYPE_MDELAY] = rtw_mdelay_os,
-	[RTW_PWAIT_TYPE_UDELAY] = rtw_udelay_os,
-};
-
-int rtw_pwctx_config(struct rtw_pwait_ctx *pwctx, enum rtw_pwait_type type, s32 time, s32 cnt_lmt)
-{
-	int ret = _FAIL;
-
-	if (!RTW_PWAIT_TYPE_VALID(type))
-		goto exit;
-
-	pwctx->conf.type = type;
-	pwctx->conf.wait_time = time;
-	pwctx->conf.wait_cnt_lmt = cnt_lmt;
-	pwctx->wait_hdl = rtw_pwait_hdl[type];
-
-	ret = _SUCCESS;
-
-exit:
-	return ret;
-}
-
 bool rtw_macaddr_is_larger(const u8 *a, const u8 *b)
 {
 	u32 va, vb;
@@ -871,137 +624,6 @@ bool rtw_macaddr_is_larger(const u8 *a, const u8 *b)
 		return 0;
 
 	return be16_to_cpu(*((u16 *)(a + 4))) > be16_to_cpu(*((u16 *)(b + 4)));
-}
-
-inline void ATOMIC_SET(ATOMIC_T *v, int i)
-{
-#ifdef PLATFORM_LINUX
-	atomic_set(v, i);
-#elif defined(PLATFORM_WINDOWS)
-	*v = i; /* other choice???? */
-#elif defined(PLATFORM_FREEBSD)
-	atomic_set_int(v, i);
-#endif
-}
-
-inline int ATOMIC_READ(ATOMIC_T *v)
-{
-#ifdef PLATFORM_LINUX
-	return atomic_read(v);
-#elif defined(PLATFORM_WINDOWS)
-	return *v; /* other choice???? */
-#elif defined(PLATFORM_FREEBSD)
-	return atomic_load_acq_32(v);
-#endif
-}
-
-inline void ATOMIC_ADD(ATOMIC_T *v, int i)
-{
-#ifdef PLATFORM_LINUX
-	atomic_add(i, v);
-#elif defined(PLATFORM_WINDOWS)
-	InterlockedAdd(v, i);
-#elif defined(PLATFORM_FREEBSD)
-	atomic_add_int(v, i);
-#endif
-}
-inline void ATOMIC_SUB(ATOMIC_T *v, int i)
-{
-#ifdef PLATFORM_LINUX
-	atomic_sub(i, v);
-#elif defined(PLATFORM_WINDOWS)
-	InterlockedAdd(v, -i);
-#elif defined(PLATFORM_FREEBSD)
-	atomic_subtract_int(v, i);
-#endif
-}
-
-inline void ATOMIC_INC(ATOMIC_T *v)
-{
-#ifdef PLATFORM_LINUX
-	atomic_inc(v);
-#elif defined(PLATFORM_WINDOWS)
-	InterlockedIncrement(v);
-#elif defined(PLATFORM_FREEBSD)
-	atomic_add_int(v, 1);
-#endif
-}
-
-inline void ATOMIC_DEC(ATOMIC_T *v)
-{
-#ifdef PLATFORM_LINUX
-	atomic_dec(v);
-#elif defined(PLATFORM_WINDOWS)
-	InterlockedDecrement(v);
-#elif defined(PLATFORM_FREEBSD)
-	atomic_subtract_int(v, 1);
-#endif
-}
-
-inline int ATOMIC_ADD_RETURN(ATOMIC_T *v, int i)
-{
-#ifdef PLATFORM_LINUX
-	return atomic_add_return(i, v);
-#elif defined(PLATFORM_WINDOWS)
-	return InterlockedAdd(v, i);
-#elif defined(PLATFORM_FREEBSD)
-	atomic_add_int(v, i);
-	return atomic_load_acq_32(v);
-#endif
-}
-
-inline int ATOMIC_SUB_RETURN(ATOMIC_T *v, int i)
-{
-#ifdef PLATFORM_LINUX
-	return atomic_sub_return(i, v);
-#elif defined(PLATFORM_WINDOWS)
-	return InterlockedAdd(v, -i);
-#elif defined(PLATFORM_FREEBSD)
-	atomic_subtract_int(v, i);
-	return atomic_load_acq_32(v);
-#endif
-}
-
-inline int ATOMIC_INC_RETURN(ATOMIC_T *v)
-{
-#ifdef PLATFORM_LINUX
-	return atomic_inc_return(v);
-#elif defined(PLATFORM_WINDOWS)
-	return InterlockedIncrement(v);
-#elif defined(PLATFORM_FREEBSD)
-	atomic_add_int(v, 1);
-	return atomic_load_acq_32(v);
-#endif
-}
-
-inline int ATOMIC_DEC_RETURN(ATOMIC_T *v)
-{
-#ifdef PLATFORM_LINUX
-	return atomic_dec_return(v);
-#elif defined(PLATFORM_WINDOWS)
-	return InterlockedDecrement(v);
-#elif defined(PLATFORM_FREEBSD)
-	atomic_subtract_int(v, 1);
-	return atomic_load_acq_32(v);
-#endif
-}
-
-inline bool ATOMIC_INC_UNLESS(ATOMIC_T *v, int u)
-{
-#ifdef PLATFORM_LINUX
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 15))
-	return atomic_add_unless(v, 1, u);
-#else
-	/* only make sure not exceed after this function */
-	if (ATOMIC_INC_RETURN(v) > u) {
-		ATOMIC_DEC(v);
-		return 0;
-	}
-	return 1;
-#endif
-#else
-	#error "TBD\n"
-#endif
 }
 
 /*
@@ -1022,76 +644,6 @@ int rtw_readable_file_sz_chk(const char *path, u32 sz)
 	
 	return _TRUE;
 }
-
-#ifdef PLATFORM_FREEBSD
-/*
- * Copy a buffer from userspace and write into kernel address
- * space.
- *
- * This emulation just calls the FreeBSD copyin function (to
- * copy data from user space buffer into a kernel space buffer)
- * and is designed to be used with the above io_write_wrapper.
- *
- * This function should return the number of bytes not copied.
- * I.e. success results in a zero value.
- * Negative error values are not returned.
- */
-unsigned long
-copy_from_user(void *to, const void *from, unsigned long n)
-{
-	if (copyin(from, to, n) != 0) {
-		/* Any errors will be treated as a failure
-		   to copy any of the requested bytes */
-		return n;
-	}
-
-	return 0;
-}
-
-unsigned long
-copy_to_user(void *to, const void *from, unsigned long n)
-{
-	if (copyout(from, to, n) != 0) {
-		/* Any errors will be treated as a failure
-		   to copy any of the requested bytes */
-		return n;
-	}
-
-	return 0;
-}
-
-
-/*
- * The usb_register and usb_deregister functions are used to register
- * usb drivers with the usb subsystem. In this compatibility layer
- * emulation a list of drivers (struct usb_driver) is maintained
- * and is used for probing/attaching etc.
- *
- * usb_register and usb_deregister simply call these functions.
- */
-int
-usb_register(struct usb_driver *driver)
-{
-	rtw_usb_linux_register(driver);
-	return 0;
-}
-
-
-int
-usb_deregister(struct usb_driver *driver)
-{
-	rtw_usb_linux_deregister(driver);
-	return 0;
-}
-
-void module_init_exit_wrapper(void *arg)
-{
-	int (*func)(void) = arg;
-	func();
-	return;
-}
-
-#endif /* PLATFORM_FREEBSD */
 
 void rtw_buf_free(u8 **buf, u32 *buf_len)
 {
@@ -1326,14 +878,13 @@ exit:
 	return val;
 }
 
-#ifdef CONFIG_RTW_MESH
 int rtw_blacklist_add(_queue *blist, const u8 *addr, u32 timeout_ms)
 {
 	struct blacklist_ent *ent;
 	_list *list, *head;
 	u8 exist = _FALSE, timeout = _FALSE;
 
-	enter_critical_bh(&blist->lock);
+	_rtw_spinlock_bh(&blist->lock);
 
 	head = &blist->queue;
 	list = get_next(head);
@@ -1366,7 +917,7 @@ int rtw_blacklist_add(_queue *blist, const u8 *addr, u32 timeout_ms)
 		}
 	}
 
-	exit_critical_bh(&blist->lock);
+	_rtw_spinunlock_bh(&blist->lock);
 
 	return (exist == _TRUE && timeout == _FALSE) ? RTW_ALREADY : (ent ? _SUCCESS : _FAIL);
 }
@@ -1377,7 +928,7 @@ int rtw_blacklist_del(_queue *blist, const u8 *addr)
 	_list *list, *head;
 	u8 exist = _FALSE;
 
-	enter_critical_bh(&blist->lock);
+	_rtw_spinlock_bh(&blist->lock);
 	head = &blist->queue;
 	list = get_next(head);
 	while (rtw_end_of_queue_search(head, list) == _FALSE) {
@@ -1397,7 +948,7 @@ int rtw_blacklist_del(_queue *blist, const u8 *addr)
 		}
 	}
 
-	exit_critical_bh(&blist->lock);
+	_rtw_spinunlock_bh(&blist->lock);
 
 	return exist == _TRUE ? _SUCCESS : RTW_ALREADY;
 }
@@ -1408,7 +959,7 @@ int rtw_blacklist_search(_queue *blist, const u8 *addr)
 	_list *list, *head;
 	u8 exist = _FALSE;
 
-	enter_critical_bh(&blist->lock);
+	_rtw_spinlock_bh(&blist->lock);
 	head = &blist->queue;
 	list = get_next(head);
 	while (rtw_end_of_queue_search(head, list) == _FALSE) {
@@ -1430,7 +981,7 @@ int rtw_blacklist_search(_queue *blist, const u8 *addr)
 		}
 	}
 
-	exit_critical_bh(&blist->lock);
+	_rtw_spinunlock_bh(&blist->lock);
 
 	return exist;
 }
@@ -1443,9 +994,9 @@ void rtw_blacklist_flush(_queue *blist)
 
 	_rtw_init_listhead(&tmp);
 
-	enter_critical_bh(&blist->lock);
+	_rtw_spinlock_bh(&blist->lock);
 	rtw_list_splice_init(&blist->queue, &tmp);
-	exit_critical_bh(&blist->lock);
+	_rtw_spinunlock_bh(&blist->lock);
 
 	head = &tmp;
 	list = get_next(head);
@@ -1462,7 +1013,7 @@ void dump_blacklist(void *sel, _queue *blist, const char *title)
 	struct blacklist_ent *ent = NULL;
 	_list *list, *head;
 
-	enter_critical_bh(&blist->lock);
+	_rtw_spinlock_bh(&blist->lock);
 	head = &blist->queue;
 	list = get_next(head);
 
@@ -1482,9 +1033,8 @@ void dump_blacklist(void *sel, _queue *blist, const char *title)
 		}
 
 	}
-	exit_critical_bh(&blist->lock);
+	_rtw_spinunlock_bh(&blist->lock);
 }
-#endif
 
 /**
 * is_null -
@@ -1615,30 +1165,4 @@ int hexstr2bin(const char *hex, u8 *buf, size_t len)
 	return 0;
 }
 
-/**
- * hwaddr_aton - Convert ASCII string to MAC address
- * @txt: MAC address as a string (e.g., "00:11:22:33:44:55")
- * @addr: Buffer for the MAC address (ETH_ALEN = 6 bytes)
- * Returns: 0 on success, -1 on failure (e.g., string not a MAC address)
- */
-int hwaddr_aton_i(const char *txt, u8 *addr)
-{
-	int i;
-
-	for (i = 0; i < 6; i++) {
-		int a, b;
-
-		a = hex2num_i(*txt++);
-		if (a < 0)
-			return -1;
-		b = hex2num_i(*txt++);
-		if (b < 0)
-			return -1;
-		*addr++ = (a << 4) | b;
-		if (i < 5 && *txt++ != ':')
-			return -1;
-	}
-
-	return 0;
-}
 
