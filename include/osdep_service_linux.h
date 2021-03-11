@@ -1002,16 +1002,6 @@ typedef unsigned long _irqL;
 
 typedef ktime_t sysptime;
 
-__inline static void enter_critical_bh(_lock *plock)
-{
-	spin_lock_bh(plock);
-}
-
-__inline static void exit_critical_bh(_lock *plock)
-{
-	spin_unlock_bh(plock);
-}
-
 #define ATOMIC_T atomic_t
 
 

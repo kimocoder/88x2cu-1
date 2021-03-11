@@ -501,9 +501,9 @@ static void rtw_hwmp_preq_frame_process(_adapter *adapter,
 			if (preq_is_gate)
 				rtw_mesh_path_add_gate(path);
 			else if (path->is_gate) {
-				enter_critical_bh(&path->state_lock);
+				_rtw_spinlock_bh(&path->state_lock);
 				rtw_mesh_gate_del(adapter->mesh_info.mesh_paths, path);
-				exit_critical_bh(&path->state_lock);
+				_rtw_spinunlock_bh(&path->state_lock);
 			}
 		}
 		path = NULL;
@@ -539,9 +539,9 @@ static void rtw_hwmp_preq_frame_process(_adapter *adapter,
 				path->gate_asked = false;
 				rtw_mesh_path_add_gate(path);
 			} else if (path->is_gate) {
-				enter_critical_bh(&path->state_lock);
+				_rtw_spinlock_bh(&path->state_lock);
 				rtw_mesh_gate_del(adapter->mesh_info.mesh_paths, path);
-				exit_critical_bh(&path->state_lock);
+				_rtw_spinunlock_bh(&path->state_lock);
 			}
 		}
 		rtw_rcu_read_unlock();
@@ -553,9 +553,9 @@ static void rtw_hwmp_preq_frame_process(_adapter *adapter,
 			if (preq_is_gate)
 				rtw_mesh_path_add_gate(path);
 			else if (path->is_gate) {
-				enter_critical_bh(&path->state_lock);
+				_rtw_spinlock_bh(&path->state_lock);
 				rtw_mesh_gate_del(adapter->mesh_info.mesh_paths, path);
-				exit_critical_bh(&path->state_lock);
+				_rtw_spinunlock_bh(&path->state_lock);
 			}
 		}
 		path = NULL;
@@ -672,13 +672,13 @@ static void rtw_hwmp_prep_frame_process(_adapter *adapter,
 		if (path && path->gate_asked) {
 			flags = RTW_PREP_IE_FLAGS(prep_elem);
 			if (flags & BIT(7)) {
-				enter_critical_bh(&path->state_lock);
+				_rtw_spinlock_bh(&path->state_lock);
 				path->gate_asked = false;
-				exit_critical_bh(&path->state_lock);
+				_rtw_spinunlock_bh(&path->state_lock);
 				if (!(flags & RTW_IEEE80211_PREQ_IS_GATE_FLAG)) {
-					enter_critical_bh(&path->state_lock);
+					_rtw_spinlock_bh(&path->state_lock);
 					rtw_mesh_gate_del(adapter->mesh_info.mesh_paths, path);
-					exit_critical_bh(&path->state_lock);
+					_rtw_spinunlock_bh(&path->state_lock);
 				}
 			}
 		}
@@ -699,15 +699,15 @@ static void rtw_hwmp_prep_frame_process(_adapter *adapter,
 	rtw_rcu_read_lock();
 	path = rtw_mesh_path_lookup(adapter, originator_addr);
 	if (path)
-		enter_critical_bh(&path->state_lock);
+		_rtw_spinlock_bh(&path->state_lock);
 	else
 		goto fail;
 	if (!(path->flags & RTW_MESH_PATH_ACTIVE)) {
-		exit_critical_bh(&path->state_lock);
+		_rtw_spinunlock_bh(&path->state_lock);
 		goto fail;
 	}
 	_rtw_memcpy(next_hop, rtw_next_hop_deref_protected(path)->cmn.mac_addr, ETH_ALEN);
-	exit_critical_bh(&path->state_lock);
+	_rtw_spinunlock_bh(&path->state_lock);
 	--ttl;
 	flags = RTW_PREP_IE_FLAGS(prep_elem);
 	lifetime = RTW_PREP_IE_LIFETIME(prep_elem);
@@ -760,7 +760,7 @@ static void rtw_hwmp_perr_frame_process(_adapter *adapter,
 	if (path) {
 		struct sta_info *sta;
 
-		enter_critical_bh(&path->state_lock);
+		_rtw_spinlock_bh(&path->state_lock);
 		sta = rtw_next_hop_deref_protected(path);
 		if (path->flags & RTW_MESH_PATH_ACTIVE &&
 		    rtw_ether_addr_equal(ta, sta->cmn.mac_addr) &&
@@ -772,14 +772,14 @@ static void rtw_hwmp_perr_frame_process(_adapter *adapter,
 				path->sn = target_sn;
 			else
 				path->sn += 1;
-			exit_critical_bh(&path->state_lock);
+			_rtw_spinunlock_bh(&path->state_lock);
 			if (!mshcfg->dot11MeshForwarding)
 				goto endperr;
 			rtw_mesh_path_error_tx(adapter, ttl, target_addr,
 					       target_sn, perr_reason_code,
 					       bcast_addr);
 		} else
-			exit_critical_bh(&path->state_lock);
+			_rtw_spinunlock_bh(&path->state_lock);
 	}
 endperr:
 	rtw_rcu_read_unlock();
@@ -881,9 +881,9 @@ static void rtw_hwmp_rann_frame_process(_adapter *adapter,
 		path->gate_asked = false;
 		rtw_mesh_path_add_gate(path);
 	} else if (path->is_gate) {
-		enter_critical_bh(&path->state_lock);
+		_rtw_spinlock_bh(&path->state_lock);
 		rtw_mesh_gate_del(adapter->mesh_info.mesh_paths, path);
-		exit_critical_bh(&path->state_lock);
+		_rtw_spinunlock_bh(&path->state_lock);
 	}
 
 	if (ttl <= 1) {
@@ -957,7 +957,7 @@ static u32 rtw_hwmp_route_info_get(_adapter *adapter,
 	} else {
 		path = rtw_mesh_path_lookup(adapter, originator_addr);
 		if (path) {
-			enter_critical_bh(&path->state_lock);
+			_rtw_spinlock_bh(&path->state_lock);
 			if (path->flags & RTW_MESH_PATH_FIXED)
 				fresh_info = _FALSE;
 			else if ((path->flags & RTW_MESH_PATH_ACTIVE) &&
@@ -990,7 +990,7 @@ static u32 rtw_hwmp_route_info_get(_adapter *adapter,
 				rtw_rcu_read_unlock();
 				return 0;
 			}
-			enter_critical_bh(&path->state_lock);
+			_rtw_spinlock_bh(&path->state_lock);
 		}
 
 		if (fresh_info) {
@@ -1008,10 +1008,10 @@ static u32 rtw_hwmp_route_info_get(_adapter *adapter,
 				path->rann_metric = new_metric;
 			}
 #endif
-			exit_critical_bh(&path->state_lock);
+			_rtw_spinunlock_bh(&path->state_lock);
 			rtw_mesh_path_tx_pending(path);
 		} else
-			exit_critical_bh(&path->state_lock);
+			_rtw_spinunlock_bh(&path->state_lock);
 	}
 
 	/* Update and check transmitter routing info */
@@ -1023,7 +1023,7 @@ static u32 rtw_hwmp_route_info_get(_adapter *adapter,
 
 		path = rtw_mesh_path_lookup(adapter, ta);
 		if (path) {
-			enter_critical_bh(&path->state_lock);
+			_rtw_spinlock_bh(&path->state_lock);
 			if ((path->flags & RTW_MESH_PATH_FIXED) ||
 				((path->flags & RTW_MESH_PATH_ACTIVE) &&
 					(last_hop_metric > path->metric)))
@@ -1034,7 +1034,7 @@ static u32 rtw_hwmp_route_info_get(_adapter *adapter,
 				rtw_rcu_read_unlock();
 				return 0;
 			}
-			enter_critical_bh(&path->state_lock);
+			_rtw_spinlock_bh(&path->state_lock);
 		}
 
 		if (fresh_info) {
@@ -1043,10 +1043,10 @@ static u32 rtw_hwmp_route_info_get(_adapter *adapter,
 			path->exp_time = rtw_time_after(path->exp_time, exp_time)
 					  ?  path->exp_time : exp_time;
 			rtw_mesh_path_activate(path);
-			exit_critical_bh(&path->state_lock);
+			_rtw_spinunlock_bh(&path->state_lock);
 			rtw_mesh_path_tx_pending(path);
 		} else
-			exit_critical_bh(&path->state_lock);
+			_rtw_spinunlock_bh(&path->state_lock);
 	}
 
 	rtw_rcu_read_unlock();
@@ -1136,9 +1136,9 @@ void rtw_mesh_queue_preq(struct rtw_mesh_path *path, u8 flags)
 		return;
 	}
 
-	enter_critical_bh(&minfo->mesh_preq_queue_lock);
+	_rtw_spinlock_bh(&minfo->mesh_preq_queue_lock);
 	if (minfo->preq_queue_len == RTW_MAX_PREQ_QUEUE_LEN) {
-		exit_critical_bh(&minfo->mesh_preq_queue_lock);
+		_rtw_spinunlock_bh(&minfo->mesh_preq_queue_lock);
 		rtw_mfree(preq_node, sizeof(struct rtw_mesh_preq_queue));
 		if (rtw_print_ratelimit())
 			RTW_HWMP_INFO("PREQ node queue full\n");
@@ -1148,7 +1148,7 @@ void rtw_mesh_queue_preq(struct rtw_mesh_path *path, u8 flags)
 	_rtw_spinlock(&path->state_lock);
 	if (path->flags & RTW_MESH_PATH_REQ_QUEUED) {
 		_rtw_spinunlock(&path->state_lock);
-		exit_critical_bh(&minfo->mesh_preq_queue_lock);
+		_rtw_spinunlock_bh(&minfo->mesh_preq_queue_lock);
 		rtw_mfree(preq_node, sizeof(struct rtw_mesh_preq_queue));
 		return;
 	}
@@ -1169,7 +1169,7 @@ void rtw_mesh_queue_preq(struct rtw_mesh_path *path, u8 flags)
 
 	rtw_list_insert_tail(&preq_node->list, &minfo->preq_queue.list);
 	++minfo->preq_queue_len;
-	exit_critical_bh(&minfo->mesh_preq_queue_lock);
+	_rtw_spinunlock_bh(&minfo->mesh_preq_queue_lock);
 
 	if (rtw_time_after(rtw_get_current_time(), minfo->last_preq + rtw_min_preq_int_jiff(adapter)))
 		rtw_mesh_work(&adapter->mesh_work);
@@ -1219,11 +1219,11 @@ void rtw_mesh_path_start_discovery(_adapter *adapter)
 	BOOLEAN is_root_add_chk = _FALSE;
 	BOOLEAN da_is_peer, force_preq_bcast;
 
-	enter_critical_bh(&minfo->mesh_preq_queue_lock);
+	_rtw_spinlock_bh(&minfo->mesh_preq_queue_lock);
 	if (!minfo->preq_queue_len ||
 		rtw_time_before(rtw_get_current_time(), minfo->last_preq +
 				rtw_min_preq_int_jiff(adapter))) {
-		exit_critical_bh(&minfo->mesh_preq_queue_lock);
+		_rtw_spinunlock_bh(&minfo->mesh_preq_queue_lock);
 		return;
 	}
 
@@ -1231,22 +1231,22 @@ void rtw_mesh_path_start_discovery(_adapter *adapter)
 			struct rtw_mesh_preq_queue, list);
 	rtw_list_delete(&preq_node->list); /* list_del_init(&preq_node->list); */
 	--minfo->preq_queue_len;
-	exit_critical_bh(&minfo->mesh_preq_queue_lock);
+	_rtw_spinunlock_bh(&minfo->mesh_preq_queue_lock);
 
 	rtw_rcu_read_lock();
 	path = rtw_mesh_path_lookup(adapter, preq_node->dst);
 	if (!path)
 		goto enddiscovery;
 
-	enter_critical_bh(&path->state_lock);
+	_rtw_spinlock_bh(&path->state_lock);
 	if (path->flags & (RTW_MESH_PATH_DELETED | RTW_MESH_PATH_FIXED)) {
-		exit_critical_bh(&path->state_lock);
+		_rtw_spinunlock_bh(&path->state_lock);
 		goto enddiscovery;
 	}
 	path->flags &= ~RTW_MESH_PATH_REQ_QUEUED;
 	if (preq_node->flags & RTW_PREQ_Q_F_START) {
 		if (path->flags & RTW_MESH_PATH_RESOLVING) {
-			exit_critical_bh(&path->state_lock);
+			_rtw_spinunlock_bh(&path->state_lock);
 			goto enddiscovery;
 		} else {
 			path->flags &= ~RTW_MESH_PATH_RESOLVED;
@@ -1257,7 +1257,7 @@ void rtw_mesh_path_start_discovery(_adapter *adapter)
 	} else if (!(path->flags & RTW_MESH_PATH_RESOLVING) ||
 			path->flags & RTW_MESH_PATH_RESOLVED) {
 		path->flags &= ~RTW_MESH_PATH_RESOLVING;
-		exit_critical_bh(&path->state_lock);
+		_rtw_spinunlock_bh(&path->state_lock);
 		goto enddiscovery;
 	}
 
@@ -1273,7 +1273,7 @@ void rtw_mesh_path_start_discovery(_adapter *adapter)
 	ttl = mshcfg->element_ttl;
 	if (ttl == 0) {
 		minfo->mshstats.dropped_frames_ttl++;
-		exit_critical_bh(&path->state_lock);
+		_rtw_spinunlock_bh(&path->state_lock);
 		goto enddiscovery;
 	}
 
@@ -1287,7 +1287,7 @@ void rtw_mesh_path_start_discovery(_adapter *adapter)
 #endif
 	da_is_peer = !!(path->flags & RTW_MESH_PATH_PEER_AKA);
 	force_preq_bcast = !!(path->flags & RTW_MESH_PATH_BCAST_PREQ);
-	exit_critical_bh(&path->state_lock);
+	_rtw_spinunlock_bh(&path->state_lock);
 
 	da = rtw_hwmp_preq_da(path, is_root_add_chk,
 			      da_is_peer, force_preq_bcast);
@@ -1320,7 +1320,7 @@ void rtw_mesh_path_timer(void *ctx)
 	if (suspending)
 		return;
 #endif
-	enter_critical_bh(&path->state_lock);
+	_rtw_spinlock_bh(&path->state_lock);
 	if (path->flags & RTW_MESH_PATH_RESOLVED ||
 			(!(path->flags & RTW_MESH_PATH_RESOLVING))) {
 		path->flags &= ~(RTW_MESH_PATH_RESOLVING |
@@ -1328,7 +1328,7 @@ void rtw_mesh_path_timer(void *ctx)
 				 RTW_MESH_PATH_ROOT_ADD_CHK |
 				 RTW_MESH_PATH_PEER_AKA |
 				 RTW_MESH_PATH_BCAST_PREQ);
-		exit_critical_bh(&path->state_lock);
+		_rtw_spinunlock_bh(&path->state_lock);
 	} else if (path->discovery_retries < rtw_max_preq_retries(adapter)) {
 		++path->discovery_retries;
 		path->discovery_timeout *= 2;
@@ -1340,7 +1340,7 @@ void rtw_mesh_path_timer(void *ctx)
 		if (path->gate_asked)
 			retry |= RTW_PREQ_Q_F_REFRESH;
 
-		exit_critical_bh(&path->state_lock);
+		_rtw_spinunlock_bh(&path->state_lock);
 		rtw_mesh_queue_preq(path, retry);
 	} else {
 		path->flags &= ~(RTW_MESH_PATH_RESOLVING |
@@ -1350,7 +1350,7 @@ void rtw_mesh_path_timer(void *ctx)
 				  RTW_MESH_PATH_PEER_AKA |
 				  RTW_MESH_PATH_BCAST_PREQ);
 		path->exp_time = rtw_get_current_time();
-		exit_critical_bh(&path->state_lock);
+		_rtw_spinunlock_bh(&path->state_lock);
 		if (!path->is_gate && rtw_mesh_gate_num(adapter) > 0) {
 			ret = rtw_mesh_path_send_to_gates(path);
 			if (ret)

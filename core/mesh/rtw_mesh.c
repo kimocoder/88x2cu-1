@@ -467,11 +467,11 @@ struct sta_info *rtw_mesh_acnode_prevent_pick_sacrifice(_adapter *adapter)
 	struct sta_priv *stapriv = &adapter->stapriv;
 	struct sta_info *sacrifice = NULL;
 
-	enter_critical_bh(&stapriv->asoc_list_lock);
+	_rtw_spinlock_bh(&stapriv->asoc_list_lock);
 
 	sacrifice = _rtw_mesh_acnode_prevent_pick_sacrifice(adapter);
 
-	exit_critical_bh(&stapriv->asoc_list_lock);
+	_rtw_spinunlock_bh(&stapriv->asoc_list_lock);
 
 	return sacrifice;
 }
@@ -658,7 +658,7 @@ static void rtw_mesh_cto_mgate_blacklist_chk(_adapter *adapter)
 	struct blacklist_ent *ent = NULL;
 	struct wlan_network *scanned = NULL;
 
-	enter_critical_bh(&blist->lock);
+	_rtw_spinlock_bh(&blist->lock);
 	head = &blist->queue;
 	list = get_next(head);
 	while (rtw_end_of_queue_search(head, list) == _FALSE) {
@@ -681,7 +681,7 @@ static void rtw_mesh_cto_mgate_blacklist_chk(_adapter *adapter)
 		}
 	}
 
-	exit_critical_bh(&blist->lock);
+	_rtw_spinunlock_bh(&blist->lock);
 }
 #endif /* CONFIG_RTW_MESH_CTO_MGATE_BLACKLIST */
 
@@ -776,10 +776,10 @@ void rtw_mesh_peer_status_chk(_adapter *adapter)
 	}
 #endif
 
-	enter_critical_bh(&(plink_ctl->lock));
+	_rtw_spinlock_bh(&(plink_ctl->lock));
 
 	/* check established peers */
-	enter_critical_bh(&stapriv->asoc_list_lock);
+	_rtw_spinlock_bh(&stapriv->asoc_list_lock);
 
 	head = &stapriv->asoc_list;
 	list = get_next(head);
@@ -858,7 +858,7 @@ flush_add:
 		}
 	}
 
-	exit_critical_bh(&stapriv->asoc_list_lock);
+	_rtw_spinunlock_bh(&stapriv->asoc_list_lock);
 
 	/* check non-established peers */
 	for (i = 0; i < RTW_MESH_MAX_PEER_CANDIDATES; i++) {
@@ -885,7 +885,7 @@ flush_add:
 		#endif
 	}
 
-	exit_critical_bh(&(plink_ctl->lock));
+	_rtw_spinunlock_bh(&(plink_ctl->lock));
 
 	if (flush_num) {
 		u8 sta_addr[ETH_ALEN];
@@ -928,7 +928,7 @@ static u8 rtw_mesh_offch_cto_mgate_required(_adapter *adapter)
 	if (!rtw_mesh_cto_mgate_required(adapter))
 		goto exit;
 
-	enter_critical_bh(&(mlme->scanned_queue.lock));
+	_rtw_spinlock_bh(&(mlme->scanned_queue.lock));
 
 	head = get_list_head(queue);
 	pos = get_next(head);
@@ -955,7 +955,7 @@ static u8 rtw_mesh_offch_cto_mgate_required(_adapter *adapter)
 	if (rtw_end_of_queue_search(head, pos))
 		ret = 1;
 
-	exit_critical_bh(&(mlme->scanned_queue.lock));
+	_rtw_spinunlock_bh(&(mlme->scanned_queue.lock));
 
 exit:
 	return ret;
@@ -1125,7 +1125,7 @@ void dump_mesh_networks(void *sel, _adapter *adapter)
 	if (!mesh_networks)
 		return;
 
-	enter_critical_bh(&queue->lock);
+	_rtw_spinlock_bh(&queue->lock);
 	head = get_list_head(queue);
 	list = get_next(head);
 
@@ -1144,7 +1144,7 @@ void dump_mesh_networks(void *sel, _adapter *adapter)
 		mesh_networks[mesh_network_cnt++] = network;
 	}
 
-	exit_critical_bh(&queue->lock);
+	_rtw_spinunlock_bh(&queue->lock);
 
 	RTW_PRINT_SEL(sel, "  %-17s %-3s %-4s %-5s %-32s %-10s"
 		" %-3s %-3s %-4s"
@@ -2951,13 +2951,13 @@ static void mpath_tx_tasklet_hdl(void *priv)
 
 	while (1) {
 		tmp_len = 0;
-		enter_critical_bh(&minfo->mpath_tx_queue.lock);
+		_rtw_spinlock_bh(&minfo->mpath_tx_queue.lock);
 		if (minfo->mpath_tx_queue_len) {
 			rtw_list_splice_init(&minfo->mpath_tx_queue.queue, &tmp);
 			tmp_len = minfo->mpath_tx_queue_len;
 			minfo->mpath_tx_queue_len = 0;
 		}
-		exit_critical_bh(&minfo->mpath_tx_queue.lock);
+		_rtw_spinunlock_bh(&minfo->mpath_tx_queue.lock);
 
 		if (!tmp_len)
 			break;
@@ -2988,10 +2988,10 @@ static void rtw_mpath_tx_queue_flush(_adapter *adapter)
 
 	_rtw_init_listhead(&tmp);
 
-	enter_critical_bh(&minfo->mpath_tx_queue.lock);
+	_rtw_spinlock_bh(&minfo->mpath_tx_queue.lock);
 	rtw_list_splice_init(&minfo->mpath_tx_queue.queue, &tmp);
 	minfo->mpath_tx_queue_len = 0;
-	exit_critical_bh(&minfo->mpath_tx_queue.lock);
+	_rtw_spinunlock_bh(&minfo->mpath_tx_queue.lock);
 
 	head = &tmp;
 	list = get_next(head);
@@ -3437,7 +3437,7 @@ int rtw_mesh_nexthop_resolve(_adapter *adapter,
 	if (!(mpath->flags & RTW_MESH_PATH_RESOLVING))
 		rtw_mesh_queue_preq(mpath, RTW_PREQ_Q_F_START);
 
-	enter_critical_bh(&mpath->frame_queue.lock);
+	_rtw_spinlock_bh(&mpath->frame_queue.lock);
 
 	if (mpath->frame_queue_len >= RTW_MESH_FRAME_QUEUE_LEN) {
 		xframe_to_free = LIST_CONTAINOR(get_next(get_list_head(&mpath->frame_queue)), struct xmit_frame, list);
@@ -3448,7 +3448,7 @@ int rtw_mesh_nexthop_resolve(_adapter *adapter,
 	rtw_list_insert_tail(&xframe->list, get_list_head(&mpath->frame_queue));
 	mpath->frame_queue_len++;
 
-	exit_critical_bh(&mpath->frame_queue.lock);
+	_rtw_spinunlock_bh(&mpath->frame_queue.lock);
 
 	ret = RTW_RA_RESOLVING;
 	if (xframe_to_free)
@@ -3516,9 +3516,9 @@ int rtw_mesh_nexthop_lookup(_adapter *adapter,
 		   !(mpath->flags & RTW_MESH_PATH_FIXED) &&
 		   !(mpath->flags & RTW_MESH_PATH_BCAST_PREQ) &&
 		   mpath->is_root && nexthop_alive == _FALSE) {
-		enter_critical_bh(&mpath->state_lock);
+		_rtw_spinlock_bh(&mpath->state_lock);
 		mpath->flags |= RTW_MESH_PATH_BCAST_PREQ;
-		exit_critical_bh(&mpath->state_lock);
+		_rtw_spinunlock_bh(&mpath->state_lock);
 	}
 
 endlookup:
@@ -4092,11 +4092,11 @@ int rtw_mesh_rx_msdu_act_check(union recv_frame *rframe
 		if (!mppath)
 			rtw_mpp_path_add(adapter, proxied_addr, mpp_addr);
 		else {
-			enter_critical_bh(&mppath->state_lock);
+			_rtw_spinlock_bh(&mppath->state_lock);
 			if (_rtw_memcmp(mppath->mpp, mpp_addr, ETH_ALEN) == _FALSE)
 				_rtw_memcpy(mppath->mpp, mpp_addr, ETH_ALEN);
 			mppath->exp_time = rtw_get_current_time();
-			exit_critical_bh(&mppath->state_lock);
+			_rtw_spinunlock_bh(&mppath->state_lock);
 		}
 		rtw_rcu_read_unlock();
 	}

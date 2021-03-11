@@ -1241,7 +1241,7 @@ void dump_unassoc_sta(void *sel, _adapter *adapter)
 	if (!unassoc_sta_arr)
 		return;
 
-	enter_critical_bh(&queue->lock);
+	_rtw_spinlock_bh(&queue->lock);
 	head = get_list_head(queue);
 	list = get_next(head);
 
@@ -1252,7 +1252,7 @@ void dump_unassoc_sta(void *sel, _adapter *adapter)
 		unassoc_sta_arr[unassoc_sta_cnt++] = unassoc_sta;
 	}
 
-	exit_critical_bh(&queue->lock);
+	_rtw_spinunlock_bh(&queue->lock);
 
 	RTW_PRINT_SEL(sel, "  %17s %18s %6s\n", "mac_addr", "measure_delta_time", "rssi");
 
