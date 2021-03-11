@@ -157,7 +157,6 @@ void rtw_ft_reassoc_event_callback(_adapter *padapter, u8 *pbuf)
 	struct mlme_ext_info *pmlmeinfo = &(pmlmeext->mlmext_info);
 	WLAN_BSSID_EX *pnetwork = (WLAN_BSSID_EX *)&(pmlmeinfo->network);
 	struct cfg80211_ft_event_params ft_evt_parms;
-	_irqL irqL;
 
 	_rtw_memset(&ft_evt_parms, 0, sizeof(ft_evt_parms));
 	rtw_ft_update_stainfo(padapter, pnetwork);
@@ -191,7 +190,7 @@ void rtw_ft_reassoc_event_callback(_adapter *padapter, u8 *pbuf)
 			ft_evt_parms.ric_ies_len += ft_evt_parms.ies_len;	
 	#endif	
 	
-	rtw_ft_lock_set_status(padapter, RTW_FT_AUTHENTICATED_STA, &irqL);
+	rtw_ft_lock_set_status(padapter, RTW_FT_AUTHENTICATED_STA);
 	rtw_cfg80211_ft_event(padapter, &ft_evt_parms);
 	RTW_INFO("%s: to "MAC_FMT"\n", __func__, MAC_ARG(ft_evt_parms.target_ap));
 
@@ -536,7 +535,6 @@ void rtw_ft_report_evt(_adapter *padapter)
 	struct mlme_ext_info *pmlmeinfo = &(pmlmeext->mlmext_info);
 	WLAN_BSSID_EX *pnetwork = (WLAN_BSSID_EX *)&(pmlmeinfo->network);
 	struct cfg80211_ft_event_params ft_evt_parms;
-	_irqL irqL;
 
 	_rtw_memset(&ft_evt_parms, 0, sizeof(ft_evt_parms));
 	rtw_ft_update_stainfo(padapter, pnetwork);
@@ -572,7 +570,7 @@ void rtw_ft_report_evt(_adapter *padapter)
 			(0):(ft_evt_parms.ies_len - 100);
 	#endif
 	
-	rtw_ft_lock_set_status(padapter, RTW_FT_AUTHENTICATED_STA, &irqL);
+	rtw_ft_lock_set_status(padapter, RTW_FT_AUTHENTICATED_STA);
 	rtw_cfg80211_ft_event(padapter, &ft_evt_parms);
 	RTW_INFO("FT: rtw_ft_report_evt\n");
 	rtw_mfree((u8 *)pft_roam->ft_event.target_ap, ETH_ALEN);

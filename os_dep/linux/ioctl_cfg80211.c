@@ -1050,7 +1050,6 @@ void rtw_cfg80211_indicate_connect(_adapter *padapter)
 	struct wlan_network  *cur_network = &(pmlmepriv->cur_network);
 	struct wireless_dev *pwdev = padapter->rtw_wdev;
 	struct rtw_wdev_priv *pwdev_priv = adapter_wdev_data(padapter);
-	_irqL irqL;
 #ifdef CONFIG_P2P
 	struct wifidirect_info *pwdinfo = &(padapter->wdinfo);
 #endif
@@ -1193,7 +1192,6 @@ void rtw_cfg80211_indicate_disconnect(_adapter *padapter, u16 reason, u8 locally
 {
 	struct wireless_dev *pwdev = padapter->rtw_wdev;
 	struct rtw_wdev_priv *pwdev_priv = adapter_wdev_data(padapter);
-	_irqL irqL;
 #ifdef CONFIG_P2P
 	struct wifidirect_info *pwdinfo = &(padapter->wdinfo);
 #endif
@@ -2758,7 +2756,6 @@ exit:
 void rtw_cfg80211_indicate_scan_done(_adapter *adapter, bool aborted)
 {
 	struct rtw_wdev_priv *pwdev_priv = adapter_wdev_data(adapter);
-	_irqL	irqL;
 
 #if (KERNEL_VERSION(4, 8, 0) <= LINUX_VERSION_CODE)
 	struct cfg80211_scan_info info;
@@ -2876,7 +2873,6 @@ static void _rtw_cfg80211_surveydone_event_callback(_adapter *padapter, struct c
 {
 	struct rf_ctl_t *rfctl = adapter_to_rfctl(padapter);
 	RT_CHANNEL_INFO *chset = rfctl->channel_set;
-	_irqL	irqL;
 	_list					*plist, *phead;
 	struct	mlme_priv	*pmlmepriv = &(padapter->mlmepriv);
 	_queue				*queue	= &(pmlmepriv->scanned_queue);
@@ -3054,7 +3050,6 @@ u8 rtw_cfg80211_scan_via_buddy(_adapter *padapter, struct cfg80211_scan_request 
 	int i;
 	u8 ret = _FALSE;
 	_adapter *iface = NULL;
-	_irqL	irqL;
 	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
 	struct rtw_wdev_priv *pwdev_priv = adapter_wdev_data(padapter);
 	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
@@ -3103,7 +3098,6 @@ void rtw_cfg80211_indicate_scan_done_for_buddy(_adapter *padapter, bool bscan_ab
 {
 	int i;
 	_adapter *iface = NULL;
-	_irqL	irqL;
 	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
 	struct mlme_priv *mlmepriv;
 	struct rtw_wdev_priv *wdev_priv;
@@ -4103,7 +4097,6 @@ static int cfg80211_rtw_connect(struct wiphy *wiphy, struct net_device *ndev,
 	struct security_priv *psecuritypriv = &padapter->securitypriv;
 	struct rtw_wdev_priv *pwdev_priv = adapter_wdev_data(padapter);
 	struct mlme_priv *pmlmepriv = &(padapter->mlmepriv);
-	_irqL irqL;
 
 #if (RTW_CFG80211_BLOCK_STA_DISCON_EVENT & RTW_CFG80211_BLOCK_DISCON_WHEN_CONNECT)
 	rtw_wdev_set_not_indic_disco(pwdev_priv, 1);
@@ -5551,7 +5544,6 @@ static int	cfg80211_rtw_add_station(struct wiphy *wiphy, struct net_device *ndev
 		struct wlan_network *scanned = NULL;
 		bool acnode = 0;
 		u8 add_new_sta = 0, probe_req = 0;
-		_irqL irqL;
 
 		if (params->plink_state != NL80211_PLINK_LISTEN) {
 			RTW_WARN(FUNC_NDEV_FMT" %s\n", FUNC_NDEV_ARG(ndev), nl80211_plink_state_str(params->plink_state));
@@ -5692,7 +5684,6 @@ static int	cfg80211_rtw_del_station(struct wiphy *wiphy, struct net_device *ndev
 )
 {
 	int ret = 0;
-	_irqL irqL;
 	_list	*phead, *plist;
 	u8 updated = _FALSE;
 	const u8 *target_mac;
@@ -5877,7 +5868,6 @@ static int	cfg80211_rtw_dump_station(struct wiphy *wiphy, struct net_device *nde
 #define DBG_DUMP_STATION 0
 
 	int ret = 0;
-	_irqL irqL;
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(ndev);
 	struct sta_priv *pstapriv = &padapter->stapriv;
 	struct sta_info *psta = NULL;
@@ -7295,7 +7285,6 @@ static s32 cfg80211_rtw_update_ft_ies(struct wiphy *wiphy,
 	_adapter *padapter = NULL;
 	struct mlme_priv *pmlmepriv = NULL;
 	struct ft_roam_info *pft_roam = NULL;
-	_irqL irqL;
 	u8 *p;
 	u8 *pie = NULL;
 	u32 ie_len = 0;
@@ -7603,7 +7592,6 @@ inline int rtw_cfg80211_is_p2p_scan(_adapter *adapter)
 		* 2. RTW_DEDICATED_P2P_DEVICE not defined
 		*/
 		struct rtw_wdev_priv *wdev_data = adapter_wdev_data(adapter);
-		_irqL irqL;
 		int is_p2p_scan = 0;
 
 		_rtw_spinlock_bh(&wdev_data->scan_req_lock);
@@ -7731,7 +7719,6 @@ inline int rtw_cfg80211_is_scan_by_pd_wdev(_adapter *adapter)
 	struct wiphy *wiphy = adapter_to_wiphy(adapter);
 	struct rtw_wdev_priv *wdev_data = adapter_wdev_data(adapter);
 	struct wireless_dev *wdev = NULL;
-	_irqL irqL;
 
 	_rtw_spinlock_bh(&wdev_data->scan_req_lock);
 	if (wdev_data->scan_request)
@@ -10074,7 +10061,6 @@ void rtw_cfg80211_external_auth_status(struct wiphy *wiphy, struct net_device *d
 	struct sta_info	*psta = NULL;
 	u8 *buf = NULL;
 	u32 len = 0;
-	_irqL irqL;
 
 	RTW_INFO(FUNC_NDEV_FMT"\n", FUNC_NDEV_ARG(dev));
 

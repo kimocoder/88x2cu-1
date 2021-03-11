@@ -1243,7 +1243,6 @@ static int proc_get_rx_info_msg(struct seq_file *m, void *v)
 }
 static int proc_get_tx_info_msg(struct seq_file *m, void *v)
 {
-	_irqL irqL;
 	struct net_device *dev = m->private;
 	_adapter *adapter = (_adapter *)rtw_netdev_priv(dev);
 	struct sta_info *psta;
@@ -4410,7 +4409,6 @@ int proc_get_sta_assoc_req_frame_body(struct seq_file *m, void *v)
 
 	if (MLME_IS_AP(adapter)) {
 		struct sta_info *psta;
-		_irqL irqL;
 		u8 *passoc_req = NULL;
 		u32 assoc_req_len = 0;
 

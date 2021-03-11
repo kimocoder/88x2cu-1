@@ -399,7 +399,6 @@ static int __nat25_db_network_lookup_and_replace(_adapter *priv,
 		struct sk_buff *skb, unsigned char *networkAddr)
 {
 	struct nat25_network_db_entry *db;
-	_irqL irqL;
 	_rtw_spinlock_bh(&priv->br_ext_lock);
 
 	db = priv->nethash[__nat25_network_hash(networkAddr)];
@@ -474,7 +473,6 @@ static void __nat25_db_network_insert(_adapter *priv,
 {
 	struct nat25_network_db_entry *db;
 	int hash;
-	_irqL irqL;
 	_rtw_spinlock_bh(&priv->br_ext_lock);
 
 	hash = __nat25_network_hash(networkAddr);
@@ -509,7 +507,6 @@ static void __nat25_db_network_insert(_adapter *priv,
 
 static void __nat25_db_print(_adapter *priv)
 {
-	_irqL irqL;
 	_rtw_spinlock_bh(&priv->br_ext_lock);
 
 #ifdef BR_EXT_DEBUG
@@ -597,7 +594,6 @@ static void __nat25_db_print(_adapter *priv)
 void nat25_db_cleanup(_adapter *priv)
 {
 	int i;
-	_irqL irqL;
 	_rtw_spinlock_bh(&priv->br_ext_lock);
 
 	for (i = 0; i < NAT25_HASH_SIZE; i++) {
@@ -626,7 +622,6 @@ void nat25_db_cleanup(_adapter *priv)
 void nat25_db_expire(_adapter *priv)
 {
 	int i;
-	_irqL irqL;
 	_rtw_spinlock_bh(&priv->br_ext_lock);
 
 	/* if(!priv->ethBrExtInfo.nat25_disable) */
@@ -1402,7 +1397,6 @@ int nat25_handle_frame(_adapter *priv, struct sk_buff *skb)
 		}
 
 		if (!priv->ethBrExtInfo.nat25_disable) {
-			_irqL irqL;
 			_rtw_spinlock_bh(&priv->br_ext_lock);
 			/*
 			 *	This function look up the destination network address from

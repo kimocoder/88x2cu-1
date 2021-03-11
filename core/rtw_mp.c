@@ -788,7 +788,6 @@ u32 mp_join(PADAPTER padapter, u8 mode)
 	WLAN_BSSID_EX bssid;
 	struct sta_info *psta;
 	u32 length;
-	_irqL irqL;
 	s32 res = _SUCCESS;
 
 	struct mp_priv *pmppriv = &padapter->mppriv;
@@ -984,8 +983,6 @@ void mp_stop_test(PADAPTER padapter)
 	struct registry_priv  *registry_par = &padapter->registrypriv;
 	PHAL_DATA_TYPE hal;
 #endif
-
-	_irqL irqL;
 
 	if (pmppriv->mode == MP_ON) {
 		pmppriv->bSetTxPower = 0;

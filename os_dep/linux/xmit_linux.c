@@ -286,7 +286,6 @@ void rtw_os_xmit_schedule(_adapter *padapter)
 
 
 #else
-	_irqL  irqL;
 	struct xmit_priv *pxmitpriv;
 
 	if (!padapter)

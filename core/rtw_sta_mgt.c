@@ -739,7 +739,6 @@ u32	rtw_free_stainfo(_adapter *padapter , struct sta_info *psta)
 
 	/* for A-MPDU Rx reordering buffer control, cancel reordering_ctrl_timer */
 	for (i = 0; i < 16 ; i++) {
-		_irqL irqL;
 		_list	*phead, *plist;
 		union recv_frame *prframe;
 		_queue *ppending_recvframe_queue;
@@ -893,9 +892,6 @@ exit:
 /* any station allocated can be searched by hash list */
 struct sta_info *rtw_get_stainfo(struct sta_priv *pstapriv, const u8 *hwaddr)
 {
-
-	_irqL	 irqL;
-
 	_list	*plist, *phead;
 
 	struct sta_info *psta = NULL;
@@ -1092,7 +1088,6 @@ const char *const _acl_mode_str[RTW_ACL_MODE_MAX] = {
 u8 _rtw_access_ctrl(_adapter *adapter, u8 period, const u8 *mac_addr)
 {
 	u8 res = _TRUE;
-	_irqL irqL;
 	_list *list, *head;
 	struct rtw_wlan_acl_node *acl_node;
 	u8 match = _FALSE;
@@ -1226,7 +1221,7 @@ struct sta_info *rtw_pre_link_sta_add(struct sta_priv *stapriv, u8 *hwaddr)
 		node->valid = _TRUE;
 		pre_link_sta_ctl->num++;
 	}
-	_rtw_spinunlock_bh(&(pre_link_sta_ctl->lock), &irqL);
+	_rtw_spinunlock_bh(&(pre_link_sta_ctl->lock));
 
 	if (node == NULL)
 		goto exit;

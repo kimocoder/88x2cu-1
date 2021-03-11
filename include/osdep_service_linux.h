@@ -998,7 +998,6 @@ static inline void rtw_dump_stack(void)
 #endif
 
 // NEO need to take off
-typedef unsigned long _irqL;
 
 typedef ktime_t sysptime;
 

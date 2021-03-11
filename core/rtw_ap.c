@@ -398,7 +398,6 @@ static void rtw_check_restore_rf18(_adapter *padapter)
 
 void	expire_timeout_chk(_adapter *padapter)
 {
-	_irqL irqL;
 	_list	*phead, *plist;
 	u8 updated = _FALSE;
 	struct sta_info *psta = NULL;
@@ -815,7 +814,6 @@ void rtw_ap_update_sta_ra_info(_adapter *padapter, struct sta_info *psta)
 #ifdef CONFIG_BMC_TX_RATE_SELECT
 u8 rtw_ap_find_mini_tx_rate(_adapter *adapter)
 {
-	_irqL irqL;
 	_list	*phead, *plist;
 	u8 miini_tx_rate = ODM_RATEVHTSS4MCS9, sta_tx_rate;
 	struct sta_info *psta = NULL;
@@ -986,7 +984,6 @@ void rtw_init_bmc_sta_tx_rate(_adapter *padapter, struct sta_info *psta)
 
 void update_bmc_sta(_adapter *padapter)
 {
-	_irqL	irqL;
 	unsigned char	network_type;
 	int supportRateNum = 0;
 	struct mlme_priv *pmlmepriv = &(padapter->mlmepriv);
@@ -1074,7 +1071,6 @@ void update_sta_info_apmode_ht_bf_cap(_adapter *padapter, struct sta_info *psta)
  * AID: 1~MAX for sta and 0 for bc/mc in ap/adhoc mode  */
 void update_sta_info_apmode(_adapter *padapter, struct sta_info *psta)
 {
-	_irqL	irqL;
 	struct mlme_priv *pmlmepriv = &(padapter->mlmepriv);
 	struct security_priv *psecuritypriv = &padapter->securitypriv;
 	struct mlme_ext_priv	*pmlmeext = &(padapter->mlmeextpriv);
@@ -1468,7 +1464,6 @@ static void update_hw_ht_param(_adapter *padapter)
 #endif /* CONFIG_80211N_HT */
 static void rtw_ap_check_scan(_adapter *padapter)
 {
-	_irqL	irqL;
 	_list		*plist, *phead;
 	u32	delta_time, lifetime;
 	struct	wlan_network	*pnetwork = NULL;
@@ -1877,8 +1872,6 @@ update_beacon:
 		&& pmlmeext->bstart_bss == _TRUE
 	) {
 #ifdef CONFIG_SUPPORT_MULTI_BCN
-		_irqL irqL;
-
 		_rtw_spinlock_bh(&pdvobj->ap_if_q.lock);
 		if (rtw_is_list_empty(&padapter->list)) {
 			#ifdef CONFIG_FW_HANDLE_TXBCN
@@ -2525,7 +2518,6 @@ void rtw_macaddr_acl_init(_adapter *adapter, u8 period)
 	struct wlan_acl_pool *acl;
 	_queue *acl_node_q;
 	int i;
-	_irqL irqL;
 
 	if (period >= RTW_ACL_PERIOD_NUM) {
 		rtw_warn_on(1);
@@ -2553,7 +2545,6 @@ static void _rtw_macaddr_acl_deinit(_adapter *adapter, u8 period, bool clear_onl
 	struct sta_priv *stapriv = &adapter->stapriv;
 	struct wlan_acl_pool *acl;
 	_queue *acl_node_q;
-	_irqL irqL;
 	_list *head, *list;
 	struct rtw_wlan_acl_node *acl_node;
 
@@ -2617,7 +2608,6 @@ void rtw_set_macaddr_acl(_adapter *adapter, u8 period, int mode)
 
 int rtw_acl_add_sta(_adapter *adapter, u8 period, const u8 *addr)
 {
-	_irqL irqL;
 	_list *list, *head;
 	u8 existed = 0;
 	int i = -1, ret = 0;
@@ -2690,7 +2680,6 @@ exit:
 
 int rtw_acl_remove_sta(_adapter *adapter, u8 period, const u8 *addr)
 {
-	_irqL irqL;
 	_list *list, *head;
 	int ret = 0;
 	struct rtw_wlan_acl_node *acl_node;
@@ -2886,7 +2875,6 @@ int rtw_ap_set_wep_key(_adapter *padapter, u8 *key, u8 keylen, int keyid, u8 set
 u8 rtw_ap_bmc_frames_hdl(_adapter *padapter)
 {
 #define HIQ_XMIT_COUNTS (6)
-	_irqL irqL;
 	struct sta_info *psta_bmc;
 	_list	*xmitframe_plist, *xmitframe_phead;
 	struct xmit_frame *pxmitframe = NULL;
@@ -3283,7 +3271,6 @@ static void update_bcn_vendor_spec_ie(_adapter *padapter, u8 *oui)
 
 void _update_beacon(_adapter *padapter, u8 ie_id, u8 *oui, u8 tx, u8 flags, const char *tag)
 {
-	_irqL irqL;
 	struct mlme_priv *pmlmepriv;
 	struct mlme_ext_priv *pmlmeext;
 	bool updated = 1; /* treat as upadated by default */
@@ -3545,7 +3532,6 @@ void associated_clients_update(_adapter *padapter, u8 updated, u32 sta_info_type
 {
 	/* update associcated stations cap. */
 	if (updated == _TRUE) {
-		_irqL irqL;
 		_list	*phead, *plist;
 		struct sta_info *psta = NULL;
 		struct sta_priv *pstapriv = &padapter->stapriv;
@@ -3863,7 +3849,6 @@ u8 bss_cap_update_on_sta_leave(_adapter *padapter, struct sta_info *psta)
 
 u8 ap_free_sta(_adapter *padapter, struct sta_info *psta, bool active, u16 reason, bool enqueue)
 {
-	_irqL irqL;
 	u8 beacon_updated = _FALSE;
 
 	if (!psta)
@@ -3947,7 +3932,6 @@ u8 ap_free_sta(_adapter *padapter, struct sta_info *psta, bool active, u16 reaso
 
 int rtw_ap_inform_ch_switch(_adapter *padapter, u8 new_ch, u8 ch_offset)
 {
-	_irqL irqL;
 	_list	*phead, *plist;
 	int ret = 0;
 	struct sta_info *psta = NULL;
@@ -3983,7 +3967,6 @@ int rtw_ap_inform_ch_switch(_adapter *padapter, u8 new_ch, u8 ch_offset)
 
 int rtw_sta_flush(_adapter *padapter, bool enqueue)
 {
-	_irqL irqL;
 	_list	*phead, *plist;
 	int ret = 0;
 	struct sta_info *psta = NULL;
@@ -4104,7 +4087,6 @@ void rtw_ap_restore_network(_adapter *padapter)
 	struct sta_priv *pstapriv = &padapter->stapriv;
 	struct sta_info *psta;
 	struct security_priv *psecuritypriv = &(padapter->securitypriv);
-	_irqL irqL;
 	_list	*phead, *plist;
 	u8 chk_alive_num = 0;
 	char chk_alive_list[NUM_STA];
@@ -4235,7 +4217,6 @@ void stop_ap_mode(_adapter *padapter)
 	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
 #ifdef CONFIG_SUPPORT_MULTI_BCN
 	struct dvobj_priv *pdvobj = padapter->dvobj;
-	_irqL irqL;
 #endif
 
 	RTW_INFO("%s -"ADPT_FMT"\n", __func__, ADPT_ARG(padapter));
@@ -4998,7 +4979,6 @@ u8 rtw_ap_sta_states_check(_adapter *adapter)
 	struct sta_info *psta;
 	struct sta_priv *pstapriv = &adapter->stapriv;
 	_list *plist, *phead;
-	_irqL irqL;
 	u8 rst = _FALSE;
 
 	if (!MLME_IS_AP(adapter) && !MLME_IS_MESH(adapter))
@@ -5034,7 +5014,6 @@ u8 rtw_ap_sta_states_check(_adapter *adapter)
 void tx_beacon_handlder(struct dvobj_priv *pdvobj)
 {
 #define BEACON_EARLY_TIME		20	/* unit:TU*/
-	_irqL irqL;
 	_list	*plist, *phead;
 	u32 timestamp[2];
 	u32 bcn_interval_us; /* unit : usec */
@@ -5578,7 +5557,6 @@ static bool rtw_ap_data_bmc_to_uc(_adapter *adapter
 {
 	struct sta_priv *stapriv = &adapter->stapriv;
 	struct xmit_priv *xmitpriv = &adapter->xmitpriv;
-	_irqL irqL;
 	_list *head, *list;
 	struct sta_info *sta;
 	char b2u_sta_id[NUM_STA];

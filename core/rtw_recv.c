@@ -3232,7 +3232,6 @@ static void recv_indicatepkts_pkt_loss_cnt(_adapter *padapter, u64 prev_seq, u64
 
 static int recv_indicatepkts_in_order(_adapter *padapter, struct recv_reorder_ctrl *preorder_ctrl, int bforced)
 {
-	/* _irqL irql; */
 	_list	*phead, *plist;
 	union recv_frame *prframe;
 	struct rx_pkt_attrib *pattrib;
@@ -3366,7 +3365,6 @@ static int recv_indicatepkts_in_order(_adapter *padapter, struct recv_reorder_ct
 
 static int recv_indicatepkt_reorder(_adapter *padapter, union recv_frame *prframe)
 {
-	_irqL irql;
 	struct rx_pkt_attrib *pattrib = &prframe->u.hdr.attrib;
 	struct recv_reorder_ctrl *preorder_ctrl = prframe->u.hdr.preorder_ctrl;
 	_queue *ppending_recvframe_queue = preorder_ctrl ? &preorder_ctrl->pending_recvframe_queue : NULL;
@@ -4334,7 +4332,6 @@ void rx_query_phy_status(
 	struct sta_priv *pstapriv;
 	struct sta_info *psta = NULL;
 	struct recv_priv  *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
-	/* _irqL		irqL; */
 
 	pkt_info.is_packet_match_bssid = _FALSE;
 	pkt_info.is_packet_to_self = _FALSE;

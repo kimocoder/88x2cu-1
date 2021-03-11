@@ -645,7 +645,6 @@ void invalidate_cam_all(_adapter *padapter)
 	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
 	struct cam_ctl_t *cam_ctl = &dvobj->cam_ctl;
 	u8 bmc_id = rtw_iface_bcmc_id_get(padapter);
-	_irqL irqL;
 	u8 val8 = 0;
 
 	rtw_hal_set_hwreg(padapter, HW_VAR_CAM_INVALID_ALL, &val8);
@@ -724,7 +723,6 @@ void write_cam_cache(_adapter *adapter, u8 id, u16 ctrl, u8 *mac, u8 *key)
 {
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
 	struct cam_ctl_t *cam_ctl = &dvobj->cam_ctl;
-	_irqL irqL;
 
 	_rtw_spinlock_bh(&cam_ctl->lock);
 
@@ -739,7 +737,6 @@ void clear_cam_cache(_adapter *adapter, u8 id)
 {
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
 	struct cam_ctl_t *cam_ctl = &dvobj->cam_ctl;
-	_irqL irqL;
 
 	_rtw_spinlock_bh(&cam_ctl->lock);
 
@@ -770,7 +767,6 @@ inline void rtw_camctl_set_flags(_adapter *adapter, u32 flags)
 {
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
 	struct cam_ctl_t *cam_ctl = &dvobj->cam_ctl;
-	_irqL irqL;
 
 	_rtw_spinlock_bh(&cam_ctl->lock);
 	_rtw_camctl_set_flags(adapter, flags);
@@ -789,7 +785,6 @@ inline void rtw_camctl_clr_flags(_adapter *adapter, u32 flags)
 {
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
 	struct cam_ctl_t *cam_ctl = &dvobj->cam_ctl;
-	_irqL irqL;
 
 	_rtw_spinlock_bh(&cam_ctl->lock);
 	_rtw_camctl_clr_flags(adapter, flags);
@@ -958,7 +953,6 @@ exit:
 
 inline bool rtw_sec_camid_is_used(struct cam_ctl_t *cam_ctl, u8 id)
 {
-	_irqL irqL;
 	bool ret;
 
 	_rtw_spinlock_bh(&cam_ctl->lock);
@@ -972,7 +966,6 @@ u8 rtw_get_sec_camid(_adapter *adapter, u8 max_bk_key_num, u8 *sec_key_id)
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
 	struct cam_ctl_t *cam_ctl = &dvobj->cam_ctl;
 	int i;
-	_irqL irqL;
 	u8 sec_cam_num = 0;
 
 	_rtw_spinlock_bh(&cam_ctl->lock);
@@ -1012,7 +1005,6 @@ inline bool rtw_camid_is_gk(_adapter *adapter, u8 cam_id)
 {
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
 	struct cam_ctl_t *cam_ctl = &dvobj->cam_ctl;
-	_irqL irqL;
 	bool ret;
 
 	_rtw_spinlock_bh(&cam_ctl->lock);
@@ -1070,7 +1062,6 @@ s16 rtw_camid_search(_adapter *adapter, u8 *addr, s16 kid, s8 gk)
 {
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
 	struct cam_ctl_t *cam_ctl = &dvobj->cam_ctl;
-	_irqL irqL;
 	s16 cam_id = -1;
 
 	_rtw_spinlock_bh(&cam_ctl->lock);
@@ -1148,7 +1139,6 @@ s16 rtw_camid_alloc(_adapter *adapter, struct sta_info *sta, u8 kid, u8 gk, bool
 	struct mlme_ext_info *mlmeinfo = &adapter->mlmeextpriv.mlmext_info;
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
 	struct cam_ctl_t *cam_ctl = &dvobj->cam_ctl;
-	_irqL irqL;
 	s16 cam_id = -1;
 
 	*used = _FALSE;
@@ -1214,7 +1204,6 @@ void rtw_camid_set(_adapter *adapter, u8 cam_id)
 {
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
 	struct cam_ctl_t *cam_ctl = &dvobj->cam_ctl;
-	_irqL irqL;
 
 	_rtw_spinlock_bh(&cam_ctl->lock);
 
@@ -1228,7 +1217,6 @@ void rtw_camid_free(_adapter *adapter, u8 cam_id)
 {
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
 	struct cam_ctl_t *cam_ctl = &dvobj->cam_ctl;
-	_irqL irqL;
 
 	_rtw_spinlock_bh(&cam_ctl->lock);
 
@@ -1244,7 +1232,6 @@ inline void rtw_sec_cam_swap(_adapter *adapter, u8 cam_id_a, u8 cam_id_b)
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
 	struct cam_ctl_t *cam_ctl = &dvobj->cam_ctl;
 	struct sec_cam_ent cache_a, cache_b;
-	_irqL irqL;
 	bool cam_a_used, cam_b_used;
 
 	if (1)
@@ -1295,7 +1282,6 @@ s16 rtw_get_empty_cam_entry(_adapter *adapter, u8 start_camid)
 {
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
 	struct cam_ctl_t *cam_ctl = &dvobj->cam_ctl;
-	_irqL irqL;
 	int i;
 	s16 cam_id = -1;
 
@@ -2320,7 +2306,6 @@ void rtw_absorb_ssid_ifneed(_adapter *padapter, WLAN_BSSID_EX *bssid, u8 *pframe
 	u32 remain_len = 0;
 	u8 backupIE[MAX_IE_SZ];
 	u16 subtype = get_frame_sub_type(pframe);
-	_irqL irqL;
 
 	if (subtype == WIFI_BEACON) {
 		bssid->Reserved[0] = BSS_TYPE_BCN;
@@ -3928,7 +3913,6 @@ void rtw_iface_bcmc_sec_cam_map_restore(_adapter *adapter)
 void rtw_alloc_macid(_adapter *padapter, struct sta_info *psta)
 {
 	int i;
-	_irqL irqL;
 	u8 bc_addr[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
 	struct macid_ctl_t *macid_ctl = dvobj_to_macidctl(dvobj);
@@ -4030,7 +4014,6 @@ exit:
 
 void rtw_release_macid(_adapter *padapter, struct sta_info *psta)
 {
-	_irqL irqL;
 	u8 bc_addr[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
 	struct macid_ctl_t *macid_ctl = dvobj_to_macidctl(dvobj);

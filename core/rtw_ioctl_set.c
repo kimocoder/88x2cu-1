@@ -72,7 +72,6 @@ exit:
 u8 rtw_do_join(_adapter *padapter);
 u8 rtw_do_join(_adapter *padapter)
 {
-	_irqL	irqL;
 	_list	*plist, *phead;
 	u8 *pibss = NULL;
 	struct	mlme_priv	*pmlmepriv = &(padapter->mlmepriv);
@@ -205,7 +204,6 @@ exit:
 
 u8 rtw_set_802_11_bssid(_adapter *padapter, u8 *bssid)
 {
-	_irqL irqL;
 	u8 status = _SUCCESS;
 
 	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
@@ -276,7 +274,6 @@ exit:
 
 u8 rtw_set_802_11_ssid(_adapter *padapter, NDIS_802_11_SSID *ssid)
 {
-	_irqL irqL;
 	u8 status = _SUCCESS;
 
 	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
@@ -375,7 +372,6 @@ exit:
 u8 rtw_set_802_11_connect(_adapter *padapter,
 			  u8 *bssid, NDIS_802_11_SSID *ssid, u16 ch)
 {
-	_irqL irqL;
 	u8 status = _SUCCESS;
 	bool bssid_valid = _TRUE;
 	bool ssid_valid = _TRUE;
@@ -444,7 +440,6 @@ exit:
 u8 rtw_set_802_11_infrastructure_mode(_adapter *padapter,
 			      NDIS_802_11_NETWORK_INFRASTRUCTURE networktype, u8 flags)
 {
-	_irqL irqL;
 	struct	mlme_priv	*pmlmepriv = &padapter->mlmepriv;
 	struct	wlan_network	*cur_network = &pmlmepriv->cur_network;
 	NDIS_802_11_NETWORK_INFRASTRUCTURE *pold_state = &(cur_network->network.InfrastructureMode);
@@ -548,7 +543,6 @@ u8 rtw_set_802_11_infrastructure_mode(_adapter *padapter,
 
 u8 rtw_set_802_11_disassociate(_adapter *padapter)
 {
-	_irqL irqL;
 	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
 
 

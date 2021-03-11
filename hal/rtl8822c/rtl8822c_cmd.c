@@ -389,7 +389,6 @@ C2HTxRPTHandler_8822c(
 		u8			CmdLen
 )
 {
-	_irqL	 irqL;
 	u8 macid = 0, IniRate = 0;
 	u16 TxOK = 0, TxFail = 0;
 	struct sta_priv	*pstapriv = &(GET_PRIMARY_ADAPTER(Adapter))->stapriv, *pstapriv_original = NULL;
@@ -436,7 +435,6 @@ C2HSPC_STAT_8822c(
 		u8			CmdLen
 )
 {
-	_irqL	 irqL;
 	struct sta_priv *pstapriv = &(GET_PRIMARY_ADAPTER(Adapter))->stapriv;
 	struct sta_info *psta = NULL;
 	struct sta_info *pbcmc_stainfo = rtw_get_bcmc_stainfo(Adapter);
