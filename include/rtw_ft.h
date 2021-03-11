@@ -59,9 +59,9 @@ enum _rtw_ft_sta_status {
 
 #define rtw_ft_lock_set_status(a, s, irq) \
 	do { \
-		_enter_critical_bh(&(a)->mlmepriv.lock, ((_irqL *)(irq)));	\
+		_rtw_spinlock_bh(&(a)->mlmepriv.lock);	\
 		((a)->mlmepriv.ft_roam.ft_status = (s));	\
-		_exit_critical_bh(&(a)->mlmepriv.lock, ((_irqL *)(irq)));	\
+		_rtw_spinunlock_bh(&(a)->mlmepriv.lock);	\
 	} while (0)
 
 #define rtw_ft_reset_status(a) \

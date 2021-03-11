@@ -25,7 +25,6 @@ static void _rtw_bss_nums_count(_adapter *adapter, u8 *pbss_nums)
 	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(adapter);
 
 	_list	*plist, *phead;
-	_irqL irqL;
 	int chan_idx = -1;
 
 	if (pbss_nums == NULL) {
@@ -34,7 +33,7 @@ static void _rtw_bss_nums_count(_adapter *adapter, u8 *pbss_nums)
 	}
 	_rtw_memset(pbss_nums, 0, MAX_CHANNEL_NUM);
 
-	_enter_critical_bh(&(pmlmepriv->scanned_queue.lock), &irqL);
+	_rtw_spinlock_bh(&(pmlmepriv->scanned_queue.lock));
 	phead = get_list_head(queue);
 	plist = get_next(phead);
 	while (1) {
@@ -56,7 +55,7 @@ static void _rtw_bss_nums_count(_adapter *adapter, u8 *pbss_nums)
 
 		plist = get_next(plist);
 	}
-	_exit_critical_bh(&(pmlmepriv->scanned_queue.lock), &irqL);
+	_rtw_spinunlock_bh(&(pmlmepriv->scanned_queue.lock));
 }
 
 u8 rtw_get_ch_num_by_idx(_adapter *adapter, u8 idx)

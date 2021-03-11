@@ -933,7 +933,6 @@ void SetHalODMVar(
 	BOOLEAN					bSet)
 {
 	struct dm_struct *podmpriv = adapter_to_phydm(Adapter);
-	/* _irqL irqL; */
 	switch (eVariable) {
 	case HAL_ODM_STA_INFO: {
 		struct sta_info *psta = (struct sta_info *)pValue1;
@@ -944,11 +943,8 @@ void SetHalODMVar(
 			phydm_cmn_sta_info_hook(podmpriv, psta->cmn.mac_id, &(psta->cmn));
 		} else {
 			RTW_INFO("### Clean STA_(%d) info ###\n", psta->cmn.mac_id);
-			/* _enter_critical_bh(&pHalData->odm_stainfo_lock, &irqL); */
 			psta->cmn.dm_ctrl = 0;
 			phydm_cmn_sta_info_hook(podmpriv, psta->cmn.mac_id, NULL);
-
-			/* _exit_critical_bh(&pHalData->odm_stainfo_lock, &irqL); */
 		}
 	}
 		break;

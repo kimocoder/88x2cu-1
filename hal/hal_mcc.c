@@ -526,7 +526,7 @@ static void mcc_cfg_phdym_offload(_adapter *adapter, u8 enable)
 				break;
 			case MCC_ROLE_AP:
 			case MCC_ROLE_GO:
-				_enter_critical_bh(&stapriv->asoc_list_lock, &irqL);
+				_rtw_spinlock_bh(&stapriv->asoc_list_lock);
 
 				head = &stapriv->asoc_list;
 				list = get_next(head);
@@ -537,7 +537,7 @@ static void mcc_cfg_phdym_offload(_adapter *adapter, u8 enable)
 					mcc_cfg_phdym_update_macid(iface, _TRUE, sta->cmn.mac_id);
 				}
 
-				_exit_critical_bh(&stapriv->asoc_list_lock, &irqL);
+				_rtw_spinunlock_bh(&stapriv->asoc_list_lock);
 				break;
 			default:
 				RTW_INFO("Unknown role\n");
@@ -668,7 +668,7 @@ static void rtw_hal_config_mcc_role_setting(PADAPTER padapter, u8 order)
 
 			rtw_hal_mcc_assign_tx_threshold(padapter);
 
-			_enter_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+			_rtw_spinlock_bh(&pstapriv->asoc_list_lock);
 
 			phead = &pstapriv->asoc_list;
 			plist = get_next(phead);
@@ -683,7 +683,7 @@ static void rtw_hal_config_mcc_role_setting(PADAPTER padapter, u8 order)
 				#endif
 			}
 
-			_exit_critical_bh(&pstapriv->asoc_list_lock, &irqL);
+			_rtw_spinunlock_bh(&pstapriv->asoc_list_lock);
 
 			psta = rtw_get_bcmc_stainfo(padapter);
 
@@ -2915,7 +2915,7 @@ void rtw_hal_mcc_c2h_handler(PADAPTER padapter, u8 buflen, u8 *tmpBuf)
 		return;
 	}
 
-	_enter_critical_bh(&pmccobjpriv->mcc_lock, &irqL);
+	_rtw_spinlock_bh(&pmccobjpriv->mcc_lock);
 	pmccobjpriv->mcc_c2h_status = tmpBuf[0];
 	pmccobjpriv->current_order = tmpBuf[1];
 	cur_adapter = pmccobjpriv->iface[pmccobjpriv->current_order];
@@ -2925,18 +2925,18 @@ void rtw_hal_mcc_c2h_handler(PADAPTER padapter, u8 buflen, u8 *tmpBuf)
 	rtw_set_oper_ch(cur_adapter, cur_ch);
 	rtw_set_oper_bw(cur_adapter, cur_bw);
 	rtw_set_oper_choffset(cur_adapter, cur_ch_offset);
-	_exit_critical_bh(&pmccobjpriv->mcc_lock, &irqL);
+	_rtw_spinunlock_bh(&pmccobjpriv->mcc_lock);
 
 	if (0)
 		RTW_INFO("%d,order:%d,TSF:0x%llx\n", tmpBuf[0], tmpBuf[1], RTW_GET_LE64(tmpBuf + 2));
 	
 	switch (pmccobjpriv->mcc_c2h_status) {
 	case MCC_RPT_SUCCESS:
-		_enter_critical_bh(&pmccobjpriv->mcc_lock, &irqL);
+		_rtw_spinlock_bh(&pmccobjpriv->mcc_lock);
 		pmccobjpriv->cur_mcc_success_cnt++;
 		rtw_hal_mcc_upadate_chnl_bw(cur_adapter, cur_ch, cur_ch_offset, cur_bw, _FALSE);
 		mcc_get_reg_cmd(padapter, pmccobjpriv->current_order);
-		_exit_critical_bh(&pmccobjpriv->mcc_lock, &irqL);
+		_rtw_spinunlock_bh(&pmccobjpriv->mcc_lock);
 		break;
 	case MCC_RPT_TXNULL_FAIL:
 		RTW_INFO("[MCC] TXNULL FAIL\n");
@@ -2948,14 +2948,14 @@ void rtw_hal_mcc_c2h_handler(PADAPTER padapter, u8 buflen, u8 *tmpBuf)
 		rtw_sctx_done(&mcc_sctx);
 		break;
 	case MCC_RPT_READY:
-		_enter_critical_bh(&pmccobjpriv->mcc_lock, &irqL);
+		_rtw_spinlock_bh(&pmccobjpriv->mcc_lock);
 		/* initialize counter & time */
 		pmccobjpriv->mcc_launch_time = rtw_get_current_time();
 		pmccobjpriv->mcc_c2h_status = MCC_RPT_READY;
 		pmccobjpriv->cur_mcc_success_cnt = 0;
 		pmccobjpriv->prev_mcc_success_cnt = 0;
 		pmccobjpriv->mcc_tolerance_time = MCC_TOLERANCE_TIME;
-		_exit_critical_bh(&pmccobjpriv->mcc_lock, &irqL);
+		_rtw_spinunlock_bh(&pmccobjpriv->mcc_lock);
 
 		RTW_INFO("[MCC] MCC ready\n");
 		rtw_sctx_done(&mcc_sctx);
@@ -2967,9 +2967,9 @@ void rtw_hal_mcc_c2h_handler(PADAPTER padapter, u8 buflen, u8 *tmpBuf)
 		rtw_hal_mcc_update_noa_start_time_hdl(padapter, buflen, tmpBuf);
 		break;
 	case MCC_RPT_TSF:
-		_enter_critical_bh(&pmccobjpriv->mcc_lock, &irqL);
+		_rtw_spinlock_bh(&pmccobjpriv->mcc_lock);
 		rtw_hal_mcc_rpt_tsf_hdl(padapter, buflen, tmpBuf);
-		_exit_critical_bh(&pmccobjpriv->mcc_lock, &irqL);
+		_rtw_spinunlock_bh(&pmccobjpriv->mcc_lock);
 		break;
 	default:
 		/* RTW_INFO("[MCC] Other MCC status(%d)\n", pmccobjpriv->mcc_c2h_status); */
@@ -3122,7 +3122,7 @@ void rtw_hal_mcc_sw_status_check(PADAPTER padapter)
 		}
 
 		if (rtw_get_passing_time_ms(pmccobjpriv->mcc_launch_time) > 2000) {
-			_enter_critical_bh(&pmccobjpriv->mcc_lock, &irqL);
+			_rtw_spinlock_bh(&pmccobjpriv->mcc_lock);
 
 			cur_cnt = pmccobjpriv->cur_mcc_success_cnt;
 			prev_cnt = pmccobjpriv->prev_mcc_success_cnt;
@@ -3143,7 +3143,7 @@ void rtw_hal_mcc_sw_status_check(PADAPTER padapter)
 			if (pmccobjpriv->mcc_tolerance_time != 0)
 				check_ret = _SUCCESS;
 
-			_exit_critical_bh(&pmccobjpriv->mcc_lock, &irqL);
+			_rtw_spinunlock_bh(&pmccobjpriv->mcc_lock);
 
 			if (check_ret != _SUCCESS) {
 				RTW_INFO("============ MCC swich channel check fail (%d)=============\n", diff_cnt);
@@ -3154,9 +3154,9 @@ void rtw_hal_mcc_sw_status_check(PADAPTER padapter)
 				#endif /* MCC_RESTART */
 			}
 		} else {
-			_enter_critical_bh(&pmccobjpriv->mcc_lock, &irqL);
+			_rtw_spinlock_bh(&pmccobjpriv->mcc_lock);
 			pmccobjpriv->prev_mcc_success_cnt = pmccobjpriv->cur_mcc_success_cnt;
-			_exit_critical_bh(&pmccobjpriv->mcc_lock, &irqL);
+			_rtw_spinunlock_bh(&pmccobjpriv->mcc_lock);
 		}
 
 	}
@@ -3567,9 +3567,9 @@ static void mcc_dump_dbg_reg(void *sel, _adapter *adapter)
 	struct hal_spec_t *hal_spec = GET_HAL_SPEC(adapter);
 	u8 i,j;
 
-	_enter_critical_bh(&mccobjpriv->mcc_lock, &irqL);
+	_rtw_spinlock_bh(&mccobjpriv->mcc_lock);
 	RTW_PRINT_SEL(sel, "current order=%d\n", mccobjpriv->current_order);
-	_exit_critical_bh(&mccobjpriv->mcc_lock, &irqL);
+	_rtw_spinunlock_bh(&mccobjpriv->mcc_lock);
 
 	_rtw_mutex_lock_interruptible(&mccobjpriv->mcc_dbg_reg_mutex);
 	for (i = 0; i < ARRAY_SIZE(mccobjpriv->dbg_reg); i++)

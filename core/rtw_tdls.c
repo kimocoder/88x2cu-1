@@ -99,7 +99,6 @@ void rtw_free_all_tdls_sta(_adapter *padapter, u8 enqueue_cmd)
 {
 	struct sta_priv *pstapriv = &padapter->stapriv;
 	struct tdls_info *ptdlsinfo = &padapter->tdlsinfo;
-	_irqL	 irqL;
 	_list	*plist, *phead;
 	s32	index;
 	struct sta_info *psta = NULL;
@@ -108,7 +107,7 @@ void rtw_free_all_tdls_sta(_adapter *padapter, u8 enqueue_cmd)
 
 	_rtw_memset(ptdls_sta, 0x00, sizeof(ptdls_sta));
 
-	_enter_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+	_rtw_spinlock_bh(&pstapriv->sta_hash_lock);
 	for (index = 0; index < NUM_STA; index++) {
 		phead = &(pstapriv->sta_hash[index]);
 		plist = get_next(phead);
@@ -122,7 +121,7 @@ void rtw_free_all_tdls_sta(_adapter *padapter, u8 enqueue_cmd)
 				ptdls_sta[index] = psta;
 		}
 	}
-	_exit_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+	_rtw_spinunlock_bh(&pstapriv->sta_hash_lock);
 
 	for (index = 0; index < NUM_STA; index++) {
 		if (ptdls_sta[index]) {
@@ -221,14 +220,13 @@ u8 rtw_is_tdls_sta_existed(_adapter *padapter)
 	struct sta_priv *pstapriv = &padapter->stapriv;
 	struct sta_info *psta;
 	int i = 0;
-	_irqL irqL;
 	_list	*plist, *phead;
 	u8 ret = _FALSE;
 
 	if (rtw_is_tdls_enabled(padapter) == _FALSE)
 		return _FALSE;
 
-	_enter_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+	_rtw_spinlock_bh(&pstapriv->sta_hash_lock);
 
 	for (i = 0; i < NUM_STA; i++) {
 		phead = &(pstapriv->sta_hash[i]);
@@ -245,7 +243,7 @@ u8 rtw_is_tdls_sta_existed(_adapter *padapter)
 
 Exit:
 
-	_exit_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+	_rtw_spinunlock_bh(&pstapriv->sta_hash_lock);
 
 	return ret;
 }
@@ -1218,7 +1216,6 @@ int issue_tdls_setup_req(_adapter *padapter, struct tdls_txmgmt *ptxmgmt, int wa
 	struct xmit_priv			*pxmitpriv = &(padapter->xmitpriv);
 	struct sta_priv *pstapriv = &padapter->stapriv;
 	struct sta_info *ptdls_sta = NULL;
-	_irqL irqL;
 	int ret = _FAIL;
 	/* Retry timer should be set at least 301 sec, using TPK_count counting 301 times. */
 	u32 timeout_interval = TDLS_TPK_RESEND_COUNT;
@@ -1304,7 +1301,6 @@ int _issue_tdls_teardown(_adapter *padapter, struct tdls_txmgmt *ptxmgmt, struct
 	struct mlme_priv	*pmlmepriv = &padapter->mlmepriv;
 	struct xmit_priv			*pxmitpriv = &(padapter->xmitpriv);
 	struct sta_priv *pstapriv = &padapter->stapriv;
-	_irqL irqL;
 	int ret = _FAIL;
 
 	RTW_INFO("[TDLS] %s\n", __FUNCTION__);
@@ -1734,13 +1730,6 @@ int issue_tdls_ch_switch_rsp(_adapter *padapter, struct tdls_txmgmt *ptxmgmt, in
 
 	update_tdls_attrib(padapter, pattrib);
 	pattrib->qsel = pattrib->priority;
-	/*
-		_enter_critical_bh(&pxmitpriv->lock, &irqL);
-		if(xmitframe_enqueue_for_tdls_sleeping_sta(padapter, pmgntframe)==_TRUE){
-			_exit_critical_bh(&pxmitpriv->lock, &irqL);
-			return _FALSE;
-		}
-	*/
 	if (rtw_xmit_tdls_coalesce(padapter, pmgntframe, ptxmgmt) != _SUCCESS) {
 		rtw_free_xmitbuf(pxmitpriv, pmgntframe->pxmitbuf);
 		rtw_free_xmitframe(pxmitpriv, pmgntframe);
@@ -1836,7 +1825,6 @@ sint On_TDLS_Setup_Req(_adapter *padapter, union recv_frame *precv_frame, struct
 	u8 *ptr = precv_frame->u.hdr.rx_data;
 	struct mlme_priv *pmlmepriv = &(padapter->mlmepriv);
 	struct security_priv *psecuritypriv = &padapter->securitypriv;
-	_irqL irqL;
 	struct rx_pkt_attrib	*prx_pkt_attrib = &precv_frame->u.hdr.attrib;
 	u8 *prsnie, *ppairwise_cipher;
 	u8 i, k;
@@ -2053,7 +2041,6 @@ int On_TDLS_Setup_Rsp(_adapter *padapter, union recv_frame *precv_frame, struct 
 	struct tdls_info *ptdlsinfo = &padapter->tdlsinfo;
 	struct sta_priv *pstapriv = &padapter->stapriv;
 	u8 *ptr = precv_frame->u.hdr.rx_data;
-	_irqL irqL;
 	struct rx_pkt_attrib	*prx_pkt_attrib = &precv_frame->u.hdr.attrib;
 	u8 *psa;
 	u16 status_code = 0;
@@ -2231,7 +2218,6 @@ int On_TDLS_Setup_Cfm(_adapter *padapter, union recv_frame *precv_frame, struct 
 	struct tdls_info *ptdlsinfo = &padapter->tdlsinfo;
 	struct sta_priv *pstapriv = &padapter->stapriv;
 	u8 *ptr = precv_frame->u.hdr.rx_data;
-	_irqL irqL;
 	struct rx_pkt_attrib	*prx_pkt_attrib = &precv_frame->u.hdr.attrib;
 	u8 *psa;
 	u16 status_code = 0;
@@ -2408,7 +2394,6 @@ int On_TDLS_Teardown(_adapter *padapter, union recv_frame *precv_frame, struct s
 	struct mlme_ext_priv	*pmlmeext = &(padapter->mlmeextpriv);
 	struct mlme_ext_info	*pmlmeinfo = &(pmlmeext->mlmext_info);
 	struct sta_priv	*pstapriv = &padapter->stapriv;
-	_irqL irqL;
 	u8 reason;
 
 	reason = *(ptr + prx_pkt_attrib->hdrlen + prx_pkt_attrib->iv_len + LLC_HEADER_SIZE + ETH_TYPE_LEN + PAYLOAD_TYPE_LEN + 2);
@@ -2475,11 +2460,10 @@ int On_TDLS_Peer_Traffic_Rsp(_adapter *padapter, union recv_frame *precv_frame, 
 	/* If it's a direct link and have buffered frame */
 	if (ptdls_sta->tdls_sta_state & TDLS_LINKED_STATE) {
 		if (wmmps_ac) {
-			_irqL irqL;
 			_list	*xmitframe_plist, *xmitframe_phead;
 			struct xmit_frame *pxmitframe = NULL;
 
-			_enter_critical_bh(&ptdls_sta->sleep_q.lock, &irqL);
+			_rtw_spinlock_bh(&ptdls_sta->sleep_q.lock);
 
 			xmitframe_phead = get_list_head(&ptdls_sta->sleep_q);
 			xmitframe_plist = get_next(xmitframe_phead);
@@ -2511,7 +2495,7 @@ int On_TDLS_Peer_Traffic_Rsp(_adapter *padapter, union recv_frame *precv_frame, 
 				ptdls_sta->sleepq_len = 0;
 			}
 
-			_exit_critical_bh(&ptdls_sta->sleep_q.lock, &irqL);
+			_rtw_spinunlock_bh(&ptdls_sta->sleep_q.lock);
 
 		}
 
@@ -3431,14 +3415,13 @@ void rtw_tdls_teardown_pre_hdl(_adapter *padapter, struct sta_info *psta)
 {
 	struct tdls_info *ptdlsinfo = &padapter->tdlsinfo;
 	struct sta_priv *pstapriv = &padapter->stapriv;
-	_irqL irqL;
 
 	rtw_cancel_tdls_timer(psta);
 
-	_enter_critical_bh(&(pstapriv->sta_hash_lock), &irqL);
+	_rtw_spinlock_bh(&(pstapriv->sta_hash_lock));
 	if (ptdlsinfo->sta_cnt != 0)
 		ptdlsinfo->sta_cnt--;
-	_exit_critical_bh(&(pstapriv->sta_hash_lock), &irqL);
+	_rtw_spinunlock_bh(&(pstapriv->sta_hash_lock));
 
 	if (ptdlsinfo->sta_cnt < MAX_ALLOWED_TDLS_STA_NUM) {
 		ptdlsinfo->sta_maximum = _FALSE;
