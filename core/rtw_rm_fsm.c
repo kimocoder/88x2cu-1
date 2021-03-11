@@ -156,20 +156,19 @@ int rtw_free_rm_priv(_adapter *padapter)
 
 static int rm_enqueue_ev(_queue *queue, struct rm_event *obj, bool to_head)
 {
-	_irqL irqL;
-
+	unsigned long sp_flags;
 
 	if (obj == NULL)
 		return _FAIL;
 
-	_enter_critical(&queue->lock, &irqL);
+	_rtw_spinlock_irq(&queue->lock, &sp_flags);
 
 	if (to_head)
 		rtw_list_insert_head(&obj->list, &queue->queue);
 	else
 		rtw_list_insert_tail(&obj->list, &queue->queue);
 
-	_exit_critical(&queue->lock, &irqL);
+	_rtw_spinunlock_irq(&queue->lock, &sp_flags);
 
 	return _SUCCESS;
 }
@@ -257,20 +256,21 @@ struct rm_obj *rm_alloc_rmobj(_adapter *padapter)
 
 int rm_enqueue_rmobj(_adapter *padapter, struct rm_obj *prm, bool to_head)
 {
-	_irqL irqL;
 	struct rm_priv *prmpriv = &padapter->rmpriv;
 	_queue *queue = &prmpriv->rm_queue;
+
+	unsigned long sp_flags;
 
 
 	if (prm == NULL)
 		return _FAIL;
 
-	_enter_critical(&queue->lock, &irqL);
+	_rtw_spinlock_irq(&queue->lock, &sq_flags);
 	if (to_head)
 		rtw_list_insert_head(&prm->list, &queue->queue);
 	else
 		rtw_list_insert_tail(&prm->list, &queue->queue);
-	_exit_critical(&queue->lock, &irqL);
+	_rtw_spinunlock_irq(&queue->lock, &sp_flags);
 
 	rm_state_initial(prm);
 
@@ -279,11 +279,11 @@ int rm_enqueue_rmobj(_adapter *padapter, struct rm_obj *prm, bool to_head)
 
 static struct rm_obj *rm_dequeue_rm(_queue *queue)
 {
-	_irqL irqL;
 	struct rm_obj *prm;
+	unsigned long sp_flags;
 
 
-	_enter_critical(&queue->lock, &irqL);
+	_rtw_spinlock_irq(&queue->lock, &sp_flags);
 	if (rtw_is_list_empty(&(queue->queue)))
 		prm = NULL;
 	else {
@@ -291,18 +291,18 @@ static struct rm_obj *rm_dequeue_rm(_queue *queue)
 			struct rm_obj, list);
 		/* rtw_list_delete(&prm->list); */
 	}
-	_exit_critical(&queue->lock, &irqL);
+	_rtw_spinunlock_irq(&queue->lock, &sp_flags);
 
 	return prm;
 }
 
 static struct rm_event *rm_dequeue_ev(_queue *queue)
 {
-	_irqL irqL;
 	struct rm_event *ev;
+	unsigned long sp_flags;
 
 
-	_enter_critical(&queue->lock, &irqL);
+	_rtw_spinlock_irq(&queue->lock, &sp_flags);
 	if (rtw_is_list_empty(&(queue->queue)))
 		ev = NULL;
 	else {
@@ -310,22 +310,22 @@ static struct rm_event *rm_dequeue_ev(_queue *queue)
 			struct rm_event, list);
 		rtw_list_delete(&ev->list);
 	}
-	_exit_critical(&queue->lock, &irqL);
+	_rtw_spinunlock_irq(&queue->lock, &sp_flags);
 
 	return ev;
 }
 
 static struct rm_obj *_rm_get_rmobj(_queue *queue, u32 rmid)
 {
-	_irqL irqL;
 	_list *phead, *plist;
 	struct rm_obj *prm = NULL;
+	unsigned long sp_flags;
 
 
 	if (rmid == 0)
 		return NULL;
 
-	_enter_critical(&queue->lock, &irqL);
+	_rtw_spinlock_irq(&queue->lock, &sp_flags);
 
 	phead = get_list_head(queue);
 	plist = get_next(phead);
@@ -333,12 +333,12 @@ static struct rm_obj *_rm_get_rmobj(_queue *queue, u32 rmid)
 
 		prm = LIST_CONTAINOR(plist, struct rm_obj, list);
 		if (rmid == (prm->rmid)) {
-			_exit_critical(&queue->lock, &irqL);
+			_rtw_spinunlock_irq(&queue->lock, &sp_flags);
 			return prm;
 		}
 		plist = get_next(plist);
 	}
-	_exit_critical(&queue->lock, &irqL);
+	_rtw_spinunlock_irq(&queue->lock, &sp_flags);
 
 	return NULL;
 }
@@ -426,13 +426,13 @@ int _rm_post_event(_adapter *padapter, u32 rmid, enum RM_EV_ID evid)
 
 static void rm_bcast_aid_handler(_adapter *padapter, struct rm_event *pev)
 {
-	_irqL irqL;
 	_list *phead, *plist;
 	_queue *queue = &padapter->rmpriv.rm_queue;
 	struct rm_obj *prm;
+	unsigned long sp_flags;
 
 
-	_enter_critical(&queue->lock, &irqL);
+	_rtw_spinlock_irq(&queue->lock, &sp_flags);
 	phead = get_list_head(queue);
 	plist = get_next(phead);
 	while ((rtw_end_of_queue_search(phead, plist)) == _FALSE) {
@@ -440,12 +440,12 @@ static void rm_bcast_aid_handler(_adapter *padapter, struct rm_event *pev)
 		prm = LIST_CONTAINOR(plist, struct rm_obj, list);
 		plist = get_next(plist);
 		if (RM_GET_AID(pev->rmid) == RM_GET_AID(prm->rmid)) {
-			_exit_critical(&queue->lock, &irqL);
+			_rtw_spinunlock_irq(&queue->lock, &sp_flags);
 			rm_state_run(prm, pev->evid);
-			_enter_critical(&queue->lock, &irqL);
+			_rtw_spinlock_irq(&queue->lock, &sp_flags);
 		}
 	}
-	_exit_critical(&queue->lock, &irqL);
+	_rtw_spinunlock_irq(&queue->lock, &sp_flags);
 	return;
 }
 

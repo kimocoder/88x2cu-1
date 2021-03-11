@@ -1005,15 +1005,6 @@ u32 rtw_init_bcmc_stainfo(_adapter *padapter)
 
 	ptxservq = &(psta->sta_xmitpriv.be_q);
 
-	/*
-		_enter_critical(&pstapending->lock, &irqL0);
-
-		if (rtw_is_list_empty(&ptxservq->tx_pending))
-			rtw_list_insert_tail(&ptxservq->tx_pending, get_list_head(pstapending));
-
-		_exit_critical(&pstapending->lock, &irqL0);
-	*/
-
 exit:
 	return _SUCCESS;
 

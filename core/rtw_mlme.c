@@ -463,15 +463,11 @@ void _rtw_free_network_nolock(struct	mlme_priv *pmlmepriv, struct wlan_network *
 	if (pnetwork->fixed == _TRUE)
 		goto exit;
 
-	/* _enter_critical(&free_queue->lock, &irqL); */
-
 	rtw_list_delete(&(pnetwork->list));
 
 	rtw_list_insert_tail(&(pnetwork->list), get_list_head(free_queue));
 
 	pmlmepriv->num_of_scanned--;
-
-	/* _exit_critical(&free_queue->lock, &irqL); */
 
 exit:
 	return;
@@ -2860,7 +2856,6 @@ exit:
 void rtw_sta_timeout_event_callback(_adapter *adapter, u8 *pbuf)
 {
 #ifdef CONFIG_AP_MODE
-	_irqL irqL;
 	struct sta_info *psta;
 	struct stadel_event *pstadel = (struct stadel_event *)pbuf;
 	struct sta_priv *pstapriv = &adapter->stapriv;

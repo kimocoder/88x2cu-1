@@ -7859,10 +7859,11 @@ void dump_mgntframe(_adapter *padapter, struct xmit_frame *pmgntframe)
 s32 dump_mgntframe_and_wait(_adapter *padapter, struct xmit_frame *pmgntframe, int timeout_ms)
 {
 	s32 ret = _FAIL;
-	_irqL irqL;
 	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
 	struct xmit_buf *pxmitbuf = pmgntframe->pxmitbuf;
 	struct submit_ctx sctx;
+
+	unsigned long sp_flags;
 
 	if (RTW_CANNOT_RUN(adapter_to_dvobj(padapter))) {
 		rtw_free_xmitbuf(&padapter->xmitpriv, pmgntframe->pxmitbuf);
@@ -7882,9 +7883,9 @@ s32 dump_mgntframe_and_wait(_adapter *padapter, struct xmit_frame *pmgntframe, i
 	)
 		ret = rtw_sctx_wait(&sctx, __func__);
 
-	_enter_critical(&pxmitpriv->lock_sctx, &irqL);
+	_rtw_spinlock_irq(&pxmitpriv->lock_sctx, &sp_flags);
 	pxmitbuf->sctx = NULL;
-	_exit_critical(&pxmitpriv->lock_sctx, &irqL);
+	_rtw_spinunlock_irq(&pxmitpriv->lock_sctx, &sp_flags);
 
 	return ret;
 }
@@ -7981,7 +7982,6 @@ void issue_beacon(_adapter *padapter, int timeout_ms)
 	unsigned int	rate_len;
 	struct xmit_priv	*pxmitpriv = &(padapter->xmitpriv);
 #if defined(CONFIG_AP_MODE) && defined (CONFIG_NATIVEAP_MLME)
-	_irqL irqL;
 	struct mlme_priv *pmlmepriv = &(padapter->mlmepriv);
 #endif /* #if defined (CONFIG_AP_MODE) && defined (CONFIG_NATIVEAP_MLME) */
 	struct mlme_ext_priv	*pmlmeext = &(padapter->mlmeextpriv);
@@ -10626,7 +10626,6 @@ exit:
 
 void issue_action_BSSCoexistPacket(_adapter *padapter)
 {
-	_irqL	irqL;
 	_list		*plist, *phead;
 	unsigned char category, action;
 	struct xmit_frame			*pmgntframe;
@@ -12186,7 +12185,6 @@ Following are the event callback functions
 /* for sta/adhoc mode */
 void update_sta_info(_adapter *padapter, struct sta_info *psta)
 {
-	_irqL	irqL;
 	struct mlme_priv *pmlmepriv = &(padapter->mlmepriv);
 	struct mlme_ext_priv	*pmlmeext = &padapter->mlmeextpriv;
 	struct mlme_ext_info	*pmlmeinfo = &(pmlmeext->mlmext_info);
@@ -12519,7 +12517,6 @@ exit_mlmeext_joinbss_event_callback:
 		struct xmit_frame *rframe;
 		struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
 		_list *plist, *phead;
-		_irqL irqL;
 		struct sk_buff *pkt;
 
 		padapter->mlmepriv.roam_network = NULL;
@@ -13041,7 +13038,6 @@ bypass_active_keep_alive:
 		} /* end of if ((psta = rtw_get_stainfo(pstapriv, passoc_res->network.MacAddress)) != NULL) */
 
 	} else if (is_client_associated_to_ibss(padapter)) {
-		_irqL irqL;
 		_list *phead, *plist, dlist;
 
 		_rtw_init_listhead(&dlist);
@@ -13379,7 +13375,6 @@ void sa_query_timer_hdl(void *ctx)
 {
 	struct sta_info *psta = (struct sta_info *)ctx;
 	_adapter *padapter = psta->padapter;
-	_irqL irqL;
 	struct sta_priv *pstapriv = &padapter->stapriv;
 	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
 
@@ -13691,7 +13686,6 @@ u8 join_cmd_hdl(_adapter *padapter, u8 *pbuf)
 	struct wlan_network     *rnetwork = pmlmepriv->roam_network;
 	struct beacon_keys bcn_keys;
 	u32 roam_ielen;
-	_irqL irqL;
 #endif
 	u32 i;
 	/* u8	initialgain; */
@@ -14493,7 +14487,6 @@ void generate_quickss(_adapter *padapter)
 	struct rtw_ieee80211_channel *roam_ch = pmlmeext->roam_ch;
 	struct rf_ctl_t *rfctl = adapter_to_rfctl(padapter);
 	int chan;
-	_irqL irqL;
 	_list *plist, *phead;
 	u8 *target_ssid=NULL, *ssid=NULL, ds_cfg, j, ch_num;
 	u32  target_ssid_len=0, ssid_len=0;
@@ -14700,7 +14693,6 @@ enable_mc:
 		struct xmit_frame *rframe;
 		struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
 		_list *plist, *phead;
-		_irqL irqL;
 		struct sk_buff *pkt;
 
 		padapter->mlmepriv.roam_network = NULL;
@@ -15748,7 +15740,6 @@ u8 set_csa_hdl(_adapter *adapter, unsigned char *pbuf)
 u8 tdls_hdl(_adapter *padapter, unsigned char *pbuf)
 {
 #ifdef CONFIG_TDLS
-	_irqL irqL;
 	HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(padapter);
 	struct tdls_info *ptdlsinfo = &padapter->tdlsinfo;
 #ifdef CONFIG_TDLS_CH_SW

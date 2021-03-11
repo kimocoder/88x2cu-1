@@ -395,7 +395,6 @@ check_completion:
 
 u32 rtw_halmac_usb_write_port(_adapter *padapter, u32 addr, u32 len, u8 *wmem)
 {
-	_irqL irqL;
 	unsigned int pipe;
 	int status;
 	u32 ret = _FAIL;
@@ -409,6 +408,8 @@ u32 rtw_halmac_usb_write_port(_adapter *padapter, u32 addr, u32 len, u8 *wmem)
 
 	struct lite_data_buf *litexmitbuf = NULL;
 	struct data_urb *xmiturb = NULL;
+
+	unsigned long sp_flags;
 
 
 	//RTW_INFO("%s : NEO bulkout_id:%d\n", __func__, pxmitbuf->bulkout_id);
@@ -438,7 +439,7 @@ u32 rtw_halmac_usb_write_port(_adapter *padapter, u32 addr, u32 len, u8 *wmem)
 		goto exit;
 	}
 
-	_enter_critical(&pxmitpriv->lock, &irqL);
+	_rtw_spinlock_irq(&pxmitpriv->lock, &sp_flags);
 
 	switch (addr) {
 	case VO_QUEUE_INX:
@@ -465,7 +466,7 @@ u32 rtw_halmac_usb_write_port(_adapter *padapter, u32 addr, u32 len, u8 *wmem)
 		break;
 	}
 
-	_exit_critical(&pxmitpriv->lock, &irqL);
+	_rtw_spinunlock_irq(&pxmitpriv->lock, &sp_flags);
 
 	purb = xmiturb->urb;
 

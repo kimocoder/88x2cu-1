@@ -1396,7 +1396,6 @@ static int rm_match_sub_elem(_adapter *padapter,
 
 static int retrieve_scan_result(struct rm_obj *prm)
 {
-	_irqL irqL;
 	_list *plist, *phead;
 	_queue *queue;
 	_adapter *padapter = prm->psta->padapter;
@@ -1419,7 +1418,7 @@ static int retrieve_scan_result(struct rm_obj *prm)
 	matched_network = 0;
 	queue = &(pmlmepriv->scanned_queue);
 
-	_enter_critical_bh(&(pmlmepriv->scanned_queue.lock), &irqL);
+	_rtw_spinlock_bh(&(pmlmepriv->scanned_queue.lock));
 
 	phead = get_list_head(queue);
 	plist = get_next(phead);
@@ -1532,7 +1531,7 @@ next:
 		plist = get_next(plist);
 	} /* while() */
 fail:
-	_exit_critical_bh(&(pmlmepriv->scanned_queue.lock), &irqL);
+	_rtw_spinunlock_bh(&(pmlmepriv->scanned_queue.lock));
 
 	if (tmp_buf)
 		rtw_mfree(tmp_buf, MAX_XMIT_EXTBUF_SZ);
@@ -2254,14 +2253,13 @@ static char * hwaddr_parse(char *txt, u8 *addr)
 void rm_dbg_list_sta(_adapter *padapter, char *s)
 {
 	int i;
-	_irqL irqL;
 	struct sta_info *psta;
 	struct sta_priv *pstapriv = &padapter->stapriv;
 	_list *plist, *phead;
 
 
 	sprintf(pstr(s), "\n");
-	_enter_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+	_rtw_spinlock_bh(&pstapriv->sta_hash_lock);
 	for (i = 0; i < NUM_STA; i++) {
 		phead = &(pstapriv->sta_hash[i]);
 		plist = get_next(phead);
@@ -2282,7 +2280,7 @@ void rm_dbg_list_sta(_adapter *padapter, char *s)
 		}
 
 	}
-	_exit_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+	_rtw_spinunlock_bh(&pstapriv->sta_hash_lock);
 	sprintf(pstr(s), "=========================================\n");
 }
 
@@ -2310,13 +2308,12 @@ void rm_dbg_help(_adapter *padapter, char *s)
 struct sta_info *rm_get_sta(_adapter *padapter, u16 aid, u8* pbssid)
 {
 	int i;
-	_irqL irqL;
 	struct sta_info *psta = NULL;
 	struct sta_priv *pstapriv = &padapter->stapriv;
 	_list *plist, *phead;
 
 
-	_enter_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+	_rtw_spinlock_bh(&pstapriv->sta_hash_lock);
 
 	for (i = 0; i < NUM_STA; i++) {
 		phead = &(pstapriv->sta_hash[i]);
@@ -2339,7 +2336,7 @@ struct sta_info *rm_get_sta(_adapter *padapter, u16 aid, u8* pbssid)
 	}
 	psta = NULL;
 done:
-	_exit_critical_bh(&pstapriv->sta_hash_lock, &irqL);
+	_rtw_spinunlock_bh(&pstapriv->sta_hash_lock);
 	return psta;
 }
 
@@ -2691,16 +2688,17 @@ static void rm_dbg_show_meas(struct rm_obj *prm, char *s)
 static void rm_dbg_list_meas(_adapter *padapter, char *s)
 {
 	int meas_amount;
-	_irqL irqL;
 	struct rm_obj *prm;
 	struct sta_info *psta;
 	struct rm_priv *prmpriv = &padapter->rmpriv;
 	_queue *queue = &prmpriv->rm_queue;
 	_list *plist, *phead;
 
+	unsigned long sp_flags;
+
 
 	sprintf(pstr(s), "\n");
-	_enter_critical(&queue->lock, &irqL);
+	_rtw_spinlock_irq(&queue->lock, &sp_flags);
 	phead = get_list_head(queue);
 	plist = get_next(phead);
 	meas_amount = 0;
@@ -2714,7 +2712,7 @@ static void rm_dbg_list_meas(_adapter *padapter, char *s)
 
 		rm_dbg_show_meas(prm, s);
 	}
-	_exit_critical(&queue->lock, &irqL);
+	_rtw_spinunlock_irq(&queue->lock, &sp_flags);
 
 	sprintf(pstr(s), "=========================================\n");
 

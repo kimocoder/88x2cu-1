@@ -1097,7 +1097,6 @@ ssize_t proc_set_read_reg(struct file *file, const char __user *buffer, size_t c
 
 int proc_get_rx_stat(struct seq_file *m, void *v)
 {
-	_irqL	 irqL;
 	_list	*plist, *phead;
 	struct net_device *dev = m->private;
 	_adapter *adapter = (_adapter *)rtw_netdev_priv(dev);
@@ -1145,7 +1144,6 @@ int proc_get_rx_stat(struct seq_file *m, void *v)
 
 int proc_get_tx_stat(struct seq_file *m, void *v)
 {
-	_irqL	irqL;
 	_list	*plist, *phead;
 	struct net_device *dev = m->private;
 	_adapter *adapter = (_adapter *)rtw_netdev_priv(dev);
@@ -2232,7 +2230,6 @@ ssize_t proc_set_rson_data(struct file *file, const char __user *buffer, size_t 
 
 int proc_get_survey_info(struct seq_file *m, void *v)
 {
-	_irqL irqL;
 	struct net_device *dev = m->private;
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
 	struct mlme_priv	*pmlmepriv = &(padapter->mlmepriv);
@@ -2751,7 +2748,6 @@ ssize_t proc_set_rate_ctl(struct file *file, const char __user *buffer, size_t c
 #ifdef 	CONFIG_PHDYM_FW_FIXRATE
 		struct dm_struct *dm = adapter_to_phydm(adapter);
 		u8 en = 1, macid = 255;
-		_irqL	irqL;
 		_list	*plist, *phead;
 		struct sta_info *psta = NULL;
 		struct sta_priv	*pstapriv = &(adapter->stapriv);
@@ -4727,7 +4723,6 @@ ssize_t proc_set_txbf_cap(struct file *file, const char __user *buffer, size_t c
 int proc_get_all_sta_info(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
-	_irqL irqL;
 	struct sta_info *psta;
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
 	struct sta_priv *pstapriv = &padapter->stapriv;
@@ -5391,7 +5386,6 @@ int proc_get_pci_aspm(struct seq_file *m, void *v)
 
 int proc_get_rx_ring(struct seq_file *m, void *v)
 {
-	_irqL irqL;
 	struct net_device *dev = m->private;
 	_adapter *padapter = (_adapter *) rtw_netdev_priv(dev);
 	struct dvobj_priv *pdvobjpriv = adapter_to_dvobj(padapter);
@@ -5399,11 +5393,13 @@ int proc_get_rx_ring(struct seq_file *m, void *v)
 	struct rtw_rx_ring *rx_ring = &precvpriv->rx_ring[RX_MPDU_QUEUE];
 	int i, j;
 
+	unsigned long sp_flags;
+
 	RTW_PRINT_SEL(m, "rx ring (%p)\n", rx_ring);
 	RTW_PRINT_SEL(m, "  dma: 0x%08x\n", (int) rx_ring->dma);
 	RTW_PRINT_SEL(m, "  idx: %d\n", rx_ring->idx);
 
-	_enter_critical(&pdvobjpriv->irq_th_lock, &irqL);
+	_rtw_spinlock_irq(&pdvobjpriv->irq_th_lock, &sp_flags);
 	for (i = 0; i < precvpriv->rxringcount; i++) {
 #ifdef CONFIG_TRX_BD_ARCH
 		struct rx_buf_desc *entry = &rx_ring->buf_desc[i];
@@ -5425,21 +5421,20 @@ int proc_get_rx_ring(struct seq_file *m, void *v)
 				RTW_PRINT_SEL(m, "\n");
 		}
 	}
-	_exit_critical(&pdvobjpriv->irq_th_lock, &irqL);
+	_rtw_spinunlock_irq(&pdvobjpriv->irq_th_lock, &sp_flags);
 
 	return 0;
 }
 
 int proc_get_tx_ring(struct seq_file *m, void *v)
 {
-	_irqL irqL;
 	struct net_device *dev = m->private;
 	_adapter *padapter = (_adapter *) rtw_netdev_priv(dev);
 	struct dvobj_priv *pdvobjpriv = adapter_to_dvobj(padapter);
 	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
 	int i, j, k;
 
-	_enter_critical(&pdvobjpriv->irq_th_lock, &irqL);
+	_rtw_spinlock_irq(&pdvobjpriv->irq_th_lock, &sp_flags);
 	for (i = 0; i < PCI_MAX_TX_QUEUE_COUNT; i++) {
 		struct rtw_tx_ring *tx_ring = &pxmitpriv->tx_ring[i];
 
@@ -5470,7 +5465,7 @@ int proc_get_tx_ring(struct seq_file *m, void *v)
 			}
 		}
 	}
-	_exit_critical(&pdvobjpriv->irq_th_lock, &irqL);
+	_rtw_spinunlock_irq(&pdvobjpriv->irq_th_lock, &sp_flags);
 
 	return 0;
 }
@@ -5478,7 +5473,6 @@ int proc_get_tx_ring(struct seq_file *m, void *v)
 #ifdef DBG_TXBD_DESC_DUMP
 int proc_get_tx_ring_ext(struct seq_file *m, void *v)
 {
-	_irqL irqL;
 	struct net_device *dev = m->private;
 	_adapter *padapter = (_adapter *) rtw_netdev_priv(dev);
 	struct dvobj_priv *pdvobjpriv = adapter_to_dvobj(padapter);
@@ -5496,7 +5490,7 @@ int proc_get_tx_ring_ext(struct seq_file *m, void *v)
 		return 0;
 	}
 
-	_enter_critical(&pdvobjpriv->irq_th_lock, &irqL);
+	_rtw_spinlock_irq(&pdvobjpriv->irq_th_lock, &sp_flags);
 	for (i = 0; i < HW_QUEUE_ENTRY; i++) {
 		struct rtw_tx_ring *tx_ring = &pxmitpriv->tx_ring[i];
 
@@ -5572,14 +5566,13 @@ int proc_get_tx_ring_ext(struct seq_file *m, void *v)
 		}
 		RTW_PRINT_SEL(m, "\n");
 	}
-	_exit_critical(&pdvobjpriv->irq_th_lock, &irqL);
+	_rtw_spinunlock_irq(&pdvobjpriv->irq_th_lock, &sp_flags);
 
 	return 0;
 }
 
 ssize_t proc_set_tx_ring_ext(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
 {
-	_irqL irqL;
 	struct net_device *dev = data;
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
 	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
@@ -5587,6 +5580,8 @@ ssize_t proc_set_tx_ring_ext(struct file *file, const char __user *buffer, size_
 	char tmp[32];
 	u32 reset = 0;
 	u32 dump = 0;
+
+	unsigned long sp_flags;
 
 	if (count < 1)
 		return -EFAULT;
@@ -5605,13 +5600,13 @@ ssize_t proc_set_tx_ring_ext(struct file *file, const char __user *buffer, size_
 			return count;
 		}
 
-		_enter_critical(&pdvobjpriv->irq_th_lock, &irqL);
+		_rtw_spinlock_irq(&pdvobjpriv->irq_th_lock, &sp_flags);
 		pxmitpriv->dump_txbd_desc = (BOOLEAN) dump;
 
 		if (reset == 1)
 			rtw_tx_desc_backup_reset();
 
-		_exit_critical(&pdvobjpriv->irq_th_lock, &irqL);
+		_rtw_spinunlock_irq(&pdvobjpriv->irq_th_lock, &sp_flags);
 
 	}
 
@@ -6518,7 +6513,6 @@ static int proc_tdls_display_tdls_sta_info(struct seq_file *m)
 	struct tdls_info *ptdlsinfo = &padapter->tdlsinfo;
 	struct sta_info *psta;
 	int i = 0, j = 0;
-	_irqL irqL;
 	_list	*plist, *phead;
 	u8 SpaceBtwnItemAndValue = TDLS_DBG_INFO_SPACE_BTWN_ITEM_AND_VALUE;
 	u8 SpaceBtwnItemAndValueTmp = 0;
@@ -6701,7 +6695,6 @@ int proc_get_tdls_info(struct seq_file *m, void *v)
 	struct tdls_info *ptdlsinfo = &padapter->tdlsinfo;
 	struct sta_info *psta;
 	int i = 0, j = 0;
-	_irqL irqL;
 	_list	*plist, *phead;
 	u8 SpaceBtwnItemAndValue = 41;
 	u8 SpaceBtwnItemAndValueTmp = 0;
@@ -6991,7 +6984,6 @@ ssize_t proc_set_tx_sa_query(struct file *file, const char __user *buffer, size_
 	struct macid_ctl_t *macid_ctl = dvobj_to_macidctl(dvobj);
 	struct sta_info *psta;
 	_list	*plist, *phead;
-	_irqL	 irqL;
 	char tmp[16];
 	u8	mac_addr[NUM_STA][ETH_ALEN];
 	u32 key_type;
@@ -7070,7 +7062,6 @@ ssize_t proc_set_tx_deauth(struct file *file, const char __user *buffer, size_t 
 	struct macid_ctl_t *macid_ctl = dvobj_to_macidctl(dvobj);
 	struct sta_info *psta;
 	_list	*plist, *phead;
-	_irqL	 irqL;
 	char tmp[16];
 	u8	mac_addr[NUM_STA][ETH_ALEN];
 	u8 bc_addr[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
@@ -7180,7 +7171,6 @@ ssize_t proc_set_tx_auth(struct file *file, const char __user *buffer, size_t co
 	struct macid_ctl_t *macid_ctl = dvobj_to_macidctl(dvobj);
 	struct sta_info *psta;
 	_list	*plist, *phead;
-	_irqL	 irqL;
 	char tmp[16];
 	u8	mac_addr[NUM_STA][ETH_ALEN];
 	u8 bc_addr[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
