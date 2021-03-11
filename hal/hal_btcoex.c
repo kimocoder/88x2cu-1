@@ -860,10 +860,9 @@ u32 halbtcoutsrc_GetBtPatchVer(PBTC_COEXIST pBtCoexist)
 {
 	if (pBtCoexist->bt_info.get_bt_fw_ver_cnt <= 5) {
 		if (halbtcoutsrc_IsHwMailboxExist(pBtCoexist) == _TRUE) {
-			_irqL irqL;
 			u8 ret;
 
-			_enter_critical_mutex(&GLBtcBtMpOperLock, &irqL);
+			_rtw_mutex_lock_interruptible(&GLBtcBtMpOperLock);
 
 			ret = _btmpoper_cmd(pBtCoexist, BT_OP_GET_BT_VERSION, 0, NULL, 0);
 			if (BT_STATUS_BT_OP_SUCCESS == ret) {
@@ -871,7 +870,7 @@ u32 halbtcoutsrc_GetBtPatchVer(PBTC_COEXIST pBtCoexist)
 				pBtCoexist->bt_info.get_bt_fw_ver_cnt++;
 			}
 
-			_exit_critical_mutex(&GLBtcBtMpOperLock, &irqL);
+			_rtw_mutex_unlock(&GLBtcBtMpOperLock);
 		} else {
 #ifdef CONFIG_BT_COEXIST_SOCKET_TRX
 			u8 dataLen = 2;
@@ -902,11 +901,10 @@ u32 halbtcoutsrc_GetBtCoexSupportedFeature(void *pBtcContext)
 
 	if (halbtcoutsrc_IsHwMailboxExist(pBtCoexist) == _TRUE) {
 		u8 buf[3] = {0};
-		_irqL irqL;
 		u8 op_code;
 		u8 status;
 
-		_enter_critical_mutex(&GLBtcBtMpOperLock, &irqL);
+		_rtw_mutex_lock_interruptible(&GLBtcBtMpOperLock);
 
 		op_code = BT_OP_GET_BT_COEX_SUPPORTED_FEATURE;
 		status = _btmpoper_cmd(pBtCoexist, op_code, 0, buf, 0);
@@ -915,7 +913,7 @@ u32 halbtcoutsrc_GetBtCoexSupportedFeature(void *pBtcContext)
 		else
 			ret = SET_BT_MP_OPER_RET(op_code, status);
 
-		_exit_critical_mutex(&GLBtcBtMpOperLock, &irqL);
+		_rtw_mutex_unlock(&GLBtcBtMpOperLock);
 
 	} else
 		ret = BT_STATUS_NOT_IMPLEMENT;
@@ -933,11 +931,10 @@ u32 halbtcoutsrc_GetBtCoexSupportedVersion(void *pBtcContext)
 
 	if (halbtcoutsrc_IsHwMailboxExist(pBtCoexist) == _TRUE) {
 		u8 buf[3] = {0};
-		_irqL irqL;
 		u8 op_code;
 		u8 status;
 
-		_enter_critical_mutex(&GLBtcBtMpOperLock, &irqL);
+		_rtw_mutex_lock_interruptible(&GLBtcBtMpOperLock);
 
 		op_code = BT_OP_GET_BT_COEX_SUPPORTED_VERSION;
 		status = _btmpoper_cmd(pBtCoexist, op_code, 0, buf, 0);
@@ -946,7 +943,7 @@ u32 halbtcoutsrc_GetBtCoexSupportedVersion(void *pBtcContext)
 		else
 			ret = SET_BT_MP_OPER_RET(op_code, status);
 
-		_exit_critical_mutex(&GLBtcBtMpOperLock, &irqL);
+		_rtw_mutex_unlock(&GLBtcBtMpOperLock);
 
 	} else
 		ret = BT_STATUS_NOT_IMPLEMENT;
@@ -964,11 +961,10 @@ u32 halbtcoutsrc_GetBtDeviceInfo(void *pBtcContext)
 
 	if (halbtcoutsrc_IsHwMailboxExist(pBtCoexist) == _TRUE) {
 		u8 buf[3] = {0};
-		_irqL irqL;
 		u8 op_code;
 		u8 status;
 
-		_enter_critical_mutex(&GLBtcBtMpOperLock, &irqL);
+		_rtw_mutex_lock_interruptible(&GLBtcBtMpOperLock);
 
 		op_code = BT_OP_GET_BT_DEVICE_INFO;
 		status = _btmpoper_cmd(pBtCoexist, op_code, 0, buf, 0);
@@ -977,7 +973,7 @@ u32 halbtcoutsrc_GetBtDeviceInfo(void *pBtcContext)
 		else
 			ret = SET_BT_MP_OPER_RET(op_code, status);
 
-		_exit_critical_mutex(&GLBtcBtMpOperLock, &irqL);
+		_rtw_mutex_unlock(&GLBtcBtMpOperLock);
 
 	} else
 		ret = BT_STATUS_NOT_IMPLEMENT;
@@ -995,11 +991,10 @@ u32 halbtcoutsrc_GetBtForbiddenSlotVal(void *pBtcContext)
 
 	if (halbtcoutsrc_IsHwMailboxExist(pBtCoexist) == _TRUE) {
 		u8 buf[3] = {0};
-		_irqL irqL;
 		u8 op_code;
 		u8 status;
 
-		_enter_critical_mutex(&GLBtcBtMpOperLock, &irqL);
+		_rtw_mutex_lock_interruptible(&GLBtcBtMpOperLock);
 
 		op_code = BT_OP_GET_BT_FORBIDDEN_SLOT_VAL;
 		status = _btmpoper_cmd(pBtCoexist, op_code, 0, buf, 0);
@@ -1008,7 +1003,7 @@ u32 halbtcoutsrc_GetBtForbiddenSlotVal(void *pBtcContext)
 		else
 			ret = SET_BT_MP_OPER_RET(op_code, status);
 
-		_exit_critical_mutex(&GLBtcBtMpOperLock, &irqL);
+		_rtw_mutex_unlock(&GLBtcBtMpOperLock);
 
 	} else
 		ret = BT_STATUS_NOT_IMPLEMENT;
@@ -1418,14 +1413,13 @@ u16 halbtcoutsrc_LnaConstrainLvl(void *pBtcContext, u8 *lna_constrain_level)
 	pBtCoexist = (PBTC_COEXIST)pBtcContext;
 
 	if (halbtcoutsrc_IsHwMailboxExist(pBtCoexist) == _TRUE) {
-		_irqL irqL;
 		u8 op_code;
 
-		_enter_critical_mutex(&GLBtcBtMpOperLock, &irqL);
+		_rtw_mutex_lock_interruptible(&GLBtcBtMpOperLock);
 
 		ret = _btmpoper_cmd(pBtCoexist, BT_OP_SET_BT_LANCONSTRAIN_LEVEL, 0, lna_constrain_level, 1);
 
-		_exit_critical_mutex(&GLBtcBtMpOperLock, &irqL);
+		_rtw_mutex_unlock(&GLBtcBtMpOperLock);
 	} else { 
 		ret = BT_STATUS_NOT_IMPLEMENT;
 		RTW_INFO("%s halbtcoutsrc_IsHwMailboxExist(pBtCoexist) == FALSE\n", __func__);
@@ -2497,11 +2491,10 @@ u16 halbtcoutsrc_SetBtReg(void *pBtcContext, u8 RegType, u32 RegAddr, u32 Data)
 
 	if (halbtcoutsrc_IsHwMailboxExist(pBtCoexist) == _TRUE) {
 		u8 buf[3] = {0};
-		_irqL irqL;
 		u8 op_code;
 		u8 status;
 
-		_enter_critical_mutex(&GLBtcBtMpOperLock, &irqL);
+		_rtw_mutex_lock_interruptible(&GLBtcBtMpOperLock);
 
 		Data = cpu_to_le32(Data);
 		op_code = BT_OP_WRITE_REG_VALUE;
@@ -2517,7 +2510,7 @@ u16 halbtcoutsrc_SetBtReg(void *pBtcContext, u8 RegType, u32 RegAddr, u32 Data)
 				ret = SET_BT_MP_OPER_RET(op_code, status);
 		}
 
-		_exit_critical_mutex(&GLBtcBtMpOperLock, &irqL);
+		_rtw_mutex_unlock(&GLBtcBtMpOperLock);
 	} else
 		ret = BT_STATUS_NOT_IMPLEMENT;
 
@@ -2558,7 +2551,6 @@ u8 halbtcoutsrc_SetBtTRXMASK(void *pBtcContext, u8 bt_trx_mask)
 		if (halbtcoutsrc_IsHwMailboxExist(pBtCoexist) == _TRUE) {
 			u8 buf[3] = {0};
 			u8 len = 0;
-			_irqL irqL;
 			u8 op_code;
 			u8 status;
 
@@ -2571,14 +2563,14 @@ u8 halbtcoutsrc_SetBtTRXMASK(void *pBtcContext, u8 bt_trx_mask)
 				len = 2;
 			}
 
-			_enter_critical_mutex(&GLBtcBtMpOperLock, &irqL);
+			_rtw_mutex_lock_interruptible(&GLBtcBtMpOperLock);
 
 			op_code = BT_OP_SET_BT_TRX_MASK;
 			status = _btmpoper_cmd(pBtCoexist, op_code, 0, buf, len);
 			if (status != BT_STATUS_BT_OP_SUCCESS)
 				ret = SET_BT_MP_OPER_RET(op_code, status);
 
-			_exit_critical_mutex(&GLBtcBtMpOperLock, &irqL);
+			_rtw_mutex_unlock(&GLBtcBtMpOperLock);
 		} else
 			ret = BT_STATUS_NOT_IMPLEMENT;
 	}
@@ -2598,14 +2590,13 @@ u16 halbtcoutsrc_GetBtReg_with_status(void *pBtcContext, u8 RegType, u32 RegAddr
 
 	if (halbtcoutsrc_IsHwMailboxExist(pBtCoexist) == _TRUE) {
 		u8 buf[3] = {0};
-		_irqL irqL;
 		u8 op_code;
 		u8 status;
 
 		buf[0] = RegType;
 		*(u16 *)(buf + 1) = cpu_to_le16((u16)RegAddr);
 
-		_enter_critical_mutex(&GLBtcBtMpOperLock, &irqL);
+		_rtw_mutex_lock_interruptible(&GLBtcBtMpOperLock);
 
 		op_code = BT_OP_READ_REG;
 		status = _btmpoper_cmd(pBtCoexist, op_code, 0, buf, 3);
@@ -2614,7 +2605,7 @@ u16 halbtcoutsrc_GetBtReg_with_status(void *pBtcContext, u8 RegType, u32 RegAddr
 		else
 			ret = SET_BT_MP_OPER_RET(op_code, status);
 
-		_exit_critical_mutex(&GLBtcBtMpOperLock, &irqL);
+		_rtw_mutex_unlock(&GLBtcBtMpOperLock);
 
 	} else
 		ret = BT_STATUS_NOT_IMPLEMENT;
@@ -2637,11 +2628,10 @@ u16 halbtcoutsrc_setbttestmode(void *pBtcContext, u8 Type)
 	pBtCoexist = (PBTC_COEXIST)pBtcContext;
 
 	if (halbtcoutsrc_IsHwMailboxExist(pBtCoexist) == _TRUE) {
-		_irqL irqL;
 		u8 op_code;
 		u8 status;
 
-		_enter_critical_mutex(&GLBtcBtMpOperLock, &irqL);
+		_rtw_mutex_lock_interruptible(&GLBtcBtMpOperLock);
 
 		Type = cpu_to_le32(Type);
 		op_code = BT_OP_SET_BT_TEST_MODE_VAL;
@@ -2649,7 +2639,7 @@ u16 halbtcoutsrc_setbttestmode(void *pBtcContext, u8 Type)
 		if (status != BT_STATUS_BT_OP_SUCCESS)
 			ret = SET_BT_MP_OPER_RET(op_code, status);
 
-		_exit_critical_mutex(&GLBtcBtMpOperLock, &irqL);
+		_rtw_mutex_unlock(&GLBtcBtMpOperLock);
 	} else
 		ret = BT_STATUS_NOT_IMPLEMENT;
 
@@ -2831,12 +2821,11 @@ u8 halbtcoutsrc_GetBleScanTypeFromBt(void *pBtcContext)
 
 	if (halbtcoutsrc_IsHwMailboxExist(pBtCoexist) == _TRUE) {
 		u8 buf[3] = {0};
-		_irqL irqL;
 		u8 op_code;
 		u8 status;
 
 
-		_enter_critical_mutex(&GLBtcBtMpOperLock, &irqL);
+		_rtw_mutex_lock_interruptible(&GLBtcBtMpOperLock);
 
 		op_code = BT_OP_GET_BT_BLE_SCAN_TYPE;
 		status = _btmpoper_cmd(pBtCoexist, op_code, 0, buf, 0);
@@ -2845,7 +2834,7 @@ u8 halbtcoutsrc_GetBleScanTypeFromBt(void *pBtcContext)
 		else
 			ret = SET_BT_MP_OPER_RET(op_code, status);
 
-		_exit_critical_mutex(&GLBtcBtMpOperLock, &irqL);
+		_rtw_mutex_unlock(&GLBtcBtMpOperLock);
 
 	} else
 		ret = BT_STATUS_NOT_IMPLEMENT;
@@ -2863,13 +2852,12 @@ u32 halbtcoutsrc_GetBleScanParaFromBt(void *pBtcContext, u8 scanType)
 
 	if (halbtcoutsrc_IsHwMailboxExist(pBtCoexist) == _TRUE) {
 		u8 buf[3] = {0};
-		_irqL irqL;
 		u8 op_code;
 		u8 status;
 		
 		buf[0] = scanType;
 
-		_enter_critical_mutex(&GLBtcBtMpOperLock, &irqL);
+		_rtw_mutex_lock_interruptible(&GLBtcBtMpOperLock);
 
 		op_code = BT_OP_GET_BT_BLE_SCAN_PARA;
 		status = _btmpoper_cmd(pBtCoexist, op_code, 0, buf, 1);
@@ -2878,7 +2866,7 @@ u32 halbtcoutsrc_GetBleScanParaFromBt(void *pBtcContext, u8 scanType)
 		else
 			ret = SET_BT_MP_OPER_RET(op_code, status);
 
-		_exit_critical_mutex(&GLBtcBtMpOperLock, &irqL);
+		_rtw_mutex_unlock(&GLBtcBtMpOperLock);
 
 	} else
 		ret = BT_STATUS_NOT_IMPLEMENT;
@@ -2890,7 +2878,6 @@ u8 halbtcoutsrc_GetBtAFHMapFromBt(void *pBtcContext, u8 mapType, u8 *afhMap)
 {
 	struct btc_coexist *pBtCoexist = (struct btc_coexist *)pBtcContext;
 	u8 buf[2] = {0};
-	_irqL irqL;
 	u8 op_code;
 	u32 *AfhMapL = (u32 *)&(afhMap[0]);
 	u32 *AfhMapM = (u32 *)&(afhMap[4]);
@@ -2904,7 +2891,7 @@ u8 halbtcoutsrc_GetBtAFHMapFromBt(void *pBtcContext, u8 mapType, u8 *afhMap)
 	buf[0] = 0;
 	buf[1] = mapType;
 
-	_enter_critical_mutex(&GLBtcBtMpOperLock, &irqL);
+	_rtw_mutex_lock_interruptible(&GLBtcBtMpOperLock);
 
 	op_code = BT_LO_OP_GET_AFH_MAP_L;
 	status = _btmpoper_cmd(pBtCoexist, op_code, 0, buf, 0);
@@ -2935,7 +2922,7 @@ u8 halbtcoutsrc_GetBtAFHMapFromBt(void *pBtcContext, u8 mapType, u8 *afhMap)
 
 exit:
 
-	_exit_critical_mutex(&GLBtcBtMpOperLock, &irqL);
+	_rtw_mutex_unlock(&GLBtcBtMpOperLock);
 
 	return (ret == BT_STATUS_BT_OP_SUCCESS) ? _TRUE : _FALSE;
 }

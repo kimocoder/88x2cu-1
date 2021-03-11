@@ -2864,7 +2864,6 @@ s8 phy_get_txpwr_lmt(
 	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(Adapter);
 	struct hal_spec_t *hal_spec = GET_HAL_SPEC(Adapter);
 	struct txpwr_lmt_ent *ent = NULL;
-	_irqL irqL;
 	_list *cur, *head;
 	s8 ch_idx;
 	u8 is_ww_regd = 0;
@@ -2887,7 +2886,7 @@ s8 phy_get_txpwr_lmt(
 	}
 
 	if (lock)
-		_enter_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+		_rtw_mutex_lock_interruptible(&rfctl->txpwr_lmt_mutex);
 
 	if (!lmt_name) /* no name specified, use currnet */
 		lmt_name = rfctl->txpwr_lmt_name;
@@ -2950,7 +2949,7 @@ s8 phy_get_txpwr_lmt(
 
 release_lock:
 	if (lock)
-		_exit_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+		_rtw_mutex_unlock(&rfctl->txpwr_lmt_mutex);
 
 exit:
 	return lmt;
@@ -3004,7 +3003,6 @@ s8 phy_get_txpwr_lmt_sub_chs(_adapter *adapter
 	u8 bw_bmp = 0;
 	s8 final_lmt = reg_max ? 0 : hal_spec->txgi_max;
 	u8 final_bw = CHANNEL_WIDTH_MAX, final_cch = cch;
-	_irqL irqL;
 
 	if ((adapter->registrypriv.RegEnableTxPowerLimit == 2 && hal_data->EEPROMRegulatory != 1) ||
 		adapter->registrypriv.RegEnableTxPowerLimit == 0
@@ -3081,7 +3079,7 @@ s8 phy_get_txpwr_lmt_sub_chs(_adapter *adapter
 	if (bw_bmp == 0)
 		goto exit;
 
-	_enter_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+	_rtw_mutex_lock_interruptible(&rfctl->txpwr_lmt_mutex);
 
 	/* loop for each possible tx bandwidth to find final limit */
 	for (tmp_bw = CHANNEL_WIDTH_20; tmp_bw <= bw; tmp_bw++) {
@@ -3120,7 +3118,7 @@ s8 phy_get_txpwr_lmt_sub_chs(_adapter *adapter
 		final_bw = tmp_bw;
 	}
 
-	_exit_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+	_rtw_mutex_unlock(&rfctl->txpwr_lmt_mutex);
 
 	if (0) {
 		if (final_bw != bw && (IS_HT_RATE(rate) || IS_VHT_RATE(rate)))
@@ -3483,9 +3481,8 @@ void phy_txpwr_limit_bandwidth_chk(_adapter *adapter)
 static void phy_txpwr_lmt_post_hdl(_adapter *adapter)
 {
 	struct rf_ctl_t *rfctl = adapter_to_rfctl(adapter);
-	_irqL irqL;
 
-	_enter_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+	_rtw_mutex_lock_interruptible(&rfctl->txpwr_lmt_mutex);
 
 #if CONFIG_IEEE80211_BAND_5GHZ
 	if (IS_HARDWARE_TYPE_JAGUAR_ALL(adapter))
@@ -3497,7 +3494,7 @@ static void phy_txpwr_lmt_post_hdl(_adapter *adapter)
 	phy_txpwr_limit_bandwidth_chk(adapter);
 #endif
 
-	_exit_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+	_rtw_mutex_unlock(&rfctl->txpwr_lmt_mutex);
 }
 
 BOOLEAN

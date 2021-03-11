@@ -427,7 +427,7 @@ static u8 _halmac_mutex_lock(void *p, HALMAC_MUTEX *pMutex)
 {
 	int err;
 
-	err = _enter_critical_mutex(pMutex, NULL);
+	err = _rtw_mutex_lock_interruptible(pMutex);
 	if (err)
 		return RTW_HALMAC_FAIL;
 
@@ -436,7 +436,7 @@ static u8 _halmac_mutex_lock(void *p, HALMAC_MUTEX *pMutex)
 
 static u8 _halmac_mutex_unlock(void *p, HALMAC_MUTEX *pMutex)
 {
-	_exit_critical_mutex(pMutex, NULL);
+	_rtw_mutex_unlock(pMutex);
 	return RTW_HALMAC_SUCCESS;
 }
 
@@ -3903,7 +3903,7 @@ int rtw_halmac_send_h2c(struct dvobj_priv *d, u8 *h2c)
 		return err;
 	}
 
-	_enter_critical_mutex(&d->h2c_fwcmd_mutex, NULL);
+	_rtw_mutex_lock_interruptible(&d->h2c_fwcmd_mutex);
 
 	/* pay attention to if race condition happened in H2C cmd setting */
 	h2c_box_num = hal->LastHMEBoxNum;
@@ -3937,7 +3937,7 @@ int rtw_halmac_send_h2c(struct dvobj_priv *d, u8 *h2c)
 	RTW_INFO_DUMP("[H2C] - ", h2c, RTW_HALMAC_H2C_MAX_SIZE);
 #endif
 exit:
-	_exit_critical_mutex(&d->h2c_fwcmd_mutex, NULL);
+	_rtw_mutex_unlock(&d->h2c_fwcmd_mutex);
 	return err;
 }
 
