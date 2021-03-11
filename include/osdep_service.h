@@ -385,30 +385,6 @@ bool _rtw_time_after(systime a, systime b);
 #define rtw_time_before(a,b) _rtw_time_after(b,a)
 #endif
 
-sysptime rtw_sptime_get(void);
-sysptime rtw_sptime_set(s64 secs, const u32 nsecs);
-sysptime rtw_sptime_zero(void);
-
-int rtw_sptime_cmp(const sysptime cmp1, const sysptime cmp2);
-bool rtw_sptime_eql(const sysptime cmp1, const sysptime cmp2);
-bool rtw_sptime_is_zero(const sysptime sptime);
-sysptime rtw_sptime_sub(const sysptime lhs, const sysptime rhs);
-sysptime rtw_sptime_add(const sysptime lhs, const sysptime rhs);
-
-s64 rtw_sptime_to_ms(const sysptime sptime);
-sysptime rtw_ms_to_sptime(u64 ms);
-s64 rtw_sptime_to_us(const sysptime sptime);
-sysptime rtw_us_to_sptime(u64 us);
-s64 rtw_sptime_to_ns(const sysptime sptime);
-sysptime rtw_ns_to_sptime(u64 ns);
-
-s64 rtw_sptime_diff_ms(const sysptime start, const sysptime end);
-s64 rtw_sptime_pass_ms(const sysptime start);
-s64 rtw_sptime_diff_us(const sysptime start, const sysptime end);
-s64 rtw_sptime_pass_us(const sysptime start);
-s64 rtw_sptime_diff_ns(const sysptime start, const sysptime end);
-s64 rtw_sptime_pass_ns(const sysptime start);
-
 extern void	rtw_sleep_schedulable(int ms);
 
 extern void	rtw_msleep_os(int ms);

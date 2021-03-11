@@ -993,15 +993,5 @@ static inline void rtw_dump_stack(void)
 
 #define STRUCT_PACKED __attribute__ ((packed))
 
-#ifndef fallthrough
-#define fallthrough do {} while (0)
-#endif
-
-// NEO need to take off
-
-typedef ktime_t sysptime;
-
-#define ATOMIC_T atomic_t
-
 
 #endif /* __OSDEP_LINUX_SERVICE_H_ */
