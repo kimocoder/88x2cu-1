@@ -58,7 +58,7 @@
 
 #ifdef CONFIG_RECV_THREAD_MODE
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 4, 0))
-#include <uapi/linux/sched/types.h>
+#include <uapi/linux/sched/types.h>	/* struct sched_param */
 #endif
 #endif
 
@@ -96,7 +96,7 @@
 #endif
 
 #ifdef CONFIG_IOCTL_CFG80211
-	/*	#include <linux/ieee80211.h> */
+/*	#include <linux/ieee80211.h> */
 #include <net/cfg80211.h>
 #endif /* CONFIG_IOCTL_CFG80211 */
 
@@ -117,6 +117,7 @@
 #include <linux/usb/ch9.h>
 #endif
 #endif
+
 
 #if defined(CONFIG_RTW_GRO) && (!defined(CONFIG_RTW_NAPI))
 
@@ -257,8 +258,9 @@ static inline void _rtw_usb_buffer_free(struct usb_device *dev, size_t size, voi
 }
 #endif /* CONFIG_USB_HCI */
 
+
 /*lock - spinlock*/
-typedef	spinlock_t	_lock;
+typedef	spinlock_t _lock;
 static inline void _rtw_spinlock_init(_lock *plock)
 {
 	spin_lock_init(plock);
@@ -275,6 +277,18 @@ static inline void _rtw_spinunlock(_lock *plock)
 	spin_unlock(plock);
 }
 
+#if 0
+static inline void _rtw_spinlock_ex(_lock *plock)
+{
+	spin_lock(plock);
+}
+
+static inline void _rtw_spinunlock_ex(_lock *plock)
+{
+
+	spin_unlock(plock);
+}
+#endif
 __inline static void _rtw_spinlock_irq(_lock *plock, unsigned long *flags)
 {
 	spin_lock_irqsave(plock, *flags);
@@ -320,7 +334,6 @@ static inline u32 _rtw_down_sema(_sema *sema)
 #else
 	typedef struct semaphore	_mutex;
 #endif
-
 static inline void _rtw_mutex_init(_mutex *pmutex)
 {
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37))
@@ -369,6 +382,7 @@ __inline static void _rtw_mutex_unlock(_mutex *pmutex)
 #endif
 }
 
+
 /*completion*/
 typedef struct completion _completion;
 static inline void _rtw_init_completion(_completion *comp)
@@ -384,7 +398,6 @@ static inline void _rtw_wait_for_comp(_completion *comp)
 	return wait_for_completion(comp);
 }
 
-
 struct	__queue	{
 	struct	list_head	queue;
 	_lock	lock;
@@ -394,10 +407,10 @@ typedef unsigned char	_buffer;
 
 typedef struct	__queue	_queue;
 
+
 /*list*/
 #define LIST_CONTAINOR(ptr, type, member) \
 	((type *)((char *)(ptr)-(SIZE_T)(&((type *)0)->member)))
-
 
 
 typedef struct	list_head	_list;
@@ -445,15 +458,12 @@ typedef struct rcu_head rtw_rcu_head;
 /* rhashtable */
 #include "../os_dep/linux/rtw_rhashtable.h"
 
-typedef	int	_OS_STATUS;
-/* typedef u32	_irqL; */
-typedef unsigned long _irqL;
-typedef	struct	net_device *_nic_hdl;
 
-typedef void		*_thread_hdl_;
-typedef int		thread_return;
-typedef void	*thread_context;
-struct thread_hdl {
+/*thread*/
+typedef void *_thread_hdl_;
+typedef int thread_return;
+typedef void *thread_context;
+struct thread_hdl{
 	_thread_hdl_ thread_handler;
 	u8 thread_status;
 };
@@ -516,20 +526,14 @@ static inline void flush_signals_thread(void)
 }
 
 
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2, 5, 41))
-	typedef struct work_struct _workitem;
-#else
-	typedef struct tq_struct _workitem;
-#endif
-
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(2, 6, 24))
 	#define DMA_BIT_MASK(n) (((n) == 64) ? ~0ULL : ((1ULL<<(n))-1))
 #endif
 
 typedef unsigned long systime;
-typedef ktime_t sysptime;
-typedef struct tasklet_struct _tasklet;
 
+/*tasklet*/
+typedef struct tasklet_struct _tasklet;
 typedef void (*tasklet_fn_t)(unsigned long);
 
 #if 1
@@ -615,66 +619,36 @@ static inline unsigned char *skb_end_pointer(const struct sk_buff *skb)
 	return skb->end;
 }
 #endif
-
-__inline static void _enter_critical(_lock *plock, _irqL *pirqL)
+static inline u8 *rtw_skb_data(struct sk_buff *pkt)
 {
-	spin_lock_irqsave(plock, *pirqL);
+	return pkt->data;
 }
 
-__inline static void _exit_critical(_lock *plock, _irqL *pirqL)
+static inline u32 rtw_skb_len(struct sk_buff *pkt)
 {
-	spin_unlock_irqrestore(plock, *pirqL);
+	return pkt->len;
 }
 
-__inline static void _enter_critical_ex(_lock *plock, _irqL *pirqL)
+static inline void *rtw_skb_put_zero(struct sk_buff *skb, unsigned int len)
 {
-	spin_lock_irqsave(plock, *pirqL);
-}
-
-__inline static void _exit_critical_ex(_lock *plock, _irqL *pirqL)
-{
-	spin_unlock_irqrestore(plock, *pirqL);
-}
-
-__inline static void enter_critical_bh(_lock *plock)
-{
-	spin_lock_bh(plock);
-}
-
-__inline static void exit_critical_bh(_lock *plock)
-{
-	spin_unlock_bh(plock);
-}
-
-__inline static int _enter_critical_mutex(_mutex *pmutex, _irqL *pirqL)
-{
-	int ret = 0;
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37))
-	/* mutex_lock(pmutex); */
-	ret = mutex_lock_interruptible(pmutex);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4, 13, 0)
+	return skb_put_zero(skb, len);
 #else
-	ret = down_interruptible(pmutex);
-#endif
-	return ret;
-}
+	void *tmp = skb_put(skb, len);
 
+	memset(tmp, 0, len);
 
-__inline static void _exit_critical_mutex(_mutex *pmutex, _irqL *pirqL)
-{
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37))
-	mutex_unlock(pmutex);
-#else
-	up(pmutex);
+	return tmp;
 #endif
 }
 
+/*timer*/
+typedef struct rtw_timer_list _timer;
 struct rtw_timer_list {
 	struct timer_list timer;
 	void (*function)(void *);
 	void *arg;
 };
-
-typedef struct rtw_timer_list _timer;
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 14, 0))
 static inline void timer_hdl(struct timer_list *in_timer)
@@ -722,6 +696,13 @@ __inline static void _cancel_timer_async(_timer *ptimer)
 	del_timer(&ptimer->timer);
 }
 
+/*work*/
+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2, 5, 41))
+typedef struct work_struct _workitem;
+#else
+typedef struct tq_struct _workitem;
+#endif
+
 static inline void _init_workitem(_workitem *pwork, void *pfunc, void *cntx)
 {
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 20))
@@ -755,7 +736,6 @@ __inline static void _cancel_workitem_sync(_workitem *pwork)
 /*
  * Global Mutex: can only be used at PASSIVE level.
  *   */
-
 #define ACQUIRE_GLOBAL_MUTEX(_MutexCounter)                              \
 	{                                                               \
 		while (atomic_inc_return((atomic_t *)&(_MutexCounter)) != 1) { \
@@ -769,6 +749,8 @@ __inline static void _cancel_workitem_sync(_workitem *pwork)
 		atomic_dec((atomic_t *)&(_MutexCounter));        \
 	}
 
+
+typedef	struct	net_device *_nic_hdl;
 static inline int rtw_netif_queue_stopped(struct net_device *pnetdev)
 {
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 35))
@@ -787,7 +769,6 @@ int _rtw_netif_rx(_nic_hdl ndev, struct sk_buff *skb);
 static inline int _rtw_netif_rx(_nic_hdl ndev, struct sk_buff *skb)
 {
 #if defined(CONFIG_RTW_FC_FASTFWD)
-aa
 extern int fwdEngine_wifi_rx(struct sk_buff *skb);
 enum {
 	RE8670_RX_STOP=0,
@@ -817,7 +798,6 @@ int ret = 0;
 	return 0;
 #else
 	skb->dev = ndev;
-	//print_hex_dump(KERN_INFO, "netif_rx: ", DUMP_PREFIX_OFFSET, 16, 1, skb->data, skb->len, 1);
 	return netif_rx(skb);
 #endif
 }
@@ -837,7 +817,6 @@ static inline gro_result_t _rtw_napi_gro_receive(struct napi_struct *napi, struc
 }
 #endif /* CONFIG_RTW_GRO */
 #endif /* CONFIG_RTW_NAPI */
-
 
 static inline void rtw_netif_wake_queue(struct net_device *pnetdev)
 {
@@ -909,9 +888,6 @@ static inline int rtw_merge_string(char *dst, int dst_len, const char *src1, con
 #define PATH_LENGTH_MAX PATH_MAX
 
 /* Atomic integer operations */
-#define ATOMIC_T atomic_t
-
-/* Atomic integer operations */
 static inline void ATOMIC_SET(ATOMIC_T *v, int i)
 {
 	atomic_set(v, i);
@@ -975,9 +951,6 @@ static inline bool ATOMIC_INC_UNLESS(ATOMIC_T *v, int u)
 #endif
 }
 
-
-#define rtw_netdev_priv(netdev) (((struct rtw_netdev_priv_indicator *)netdev_priv(netdev))->priv)
-
 #define NDEV_FMT "%s"
 #define NDEV_ARG(ndev) ndev->name
 #define ADPT_FMT "%s"
@@ -987,6 +960,7 @@ static inline bool ATOMIC_INC_UNLESS(ATOMIC_T *v, int u)
 #define FUNC_ADPT_FMT "%s(%s)"
 #define FUNC_ADPT_ARG(adapter) __func__, (adapter->pnetdev ? adapter->pnetdev->name : NULL)
 
+#define rtw_netdev_priv(netdev) (((struct rtw_netdev_priv_indicator *)netdev_priv(netdev))->priv)
 struct rtw_netdev_priv_indicator {
 	void *priv;
 	u32 sizeof_priv;
@@ -1008,10 +982,85 @@ extern struct net_device *rtw_alloc_etherdev(int sizeof_priv);
 #define rtw_get_bridge_ndev_by_name(name) dev_get_by_name(&init_net, name)
 #endif
 
+static inline void rtw_dump_stack(void)
+{
+	dump_stack();
+}
+#define rtw_bug_on(condition) BUG_ON(condition)
+#define rtw_warn_on(condition) WARN_ON(condition)
+#define RTW_DIV_ROUND_UP(n, d)	DIV_ROUND_UP(n, d)
+#define rtw_sprintf(buf, size, format, arg...) snprintf(buf, size, format, ##arg)
+
 #define STRUCT_PACKED __attribute__ ((packed))
 
 #ifndef fallthrough
 #define fallthrough do {} while (0)
 #endif
+
+// NEO need to take off
+typedef unsigned long _irqL;
+
+#if (LINUX_VERSION_CODE > KERNEL_VERSION(2, 5, 41))
+	typedef struct work_struct _workitem;
+#else
+	typedef struct tq_struct _workitem;
+#endif
+
+typedef ktime_t sysptime;
+
+__inline static void _enter_critical(_lock *plock, _irqL *pirqL)
+{
+	spin_lock_irqsave(plock, *pirqL);
+}
+
+__inline static void _exit_critical(_lock *plock, _irqL *pirqL)
+{
+	spin_unlock_irqrestore(plock, *pirqL);
+}
+
+__inline static void _enter_critical_ex(_lock *plock, _irqL *pirqL)
+{
+	spin_lock_irqsave(plock, *pirqL);
+}
+
+__inline static void _exit_critical_ex(_lock *plock, _irqL *pirqL)
+{
+	spin_unlock_irqrestore(plock, *pirqL);
+}
+
+__inline static void enter_critical_bh(_lock *plock)
+{
+	spin_lock_bh(plock);
+}
+
+__inline static void exit_critical_bh(_lock *plock)
+{
+	spin_unlock_bh(plock);
+}
+
+__inline static int _enter_critical_mutex(_mutex *pmutex, _irqL *pirqL)
+{
+	int ret = 0;
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37))
+	/* mutex_lock(pmutex); */
+	ret = mutex_lock_interruptible(pmutex);
+#else
+	ret = down_interruptible(pmutex);
+#endif
+	return ret;
+}
+
+
+__inline static void _exit_critical_mutex(_mutex *pmutex, _irqL *pirqL)
+{
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37))
+	mutex_unlock(pmutex);
+#else
+	up(pmutex);
+#endif
+}
+
+#define ATOMIC_T atomic_t
+
 
 #endif /* __OSDEP_LINUX_SERVICE_H_ */

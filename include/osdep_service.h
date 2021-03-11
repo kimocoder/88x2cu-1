@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright(c) 2007 - 2017 Realtek Corporation.
+ * Copyright(c) 2007 - 2019 Realtek Corporation.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -14,7 +14,6 @@
  *****************************************************************************/
 #ifndef __OSDEP_SERVICE_H_
 #define __OSDEP_SERVICE_H_
-
 
 #define _FAIL					0
 #define _SUCCESS				1
@@ -485,31 +484,6 @@ static __inline void thread_enter(char *name)
 #endif
 }
 
-__inline static _OS_STATUS res_to_status(sint res)
-{
-
-#if defined(PLATFORM_LINUX) || defined (PLATFORM_MPIXEL) || defined (PLATFORM_FREEBSD)
-	return res;
-#endif
-
-#ifdef PLATFORM_WINDOWS
-
-	if (res == _SUCCESS)
-		return NDIS_STATUS_SUCCESS;
-	else
-		return NDIS_STATUS_FAILURE;
-
-#endif
-
-}
-
-__inline static void rtw_dump_stack(void)
-{
-#ifdef PLATFORM_LINUX
-	dump_stack();
-#endif
-}
-
 #ifdef PLATFORM_LINUX
 #define rtw_warn_on(condition) WARN_ON(condition)
 #else
@@ -850,5 +824,7 @@ int hwaddr_aton_i(const char *txt, u8 *addr);
 #else /* !PLATFORM_LINUX */
 #error "NOT DEFINE \"rtw_sprintf\"!!"
 #endif /* !PLATFORM_LINUX */
+
+// NEO need to take off
 
 #endif
