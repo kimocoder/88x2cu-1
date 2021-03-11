@@ -765,10 +765,6 @@ extern int	 rtw_free_recvframe(union recv_frame *precvframe);
 extern int _rtw_enqueue_recvframe(union recv_frame *precvframe, _queue *queue);
 extern int rtw_enqueue_recvframe(union recv_frame *precvframe, _queue *queue);
 
-sint rtw_enqueue_recvbuf_to_head(struct recv_buf *precvbuf, _queue *queue);
-sint rtw_enqueue_recvbuf(struct recv_buf *precvbuf, _queue *queue);
-struct recv_buf *rtw_dequeue_recvbuf(_queue *queue);
-
 void process_pwrbit_data(_adapter *padapter, union recv_frame *precv_frame, struct sta_info *psta);
 void process_wmmps_data(_adapter *padapter, union recv_frame *precv_frame, struct sta_info *psta);
 

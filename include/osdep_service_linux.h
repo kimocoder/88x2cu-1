@@ -1002,16 +1002,6 @@ typedef unsigned long _irqL;
 
 typedef ktime_t sysptime;
 
-__inline static void _enter_critical_ex(_lock *plock, _irqL *pirqL)
-{
-	spin_lock_irqsave(plock, *pirqL);
-}
-
-__inline static void _exit_critical_ex(_lock *plock, _irqL *pirqL)
-{
-	spin_unlock_irqrestore(plock, *pirqL);
-}
-
 __inline static void enter_critical_bh(_lock *plock)
 {
 	spin_lock_bh(plock);
