@@ -1000,12 +1000,6 @@ static inline void rtw_dump_stack(void)
 // NEO need to take off
 typedef unsigned long _irqL;
 
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2, 5, 41))
-	typedef struct work_struct _workitem;
-#else
-	typedef struct tq_struct _workitem;
-#endif
-
 typedef ktime_t sysptime;
 
 __inline static void _enter_critical(_lock *plock, _irqL *pirqL)
@@ -1036,28 +1030,6 @@ __inline static void enter_critical_bh(_lock *plock)
 __inline static void exit_critical_bh(_lock *plock)
 {
 	spin_unlock_bh(plock);
-}
-
-__inline static int _enter_critical_mutex(_mutex *pmutex, _irqL *pirqL)
-{
-	int ret = 0;
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37))
-	/* mutex_lock(pmutex); */
-	ret = mutex_lock_interruptible(pmutex);
-#else
-	ret = down_interruptible(pmutex);
-#endif
-	return ret;
-}
-
-
-__inline static void _exit_critical_mutex(_mutex *pmutex, _irqL *pirqL)
-{
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37))
-	mutex_unlock(pmutex);
-#else
-	up(pmutex);
-#endif
 }
 
 #define ATOMIC_T atomic_t

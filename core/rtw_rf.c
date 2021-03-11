@@ -1700,17 +1700,14 @@ exit:
 
 inline void dump_regd_exc_list(void *sel, struct rf_ctl_t *rfctl)
 {
-	_irqL irqL;
-
-	_enter_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+	_rtw_mutex_lock_interruptible(&rfctl->txpwr_lmt_mutex);
 	_dump_regd_exc_list(sel, rfctl);
-	_exit_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+	_rtw_mutex_unlock(&rfctl->txpwr_lmt_mutex);
 }
 
 void rtw_regd_exc_add_with_nlen(struct rf_ctl_t *rfctl, const char *country, u8 domain, const char *lmt_name, u32 nlen)
 {
 	struct regd_exc_ent *ent;
-	_irqL irqL;
 
 	if (!lmt_name || !nlen) {
 		rtw_warn_on(1);
@@ -1727,12 +1724,12 @@ void rtw_regd_exc_add_with_nlen(struct rf_ctl_t *rfctl, const char *country, u8 
 	ent->domain = domain;
 	_rtw_memcpy(ent->lmt_name, lmt_name, nlen);
 
-	_enter_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+	_rtw_mutex_lock_interruptible(&rfctl->txpwr_lmt_mutex);
 
 	rtw_list_insert_tail(&ent->list, &rfctl->reg_exc_list);
 	rfctl->regd_exc_num++;
 
-	_exit_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+	_rtw_mutex_unlock(&rfctl->txpwr_lmt_mutex);
 
 exit:
 	return;
@@ -1789,11 +1786,10 @@ struct regd_exc_ent *_rtw_regd_exc_search(struct rf_ctl_t *rfctl, const char *co
 inline struct regd_exc_ent *rtw_regd_exc_search(struct rf_ctl_t *rfctl, const char *country, u8 domain)
 {
 	struct regd_exc_ent *ent;
-	_irqL irqL;
 
-	_enter_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+	_rtw_mutex_lock_interruptible(&rfctl->txpwr_lmt_mutex);
 	ent = _rtw_regd_exc_search(rfctl, country, domain);
-	_exit_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+	_rtw_mutex_unlock(&rfctl->txpwr_lmt_mutex);
 
 	return ent;
 }
@@ -1801,10 +1797,9 @@ inline struct regd_exc_ent *rtw_regd_exc_search(struct rf_ctl_t *rfctl, const ch
 void rtw_regd_exc_list_free(struct rf_ctl_t *rfctl)
 {
 	struct regd_exc_ent *ent;
-	_irqL irqL;
 	_list *cur, *head;
 
-	_enter_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+	_rtw_mutex_lock_interruptible(&rfctl->txpwr_lmt_mutex);
 
 	head = &rfctl->reg_exc_list;
 	cur = get_next(head);
@@ -1817,7 +1812,7 @@ void rtw_regd_exc_list_free(struct rf_ctl_t *rfctl)
 	}
 	rfctl->regd_exc_num = 0;
 
-	_exit_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+	_rtw_mutex_unlock(&rfctl->txpwr_lmt_mutex);
 }
 
 void dump_txpwr_lmt(void *sel, _adapter *adapter)
@@ -1826,14 +1821,13 @@ void dump_txpwr_lmt(void *sel, _adapter *adapter)
 	struct rf_ctl_t *rfctl = adapter_to_rfctl(adapter);
 	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(adapter);
 	struct hal_spec_t *hal_spec = GET_HAL_SPEC(adapter);
-	_irqL irqL;
 	char fmt[16];
 	char tmp_str[TMP_STR_LEN];
 	s8 *lmt_idx = NULL;
 	int bw, band, ch_num, tlrs, ntx_idx, rs, i, path;
 	u8 ch, n, rfpath_num;
 
-	_enter_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+	_rtw_mutex_lock_interruptible(&rfctl->txpwr_lmt_mutex);
 
 	_dump_regd_exc_list(sel, rfctl);
 	RTW_PRINT_SEL(sel, "\n");
@@ -2081,7 +2075,7 @@ void dump_txpwr_lmt(void *sel, _adapter *adapter)
 		rtw_mfree(lmt_idx, sizeof(s8) * RF_PATH_MAX * rfctl->txpwr_lmt_num);
 
 release_lock:
-	_exit_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+	_rtw_mutex_unlock(&rfctl->txpwr_lmt_mutex);
 }
 
 /* search matcing first, if not found, alloc one */
@@ -2090,7 +2084,6 @@ void rtw_txpwr_lmt_add_with_nlen(struct rf_ctl_t *rfctl, const char *lmt_name, u
 {
 	struct hal_spec_t *hal_spec = GET_HAL_SPEC(dvobj_get_primary_adapter(rfctl_to_dvobj(rfctl)));
 	struct txpwr_lmt_ent *ent;
-	_irqL irqL;
 	_list *cur, *head;
 	s8 pre_lmt;
 
@@ -2099,7 +2092,7 @@ void rtw_txpwr_lmt_add_with_nlen(struct rf_ctl_t *rfctl, const char *lmt_name, u
 		goto exit;
 	}
 
-	_enter_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+	_rtw_mutex_lock_interruptible(&rfctl->txpwr_lmt_mutex);
 
 	/* search for existed entry */
 	head = &rfctl->txpwr_lmt_list;
@@ -2170,7 +2163,7 @@ chk_lmt_val:
 			, lmt);
 
 release_lock:
-	_exit_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+	_rtw_mutex_unlock(&rfctl->txpwr_lmt_mutex);
 
 exit:
 	return;
@@ -2210,11 +2203,10 @@ struct txpwr_lmt_ent *_rtw_txpwr_lmt_get_by_name(struct rf_ctl_t *rfctl, const c
 inline struct txpwr_lmt_ent *rtw_txpwr_lmt_get_by_name(struct rf_ctl_t *rfctl, const char *lmt_name)
 {
 	struct txpwr_lmt_ent *ent;
-	_irqL irqL;
 
-	_enter_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+	_rtw_mutex_lock_interruptible(&rfctl->txpwr_lmt_mutex);
 	ent = _rtw_txpwr_lmt_get_by_name(rfctl, lmt_name);
-	_exit_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+	_rtw_mutex_unlock(&rfctl->txpwr_lmt_mutex);
 
 	return ent;
 }
@@ -2222,10 +2214,9 @@ inline struct txpwr_lmt_ent *rtw_txpwr_lmt_get_by_name(struct rf_ctl_t *rfctl, c
 void rtw_txpwr_lmt_list_free(struct rf_ctl_t *rfctl)
 {
 	struct txpwr_lmt_ent *ent;
-	_irqL irqL;
 	_list *cur, *head;
 
-	_enter_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+	_rtw_mutex_lock_interruptible(&rfctl->txpwr_lmt_mutex);
 
 	head = &rfctl->txpwr_lmt_list;
 	cur = get_next(head);
@@ -2240,7 +2231,7 @@ void rtw_txpwr_lmt_list_free(struct rf_ctl_t *rfctl)
 	}
 	rfctl->txpwr_lmt_num = 0;
 
-	_exit_critical_mutex(&rfctl->txpwr_lmt_mutex, &irqL);
+	_rtw_mutex_unlock(&rfctl->txpwr_lmt_mutex);
 }
 #endif /* CONFIG_TXPWR_LIMIT */
 

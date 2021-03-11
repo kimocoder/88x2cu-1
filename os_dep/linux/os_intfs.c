@@ -2435,9 +2435,9 @@ int pm_netdev_open(struct net_device *pnetdev, u8 bnormal)
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(pnetdev);
 
 	if (_TRUE == bnormal) {
-		_enter_critical_mutex(&(adapter_to_dvobj(padapter)->hw_init_mutex), NULL);
+		_rtw_mutex_lock_interruptible(&(adapter_to_dvobj(padapter)->hw_init_mutex));
 		status = _mi_pm_netdev_open(pnetdev);
-		_exit_critical_mutex(&(adapter_to_dvobj(padapter)->hw_init_mutex), NULL);
+		_rtw_mutex_unlock(&(adapter_to_dvobj(padapter)->hw_init_mutex));
 	}
 #ifdef CONFIG_IPS
 	else

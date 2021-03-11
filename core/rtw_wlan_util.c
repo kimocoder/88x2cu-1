@@ -506,7 +506,7 @@ void set_channel_bwmode(_adapter *padapter, unsigned char channel, unsigned char
 		else
 			chnl_offset80 = HAL_PRIME_CHNL_OFFSET_DONT_CARE;
 	}
-	_enter_critical_mutex(&(adapter_to_dvobj(padapter)->setch_mutex), NULL);
+	_rtw_mutex_lock_interruptible(&(adapter_to_dvobj(padapter)->setch_mutex));
 
 #ifdef CONFIG_MCC_MODE
 	if (MCC_EN(padapter)) {
@@ -566,7 +566,7 @@ void set_channel_bwmode(_adapter *padapter, unsigned char channel, unsigned char
 	}
 #endif /* CONFIG_DFS_MASTER */
 
-	_exit_critical_mutex(&(adapter_to_dvobj(padapter)->setch_mutex), NULL);
+	_rtw_mutex_unlock(&(adapter_to_dvobj(padapter)->setch_mutex));
 }
 
 __inline u8 *get_my_bssid(WLAN_BSSID_EX *pnetwork)

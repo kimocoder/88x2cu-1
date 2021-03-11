@@ -1013,7 +1013,7 @@ s32 rtw_tdls_do_ch_sw(_adapter *padapter, struct sta_info *ptdls_sta, u8 chnl_ty
 	if (rtw_hal_ch_sw_oper_offload(padapter, channel, channel_offset, bwmode) == _SUCCESS) {
 		if (rtw_tdls_chsw_oper_wait(padapter) == _SUCCESS) {
 			/* set channel and bw related variables in driver */
-			_enter_critical_mutex(&(adapter_to_dvobj(padapter)->setch_mutex), NULL);
+			_rtw_mutex_lock_interruptible(&(adapter_to_dvobj(padapter)->setch_mutex));
 
 			rtw_set_oper_ch(padapter, channel);
 			rtw_set_oper_choffset(padapter, channel_offset);
@@ -1037,7 +1037,7 @@ s32 rtw_tdls_do_ch_sw(_adapter *padapter, struct sta_info *ptdls_sta, u8 chnl_ty
 
 			pHalData->CurrentCenterFrequencyIndex1 = center_ch;
 
-			_exit_critical_mutex(&(adapter_to_dvobj(padapter)->setch_mutex), NULL);
+			_rtw_mutex_unlock(&(adapter_to_dvobj(padapter)->setch_mutex));
 
 			rtw_hal_get_hwreg(padapter, HW_VAR_CH_SW_NEED_TO_TAKE_CARE_IQK_INFO, &take_care_iqk);
 			if (take_care_iqk == _TRUE)

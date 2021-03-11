@@ -809,7 +809,7 @@ void rtw_exec_lps(_adapter *padapter, u8 ps_mode)
 
 	if (ps_mode == PM_PS_MODE_ACTIVE) {
 #ifdef CONFIG_LPS_ACK
-		_enter_critical_mutex(&pwrpriv->lps_ack_mutex, NULL);
+		_rtw_mutex_lock_interruptible(&pwrpriv->lps_ack_mutex);
 		rtw_sctx_init(&pwrpriv->lps_ack_sctx, 100);
 #endif /* CONFIG_LPS_ACK */
 
@@ -817,7 +817,7 @@ void rtw_exec_lps(_adapter *padapter, u8 ps_mode)
 		rtw_hal_set_hwreg(padapter, HW_VAR_LPS_STATE_CHK, (u8 *)(&ps_mode));
 
 #ifdef CONFIG_LPS_ACK
-		_exit_critical_mutex(&pwrpriv->lps_ack_mutex, NULL);
+		_rtw_mutex_unlock(&pwrpriv->lps_ack_mutex);
 #endif /* CONFIG_LPS_ACK */
 	} else {
 		if (MLME_IS_ASOC(padapter))
@@ -868,7 +868,7 @@ void rtw_lps_rfon_ctrl(_adapter *padapter, u8 rfon_ctrl)
 #endif /* CONFIG_LPS_LCLK */
 
 #ifdef CONFIG_LPS_ACK
-			_enter_critical_mutex(&pwrpriv->lps_ack_mutex, NULL);
+			_rtw_mutex_lock_interruptible(&pwrpriv->lps_ack_mutex);
 			rtw_sctx_init(&pwrpriv->lps_ack_sctx, 100);
 #endif /* CONFIG_LPS_ACK */
 
@@ -876,7 +876,7 @@ void rtw_lps_rfon_ctrl(_adapter *padapter, u8 rfon_ctrl)
 			rtw_hal_set_hwreg(padapter, HW_VAR_LPS_RFON_CHK, (u8 *)(&rfon_ctrl));
 
 #ifdef CONFIG_LPS_ACK
-			_exit_critical_mutex(&pwrpriv->lps_ack_mutex, NULL);
+			_rtw_mutex_unlock(&pwrpriv->lps_ack_mutex);
 #endif /* CONFIG_LPS_ACK */
 		} else {
 			if (MLME_IS_ASOC(padapter)) {
@@ -941,7 +941,6 @@ void rtw_set_ps_mode(PADAPTER padapter, u8 ps_mode, u8 smart_ps, u8 bcn_ant_mode
 #endif /* CONFIG_P2P */
 #ifdef CONFIG_TDLS
 	struct sta_priv *pstapriv = &padapter->stapriv;
-	_irqL irqL;
 	int i, j;
 	_list	*plist, *phead;
 	struct sta_info *ptdls_sta;
