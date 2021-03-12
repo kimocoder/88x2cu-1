@@ -209,13 +209,6 @@ enum mlme_auth_type {
 	MLME_AUTHTYPE_AUTOMATIC
 };
 
-/* Scan type including active and passive scan. */
-typedef enum _RT_SCAN_TYPE {
-	SCAN_PASSIVE,
-	SCAN_ACTIVE,
-	SCAN_MIX,
-} RT_SCAN_TYPE, *PRT_SCAN_TYPE;
-
 #define WIFI_FREQUENCY_BAND_AUTO 0
 #define WIFI_FREQUENCY_BAND_5GHZ 1
 #define WIFI_FREQUENCY_BAND_2GHZ 2
@@ -678,7 +671,7 @@ struct mlme_priv {
 	RT_LINK_DETECT_T	LinkDetectInfo;
 
 	u8	acm_mask; /* for wmm acm mask */
-	RT_SCAN_TYPE	scan_mode; /* active: 1, passive: 0 */
+	enum rtw_phl_scan_type	scan_mode; /* active: 1, passive: 0 */
 
 	u8 *wps_probe_req_ie;
 	u32 wps_probe_req_ie_len;

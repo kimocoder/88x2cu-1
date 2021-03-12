@@ -14223,11 +14223,12 @@ static void sitesurvey_res_reset(_adapter *adapter, struct sitesurvey_parm *parm
 	ss->acs = parm->acs;
 }
 
-static u8 sitesurvey_pick_ch_behavior(_adapter *padapter, u8 *ch, RT_SCAN_TYPE *type)
+static u8 sitesurvey_pick_ch_behavior(_adapter *padapter, u8 *ch,
+		enum rtw_phl_scan_type *type)
 {
 	u8 next_state;
 	u8 scan_ch = 0;
-	RT_SCAN_TYPE scan_type = SCAN_PASSIVE;
+	enum rtw_phl_scan_type scan_type = RTW_PHL_SCAN_PASSIVE;
 	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
 	struct ss_res *ss = &pmlmeext->sitesurvey_res;
 	struct rf_ctl_t *rfctl = adapter_to_rfctl(padapter);
@@ -14248,7 +14249,7 @@ static u8 sitesurvey_pick_ch_behavior(_adapter *padapter, u8 *ch, RT_SCAN_TYPE *
 			scan_ch = pwdinfo->rx_invitereq_info.operation_ch[ss->channel_idx];
 		else
 			scan_ch = pwdinfo->p2p_info.operation_ch[ss->channel_idx];
-		scan_type = SCAN_ACTIVE;
+		scan_type = RTW_PHL_SCAN_ACTIVE;
 	} else if (rtw_p2p_findphase_ex_is_social(pwdinfo)) {
 		/*
 		* Commented by Albert 2011/06/03
@@ -14257,9 +14258,9 @@ static u8 sitesurvey_pick_ch_behavior(_adapter *padapter, u8 *ch, RT_SCAN_TYPE *
 		scan_ch = pwdinfo->social_chan[ss->channel_idx];
 		ch_set_idx = rtw_chset_search_ch(rfctl->channel_set, scan_ch);
 		if (ch_set_idx >= 0)
-			scan_type = rfctl->channel_set[ch_set_idx].flags & RTW_CHF_NO_IR ? SCAN_PASSIVE : SCAN_ACTIVE;
+			scan_type = rfctl->channel_set[ch_set_idx].flags & RTW_CHF_NO_IR ? RTW_PHL_SCAN_PASSIVE : RTW_PHL_SCAN_ACTIVE;
 		else
-			scan_type = SCAN_ACTIVE;
+			scan_type = RTW_PHL_SCAN_ACTIVE;
 	} else
 #endif /* CONFIG_P2P */
 	{
@@ -14302,10 +14303,10 @@ static u8 sitesurvey_pick_ch_behavior(_adapter *padapter, u8 *ch, RT_SCAN_TYPE *
 
 			#if defined(CONFIG_RTW_ACS) && defined(CONFIG_RTW_ACS_DBG)
 			if (IS_ACS_ENABLE(padapter) && rtw_is_acs_passiv_scan(padapter))
-				scan_type = SCAN_PASSIVE;
+				scan_type = RTW_PHL_SCAN_PASSIVE;
 			else
 			#endif /*CONFIG_RTW_ACS*/
-				scan_type = (ch->flags & RTW_IEEE80211_CHAN_PASSIVE_SCAN) ? SCAN_PASSIVE : SCAN_ACTIVE;
+				scan_type = (ch->flags & RTW_IEEE80211_CHAN_PASSIVE_SCAN) ? RTW_PHL_SCAN_PASSIVE : RTW_PHL_SCAN_ACTIVE;
 		}
 	}
 

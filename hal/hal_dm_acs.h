@@ -97,7 +97,7 @@ struct auto_chan_sel {
 	#endif
 
 	#ifdef CONFIG_RTW_ACS_DBG
-	RT_SCAN_TYPE scan_type;
+	enum rtw_phl_scan_type scan_type;
 	u16 scan_time;
 	u8 igi;
 	u8 bw;
@@ -118,7 +118,7 @@ u8 rtw_is_acs_igi_valid(_adapter *adapter);
 
 #define rtw_acs_get_adv_bw(adapter)	(GET_HAL_DATA(adapter)->acs.bw)
 
-void rtw_acs_adv_setting(_adapter *adapter, RT_SCAN_TYPE scan_type, u16 scan_time, u8 igi, u8 bw);
+void rtw_acs_adv_setting(_adapter *adapter, enum rtw_phl_scan_type scan_type, u16 scan_time, u8 igi, u8 bw);
 void rtw_acs_adv_reset(_adapter *adapter);
 #endif
 

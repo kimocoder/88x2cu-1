@@ -3336,7 +3336,7 @@ bypass_p2p_chk:
 
 	/* no ssid entry, set the scan type as passvie */
 	if (request->n_ssids == 0)
-		parm.scan_mode = SCAN_PASSIVE;
+		parm.scan_mode = RTW_PHL_SCAN_PASSIVE;
 
 	/* parsing channels, n_channels */
 	for (i = 0; i < request->n_channels && i < RTW_CHANNEL_SCAN_AMOUNT; i++) {

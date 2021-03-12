@@ -676,7 +676,7 @@ void flush_all_cam_entry(_adapter *padapter);
 
 BOOLEAN IsLegal5GChannel(PADAPTER Adapter, u8 channel);
 
-void site_survey(_adapter *padapter, u8 survey_channel, RT_SCAN_TYPE ScanType);
+void site_survey(_adapter *padapter, u8 survey_channel, enum rtw_phl_scan_type scan_type);
 u8 collect_bss_info(_adapter *padapter, union recv_frame *precv_frame, WLAN_BSSID_EX *bssid);
 void rtw_update_network(WLAN_BSSID_EX *dst, WLAN_BSSID_EX *src, _adapter *padapter, bool update_ie);
 

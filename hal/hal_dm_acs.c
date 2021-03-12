@@ -118,7 +118,7 @@ u8 rtw_is_acs_igi_valid(_adapter *adapter)
 
 	return _FALSE;
 }
-void rtw_acs_adv_setting(_adapter *adapter, RT_SCAN_TYPE scan_type, u16 scan_time, u8 igi, u8 bw)
+void rtw_acs_adv_setting(_adapter *adapter, enum rtw_phl_scan_type scan_type, u16 scan_time, u8 igi, u8 bw)
 {
 	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(adapter);
 	struct auto_chan_sel *pacs = &hal_data->acs;

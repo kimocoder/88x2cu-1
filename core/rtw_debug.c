@@ -56,9 +56,14 @@ extern uint rtw_recvbuf_nr;
 	RTW_PRINT_SEL(sel, "\nKernel Version: %s\n", kernel_version);
 #endif
 
+#ifdef CONFIG_RTW_ANDROID
+	RTW_PRINT_SEL(sel, "Android Driver: %d\n", CONFIG_RTW_ANDROID);
+#else
+	RTW_PRINT_SEL(sel, "Linux Driver\n");
+#endif /* CONFIG_RTW_ANDROID */
+
 	RTW_PRINT_SEL(sel, "Driver Version: %s\n", DRIVERVERSION);
 	RTW_PRINT_SEL(sel, "------------------------------------------------\n");
-	RTW_PRINT_SEL(sel, "CONFIG_RTW_ANDROID: %d\n", CONFIG_RTW_ANDROID);
 #ifdef CONFIG_IOCTL_CFG80211
 	RTW_PRINT_SEL(sel, "CFG80211\n");
 #ifdef RTW_USE_CFG80211_STA_EVENT
