@@ -10155,10 +10155,6 @@ static int rtw_priv_mp_get(struct net_device *dev,
 		RTW_INFO("mp_get EFUSE_FILE\n");
 		status = rtw_efuse_file_map(dev, info, wdata, extra);
 		break;
-	case EFUSE_FILE_STORE:
-		RTW_INFO("mp_get EFUSE_FILE_STORE\n");
-		status = rtw_efuse_file_map_store(dev, info, wdata, extra);
-		break;
 	case MP_TX:
 		RTW_INFO("mp_get MP_TX\n");
 		status = rtw_mp_tx(dev, info, wdata, extra);

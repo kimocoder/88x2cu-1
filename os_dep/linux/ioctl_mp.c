@@ -2905,45 +2905,6 @@ int rtw_efuse_file_map(struct net_device *dev,
 	return 0;
 }
 
-
-int rtw_efuse_file_map_store(struct net_device *dev,
-				struct iw_request_info *info,
-				union iwreq_data *wrqu, char *extra)
-{
-	char *rtw_efuse_file_map_path;
-	u8 Status;
-	u16 mapLen;
-	PEFUSE_HAL pEfuseHal;
-	PADAPTER padapter = rtw_netdev_priv(dev);
-	HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(padapter);
-	struct mp_priv *pmp_priv = &padapter->mppriv;
-
-	pEfuseHal = &pHalData->EfuseHal;
-	if (copy_from_user(extra, wrqu->data.pointer, wrqu->data.length))
-		return -EFAULT;
-
-	rtw_efuse_file_map_path = extra;
-	RTW_INFO("%s rtw_is_file_readable! %s\n", __func__, rtw_efuse_file_map_path);
-
-	EFUSE_GetEfuseDefinition(padapter, EFUSE_WIFI, TYPE_EFUSE_MAP_LEN , (void *)&mapLen, _FALSE);
-
-	if (mapLen != 0) {
-		RTW_INFO("%s, efuse store path = %s! mapLen = %d\n", __func__, rtw_efuse_file_map_path, mapLen);
-		Status = rtw_efuse_file_store(padapter, rtw_efuse_file_map_path, pEfuseHal->fakeEfuseModifiedMap, mapLen);
-		if (Status) {
-			sprintf(extra, "efuse file restore OK\n");
-		} else {
-			sprintf(extra, "efuse file restore FAIL\n");
-		}
-	} else {
-		sprintf(extra, "efuse file readable FAIL\n");
-		RTW_INFO("%s rtw_is_file_readable fail! map Len %d\n", __func__, mapLen);
-	}
-
-	wrqu->data.length = strlen(extra);
-	return 0;
-}
-
 int rtw_bt_efuse_file_map(struct net_device *dev,
 				struct iw_request_info *info,
 				union iwreq_data *wrqu, char *extra)

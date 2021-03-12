@@ -1154,7 +1154,6 @@ enum {
 static void LinkLayerStats(_adapter *padapter)
 {
 	struct xmit_priv		*pxmitpriv = &(padapter->xmitpriv);
-	struct recv_priv		*precvpriv = &(padapter->recvpriv);
 	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
 	struct dvobj_priv	*pdvobjpriv = adapter_to_dvobj(padapter);
 	u32 ps_time, trx_total_time;
@@ -1310,7 +1309,6 @@ static int rtw_cfgvendor_set_rssi_monitor(struct wiphy *wiphy,
         _adapter *padapter = GET_PRIMARY_ADAPTER(wiphy_to_adapter(wiphy));
         struct rtw_wdev_priv *pwdev_priv = adapter_wdev_data(padapter);
 
-        struct recv_priv *precvpriv = &padapter->recvpriv;
 	int err = 0, rem, type;
         const struct nlattr *iter;
 

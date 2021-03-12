@@ -2343,23 +2343,6 @@ int isAdaptorInfoFileValid(void)
 	return _TRUE;
 }
 
-int storeAdaptorInfoFile(char *path, u8 *efuse_data)
-{
-	int ret = _SUCCESS;
-
-	if (path && efuse_data) {
-		ret = rtw_store_to_file(path, efuse_data, EEPROM_MAX_SIZE_512);
-		if (ret == EEPROM_MAX_SIZE)
-			ret = _SUCCESS;
-		else
-			ret = _FAIL;
-	} else {
-		RTW_INFO("%s NULL pointer\n", __FUNCTION__);
-		ret =  _FAIL;
-	}
-	return ret;
-}
-
 int retriveAdaptorInfoFile(char *path, u8 *efuse_data)
 {
 	int ret = _SUCCESS;
@@ -2441,42 +2424,6 @@ u8 rtw_efuse_file_read(PADAPTER padapter, u8 *filepath, u8 *buf, u32 len)
 	return _TRUE;
 }
 
-
-u8 rtw_efuse_file_store(PADAPTER padapter, u8 *filepath, u8 *buf, u32 len)
-{
-	int err = 0, i = 0, j = 0, mapLen = 0 ;
-	char *cbuf, *pchr;
-
-	cbuf = rtw_zmalloc(len * 3);
-	pchr = cbuf;
-
-	if (filepath && buf) {
-		if (cbuf == NULL) {
-			RTW_INFO("%s, malloc cbuf _FAIL\n", __FUNCTION__);
-			err = _FAIL;
-		} else {
-			for (i = 0; i <= len; i += 16) {
-				for (j = 0; j < 16; j++)
-					pchr += sprintf(pchr, "%02X ", buf[i + j]);
-				pchr += sprintf(pchr, "\n");
-			}
-
-			err = rtw_store_to_file(filepath, cbuf, strlen(cbuf));
-			RTW_INFO("%s, rtw_store_to_file len=%d,err =%d, len(cbuf)=%zd\n", __FUNCTION__, len, err, strlen(cbuf));
-			if (err == strlen(cbuf)) {
-				err = _SUCCESS;
-				RTW_INFO("%s, filepatch %s, len=%d, done\n", __FUNCTION__, filepath, len);
-			} else {
-				err = _FAIL;
-				RTW_INFO("%s, filepatch %s, len=%d,err =%d, _FAIL\n", __FUNCTION__, filepath, len, err);
-			}
-		}
-	}
-	if (cbuf)
-		rtw_mfree(cbuf, len * 3);
-
-	return err;
-}
 
 #ifdef CONFIG_EFUSE_CONFIG_FILE
 u32 rtw_read_efuse_from_file(const char *path, u8 *buf, int map_size)
