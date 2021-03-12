@@ -67,8 +67,6 @@
 /*
  * Internal  General Config
  */
-/* #define CONFIG_H2CLBK */
-
 #define CONFIG_EMBEDDED_FWIMG	1
 #if (CONFIG_EMBEDDED_FWIMG==1)
 	#define	LOAD_FW_HEADER_FROM_DRIVER
