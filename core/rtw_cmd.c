@@ -495,6 +495,86 @@ void rtw_free_cmd_obj(struct cmd_obj *pcmd)
 	rtw_mfree((unsigned char *)pcmd, sizeof(struct cmd_obj));
 }
 
+void rtw_run_cmd(_adapter *padapter, struct cmd_obj *pcmd, bool discard)
+{
+	u8 ret;
+	u8 *pcmdbuf;
+	systime cmd_start_time;
+	u32 cmd_process_time;
+	u8(*cmd_hdl)(_adapter *padapter, u8 *pbuf);
+	void (*pcmd_callback)(_adapter *dev, struct cmd_obj *pcmd);
+	struct cmd_priv *pcmdpriv = &(adapter_to_dvobj(padapter)->cmdpriv);
+	struct drvextra_cmd_parm *extra_parm = NULL;
+
+	cmd_start_time = rtw_get_current_time();
+	pcmdpriv->cmd_issued_cnt++;
+
+	if (discard)
+		goto post_process;
+
+	if (pcmd->cmdsz > MAX_CMDSZ) {
+		RTW_ERR("%s cmdsz:%d > MAX_CMDSZ:%d\n", __func__, pcmd->cmdsz, MAX_CMDSZ);
+		pcmd->res = H2C_PARAMETERS_ERROR;
+		goto post_process;
+	}
+
+	if (pcmd->cmdcode >= (sizeof(wlancmds) / sizeof(struct rtw_cmd))) {
+		RTW_ERR("%s undefined cmdcode:%d\n", __func__, pcmd->cmdcode);
+		pcmd->res = H2C_PARAMETERS_ERROR;
+		goto post_process;
+	}
+
+	cmd_hdl = wlancmds[pcmd->cmdcode].cmd_hdl;
+	if (!cmd_hdl) {
+		RTW_ERR("%s no cmd_hdl for cmdcode:%d\n", __func__, pcmd->cmdcode);
+		pcmd->res = H2C_PARAMETERS_ERROR;
+		goto post_process;
+	}
+
+	if (DBG_CMD_EXECUTE)
+		RTW_INFO(ADPT_FMT" "CMD_FMT" %sexecute\n", ADPT_ARG(pcmd->padapter), CMD_ARG(pcmd)
+			, pcmd->res == H2C_ENQ_HEAD ? "ENQ_HEAD " : (pcmd->res == H2C_ENQ_HEAD_FAIL ? "ENQ_HEAD_FAIL " : ""));
+
+	pcmdbuf = pcmdpriv->cmd_buf;
+	_rtw_memcpy(pcmdbuf, pcmd->parmbuf, pcmd->cmdsz);
+	ret = cmd_hdl(pcmd->padapter, pcmdbuf);
+	pcmd->res = ret;
+
+	pcmdpriv->cmd_seq++;
+
+post_process:
+
+	_rtw_mutex_lock_interruptible(&pcmdpriv->sctx_mutex);
+	if (pcmd->sctx) {
+		if (0)
+			RTW_PRINT(FUNC_ADPT_FMT" pcmd->sctx\n", FUNC_ADPT_ARG(pcmd->padapter));
+		if (pcmd->res == H2C_SUCCESS)
+			rtw_sctx_done(&pcmd->sctx);
+		else
+			rtw_sctx_done_err(&pcmd->sctx, RTW_SCTX_DONE_CMD_ERROR);
+	}
+	_rtw_mutex_unlock(&pcmdpriv->sctx_mutex);
+
+	cmd_process_time = rtw_get_passing_time_ms(cmd_start_time);
+	if (cmd_process_time > 1000) {
+		RTW_INFO(ADPT_FMT" "CMD_FMT" process_time=%d\n", ADPT_ARG(pcmd->padapter), CMD_ARG(pcmd), cmd_process_time);
+		if (0)
+			rtw_warn_on(1);
+	}
+
+	/* call callback function for post-processed */
+	if (pcmd->cmdcode >= (sizeof(wlancmds) / sizeof(struct rtw_cmd)))
+		pcmd_callback = wlancmds[pcmd->cmdcode].callback;
+	else
+		pcmd_callback = NULL;
+
+	if (pcmd_callback == NULL) {
+		rtw_free_cmd_obj(pcmd);
+	} else {
+		/* todo: !!! fill rsp_buf to pcmd->rsp if (pcmd->rsp!=NULL) */
+		pcmd_callback(pcmd->padapter, pcmd);/* need conider that free cmd_obj in rtw_cmd_callback */
+	}
+}
 
 void rtw_stop_cmd_thread(_adapter *adapter)
 {
@@ -5570,3 +5650,132 @@ exit:
 	return res;
 }
 #endif /* CONFIG_WRITE_BCN_LEN_TO_FW */
+
+char UNKNOWN_CID[16] = "UNKNOWN_EXTRA";
+char *rtw_extra_name(struct drvextra_cmd_parm *pdrvextra_cmd)
+{
+	switch(pdrvextra_cmd->ec_id) {
+	case NONE_WK_CID:
+		return "NONE_WK_CID";
+		break;
+	case STA_MSTATUS_RPT_WK_CID:
+		return "STA_MSTATUS_RPT_WK_CID";
+		break;
+	#if 0 /*#ifdef CONFIG_CORE_DM_CHK_TIMER*/
+	case DYNAMIC_CHK_WK_CID:
+		return "DYNAMIC_CHK_WK_CID";
+		break;
+	#endif
+	case DM_CTRL_WK_CID:
+		return "DM_CTRL_WK_CID";
+		break;
+	case PBC_POLLING_WK_CID:
+		return "PBC_POLLING_WK_CID";
+		break;
+	#ifdef CONFIG_POWER_SAVING
+	case POWER_SAVING_CTRL_WK_CID:
+		return "POWER_SAVING_CTRL_WK_CID";
+	#endif
+		break;
+	case LPS_CTRL_WK_CID:
+		return "LPS_CTRL_WK_CID";
+		break;
+	case ANT_SELECT_WK_CID:
+		return "ANT_SELECT_WK_CID";
+		break;
+	case P2P_PS_WK_CID:
+		return "P2P_PS_WK_CID";
+		break;
+	case CHECK_HIQ_WK_CID:
+		return "CHECK_HIQ_WK_CID";
+		break;
+	case C2H_WK_CID:
+		return "C2H_WK_CID";
+		break;
+	case RESET_SECURITYPRIV:
+		return "RESET_SECURITYPRIV";
+		break;
+	case FREE_ASSOC_RESOURCES:
+		return "FREE_ASSOC_RESOURCES";
+		break;
+	case DM_IN_LPS_WK_CID:
+		return "DM_IN_LPS_WK_CID";
+		break;
+	case DM_RA_MSK_WK_CID:
+		return "DM_RA_MSK_WK_CID";
+		break;
+	case LPS_CHANGE_DTIM_CID:
+		return "LPS_CHANGE_DTIM_CID";
+		break;
+	case DFS_RADAR_DETECT_WK_CID:
+		return "DFS_RADAR_DETECT_WK_CID";
+		break;
+	case DFS_RADAR_DETECT_EN_DEC_WK_CID:
+		return "DFS_RADAR_DETECT_EN_DEC_WK_CID";
+		break;
+	case SESSION_TRACKER_WK_CID:
+		return "SESSION_TRACKER_WK_CID";
+		break;
+	case TEST_H2C_CID:
+		return "TEST_H2C_CID";
+		break;
+	case MP_CMD_WK_CID:
+		return "MP_CMD_WK_CID";
+		break;
+	case CUSTOMER_STR_WK_CID:
+		return "CUSTOMER_STR_WK_CID";
+		break;
+	case MGNT_TX_WK_CID:
+		return "MGNT_TX_WK_CID";
+		break;
+	case REQ_PER_CMD_WK_CID:
+		return "REQ_PER_CMD_WK_CID";
+		break;
+	case SSMPS_WK_CID:
+		return "SSMPS_WK_CID";
+		break;
+#ifdef CONFIG_CTRL_TXSS_BY_TP
+	case TXSS_WK_CID:
+		return "TXSS_WK_CID";
+		break;
+#endif
+	case AC_PARM_CMD_WK_CID:
+		return "AC_PARM_CMD_WK_CID";
+		break;
+#ifdef CONFIG_AP_MODE
+	case STOP_AP_WK_CID:
+		return "STOP_AP_WK_CID";
+		break;
+#endif
+#ifdef CONFIG_RTW_TOKEN_BASED_XMIT
+	case TBTX_CONTROL_TX_WK_CID:
+		return "TBTX_CONTROL_TX_WK_CID";
+		break;
+#endif
+	case MAX_WK_CID:
+		return "MAX_WK_CID";
+		break;
+	default:
+		return UNKNOWN_CID;
+		break;
+	}
+	return UNKNOWN_CID;
+}
+
+char UNKNOWN_CMD[16] = "UNKNOWN_CMD";
+char *rtw_cmd_name(struct cmd_obj *pcmd)
+{
+	struct rtw_evt_header *pev;
+
+	if (pcmd->cmdcode >= (sizeof(wlancmds) / sizeof(struct rtw_cmd)))
+		return UNKNOWN_CMD;
+
+	if (pcmd->cmdcode == CMD_SET_MLME_EVT)
+		return rtw_evt_name((struct rtw_evt_header*)pcmd->parmbuf);
+
+	if (pcmd->cmdcode == CMD_SET_DRV_EXTRA)
+		return rtw_extra_name((struct drvextra_cmd_parm*)pcmd->parmbuf);
+
+	return wlancmds[pcmd->cmdcode].name;
+}
+

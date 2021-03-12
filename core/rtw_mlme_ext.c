@@ -12264,7 +12264,7 @@ void update_sta_info(_adapter *padapter, struct sta_info *psta)
 
 }
 
-static void rtw_mlmeext_disconnect(_adapter *padapter)
+void rtw_mlmeext_disconnect(_adapter *padapter)
 {
 	struct mlme_priv		*pmlmepriv = &padapter->mlmepriv;
 	struct mlme_ext_priv	*pmlmeext = &padapter->mlmeextpriv;
@@ -16071,5 +16071,14 @@ u8 rtw_write_bcnlen_hdl(_adapter *padapter, u8 *pbuf)
 	rtw_write16(padapter, REG_RX_BEACON_LENGTH + 2, bcn_len);
 #endif
 	return H2C_SUCCESS;
+}
+
+char UNKNOWN_EVT[16] = "UNKNOWN_EVT";
+char *rtw_evt_name(struct rtw_evt_header *pev)
+{
+	if (pev->id >= EVT_ID_MAX)
+		return UNKNOWN_EVT;
+
+	return wlanevents[pev->id].name;
 }
 

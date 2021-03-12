@@ -53,6 +53,9 @@ struct mi_state {
 	u8 p2p_gc;
 	u8 p2p_go;
 #endif
+	u8 union_ch;
+	u8 union_bw;
+	u8 union_offset;
 };
 
 #define MSTATE_STA_NUM(_mstate)			((_mstate)->sta_num)

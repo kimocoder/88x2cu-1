@@ -2893,8 +2893,7 @@ u8 rtw_sitesurvey_cmd(_adapter *padapter, struct sitesurvey_parm *pparm)
 	default:
 		RTW_INFO("%s NEO RTW_SCAN_NORMAL\n", __func__);
 		phl_param->ops = &scan_ops_cb;
-		//phl_param->back_op_mode = SCAN_BKOP_CNT;
-		phl_param->back_op_mode = SCAN_BKOP_NONE;
+		phl_param->back_op_mode = SCAN_BKOP_CNT;
 		phl_param->back_op_ch_cnt = 3;
 		phl_param->back_op_ch_dur_ms = SURVEY_TO;
 		break;

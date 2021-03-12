@@ -819,7 +819,9 @@ defined(CONFIG_RTL8723F) /*|| defined(CONFIG_RTL8814A)*/
 	#define CONFIG_CMD_GENERAL
 	#define CONFIG_CMD_SER
 	#define CONFIG_STA_CMD_DISPR
+	#ifdef CONFIG_AP
 	#define CONFIG_AP_CMD_DISPR
+	#endif
 	/*#define CONFIG_IBSS_CMD_DISPR*/
 	#define CONFIG_CMD_TSF_SYNC
 #endif

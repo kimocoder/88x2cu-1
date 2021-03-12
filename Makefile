@@ -2448,26 +2448,27 @@ rtk_core :=	core/rtw_cmd.o \
 		core/mesh/rtw_mesh_hwmp.o \
 		core/rtw_xmit.o	\
 		core/rtw_p2p.o \
-		core/rtw_rson.o \
 		core/rtw_tdls.o \
 		core/rtw_br_ext.o \
 		core/rtw_sreset.o \
-		core/rtw_btcoex_wifionly.o \
-		core/rtw_btcoex.o \
 		core/rtw_trx.o \
 		core/rtw_beamforming.o \
-		core/rtw_odm.o \
 		core/rtw_rm.o \
 		core/rtw_rm_fsm.o \
+		core/rtw_rm_util.o \
 		core/rtw_ft.o \
 		core/rtw_wnm.o \
 		core/rtw_mbo.o \
-		core/rtw_rm_util.o \
 		core/efuse/rtw_efuse.o \
 		core/rtw_roch.o \
+		core/rtw_rson.o \
+		core/rtw_btcoex_wifionly.o \
+		core/rtw_btcoex.o \
+		core/rtw_odm.o \
 		core/rtw_scan.o
 
-rtk_core += core/rtw_phl.o
+rtk_core += core/rtw_phl.o \
+	    core/rtw_phl_cmd.o
 
 ifeq ($(CONFIG_USB_HCI), y)
 rtk_core += core/rtw_trx_usb.o

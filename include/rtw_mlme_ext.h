@@ -249,6 +249,8 @@ struct mlme_ext_info {
 	u8	hidden_ssid_mode;
 	u8	VHT_enable;
 
+	u8	HE_enable;
+
 	u8 ip_addr[RTW_IP_ADDR_LEN];
 	u8 ip6_addr[RTW_IPv6_ADDR_LEN];
 
@@ -964,7 +966,7 @@ unsigned int OnAction_tbtx_token(_adapter *padapter, union recv_frame *precv_fra
 void rtw_issue_action_token_req(_adapter *padapter, struct sta_info *pstat);
 void rtw_issue_action_token_rel(_adapter *padapter);
 #endif
-
+void rtw_mlmeext_disconnect(_adapter *padapter);
 void mlmeext_joinbss_event_callback(_adapter *padapter, int join_res);
 void mlmeext_sta_del_event_callback(_adapter *padapter);
 void mlmeext_sta_add_event_callback(_adapter *padapter, struct sta_info *psta);
@@ -1007,6 +1009,12 @@ void reassoc_timer_hdl(_adapter *padapter);
 	do { \
 		/*RTW_INFO("%s set_link_timer(%p, %d)\n", __FUNCTION__, (mlmeext), (ms));*/ \
 		_set_timer(&(mlmeext)->link_timer, (ms)); \
+	} while (0)
+
+#define cancel_link_timer(mlmeext) \
+	do { \
+		/*RTW_INFO("%s cancel_link_timer(%p)\n", __FUNCTION__, (mlmeext));*/ \
+		_cancel_timer_ex(&(mlmeext)->link_timer); \
 	} while (0)
 
 bool rtw_is_cck_rate(u8 rate);
@@ -1095,6 +1103,7 @@ void rtw_ch_util_rpt(_adapter *adapter);
 #define GEN_MLME_EXT_HANDLER(cmd, callback_func)	{.cmd_hdl = cmd, .callback = callback_func},
 
 struct rtw_cmd {
+	char name[32];
 	u8(*cmd_hdl)(_adapter *padapter, u8 *pbuf);
 	void (*callback)(_adapter  *padapter, struct cmd_obj *cmd);
 };
@@ -1134,6 +1143,7 @@ struct rtw_cmd wlancmds[] = {
 	GEN_MLME_EXT_HANDLER(rtw_write_bcnlen_hdl, NULL) /* CMD_WRITE_BCN_LEN */
 };
 #endif
+char *rtw_cmd_name(struct cmd_obj *pcmd);
 
 struct rtw_evt_header {
 	u8 id;
@@ -1156,20 +1166,28 @@ enum rtw_event_id {
 #endif
 	EVT_ID_MAX
 };
+
+struct rtw_event {
+	char name[32];
+	u32 parmsize;
+	void (*event_callback)(_adapter *dev, u8 *pbuf);
+};
 #ifdef _RTW_MLME_EXT_C_
 static struct rtw_event wlanevents[] = {
-	{sizeof(struct survey_event), &rtw_survey_event_callback}, /*EVT_SURVEY*/
-	{sizeof(struct surveydone_event), &rtw_surveydone_event_callback}, /*EVT_SURVEY_DONE*/
-	{sizeof(struct joinbss_event), &rtw_joinbss_event_callback}, /*EVT_JOINBSS*/
-	{sizeof(struct stassoc_event), &rtw_stassoc_event_callback}, /*EVT_ADD_STA*/
-	{sizeof(struct stadel_event), &rtw_stadel_event_callback}, /*EVT_DEL_STA*/
-	{sizeof(struct wmm_event), &rtw_wmm_event_callback}, /*EVT_WMM_UPDATE*/
+	{"EVT_SURVEY", sizeof(struct survey_event), &rtw_survey_event_callback}, /*EVT_SURVEY*/
+	{"EVT_SURVEY_DONE", sizeof(struct surveydone_event), &rtw_surveydone_event_callback}, /*EVT_SURVEY_DONE*/
+	{"EVT_JOINBSS", sizeof(struct joinbss_event), &rtw_joinbss_event_callback}, /*EVT_JOINBSS*/
+	{"EVT_ADD_STA", sizeof(struct stassoc_event), &rtw_stassoc_event_callback}, /*EVT_ADD_STA*/
+	{"EVT_DEL_STA", sizeof(struct stadel_event), &rtw_stadel_event_callback}, /*EVT_DEL_STA*/
+	{"EVT_WMM_UPDATE", sizeof(struct wmm_event), &rtw_wmm_event_callback}, /*EVT_WMM_UPDATE*/
 	#ifdef CONFIG_IEEE80211W
-	{sizeof(struct stadel_event), &rtw_sta_timeout_event_callback}, /*EVT_TIMEOUT_STA*/
+	{"EVT_TIMEOUT_STA", sizeof(struct stadel_event), &rtw_sta_timeout_event_callback}, /*EVT_TIMEOUT_STA*/
 	#endif /* CONFIG_IEEE80211W */
 	#ifdef CONFIG_RTW_80211R
-	{sizeof(struct stassoc_event), &rtw_ft_reassoc_event_callback}, /*EVT_FT_REASSOC*/
+	{"EVT_FT_REASSOC", sizeof(struct stassoc_event), &rtw_ft_reassoc_event_callback}, /*EVT_FT_REASSOC*/
 	#endif
 };
-#endif/* _RTW_MLME_EXT_C_ */
+#endif/*_RTW_MLME_EXT_C_*/
+char *rtw_evt_name(struct rtw_evt_header *pev);
+
 #endif

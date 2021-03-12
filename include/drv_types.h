@@ -2053,6 +2053,23 @@ struct cfg80211_wifidirect_info cfg80211_wdinfo;
 	u32	tbtx_duration;
 #endif /* CONFIG_RTW_TOKEN_BASED_XMIT */
 
+#ifdef CONFIG_STA_CMD_DISPR
+	_lock connect_st_lock;
+	u8 connect_state;
+#define CONNECT_ST_NOT_READY	0
+#define CONNECT_ST_IDLE		1
+#define CONNECT_ST_REQUESTING	2
+#define CONNECT_ST_ACQUIRED	3
+	bool connect_abort;
+	struct phl_cmd_token_req connect_req;
+	u32 connect_token;
+
+	_lock disconnect_lock;
+	struct phl_cmd_token_req disconnect_req;
+	u32 disconnect_token;
+	struct cmd_obj *discon_cmd;
+#endif /* CONFIG_STA_CMD_DISPR */
+
 #ifdef RTW_SIMPLE_CONFIG
 	u8 rtw_simple_config;
 #endif

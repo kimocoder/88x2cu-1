@@ -404,6 +404,9 @@ struct net_device *rtw_init_netdev(_adapter *old_padapter)
 	return pnetdev;
 }
 
+#ifdef CONFIG_PCI_HCI
+#include <rtw_trx_pci.h>
+#endif
 int rtw_os_ndev_alloc(_adapter *adapter)
 {
 	int ret = _FAIL;
@@ -510,7 +513,7 @@ static void rtw_ethtool_get_strings(struct net_device *dev, u32 sset, u8 *data)
 
 	if (sset == ETH_SS_STATS) {
 		sz_sta_stats = sizeof(rtw_ethtool_gstrings_sta_stats);
-		memcpy(data, rtw_ethtool_gstrings_sta_stats, sz_sta_stats);
+		_rtw_memcpy(data, rtw_ethtool_gstrings_sta_stats, sz_sta_stats);
 	}
 }
 
@@ -1463,7 +1466,11 @@ u8 rtw_init_drv_sw(_adapter *padapter)
 
 exit:
 
-
+//NEO
+#if 0 //def CONFIG_STA_CMD_DISPR
+	rtw_connect_req_init(padapter);
+	rtw_disconnect_req_init(padapter);
+#endif /* CONFIG_STA_CMD_DISPR */
 
 	return ret8;
 
@@ -1579,6 +1586,11 @@ u8 rtw_free_drv_sw(_adapter *padapter)
 	rtw_free_evt_priv(&padapter->evtpriv);
 
 	rtw_free_mlme_priv(&padapter->mlmepriv);
+// NEO
+#if 0 //def CONFIG_STA_CMD_DISPR
+	rtw_connect_req_free(padapter);
+	rtw_disconnect_req_free(padapter);
+#endif /* CONFIG_STA_CMD_DISPR */
 
 	if (is_primary_adapter(padapter))
 		rtw_rfctl_deinit(padapter);

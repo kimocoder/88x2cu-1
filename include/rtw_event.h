@@ -88,8 +88,4 @@ struct c2hlbk_event {
 };
 #endif/* CONFIG_H2CLBK */
 
-struct rtw_event {
-	u32 parmsize;
-	void (*event_callback)(_adapter *dev, u8 *pbuf);
-};
 #endif /* _WLANEVENT_H_ */

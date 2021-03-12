@@ -1217,4 +1217,17 @@ void dump_arp_pkt(void *sel, u8 *da, u8 *sa, u8 *arp, bool tx);
 #define GET_TCP_ECE(_tcphdr)			BE_BITS_TO_1BYTE(((u8 *)(_tcphdr)) + 13, 6, 1)
 #define GET_TCP_CWR(_tcphdr)			BE_BITS_TO_1BYTE(((u8 *)(_tcphdr)) + 13, 7, 1)
 
+#ifdef CONFIG_STA_CMD_DISPR
+enum rtw_phl_status rtw_connect_cmd(struct _ADAPTER *a,
+				    struct _WLAN_BSSID_EX *network);
+void rtw_connect_abort(struct _ADAPTER *a);
+void rtw_connect_req_free(struct _ADAPTER *a);
+void rtw_connect_req_init(struct _ADAPTER *a);
+enum rtw_phl_status rtw_connect_disconnect_prepare(struct _ADAPTER *a);
+
+enum rtw_phl_status rtw_disconnect_cmd(struct _ADAPTER *a,
+				       struct cmd_obj *pcmd);
+void rtw_disconnect_req_free(struct _ADAPTER *a);
+void rtw_disconnect_req_init(struct _ADAPTER *a);
+#endif /* CONFIG_STA_CMD_DISPR */
 #endif /* __RTL871X_MLME_H_ */

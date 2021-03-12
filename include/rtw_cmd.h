@@ -267,6 +267,7 @@ enum rtw_drvextra_cmd_id {
 #ifdef CONFIG_RTW_TOKEN_BASED_XMIT
 	TBTX_CONTROL_TX_WK_CID,
 #endif
+	TSF_SYNC_DONE_WK_CID,
 	MAX_WK_CID
 };
 
@@ -738,6 +739,8 @@ extern void rtw_readtssi_cmdrsp_callback(_adapter	*padapter,  struct cmd_obj *pc
 
 extern void rtw_setstaKey_cmdrsp_callback(_adapter  *padapter,  struct cmd_obj *pcmd);
 extern void rtw_getrttbl_cmdrsp_callback(_adapter  *padapter,  struct cmd_obj *pcmd);
+void rtw_run_cmd(_adapter *padapter, struct cmd_obj *pcmd, bool discard);
+u8 rtw_tsf_done_cmd(_adapter *adapter, u8 enqueue);
 
 enum rtw_cmd_id {
 	CMD_JOINBSS, /*0*/

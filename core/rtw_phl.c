@@ -391,6 +391,8 @@ static u8 rtw_hw_trx_ops_check(struct hal_com_t *hal_com)
 }
 #endif
 
+#endif // if 0 NEO
+
 u8 rtw_core_deregister_phl_msg(struct dvobj_priv *dvobj)
 {
 	enum rtw_phl_status psts = RTW_PHL_STATUS_FAILURE;
@@ -403,15 +405,12 @@ u8 rtw_core_deregister_phl_msg(struct dvobj_priv *dvobj)
 	return _SUCCESS;
 }
 
-#endif // if 0 NEO
-
 void rtw_hw_deinit(struct dvobj_priv *dvobj)
 {
 	if (dvobj->phl) {
-#if 0 // NEO : TODO : mark off first
-		rtw_core_deregister_phl_msg(dvobj);
-#endif
 		rtw_phl_trx_free(dvobj->phl);
+		rtw_core_deregister_phl_msg(dvobj);
+		rtw_phl_watchdog_deinit(dvobj->phl);
 		rtw_phl_deinit(dvobj->phl);
 	}
 
@@ -880,6 +879,10 @@ u8 rtw_hw_iface_init(_adapter *adapter)
 	}
 
 	/*init default value*/
+	#ifdef DBG_CONFIG_CMD_DISP
+	adapter->cmd_type = 0xFF;
+	adapter->cmd_timeout = 0;
+	#endif
 	RTW_INFO("%s NEO TODO - update chan def and chanctx \n", __func__);
 #if 0 // NEO
 	rtw_hw_update_chan_def(adapter);

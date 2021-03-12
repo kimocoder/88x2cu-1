@@ -5274,3 +5274,1016 @@ void dump_arp_pkt(void *sel, u8 *da, u8 *sa, u8 *arp, bool tx)
 		, MAC_ARG(ARP_TARGET_MAC_ADDR(arp)), IP_ARG(ARP_TARGET_IP_ADDR(arp)));
 }
 
+#ifdef CONFIG_STA_CMD_DISPR
+/* software setting top half for connect abort */
+static void _connect_abort_sw_top_half(struct _ADAPTER *a)
+{
+	cancel_link_timer(&a->mlmeextpriv);
+	cancel_assoc_timer(&a->mlmepriv);
+	a->mlmeextpriv.join_abort = 1;
+}
+
+/* software setting bottom half for connect abort */
+static void _connect_abort_sw_bottom_half(struct _ADAPTER *a)
+{
+	/* ref: rtw_joinbss_event_prehandle(), join_res == -4 */
+	_clr_fwstate_(&a->mlmepriv, WIFI_UNDER_LINKING);
+	rtw_reset_securitypriv(a);
+	a->mlmeextpriv.join_abort = 0;
+}
+
+/*
+ * _connect_disconncet_hw - Handle hardware part of connect abort and fail
+ * @a:		struct _ADAPTER *
+ *
+ * Handle hardware part of connect fail.
+ * Most implement is reference from bottom half of rtw_joinbss_event_callback()
+ * with join_res < 0.
+ *
+ * Reference functions:
+ *	1. rtw_joinbss_event_callback()
+ *	2. rtw_set_hw_after_join(a, -1)
+ *	3. rtw_hw_connect_abort()
+ */
+static void _connect_disconnect_hw(struct _ADAPTER *a)
+{
+	struct dvobj_priv *d;
+	void *phl;
+	u8 *mac;
+	struct sta_info *sta;
+
+
+	d = adapter_to_dvobj(a);
+	phl = GET_HAL_INFO(d);
+	/* ref: rtw_set_hw_after_join(a, -1) */
+	mac = (u8*)a->mlmeextpriv.mlmext_info.network.MacAddress;
+	sta = rtw_get_stainfo(&a->stapriv, mac);
+	if (!sta) {
+		RTW_ERR(FUNC_ADPT_FMT ": stainfo(" MAC_FMT ") not exist!\n",
+			FUNC_ADPT_ARG(a), MAC_ARG(mac));
+		return;
+	}
+
+	/* bottom half of rtw_hw_connect_abort() - start */
+	//NEO
+	RTW_ERR("%s NEO TODO rtw_phl_chanctx_del\n", __func__);
+	//rtw_phl_chanctx_del(phl, a->phl_role, NULL);
+	/* restore original union ch */
+	rtw_join_done_chk_ch(a, -1);
+	/* free connecting AP sta info */
+	rtw_free_stainfo(a, sta);
+	rtw_init_self_stainfo(a);
+	/* bottom half of rtw_hw_connect_abort() - end */
+
+	/* bottom half of rtw_joinbss_event_callback() */
+	rtw_mi_os_xmit_schedule(a);
+}
+
+static void _connect_abort_notify_cb(void *priv, struct phl_msg *msg)
+{
+	struct _ADAPTER *a = (struct _ADAPTER *)priv;
+
+
+	RTW_DBG(FUNC_ADPT_FMT ": connect_st=%u\n",
+		FUNC_ADPT_ARG(a), a->connect_state);
+
+	_connect_disconnect_hw(a);
+	_connect_abort_sw_bottom_half(a);
+
+	_rtw_spinlock(&a->connect_st_lock);
+	if ((a->connect_state != CONNECT_ST_ACQUIRED) || !a->connect_abort) {
+		RTW_ERR(FUNC_ADPT_FMT ": connect_st=%u, abort is %s !\n",
+			FUNC_ADPT_ARG(a), a->connect_state,
+			a->connect_abort?"true":"false");
+	} else {
+		a->connect_state = CONNECT_ST_IDLE;
+		a->connect_abort = false;
+	}
+	_rtw_spinunlock(&a->connect_st_lock);
+}
+
+static enum rtw_phl_status _connect_abort_notify(struct _ADAPTER *a)
+{
+	struct dvobj_priv *d = adapter_to_dvobj(a);
+	struct phl_msg msg = {0};
+	struct phl_msg_attribute attr = {0};
+	enum rtw_phl_status status;
+
+
+	SET_MSG_MDL_ID_FIELD(msg.msg_id, PHL_FG_MDL_CONNECT);
+	SET_MSG_EVT_ID_FIELD(msg.msg_id, MSG_EVT_DISCONNECT);
+	msg.band_idx = a->phl_role->hw_band;
+	msg.rsvd[0] = (u8*)a->phl_role;
+
+	attr.opt = MSG_OPT_SEND_IN_ABORT;
+	attr.completion.completion = _connect_abort_notify_cb;
+	attr.completion.priv = a;
+
+	status = rtw_phl_send_msg_to_dispr(GET_HAL_INFO(d), &msg, &attr, NULL);
+	if (status != RTW_PHL_STATUS_SUCCESS)
+		RTW_ERR(FUNC_ADPT_FMT ": send_msg_to_dispr fail(0x%x)!\n",
+			FUNC_ADPT_ARG(a), status);
+
+	return status;
+}
+
+static void _connect_swch_done_notify_cb(void *priv, struct phl_msg *msg)
+{
+	struct _ADAPTER *a = (struct _ADAPTER *)priv;
+
+
+	RTW_DBG(FUNC_ADPT_FMT ": connect_st=%u\n",
+		FUNC_ADPT_ARG(a), a->connect_state);
+
+	if (msg->inbuf) {
+		rtw_vmfree(msg->inbuf, msg->inlen);
+		msg->inbuf = NULL;
+	}
+}
+
+static enum rtw_phl_status _connect_swch_done_notify(struct _ADAPTER *a,
+						struct rtw_chan_def *chandef)
+{
+	struct dvobj_priv *d = adapter_to_dvobj(a);
+	struct phl_msg msg = {0};
+	struct phl_msg_attribute attr = {0};
+	u8 *info = NULL;
+	enum rtw_phl_status status;
+
+
+	info = rtw_vmalloc(sizeof(struct rtw_chan_def));
+	if (!info) {
+		RTW_ERR(FUNC_ADPT_FMT ": Allocate msg hub buffer fail!\n",
+			FUNC_ADPT_ARG(a));
+		return RTW_PHL_STATUS_RESOURCE;
+	}
+	_rtw_memcpy(info, chandef, sizeof(struct rtw_chan_def));
+
+	SET_MSG_MDL_ID_FIELD(msg.msg_id, PHL_FG_MDL_CONNECT);
+	SET_MSG_EVT_ID_FIELD(msg.msg_id, MSG_EVT_SWCH_DONE);
+	msg.band_idx = a->phl_role->hw_band;
+	msg.inbuf = info;
+	msg.inlen = sizeof(struct rtw_chan_def);
+
+	attr.completion.completion = _connect_swch_done_notify_cb;
+	attr.completion.priv = a;
+
+	status = rtw_phl_send_msg_to_dispr(GET_HAL_INFO(d),
+					       &msg, &attr, NULL);
+	if (status != RTW_PHL_STATUS_SUCCESS) {
+		rtw_vmfree(info, sizeof(struct rtw_chan_def));
+		RTW_ERR(FUNC_ADPT_FMT ": send_msg_to_dispr fail(0x%x)!\n",
+			FUNC_ADPT_ARG(a), status);
+	}
+
+	return status;
+}
+
+static void _connect_cmd_done(struct _ADAPTER *a)
+{
+	struct dvobj_priv *d = adapter_to_dvobj(a);
+	struct rtw_wifi_role_t *role = a->phl_role;
+	enum rtw_phl_status status;
+
+
+	RTW_DBG(FUNC_ADPT_FMT ": +\n", FUNC_ADPT_ARG(a));
+
+	if (!a->connect_token){
+		RTW_ERR(FUNC_ADPT_FMT ": token is NULL!\n", FUNC_ADPT_ARG(a));
+		return;
+	}
+
+	_rtw_spinlock(&a->connect_st_lock);
+	status = rtw_phl_free_cmd_token(GET_HAL_INFO(d),
+					role->hw_band, &a->connect_token);
+	a->connect_token = 0;
+	if (status != RTW_PHL_STATUS_SUCCESS)
+		RTW_ERR(FUNC_ADPT_FMT ": free_cmd_token fail(0x%x)!\n",
+			FUNC_ADPT_ARG(a), status);
+	a->connect_state = CONNECT_ST_IDLE;
+	a->connect_abort = false;
+	_rtw_spinunlock(&a->connect_st_lock);
+
+	RTW_DBG(FUNC_ADPT_FMT ": -\n", FUNC_ADPT_ARG(a));
+}
+
+static enum phl_mdl_ret_code _connect_acquired(void* dispr, void *priv)
+{
+	struct _ADAPTER *a = (struct _ADAPTER *)priv;
+	struct dvobj_priv *d = adapter_to_dvobj(a);
+	struct _WLAN_BSSID_EX *network = &a->mlmeextpriv.mlmext_info.network;
+
+
+	RTW_DBG(FUNC_ADPT_FMT ": +\n", FUNC_ADPT_ARG(a));
+
+	_rtw_spinlock(&a->connect_st_lock);
+	if (a->connect_state != CONNECT_ST_REQUESTING)
+		RTW_ERR(FUNC_ADPT_FMT ": connect_st=%u, not requesting?!\n",
+			FUNC_ADPT_ARG(a), a->connect_state);
+	a->connect_state = CONNECT_ST_ACQUIRED;
+	_rtw_spinunlock(&a->connect_st_lock);
+
+	/*rtw_hw_prepare_connect(a, NULL, network->MacAddress);*/
+	// NEO
+	RTW_ERR("%s NEO TODO - rtw_phl_connect_prepare\n", __func__);
+	//rtw_phl_connect_prepare(GET_HAL_INFO(d), a->phl_role,
+	//			network->MacAddress);
+
+	RTW_DBG(FUNC_ADPT_FMT ": -\n", FUNC_ADPT_ARG(a));
+
+	return MDL_RET_SUCCESS;
+}
+
+static enum phl_mdl_ret_code _connect_abort(void* dispr, void *priv)
+{
+	struct _ADAPTER *a = (struct _ADAPTER *)priv;
+	bool inner_abort = false;
+	enum rtw_phl_status phl_status = RTW_PHL_STATUS_FAILURE;
+
+
+	RTW_DBG(FUNC_ADPT_FMT ": +\n", FUNC_ADPT_ARG(a));
+
+	_rtw_spinlock(&a->connect_st_lock);
+	RTW_INFO(FUNC_ADPT_FMT ": connect_st=%u, abort is %s\n",
+		 FUNC_ADPT_ARG(a), a->connect_state,
+		 a->connect_abort?"true":"false");
+	if (a->connect_state == CONNECT_ST_IDLE) {
+		_rtw_spinunlock(&a->connect_st_lock);
+		return MDL_RET_SUCCESS;
+	}
+	if (!a->connect_abort) {
+		RTW_INFO(FUNC_ADPT_FMT ": framework asking abort!\n",
+			 FUNC_ADPT_ARG(a));
+		a->connect_abort = true;
+		inner_abort = true;
+	}
+	_rtw_spinunlock(&a->connect_st_lock);
+
+	_connect_abort_sw_top_half(a);
+	if (inner_abort) {
+		/* ref: rtw_join_timeout_handler() */
+		_rtw_spinlock_bh(&a->mlmepriv.lock);
+		a->mlmepriv.join_status = WLAN_STATUS_UNSPECIFIED_FAILURE;
+		rtw_indicate_disconnect(a, a->mlmepriv.join_status, _FALSE);
+#ifdef CONFIG_IOCTL_CFG80211
+		rtw_cfg80211_indicate_disconnect(a, a->mlmepriv.join_status, _FALSE);
+#endif /* CONFIG_IOCTL_CFG80211 */
+		a->mlmepriv.join_status = 0;
+		_rtw_spinunlock_bh(&a->mlmepriv.lock);
+	}
+
+	if (a->connect_state == CONNECT_ST_ACQUIRED)
+		phl_status = _connect_abort_notify(a);
+	a->connect_token = 0; /* framework will free this token later */
+	if (phl_status != RTW_PHL_STATUS_SUCCESS) {
+		/* No callback function, everything should be done here */
+		_connect_abort_sw_bottom_half(a);
+		_rtw_spinlock(&a->connect_st_lock);
+		a->connect_state = CONNECT_ST_IDLE;
+		a->connect_abort = false;
+		_rtw_spinunlock(&a->connect_st_lock);
+	}
+
+	RTW_DBG(FUNC_ADPT_FMT ": -\n", FUNC_ADPT_ARG(a));
+
+	return MDL_RET_SUCCESS;
+}
+
+static enum phl_mdl_ret_code _connect_msg_hdlr(void* dispr, void* priv,
+					       struct phl_msg* msg)
+{
+	struct _ADAPTER *a = (struct _ADAPTER *)priv;
+	struct dvobj_priv *d = adapter_to_dvobj(a);
+	struct rtw_wifi_role_t *role = NULL;
+	struct _WLAN_BSSID_EX *network = &a->mlmeextpriv.mlmext_info.network;
+	struct sta_info *sta = NULL;
+	struct rtw_chan_ctx *chanctx = NULL;
+	u8 u_ch, u_bw, u_offset;
+	struct phl_msg nextmsg = {0};
+	struct phl_msg_attribute attr = {0};
+	enum rtw_phl_status status;
+	enum phl_mdl_ret_code mdl_err;
+	u8 err;
+	u32 res;
+
+
+	RTW_DBG(FUNC_ADPT_FMT ": + msg_id=0x%08x\n",
+		FUNC_ADPT_ARG(a), msg->msg_id);
+
+	if (MSG_MDL_ID_FIELD(msg->msg_id) != PHL_FG_MDL_CONNECT) {
+		RTW_INFO(FUNC_ADPT_FMT ": Message is not from connect module, "
+			 "skip msg_id=0x%08x\n", FUNC_ADPT_ARG(a), msg->msg_id);
+		RTW_DBG(FUNC_ADPT_FMT ": -\n", FUNC_ADPT_ARG(a));
+		return MDL_RET_IGNORE;
+	}
+
+	if (IS_MSG_FAIL(msg->msg_id)) {
+		RTW_WARN(FUNC_ADPT_FMT ": cmd dispatcher notify cmd failure on "
+			 "msg_id=0x%08x\n", FUNC_ADPT_ARG(a), msg->msg_id);
+		if (MSG_EVT_ID_FIELD(msg->msg_id) != MSG_EVT_DISCONNECT)
+			goto send_disconnect;
+	}
+
+	role = a->phl_role;
+	SET_MSG_MDL_ID_FIELD(nextmsg.msg_id, PHL_FG_MDL_CONNECT);
+	nextmsg.band_idx = role->hw_band;
+
+	switch (MSG_EVT_ID_FIELD(msg->msg_id)) {
+	case MSG_EVT_CONNECT_START:
+		RTW_DBG(FUNC_ADPT_FMT ": MSG_EVT_CONNECT_START\n",
+			FUNC_ADPT_ARG(a));
+
+		/* ref: top half of rtw_join_cmd_hdl() */
+
+		sta = rtw_get_stainfo(&a->stapriv, a->phl_role->mac_addr);
+		rtw_free_stainfo(a, sta);
+		sta = rtw_alloc_stainfo(&a->stapriv, network->MacAddress);
+		if (sta == NULL) {
+			RTW_ERR(FUNC_ADPT_FMT ": alloc sta " MAC_FMT " fail!\n",
+				FUNC_ADPT_ARG(a), MAC_ARG(network->MacAddress));
+			rtw_init_self_stainfo(a);
+			goto send_disconnect;
+		}
+
+		/* check channel, bandwidth, offset and switch */
+		if (rtw_chk_start_clnt_join(a, &u_ch, &u_bw, &u_offset) == _FAIL) {
+			goto send_disconnect;
+		}
+		rtw_mi_update_union_chan_inf(a, u_ch, u_offset, u_bw);
+
+#ifdef CONFIG_ANTENNA_DIVERSITY
+		rtw_antenna_select_cmd(a, network->PhyInfo.Optimum_antenna, _FALSE);
+#endif
+
+		SET_MSG_EVT_ID_FIELD(nextmsg.msg_id, MSG_EVT_SWCH_START);
+		status = rtw_phl_send_msg_to_dispr(GET_HAL_INFO(d),
+						   &nextmsg, &attr, NULL);
+		break;
+
+	case MSG_EVT_SWCH_START:
+		RTW_DBG(FUNC_ADPT_FMT ": MSG_EVT_SWCH_START\n",
+			FUNC_ADPT_ARG(a));
+		if (!role) {
+			RTW_ERR(FUNC_ADPT_FMT ": role == NULL\n",
+				FUNC_ADPT_ARG(a));
+			break;
+		}
+
+		/* ref: bottom half of rtw_join_cmd_hdl() */
+		// NEO
+		RTW_ERR("%s NEO TODO rtw_hw_update_chan_def\n", __func__);
+		//rtw_hw_update_chan_def(a);
+		RTW_DBG(FUNC_ADPT_FMT ": Switch to channel before link: "
+			"chan(%d), bw(%d), offset(%d)\n",
+			 FUNC_ADPT_ARG(a),
+			 d->iface_state.union_ch, d->iface_state.union_bw,
+			 d->iface_state.union_offset);
+		set_channel_bwmode(a, d->iface_state.union_ch,
+				   d->iface_state.union_offset,
+				   d->iface_state.union_bw);
+
+		status = _connect_swch_done_notify(a, &role->chandef);
+		break;
+
+	case MSG_EVT_SWCH_DONE:
+		RTW_DBG(FUNC_ADPT_FMT ": MSG_EVT_SWCH_DONE\n",
+			FUNC_ADPT_ARG(a));
+
+		/* ref: last part of rtw_join_cmd_hdl() */
+		cancel_link_timer(&a->mlmeextpriv);
+		start_clnt_join(a);
+
+		break;
+
+	case MSG_EVT_CONNECT_LINKED:
+		RTW_DBG(FUNC_ADPT_FMT ": MSG_EVT_CONNECT_LINKED\n",
+			FUNC_ADPT_ARG(a));
+
+		RTW_ERR("%s NEO TODO - rtw_set_hw_after_join()\n", __func__);
+		/* ref: top half of rtw_joinbss_event_callback() */
+		//rtw_set_hw_after_join(a, 0);
+
+		break;
+
+	case MSG_EVT_CONNECT_END:
+		RTW_DBG(FUNC_ADPT_FMT ": MSG_EVT_CONNECT_END\n",
+			FUNC_ADPT_ARG(a));
+
+		/* ref: bottom half of rtw_set_hw_after_join() */
+		sta = rtw_get_stainfo(&a->stapriv, network->MacAddress);
+		if (sta)
+			rtw_xmit_queue_clear(sta);
+		else
+			RTW_ERR(FUNC_ADPT_FMT ": stainfo(" MAC_FMT ") not exist!\n",
+				FUNC_ADPT_ARG(a), MAC_ARG(network->MacAddress));
+
+		/* ref: bottom half of rtw_joinbss_event_callback() */
+		rtw_mi_os_xmit_schedule(a);
+
+		_connect_cmd_done(a);
+		break;
+
+	case MSG_EVT_DISCONNECT_PREPARE:
+		RTW_WARN(FUNC_ADPT_FMT ": MSG_EVT_DISCONNECT_PREPARE\n",
+			 FUNC_ADPT_ARG(a));
+
+		/* STA connect fail case, top half */
+
+		/* top half of rtw_joinbss_event_callback() */
+		RTW_ERR("%s NEO TODO - rtw_set_hw_after_join()\n", __func__);
+		//rtw_set_hw_after_join(a, -1);
+
+		break;
+
+	case MSG_EVT_DISCONNECT:
+		RTW_WARN(FUNC_ADPT_FMT ": MSG_EVT_DISCONNECT\n",
+			 FUNC_ADPT_ARG(a));
+
+		/* STA connect fail case, bottom half */
+		_connect_disconnect_hw(a);
+
+		_connect_cmd_done(a);
+		break;
+
+	default:
+		break;
+	}
+
+	goto exit;
+
+send_disconnect:
+	/*
+	 * Trigger software handle and notify OS by rtw_joinbss_event_prehandle()
+	 * Trigger hardware handle by sending MSG_EVT_DISCONNECT
+	 */
+	res = report_join_res(a, -4, WLAN_STATUS_UNSPECIFIED_FAILURE);
+	if (res != _SUCCESS) {
+		/*
+		 * Fail to send MSG_EVT_DISCONNECT_PREPARE, do jobs in
+		 * MSG_EVT_DISCONNECT_PREPARE and MSG_EVT_DISCONNECT directly
+		 * here.
+		 */
+
+		/* ref: rtw_set_hw_after_join(a, -1) */
+		a->mlmepriv.wpa_phase = _FALSE;
+		sta = rtw_get_stainfo(&a->stapriv, network->MacAddress);
+		if (sta) {
+			/* rtw_hw_connect_abort(a, sta) */
+			RTW_ERR("%s NEO TODO - rtw_hw_del_all_key()\n", __func__);
+			//rtw_hw_del_all_key(a, sta, PHL_CMD_DIRECTLY, 0);
+			status = rtw_phl_cmd_update_media_status(
+						GET_HAL_INFO(d),
+						sta->phl_sta, NULL, false,
+						PHL_CMD_DIRECTLY, 0);
+			if (status != RTW_PHL_STATUS_SUCCESS) {
+				RTW_ERR(FUNC_ADPT_FMT ": update media status "
+					"fail(0x%x)!\n",
+					FUNC_ADPT_ARG(a), status);
+			}
+			_connect_disconnect_hw(a);
+		} else {
+			RTW_ERR(FUNC_ADPT_FMT ": stainfo(" MAC_FMT ") not exist!\n",
+				FUNC_ADPT_ARG(a), MAC_ARG(network->MacAddress));
+		}
+
+		_connect_cmd_done(a);
+	}
+
+exit:
+	RTW_DBG(FUNC_ADPT_FMT ": -\n", FUNC_ADPT_ARG(a));
+	return MDL_RET_SUCCESS;
+}
+
+static enum phl_mdl_ret_code _connect_set_info(void* dispr, void* priv,
+					       struct phl_module_op_info* info)
+{
+	struct _ADAPTER *a = (struct _ADAPTER *)priv;
+
+
+	RTW_DBG(FUNC_ADPT_FMT ": +\n", FUNC_ADPT_ARG(a));
+	RTW_DBG(FUNC_ADPT_FMT ": -\n", FUNC_ADPT_ARG(a));
+
+	return MDL_RET_IGNORE;
+}
+
+static enum phl_mdl_ret_code _connect_query_info(void* dispr, void* priv,
+						struct phl_module_op_info* info)
+{
+	struct _ADAPTER *a = (struct _ADAPTER *)priv;
+	enum phl_mdl_ret_code ret = MDL_RET_IGNORE;
+
+
+	RTW_DBG(FUNC_ADPT_FMT ": +\n", FUNC_ADPT_ARG(a));
+
+	switch (info->op_code) {
+	case FG_REQ_OP_GET_ROLE:
+		info->outbuf = (u8*)a->phl_role;
+		ret = MDL_RET_SUCCESS;
+		break;
+
+#ifdef RTW_WKARD_MRC_ISSUE_NULL_WITH_SCAN_OPS
+	case FG_REQ_OP_GET_ISSUE_NULL_OPS:
+		{
+		u8 (*issue_null)(void *, u8, bool) = scan_issu_null_data_cb;
+		info->outbuf = (u8 *)issue_null;
+		info->outlen = 0;
+		ret = MDL_RET_SUCCESS;
+		}
+		break;
+#endif
+
+	default:
+		break;
+	}
+
+	RTW_DBG(FUNC_ADPT_FMT ": -\n", FUNC_ADPT_ARG(a));
+	return ret;
+}
+
+enum rtw_phl_status rtw_connect_cmd(struct _ADAPTER *a,
+				    struct _WLAN_BSSID_EX *network)
+{
+	struct phl_cmd_token_req *cmd_req;
+	struct dvobj_priv *d = adapter_to_dvobj(a);
+	struct rtw_wifi_role_t *role = a->phl_role;
+	enum rtw_phl_status status;
+
+
+	RTW_DBG(FUNC_ADPT_FMT ": connect_st=%u\n",
+		FUNC_ADPT_ARG(a), a->connect_state);
+
+	_rtw_spinlock(&a->connect_st_lock);
+
+	if (a->connect_state != CONNECT_ST_IDLE) {
+		status = RTW_PHL_STATUS_SUCCESS;
+		RTW_WARN(FUNC_ADPT_FMT ": connect is on going...\n",
+			 FUNC_ADPT_ARG(a));
+		goto exit;
+	}
+
+	if ((network->IELength > MAX_IE_SZ) || (network->IELength < 2)) {
+		status = RTW_PHL_STATUS_INVALID_PARAM;
+		RTW_ERR(FUNC_ADPT_FMT ": invalid IE length(%u)\n",
+			 FUNC_ADPT_ARG(a), network->IELength);
+		goto exit;
+	}
+
+	/* Todo: disconnect before connecting */
+	/*set_hw_before_join(a);*/
+
+	/* Update HT/VHT/HE CAP and chan/bw/offset to a->mlmeextpriv.mlmext_info.network */
+	RTW_ERR("%s NEO TODO update_join_info\n", __func__);
+	//update_join_info(a, network);
+
+	cmd_req = &a->connect_req;
+	cmd_req->role = role;
+	status = rtw_phl_add_cmd_token_req(GET_HAL_INFO(d),
+					   role->hw_band,
+					   cmd_req, &a->connect_token);
+	if ((status != RTW_PHL_STATUS_SUCCESS)
+	    && (status != RTW_PHL_STATUS_PENDING)) {
+		RTW_ERR(FUNC_ADPT_FMT ": add_cmd_token_req fail(0x%x)!\n",
+			FUNC_ADPT_ARG(a), status);
+		goto exit;
+	}
+
+	a->connect_state = CONNECT_ST_REQUESTING;
+	status = RTW_PHL_STATUS_SUCCESS;
+
+exit:
+	_rtw_spinunlock(&a->connect_st_lock);
+
+	return status;
+}
+
+void rtw_connect_abort(struct _ADAPTER *a)
+{
+	struct phl_cmd_token_req *cmd_req;
+	struct dvobj_priv *d = adapter_to_dvobj(a);
+	struct rtw_wifi_role_t *role = a->phl_role;
+	enum rtw_phl_status status;
+
+
+	RTW_WARN(FUNC_ADPT_FMT ": connect_st=%u, abort=%u\n",
+		 FUNC_ADPT_ARG(a), a->connect_state, a->connect_abort);
+	if (a->connect_state == CONNECT_ST_NOT_READY)
+		return;
+
+	_rtw_spinlock(&a->connect_st_lock);
+	if ((a->connect_state == CONNECT_ST_IDLE) || a->connect_abort) {
+		_rtw_spinunlock(&a->connect_st_lock);
+		return;
+	}
+	a->mlmepriv.wpa_phase = _FALSE;
+	a->connect_abort = true;
+	_rtw_spinunlock(&a->connect_st_lock);
+
+	cmd_req = &a->connect_req;
+	cmd_req->role = role;
+	status = rtw_phl_cancel_cmd_token(GET_HAL_INFO(d),
+					  role->hw_band,
+					  &a->connect_token);
+	a->connect_token = 0;
+	if ((status != RTW_PHL_STATUS_SUCCESS)
+	    && (status != RTW_PHL_STATUS_PENDING)) {
+		RTW_ERR(FUNC_ADPT_FMT ": cancel_cmd_token fail(0x%x)!\n",
+			FUNC_ADPT_ARG(a), status);
+		/* Cancel fail, and something needed to be handled by self */
+		/* Release connect resource (software) */
+		_connect_abort_sw_top_half(a);
+		_connect_abort_sw_bottom_half(a);
+
+		_rtw_spinlock(&a->connect_st_lock);
+		a->connect_state = CONNECT_ST_IDLE;
+		a->connect_abort = false;
+		_rtw_spinunlock(&a->connect_st_lock);
+	}
+}
+
+void rtw_connect_req_free(struct _ADAPTER *a)
+{
+	systime start_t;
+	s32 interval;
+#define MAX_WAIT_MS	5000	/* unit: ms */
+
+
+	if (a->connect_state == CONNECT_ST_NOT_READY)
+		return;
+
+	_rtw_spinlock(&a->connect_st_lock);
+	start_t = rtw_get_current_time();
+	while (a->connect_state != CONNECT_ST_IDLE) {
+		RTW_ERR(FUNC_ADPT_FMT ": connect st=%u, waiting...\n",
+			FUNC_ADPT_ARG(a), a->connect_state);
+		_rtw_spinunlock(&a->connect_st_lock);
+
+		interval = rtw_get_passing_time_ms(start_t);
+		if (interval > MAX_WAIT_MS) {
+			RTW_ERR(FUNC_ADPT_FMT ": Timeout, fail to abort connect!\n",
+				FUNC_ADPT_ARG(a));
+			_rtw_spinlock(&a->connect_st_lock);
+			break;
+		}
+		rtw_connect_abort(a);
+		rtw_msleep_os(1);
+
+		_rtw_spinlock(&a->connect_st_lock);
+	}
+	_rtw_spinunlock(&a->connect_st_lock);
+
+	_rtw_spinlock_free(&a->connect_st_lock);
+	/* Terminate state, lock protection is not necessary */
+	a->connect_state = CONNECT_ST_NOT_READY;
+}
+
+void rtw_connect_req_init(struct _ADAPTER *a)
+{
+	struct phl_cmd_token_req *req;
+
+
+	if (a->connect_state != CONNECT_ST_NOT_READY) {
+		RTW_WARN(FUNC_ADPT_FMT ": connect_st=%u, not NOT_READY?!\n",
+			 FUNC_ADPT_ARG(a), a->connect_state);
+		return;
+	}
+
+	_rtw_spinlock_init(&a->connect_st_lock);
+
+	req = &a->connect_req;
+	req->module_id = PHL_FG_MDL_CONNECT;
+	req->priv = a;
+	req->role = NULL; /* a->phl_role, but role will change by time */
+	req->acquired = _connect_acquired;
+	req->abort = _connect_abort;
+	req->msg_hdlr = _connect_msg_hdlr;
+	req->set_info = _connect_set_info;
+	req->query_info = _connect_query_info;
+
+	/* initialize state, lock protection is not necessary */
+	a->connect_state = CONNECT_ST_IDLE;
+	a->connect_abort = false;
+}
+
+enum rtw_phl_status rtw_connect_disconnect_prepare(struct _ADAPTER *a)
+{
+	struct dvobj_priv *d = adapter_to_dvobj(a);
+	struct phl_msg msg = {0};
+	struct phl_msg_attribute attr = {0};
+	enum rtw_phl_status status;
+
+
+	SET_MSG_MDL_ID_FIELD(msg.msg_id, PHL_FG_MDL_CONNECT);
+	SET_MSG_EVT_ID_FIELD(msg.msg_id, MSG_EVT_DISCONNECT_PREPARE);
+	msg.band_idx = a->phl_role->hw_band;
+	msg.rsvd[0] = (u8*)a->phl_role;
+
+	status = rtw_phl_send_msg_to_dispr(GET_HAL_INFO(d), &msg, &attr, NULL);
+	if (status != RTW_PHL_STATUS_SUCCESS)
+		RTW_ERR(FUNC_ADPT_FMT ": send_msg_to_dispr fail(0x%x)!\n",
+			FUNC_ADPT_ARG(a), status);
+
+	return status;
+}
+
+static enum rtw_phl_status _disconnect_done_notify(struct _ADAPTER *a)
+{
+	struct dvobj_priv *d = adapter_to_dvobj(a);
+	struct phl_msg msg = {0};
+	struct phl_msg_attribute attr = {0};
+	struct rtw_wifi_role_t *wrole = a->phl_role;
+	enum rtw_phl_status status;
+
+
+	SET_MSG_MDL_ID_FIELD(msg.msg_id, PHL_FG_MDL_DISCONNECT);
+	SET_MSG_EVT_ID_FIELD(msg.msg_id, MSG_EVT_DISCONNECT);
+	msg.band_idx = wrole->hw_band;
+	msg.rsvd[0] = (u8*)wrole;
+
+	status = rtw_phl_send_msg_to_dispr(GET_HAL_INFO(d), &msg, &attr, NULL);
+	if (status != RTW_PHL_STATUS_SUCCESS)
+		RTW_ERR(FUNC_ADPT_FMT ": send_msg_to_dispr fail(0x%x)!\n",
+			FUNC_ADPT_ARG(a), status);
+
+	return status;
+}
+
+static void _disconnect_free_cmdobj(struct _ADAPTER *a)
+{
+	struct cmd_obj *cmd;
+
+
+	cmd = a->discon_cmd;
+	if (!cmd)
+		return;
+
+	_rtw_spinlock(&a->disconnect_lock);
+
+	a->discon_cmd = NULL;
+
+	if (cmd->sctx) {
+		if (cmd->res == H2C_SUCCESS)
+			rtw_sctx_done(&cmd->sctx);
+		else
+			rtw_sctx_done_err(&cmd->sctx, RTW_SCTX_DONE_CMD_ERROR);
+	}
+
+	_rtw_spinunlock(&a->disconnect_lock);
+
+	rtw_free_cmd_obj(cmd);
+}
+
+static void _disconnect_cmd_done(struct _ADAPTER *a)
+{
+	struct dvobj_priv *d = adapter_to_dvobj(a);
+	struct rtw_wifi_role_t *role = a->phl_role;
+	enum rtw_phl_status status;
+
+
+	RTW_DBG(FUNC_ADPT_FMT ": +\n", FUNC_ADPT_ARG(a));
+
+	if (!a->disconnect_token)
+		return;
+
+	status = rtw_phl_free_cmd_token(GET_HAL_INFO(d),
+					role->hw_band, &a->disconnect_token);
+	a->disconnect_token = 0;
+	if (status != RTW_PHL_STATUS_SUCCESS)
+		RTW_ERR(FUNC_ADPT_FMT ": free_cmd_token fail(0x%x)!\n",
+			FUNC_ADPT_ARG(a), status);
+
+	_disconnect_free_cmdobj(a);
+}
+
+static enum phl_mdl_ret_code _disconnect_acquired(void* dispr, void *priv)
+{
+	struct _ADAPTER *a = (struct _ADAPTER *)priv;
+	struct dvobj_priv *d = adapter_to_dvobj(a);
+
+
+	RTW_DBG(FUNC_ADPT_FMT ": +\n", FUNC_ADPT_ARG(a));
+
+	// NEO
+	RTW_ERR("%s NEO TODO rtw_phl_disconnect\n", __func__);
+	//rtw_phl_disconnect(GET_HAL_INFO(d), a->phl_role, true);
+
+	RTW_DBG(FUNC_ADPT_FMT ": -\n", FUNC_ADPT_ARG(a));
+
+	return MDL_RET_SUCCESS;
+}
+
+static enum phl_mdl_ret_code _disconnect_abort(void* dispr, void *priv)
+{
+	struct _ADAPTER *a = (struct _ADAPTER *)priv;
+
+
+	RTW_DBG(FUNC_ADPT_FMT ": +\n", FUNC_ADPT_ARG(a));
+
+	/* framework will free disconnect token automatically after abort */
+	a->disconnect_token = 0;
+	_disconnect_free_cmdobj(a);
+
+	RTW_DBG(FUNC_ADPT_FMT ": -\n", FUNC_ADPT_ARG(a));
+
+	return MDL_RET_SUCCESS;
+}
+
+static enum phl_mdl_ret_code _disconnect_msg_hdlr(void* dispr, void* priv,
+						  struct phl_msg* msg)
+{
+	struct _ADAPTER *a = (struct _ADAPTER *)priv;
+	struct disconnect_parm *discon;
+	struct stadel_event *stadel;
+	struct _WLAN_BSSID_EX *network;
+	u8 is_issue_deauth;
+	u32 retry = 0;
+	enum rtw_phl_status status = RTW_PHL_STATUS_SUCCESS;
+
+
+	RTW_DBG(FUNC_ADPT_FMT ": + msg_id=0x%08x\n",
+		FUNC_ADPT_ARG(a), msg->msg_id);
+
+	if (MSG_MDL_ID_FIELD(msg->msg_id) != PHL_FG_MDL_DISCONNECT) {
+		RTW_INFO(FUNC_ADPT_FMT ": Message is not from disconnect module, "
+			 "skip msg_id=0x%08x\n", FUNC_ADPT_ARG(a), msg->msg_id);
+		RTW_DBG(FUNC_ADPT_FMT ": -\n", FUNC_ADPT_ARG(a));
+		return MDL_RET_IGNORE;
+	}
+
+	/* Whether msg fail or not */
+	switch (MSG_EVT_ID_FIELD(msg->msg_id)) {
+	case MSG_EVT_DISCONNECT_PREPARE:
+		RTW_DBG(FUNC_ADPT_FMT ": MSG_EVT_DISCONNECT_PREPARE\n",
+			FUNC_ADPT_ARG(a));
+
+		/* ref: top half of disconnect_hdl() */
+		if ((a->discon_cmd->cmdcode == CMD_SET_MLME_EVT)
+#if CONFIG_DFS
+		    || IS_RADAR_DETECTED(adapter_to_rfctl(a))
+		    || adapter_to_rfctl(a)->csa_ch
+#endif
+		   )
+			is_issue_deauth = 0;
+		else
+			is_issue_deauth = 1;
+
+		if (is_issue_deauth) {
+#ifdef CONFIG_PLATFORM_ROCKCHIPS
+			/*
+			 * To avoid connecting to AP fail during resume process,
+			 * change retry count from 5 to 1
+			 */
+			retry = 1;
+#else /* !CONFIG_PLATFORM_ROCKCHIPS */
+			discon = (struct disconnect_parm*)a->discon_cmd->parmbuf;
+			retry = discon->deauth_timeout_ms / 100;
+#endif /* !CONFIG_PLATFORM_ROCKCHIPS */
+
+			network = &a->mlmeextpriv.mlmext_info.network;
+			issue_deauth_ex(a, network->MacAddress,
+					WLAN_REASON_DEAUTH_LEAVING,
+					retry, 100);
+		}
+
+		rtw_mlmeext_disconnect(a);
+
+		status = _disconnect_done_notify(a);
+		if (status == RTW_PHL_STATUS_SUCCESS)
+			break;
+		/* fall through */
+
+	case MSG_EVT_DISCONNECT:
+		RTW_DBG(FUNC_ADPT_FMT ": MSG_EVT_DISCONNECT\n",
+			FUNC_ADPT_ARG(a));
+
+		/* ref: bottom half of disconnect_hdl() */
+		rtw_sta_mstatus_report(a);
+
+		if (a->discon_cmd->cmdcode == CMD_SET_MLME_EVT) {
+			/* EVT_DEL_STA case */
+			/* ref: bottom half of rtw_stadel_event_callback() */
+			stadel = (struct stadel_event*)(a->discon_cmd->parmbuf
+							+ sizeof(struct rtw_evt_header));
+			_rtw_spinlock_bh(&a->mlmepriv.lock);
+			RTW_ERR("%s NEO TODO _stadel_posthandle_sta\n", __func__);
+			//_stadel_posthandle_sta(a, stadel);
+			_rtw_spinunlock_bh(&a->mlmepriv.lock);
+		}
+
+		_disconnect_cmd_done(a);
+		break;
+
+	default:
+		break;
+	}
+
+	RTW_DBG(FUNC_ADPT_FMT ": -\n", FUNC_ADPT_ARG(a));
+	return MDL_RET_SUCCESS;
+}
+
+static enum phl_mdl_ret_code _disconnect_set_info(void* dispr, void* priv,
+						struct phl_module_op_info* info)
+{
+	struct _ADAPTER *a = (struct _ADAPTER *)priv;
+
+
+	RTW_DBG(FUNC_ADPT_FMT ": +\n", FUNC_ADPT_ARG(a));
+	RTW_DBG(FUNC_ADPT_FMT ": -\n", FUNC_ADPT_ARG(a));
+	return MDL_RET_IGNORE;
+}
+
+static enum phl_mdl_ret_code _disconnect_query_info(void* dispr, void* priv,
+						struct phl_module_op_info* info)
+{
+	struct _ADAPTER *a = (struct _ADAPTER *)priv;
+	enum phl_mdl_ret_code ret = MDL_RET_IGNORE;
+
+
+	RTW_DBG(FUNC_ADPT_FMT ": +\n", FUNC_ADPT_ARG(a));
+
+	switch (info->op_code) {
+	case FG_REQ_OP_GET_ROLE:
+		info->outbuf = (u8 *)a->phl_role;
+		ret = MDL_RET_SUCCESS;
+		break;
+	default:
+		break;
+	}
+
+	RTW_DBG(FUNC_ADPT_FMT ": -\n", FUNC_ADPT_ARG(a));
+	return ret;
+}
+
+enum rtw_phl_status rtw_disconnect_cmd(struct _ADAPTER *a, struct cmd_obj *pcmd)
+{
+	struct dvobj_priv *d = adapter_to_dvobj(a);
+	struct rtw_wifi_role_t *role = a->phl_role;
+	struct rtw_evt_header *hdr;
+	struct stadel_event *stadel;
+	struct sta_info *sta;
+	struct phl_cmd_token_req *cmd_req;
+	enum rtw_phl_status phl_status = RTW_PHL_STATUS_FAILURE;
+
+
+	RTW_DBG(FUNC_ADPT_FMT ": +\n", FUNC_ADPT_ARG(a));
+
+	if (a->disconnect_token) {
+		RTW_WARN(FUNC_ADPT_FMT ": disconnect is on going...\n",
+			 FUNC_ADPT_ARG(a));
+		return RTW_PHL_STATUS_FAILURE;
+	}
+
+	if (pcmd->cmdcode == CMD_SET_MLME_EVT) {
+		/* EVT_DEL_STA case */
+		/* ref: top half of rtw_stadel_event_callback() */
+		hdr = (struct rtw_evt_header*)pcmd->parmbuf;
+		stadel = (struct stadel_event *)(pcmd->parmbuf + sizeof(*hdr));
+		sta = rtw_get_stainfo(&a->stapriv, stadel->macaddr);
+		if (!sta) {
+			RTW_ERR(FUNC_ADPT_FMT ": stainfo(" MAC_FMT ") not exist!\n",
+				FUNC_ADPT_ARG(a), MAC_ARG(stadel->macaddr));
+			return RTW_PHL_STATUS_FAILURE;
+		}
+		rtw_wfd_st_switch(sta, 0);
+		sta->hw_decrypted = _FALSE;
+	}
+
+	a->discon_cmd = pcmd;
+	cmd_req = &a->disconnect_req;
+	cmd_req->role = role;
+
+	phl_status = rtw_phl_add_cmd_token_req(GET_HAL_INFO(d),
+					       role->hw_band,
+					       cmd_req, &a->disconnect_token);
+	if ((phl_status != RTW_PHL_STATUS_SUCCESS)
+	    && (phl_status != RTW_PHL_STATUS_PENDING)) {
+		RTW_WARN(FUNC_ADPT_FMT ": add_cmd_token_req fail(0x%x)!\n",
+			 FUNC_ADPT_ARG(a), phl_status);
+		return RTW_PHL_STATUS_FAILURE;
+	}
+
+	return RTW_PHL_STATUS_SUCCESS;
+}
+
+void rtw_disconnect_req_free(struct _ADAPTER *a)
+{
+	_rtw_spinlock_free(&a->disconnect_lock);
+}
+
+void rtw_disconnect_req_init(struct _ADAPTER *a)
+{
+	struct phl_cmd_token_req *req;
+
+
+	_rtw_spinlock_init(&a->disconnect_lock);
+
+	req = &a->disconnect_req;
+	req->module_id = PHL_FG_MDL_DISCONNECT;
+	req->priv = a;
+	req->role = NULL;  /* a->phl_role, but role will change by time */
+	req->acquired = _disconnect_acquired;
+	req->abort = _disconnect_abort;
+	req->msg_hdlr = _disconnect_msg_hdlr;
+	req->set_info = _disconnect_set_info;
+	req->query_info = _disconnect_query_info;
+}
+#endif /* CONFIG_STA_CMD_DISPR */

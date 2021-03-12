@@ -1343,7 +1343,6 @@ enum rtw_phl_status rtw_phl_start(void *phl)
 	//rtw_hal_enable_interrupt(phl_info->phl_com, phl_info->hal);
 
 	phl_status = RTW_PHL_STATUS_SUCCESS;
-	RTW_INFO("%s: NEO : success\n", __func__);
 
 	return phl_status;
 
