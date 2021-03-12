@@ -2415,7 +2415,7 @@ ssize_t proc_set_survey_info(struct file *file, const char __user *buffer, size_
 		_status = rtw_set_acs_sitesurvey(padapter);
 		#endif
 	} else
-		_status = rtw_set_802_11_bssid_list_scan(padapter, NULL);
+		_status = rtw_sitesurvey_cmd(padapter, NULL);
 
 cancel_ps_deny:
 	rtw_ps_deny_cancel(padapter, PS_DENY_SCAN);

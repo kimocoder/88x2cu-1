@@ -2060,7 +2060,7 @@ static int rtw_wx_set_scan(struct net_device *dev, struct iw_request_info *a,
 
 			RTW_INFO("IW_SCAN_THIS_ESSID, ssid=%s, len=%d\n", req->essid, req->essid_len);
 
-			_status = rtw_set_802_11_bssid_list_scan(padapter, &parm);
+			_status = rtw_sitesurvey_cmd(padapter, &parm);
 
 		} else if (req->scan_type == IW_SCAN_TYPE_PASSIVE)
 			RTW_INFO("rtw_wx_set_scan, req->scan_type == IW_SCAN_TYPE_PASSIVE\n");
@@ -2151,11 +2151,11 @@ static int rtw_wx_set_scan(struct net_device *dev, struct iw_request_info *a,
 			parm.ssid_num = ssid_index;
 
 			/* jeff: it has still some scan paramater to parse, we only do this now... */
-			_status = rtw_set_802_11_bssid_list_scan(padapter, &parm);
+			_status = rtw_sitesurvey_cmd(padapter, &parm);
 
 		} else
 
-			_status = rtw_set_802_11_bssid_list_scan(padapter, NULL);
+			_status = rtw_sitesurvey_cmd(padapter, NULL);
 
 	if (_status == _FALSE)
 		ret = -1;

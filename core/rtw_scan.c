@@ -124,7 +124,7 @@ void rtw_drv_scan_by_self(_adapter *padapter, u8 reason)
 			parm.ch[i].flags = RTW_IEEE80211_CHAN_PASSIVE_SCAN;
 		}
 		parm.ch_num = 14;
-		rtw_set_802_11_bssid_list_scan(padapter, &parm);
+		rtw_sitesurvey_cmd(padapter, &parm);
 		goto exit;
 	}
 
@@ -134,9 +134,7 @@ void rtw_drv_scan_by_self(_adapter *padapter, u8 reason)
 		goto exit;
 #endif
 
-	rtw_init_sitesurvey_parm(padapter, &parm);
-	parm.reason = reason;
-	rtw_set_802_11_bssid_list_scan(padapter, &parm);
+	rtw_sitesurvey_cmd(padapter, NULL);
 exit:
 	return;
 }
