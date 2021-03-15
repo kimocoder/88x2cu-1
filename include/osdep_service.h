@@ -153,6 +153,14 @@ typedef enum mstat_status {
 } MSTAT_STATUS;
 
 #ifdef DBG_MEM_ALLOC
+#ifdef DBG_MEM_ERR_FREE
+void rtw_dbg_mem_init(void);
+void rtw_dbg_mem_deinit(void);
+#else
+#define rtw_dbg_mem_init() do {} while (0)
+#define rtw_dbg_mem_deinit() do {} while (0)
+#endif /* DBG_MEM_ERR_FREE */
+
 void rtw_mstat_update(const enum mstat_f flags, const MSTAT_STATUS status, u32 sz);
 void rtw_mstat_dump(void *sel);
 bool match_mstat_sniff_rules(const enum mstat_f flags, const size_t size);
@@ -228,6 +236,8 @@ void dbg_rtw_usb_buffer_free(struct usb_device *dev, size_t size, void *addr, dm
 #endif /* CONFIG_USB_HCI */
 
 #else /* DBG_MEM_ALLOC */
+#define rtw_dbg_mem_init() do {} while (0)
+#define rtw_dbg_mem_deinit() do {} while (0)
 #define rtw_mstat_update(flag, status, sz) do {} while (0)
 #define rtw_mstat_dump(sel) do {} while (0)
 #define match_mstat_sniff_rules(flags, size) _FALSE

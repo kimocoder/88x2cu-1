@@ -986,6 +986,8 @@ struct dvobj_priv *devobj_init(void)
 {
 	struct dvobj_priv *pdvobj = NULL;
 
+	rtw_dbg_mem_init();
+
 	pdvobj = (struct dvobj_priv *)rtw_zmalloc(sizeof(*pdvobj));
 	if (pdvobj == NULL)
 		return NULL;
@@ -1136,6 +1138,8 @@ void devobj_deinit(struct dvobj_priv *pdvobj)
 	_rtw_spinlock_free(&(pdvobj->ap_if_q.lock));
 #endif
 	rtw_mfree((u8 *)pdvobj, sizeof(*pdvobj));
+
+	rtw_dbg_mem_deinit();
 }
 
 inline u8 rtw_rtnl_lock_needed(struct dvobj_priv *dvobj)

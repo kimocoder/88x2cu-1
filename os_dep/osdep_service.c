@@ -48,6 +48,93 @@ u32 rtw_atoi(u8 *s)
 }
 
 #if defined(DBG_MEM_ALLOC)
+#if defined(DBG_MEM_ERR_FREE)
+
+#define DBG_MEM_HASHBITS 10
+
+struct hlist_head dbg_mem_ht[1 << DBG_MEM_HASHBITS];
+
+struct hash_mem {
+	void *mem;
+	int sz;
+	struct hlist_node node;
+};
+
+void rtw_dbg_mem_init(void)
+{
+	hash_init(dbg_mem_ht);
+}
+
+void rtw_dbg_mem_deinit(void)
+{
+	struct hlist_head *head;
+	struct hlist_node *p;
+	int i;
+
+	for (i = 0; i < HASH_SIZE(dbg_mem_ht); i++) {
+		head = &dbg_mem_ht[i];
+		p = head->first;
+		while (p) {
+			struct hlist_node *prev;
+			struct hash_mem *hm;
+
+			hm = container_of(p, struct hash_mem, node);
+			prev = p;
+			p = p->next;
+			hash_del(prev);
+			kfree(hm);
+		}
+	}
+}
+
+struct hash_mem *rtw_dbg_mem_find(void *mem)
+{
+	struct hash_mem *hm;
+	struct hlist_head *head;
+	struct hlist_node *p;
+
+	head = &dbg_mem_ht[hash_64((u64)(mem), DBG_MEM_HASHBITS)];
+
+	p = head->first;
+	while (p) {
+		hm = container_of(p, struct hash_mem, node);
+		if (hm->mem == mem)
+			goto out;
+		p = p->next;
+	}
+	hm = NULL;
+out:
+	return hm;
+}
+
+void rtw_dbg_mem_add(void *mem, int sz)
+{
+	struct hash_mem *hm;
+
+	hm = rtw_dbg_mem_find(mem);
+	if (!hm) {
+		hm = (struct hash_mem *)kmalloc(sizeof(*hm), GFP_ATOMIC);
+		hm->mem = mem;
+		hm->sz = sz;
+		hash_add(dbg_mem_ht, &hm->node, mem);
+	} else {
+		RTW_ERR("%s mem(%x) is in hash already\n", __func__, mem);
+		rtw_warn_on(1);
+	}
+}
+
+void rtw_dbg_mem_del(void *mem)
+{
+	struct hash_mem *hm;
+
+	hm = rtw_dbg_mem_find(mem);
+	if (hm) {
+		hash_del(&hm->node);
+		kfree(hm);
+	}
+}
+
+#endif /* DBG_MEM_ERR_FREE */
 
 struct rtw_mem_stat {
 	ATOMIC_T alloc; /* the memory bytes we allocate currently */
@@ -223,6 +310,10 @@ inline void *dbg_rtw_vmalloc(u32 sz, const enum mstat_f flags, const char *func,
 		, sz
 	);
 
+#if defined(DBG_MEM_ERR_FREE)
+	rtw_dbg_mem_add(p, sz);
+#endif
+
 	return p;
 }
 
@@ -274,6 +365,10 @@ inline void *dbg_rtw_malloc(u32 sz, const enum mstat_f flags, const char *func, 
 		, sz
 	);
 
+#if defined(DBG_MEM_ERR_FREE)
+	rtw_dbg_mem_add(p, sz);
+#endif
+
 	return p;
 }
 
@@ -292,6 +387,10 @@ inline void *dbg_rtw_zmalloc(u32 sz, const enum mstat_f flags, const char *func,
 		, sz
 	);
 
+#if defined(DBG_MEM_ERR_FREE)
+	rtw_dbg_mem_add(p, sz);
+#endif
+
 	return p;
 }
 
@@ -299,6 +398,26 @@ inline void dbg_rtw_mfree(void *pbuf, u32 sz, const enum mstat_f flags, const ch
 {
 	if (match_mstat_sniff_rules(flags, sz))
 		RTW_INFO("DBG_MEM_ALLOC %s:%d %s(%d)\n", func, line, __FUNCTION__, (sz));
+
+#if defined(DBG_MEM_ERR_FREE)
+	{
+		struct  hash_mem *hm;
+
+		hm = rtw_dbg_mem_find(pbuf);
+		if (!hm) {
+			RTW_ERR("%s cannot find allocated memory: %x\n", __func__, pbuf);
+			rtw_warn_on(1);
+			return;
+		}
+		if (hm->sz != sz) {
+			RTW_ERR("%s allocated memory (%x) size mismatch %d != hash(%d)\n",
+				__func__, pbuf, sz, hm->sz);
+			rtw_warn_on(1);
+			return;
+		}
+		rtw_dbg_mem_del(pbuf);
+	}
+#endif
 
 	_rtw_mfree((pbuf), (sz));
 

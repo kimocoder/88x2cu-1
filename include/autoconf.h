@@ -314,13 +314,15 @@
 //#define DBG_RX_DROP_FRAME
 //#define DBG_RX_DECRYPTOR
 
+#define DBG_MEM_ALLOC
+#define DBG_MEM_ERR_FREE
+
 /*
 #define DBG_CONFIG_ERROR_DETECT_INT
 #define DBG_CONFIG_ERROR_RESET
 
 #define DBG_IO
 #define DBG_DELAY_OS
-#define DBG_MEM_ALLOC
 #define DBG_IOCTL
 
 #define DBG_TX
