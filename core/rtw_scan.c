@@ -2272,6 +2272,7 @@ static u8 _free_phl_param(_adapter *adapter, struct rtw_phl_scan_param *phl_para
 		rtw_mfree(phl_param->ch, phl_param->ch_sz); 
 	if (phl_param->priv)
 		rtw_mfree(phl_param->priv, sizeof(struct scan_priv));
+
 	rtw_mfree(phl_param, sizeof(struct rtw_phl_scan_param));
 
 	res = _SUCCESS;
