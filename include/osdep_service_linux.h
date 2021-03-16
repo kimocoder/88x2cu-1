@@ -213,12 +213,13 @@ static inline void *_rtw_zvmalloc(u32 sz)
 
 static inline void _rtw_vmfree(void *pbuf, u32 sz)
 {
-	vfree(pbuf);
-
 #ifdef DBG_MEM_ALLOC
 	if (!rtw_dbg_mem_free(pbuf, sz, DBG_MEM_TYPE_VIR))
 		return;
 #endif /* DBG_MEM_ALLOC */
+
+	vfree(pbuf);
+
 #ifdef DBG_MEMORY_LEAK
 	atomic_dec(&_malloc_cnt);
 	atomic_sub(sz, &_malloc_size);
