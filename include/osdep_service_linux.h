@@ -147,6 +147,23 @@ extern ATOMIC_T _malloc_cnt;
 extern ATOMIC_T _malloc_size;
 #endif
 
+
+#if defined(DBG_MEM_ALLOC)
+
+struct hash_mem {
+	void *mem;
+	int sz;
+	struct hlist_node node;
+};
+
+void rtw_dbg_mem_init(void);
+void rtw_dbg_mem_deinit(void);
+struct hash_mem *rtw_dbg_mem_find(void *mem);
+void rtw_dbg_mem_alloc(void *mem, int sz);
+bool rtw_dbg_mem_free(void *mem, int sz);
+
+#endif /* DBG_MEM_ALLOC */
+
 static inline void *_rtw_vmalloc(u32 sz)
 {
 	void *pbuf;
@@ -195,6 +212,11 @@ static inline void *_rtw_malloc(u32 sz)
 	#endif
 		pbuf = kmalloc(sz, in_interrupt() ? GFP_ATOMIC : GFP_KERNEL);
 
+#ifdef DBG_MEM_ALLOC
+	if (pbuf)
+		rtw_dbg_mem_alloc(pbuf, sz);
+#endif /* DBG_MEM_ALLOC */
+
 #ifdef DBG_MEMORY_LEAK
 	if (pbuf != NULL) {
 		atomic_inc(&_malloc_cnt);
@@ -217,12 +239,22 @@ static inline void *_rtw_zmalloc(u32 sz)
 	/*kzalloc in KERNEL_VERSION(2, 6, 14)*/
 	void *pbuf = kzalloc( sz, in_interrupt() ? GFP_ATOMIC : GFP_KERNEL);
 
+#ifdef DBG_MEM_ALLOC
+	if (pbuf)
+		rtw_dbg_mem_alloc(pbuf, sz);
+#endif /* DBG_MEM_ALLOC */
+
 #endif
 	return pbuf;
 }
 
 static inline void _rtw_mfree(void *pbuf, u32 sz)
 {
+#ifdef DBG_MEM_ALLOC
+	if (!rtw_dbg_mem_free(pbuf, sz))
+		return;
+#endif /* DBG_MEM_ALLOC */
+
 	#ifdef RTK_DMP_PLATFORM
 	if (sz > 0x4000)
 		dvr_free(pbuf);

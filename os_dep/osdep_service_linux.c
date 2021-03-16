@@ -20,6 +20,110 @@ ATOMIC_T _malloc_cnt = ATOMIC_INIT(0);
 ATOMIC_T _malloc_size = ATOMIC_INIT(0);
 #endif /* DBG_MEMORY_LEAK */
 
+#ifdef DBG_MEM_ALLOC
+
+#define DBG_MEM_HASHBITS 10
+
+struct hlist_head dbg_mem_ht[1 << DBG_MEM_HASHBITS];
+
+void rtw_dbg_mem_init(void)
+{
+	hash_init(dbg_mem_ht);
+}
+
+void rtw_dbg_mem_deinit(void)
+{
+	struct hlist_head *head;
+	struct hlist_node *p;
+	int i;
+
+	for (i = 0; i < HASH_SIZE(dbg_mem_ht); i++) {
+		head = &dbg_mem_ht[i];
+		p = head->first;
+		while (p) {
+			struct hlist_node *prev;
+			struct hash_mem *hm;
+
+			hm = container_of(p, struct hash_mem, node);
+			prev = p;
+			p = p->next;
+			hash_del(prev);
+			kfree(hm);
+		}
+	}
+}
+
+struct hash_mem *rtw_dbg_mem_find(void *mem)
+{
+	struct hash_mem *hm;
+	struct hlist_head *head;
+	struct hlist_node *p;
+
+	head = &dbg_mem_ht[hash_64((u64)(mem), DBG_MEM_HASHBITS)];
+
+	p = head->first;
+	while (p) {
+		hm = container_of(p, struct hash_mem, node);
+		if (hm->mem == mem)
+			goto out;
+		p = p->next;
+	}
+	hm = NULL;
+out:
+	return hm;
+}
+
+void rtw_dbg_mem_alloc(void *mem, int sz)
+{
+	struct hash_mem *hm;
+
+	hm = rtw_dbg_mem_find(mem);
+	if (!hm) {
+		hm = (struct hash_mem *)kmalloc(sizeof(*hm), GFP_ATOMIC);
+		hm->mem = mem;
+		hm->sz = sz;
+		hash_add(dbg_mem_ht, &hm->node, (u64)(mem));
+	} else {
+		RTW_ERR("%s mem(%x) is in hash already\n", __func__, mem);
+		rtw_warn_on(1);
+	}
+}
+
+static void _rtw_dbg_mem_del(void *mem)
+{
+	struct hash_mem *hm;
+
+	hm = rtw_dbg_mem_find(mem);
+	if (hm) {
+		hash_del(&hm->node);
+		kfree(hm);
+	}
+}
+
+bool rtw_dbg_mem_free(void *mem, int sz)
+{
+	struct hash_mem *hm;
+
+	hm = rtw_dbg_mem_find(mem);
+	if (!hm) {
+		RTW_ERR("%s cannot find allocated memory: %x\n", __func__, mem);
+		rtw_warn_on(1);
+		return false;
+	}
+	if (hm->sz != sz) {
+		RTW_ERR("%s allocated memory (%x) size mismatch %d != hash(%d)\n",
+			__func__, mem, sz, hm->sz);
+		rtw_warn_on(1);
+		return false;
+	}
+	RTW_INFO("%s : kfree %x sz %d\n", __func__, hm->mem, hm->sz);
+	_rtw_dbg_mem_del(mem);
+
+	return true;
+}
+
+#endif /* DBG_MEM_ALLOC */
+
 /*
 * Translate the OS dependent @param error_code to OS independent RTW_STATUS_CODE
 * @return: one of RTW_STATUS_CODE
