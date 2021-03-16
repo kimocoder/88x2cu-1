@@ -22,17 +22,21 @@ ATOMIC_T _malloc_size = ATOMIC_INIT(0);
 
 #ifdef DBG_MEM_ALLOC
 
+#if (KERNEL_VERSION(3, 7, 0) <= LINUX_VERSION_CODE)
 #define DBG_MEM_HASHBITS 10
-
 struct hlist_head dbg_mem_ht[1 << DBG_MEM_HASHBITS];
+#endif
 
 void rtw_dbg_mem_init(void)
 {
+#if (KERNEL_VERSION(3, 7, 0) <= LINUX_VERSION_CODE)
 	hash_init(dbg_mem_ht);
+#endif /* LINUX_VERSION_CODE */
 }
 
 void rtw_dbg_mem_deinit(void)
 {
+#if (KERNEL_VERSION(3, 7, 0) <= LINUX_VERSION_CODE)
 	struct hlist_head *head;
 	struct hlist_node *p;
 	int i;
@@ -51,8 +55,10 @@ void rtw_dbg_mem_deinit(void)
 			kfree(hm);
 		}
 	}
+#endif /* LINUX_VERSION_CODE */
 }
 
+#if (KERNEL_VERSION(3, 7, 0) <= LINUX_VERSION_CODE)
 struct hash_mem *rtw_dbg_mem_find(void *mem)
 {
 	struct hash_mem *hm;
@@ -73,7 +79,7 @@ out:
 	return hm;
 }
 
-void rtw_dbg_mem_alloc(void *mem, int sz)
+void rtw_dbg_mem_alloc(void *mem, int sz, int type)
 {
 	struct hash_mem *hm;
 
@@ -82,6 +88,7 @@ void rtw_dbg_mem_alloc(void *mem, int sz)
 		hm = (struct hash_mem *)kmalloc(sizeof(*hm), GFP_ATOMIC);
 		hm->mem = mem;
 		hm->sz = sz;
+		hm->type = type;
 		hash_add(dbg_mem_ht, &hm->node, (u64)(mem));
 	} else {
 		RTW_ERR("%s mem(%x) is in hash already\n", __func__, mem);
@@ -100,7 +107,7 @@ static void _rtw_dbg_mem_del(void *mem)
 	}
 }
 
-bool rtw_dbg_mem_free(void *mem, int sz)
+bool rtw_dbg_mem_free(void *mem, int sz, int type)
 {
 	struct hash_mem *hm;
 
@@ -111,17 +118,22 @@ bool rtw_dbg_mem_free(void *mem, int sz)
 		return false;
 	}
 	if (hm->sz != sz) {
-		RTW_ERR("%s allocated memory (%x) size mismatch %d != hash(%d)\n",
+		RTW_ERR("%s memory (%x) size mismatch free(%d) != alloc(%d)\n",
 			__func__, mem, sz, hm->sz);
 		rtw_warn_on(1);
 		return false;
 	}
-	RTW_INFO("%s : kfree %x sz %d\n", __func__, hm->mem, hm->sz);
+	if (hm->type != type) {
+		RTW_ERR("%s memory (%x) type mismatch free(%d) != alloc(%d)\n",
+			__func__, mem, type, hm->type);
+		rtw_warn_on(1);
+		return false;
+	}
 	_rtw_dbg_mem_del(mem);
 
 	return true;
 }
-
+#endif /* LINUX_VERSION_CODE */
 #endif /* DBG_MEM_ALLOC */
 
 /*
