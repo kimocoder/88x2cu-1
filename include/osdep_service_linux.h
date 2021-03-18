@@ -161,8 +161,8 @@ bool rtw_dbg_mem_free(void *mem, int sz, int type);
 
 #else /* DBG_MEM_ERR_FREE */
 
-#define rtw_dbg_mem_alloc() do { } while (0)
-#define rtw_dbg_mem_free() do { } while (0)
+#define rtw_dbg_mem_init() do { } while (0)
+#define rtw_dbg_mem_deinit() do { } while (0)
 
 #endif /* DBG_MEM_ERR_FREE */
 

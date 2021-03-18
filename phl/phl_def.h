@@ -44,6 +44,14 @@ enum phl_hw_port {
 };
 
 #define RTW_MAX_TID_NUM 8
+#define RTW_MAX_AC_QUEUE_NUM 4
+enum phl_ac_queue {
+	PHL_BE_QUEUE_SEL	= 0,
+	PHL_BK_QUEUE_SEL	= 1,
+	PHL_VI_QUEUE_SEL	= 2,
+	PHL_VO_QUEUE_SEL	= 3,
+	PHL_AC_QUEUE_TOTAL
+};
 
 /**
  * struct rtw_chan_def - channel defination
@@ -319,6 +327,7 @@ enum wr_chg_id {
 	WR_CHG_MU_EDCA_PARAM,
 	WR_CHG_MU_EDCA_CFG,
 	WR_CHG_BSS_COLOR,
+	WR_CHG_RTS_TH,
 	WR_CHG_MAX
 };
 
@@ -361,6 +370,11 @@ struct rtw_mu_edca_param {
 	u8 timer;
 };
 
+struct rtw_rts_threshold {
+	u16 rts_time_th;
+	u16 rts_len_th;
+};
+
 enum phl_module_id{
 	/* 0 ~ 128 PHL background module starts from here*/
 	PHL_BK_MDL_START = 0,
@@ -388,6 +402,7 @@ enum phl_module_id{
 	PHL_MDL_PSTS = 75,
 	PHL_MDL_LED = 76,
 	PHL_MDL_GENERAL = 77,
+	PHL_MDL_REGU = 78,
 
 	PHL_BK_MDL_OPT_END = 127,
 	/* Fixed Max Value*/
@@ -465,48 +480,53 @@ enum phl_msg_evt_id {
 	MSG_EVT_ECSA_COUNT_DOWN = 48,
 	MSG_EVT_ECSA_SWITCH_START = 49,
 	MSG_EVT_ECSA_SWITCH_DONE = 50,
-	MSG_EVT_ECSA_DONE = 51,
-	MSG_EVT_LISTEN_STATE_EXPIRE = 52,
+	MSG_EVT_ECSA_CHECK_TX_RESUME = 51,
+	MSG_EVT_ECSA_DONE = 52,
+	MSG_EVT_LISTEN_STATE_EXPIRE = 53,
 	/* beamform */
-	MSG_EVT_SET_VHT_GID = 53,
-	MSG_EVT_WATCHDOG = 54,
-	MSG_EVT_DEV_CANNOT_IO = 55,
-	MSG_EVT_DEV_RESUME_IO = 56,
-	MSG_EVT_FORCE_USB_SW = 57,
-	MSG_EVT_GET_USB_SPEED = 58,
-	MSG_EVT_GET_USB_SW_ABILITY = 59,
-	MSG_EVT_CFG_AMPDU = 60,
-	MSG_EVT_DFS_PAUSE_TX = 61,
-	MSG_EVT_ROLE_RECOVER = 62,
-	MSG_EVT_ROLE_SUSPEND = 63,
-	MSG_EVT_HAL_SET_L2_LEAVE = 64,
-	MSG_EVT_NOTIFY_HAL = 65,
-	MSG_EVT_ISSUE_BCN = 66,
-	MSG_EVT_FREE_BCN = 67,
-	MSG_EVT_STOP_BCN = 68,
-	MSG_EVT_SEC_KEY = 69,
-	MSG_EVT_ROLE_START = 70,
-	MSG_EVT_ROLE_CHANGE = 71,
-	MSG_EVT_ROLE_STOP = 72,
-	MSG_EVT_STA_INFO_CTRL = 73,
-	MSG_EVT_STA_MEDIA_STATUS_UPT = 74,
-	MSG_EVT_CFG_CHINFO = 75,
-	MSG_EVT_STA_CHG_STAINFO = 76,
-	MSG_EVT_HW_TRX_RST_RESUME = 77,
-	MSG_EVT_HW_TRX_PAUSE = 78,
-	MSG_EVT_SW_TX_RESUME = 79,
-	MSG_EVT_SW_RX_RESUME = 80,
-	MSG_EVT_SW_TX_PAUSE = 81,
-	MSG_EVT_SW_RX_PAUSE = 82,
-	MSG_EVT_SW_TX_RESET = 83,
-	MSG_EVT_SW_RX_RESET = 84,
-	MSG_EVT_TRX_PAUSE = 85,
-	MSG_EVT_TRX_PAUSE_W_RST = 86,
+	MSG_EVT_SET_VHT_GID = 54,
+	MSG_EVT_WATCHDOG = 55,
+	MSG_EVT_DEV_CANNOT_IO = 56,
+	MSG_EVT_DEV_RESUME_IO = 57,
+	MSG_EVT_FORCE_USB_SW = 58,
+	MSG_EVT_GET_USB_SPEED = 59,
+	MSG_EVT_GET_USB_SW_ABILITY = 60,
+	MSG_EVT_CFG_AMPDU = 61,
+	MSG_EVT_DFS_PAUSE_TX = 62,
+	MSG_EVT_ROLE_RECOVER = 63,
+	MSG_EVT_ROLE_SUSPEND = 64,
+	MSG_EVT_HAL_SET_L2_LEAVE = 65,
+	MSG_EVT_NOTIFY_HAL = 66,
+	MSG_EVT_ISSUE_BCN = 67,
+	MSG_EVT_FREE_BCN = 68,
+	MSG_EVT_STOP_BCN = 69,
+	MSG_EVT_SEC_KEY = 70,
+	MSG_EVT_ROLE_START = 71,
+	MSG_EVT_ROLE_CHANGE = 72,
+	MSG_EVT_ROLE_STOP = 73,
+	MSG_EVT_STA_INFO_CTRL = 74,
+	MSG_EVT_STA_MEDIA_STATUS_UPT = 75,
+	MSG_EVT_CFG_CHINFO = 76,
+	MSG_EVT_STA_CHG_STAINFO = 77,
+	MSG_EVT_HW_TRX_RST_RESUME = 78,
+	MSG_EVT_HW_TRX_PAUSE = 79,
+	MSG_EVT_SW_TX_RESUME = 80,
+	MSG_EVT_SW_RX_RESUME = 81,
+	MSG_EVT_SW_TX_PAUSE = 82,
+	MSG_EVT_SW_RX_PAUSE = 83,
+	MSG_EVT_SW_TX_RESET = 84,
+	MSG_EVT_SW_RX_RESET = 85,
+	MSG_EVT_TRX_PAUSE = 86,
+	MSG_EVT_TRX_PAUSE_W_RST = 87,
+	/* Regulation */
+	MSG_EVT_REGU_SET_DOMAIN = 88,
 	/* dbg */
 	MSG_EVT_DBG_SIP_REG_DUMP = 120,
 	MSG_EVT_DBG_FULL_REG_DUMP = 121,
 	/*Add EVT-ID for linux core cmd temporality*/
 	MSG_EVT_LINUX_CMD_WRK = 888,
+	/* LED */
+	MSG_EVT_LED_TICK = 5000,
 	MSG_EVT_MAX = 0x7fff
 };
 
@@ -1318,6 +1338,7 @@ struct dev_cap_t {
 	u8 pwrbyrate_off;
 	u8 pwrlmt_type;
 	u8 rf_board_opt;
+	u8 sta_ulru;
 	u8 tx_mu_ru;
 };
 
@@ -1603,6 +1624,9 @@ struct rtw_phl_stainfo_t {
 #define HW_CAP_HE_NON_TB_CQI BIT(10)
 #define HW_CAP_HE_TB_CQI BIT(11)
 
+#define RTW_HW_CAP_ULRU_AUTO	0
+#define RTW_HW_CAP_ULRU_DISABLE	1
+#define RTW_HW_CAP_ULRU_ENABLE	2
 
 struct hal_spec_t {
 	char *ic_name;
@@ -2062,6 +2086,7 @@ struct rtw_phl_ppdu_sts_ent {
 	/* from ppdu status */
 	bool valid;
 	bool phl_done;
+	u8 usr_num;
 	u32 freerun_cnt;
 	struct rtw_phl_ppdu_phy_info phy_info;
 	struct rtw_phl_ppdu_sts_sta_ent sta[PHL_MAX_PPDU_STA_NUM];

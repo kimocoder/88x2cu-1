@@ -1137,7 +1137,7 @@ void devobj_deinit(struct dvobj_priv *pdvobj)
 #ifdef CONFIG_SUPPORT_MULTI_BCN
 	_rtw_spinlock_free(&(pdvobj->ap_if_q.lock));
 #endif
-	rtw_vmfree((u8 *)pdvobj, sizeof(*pdvobj));
+	rtw_mfree((u8 *)pdvobj, sizeof(*pdvobj));
 
 	rtw_dbg_mem_deinit();
 }

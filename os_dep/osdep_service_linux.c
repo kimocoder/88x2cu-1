@@ -87,7 +87,7 @@ out:
 	return hm;
 }
 
-void rtw_dbg_mem_alloc(void *mem, int sz)
+void rtw_dbg_mem_alloc(void *mem, int sz, int type)
 {
 	struct hash_mem *hm;
 
@@ -96,6 +96,7 @@ void rtw_dbg_mem_alloc(void *mem, int sz)
 		hm = (struct hash_mem *)kmalloc(sizeof(*hm), GFP_ATOMIC);
 		hm->mem = mem;
 		hm->sz = sz;
+		hm->type = type;
 		hash_add(dbg_mem_ht, &hm->node, (u64)(mem));
 	} else {
 		RTW_ERR("%s mem(%x) is in hash already\n", __func__, mem);
@@ -103,20 +104,10 @@ void rtw_dbg_mem_alloc(void *mem, int sz)
 	}
 }
 
-static void _rtw_dbg_mem_del(void *mem)
+bool rtw_dbg_mem_free(void *mem, int sz, int type)
 {
 	struct hash_mem *hm;
-
-	hm = rtw_dbg_mem_find(mem);
-	if (hm) {
-		hash_del(&hm->node);
-		kfree(hm);
-	}
-}
-
-bool rtw_dbg_mem_free(void *mem, int sz)
-{
-	struct hash_mem *hm;
+	bool ret;
 
 	hm = rtw_dbg_mem_find(mem);
 	if (!hm) {
@@ -129,11 +120,23 @@ bool rtw_dbg_mem_free(void *mem, int sz)
 		RTW_ERR("%s memory (%x) size mismatch free(%d) != alloc(%d)\n",
 			__func__, mem, sz, hm->sz);
 		rtw_warn_on(1);
-		return false;
+		ret = false;
+		goto out;
 	}
-	_rtw_dbg_mem_del(mem);
+	if (hm->type != type) {
+		RTW_ERR("%s memory (%x) type mismatch free(%d) != alloc(%d)\n",
+			__func__, mem, type, hm->type);
+		rtw_warn_on(1);
+		ret = false;
+		goto out;
+	}
 
-	return true;
+	ret = true;
+out:
+	hash_del(&hm->node);
+	kfree(hm);
+
+	return ret;
 }
 #endif /* LINUX_VERSION_CODE */
 #endif /* DBG_MEM_ERR_FREE */

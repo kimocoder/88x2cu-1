@@ -316,7 +316,7 @@ enum phl_mdl_ret_code _ser_m1_pause_trx_pcie(
 		/* Level 1 recovery failed --> L2 */
 
 		/* SW resume */
-		ops->trx_resume(phl_info, PHL_REQ_PAUSE_TX);
+		ops->trx_resume(phl_info, PHL_CTRL_TX);
 		rtw_phl_tx_req_notify(phl_info);
 
 		// SER_ST_L2
@@ -407,9 +407,9 @@ static void _ser_resume_trx_pcie(
 	struct phl_info_t *phl_info = cser->phl_info;
 	struct phl_hci_trx_ops *ops = phl_info->hci_trx_ops;
 
-	ops->trx_resume(phl_info, PHL_REQ_PAUSE_RX);
+	ops->trx_resume(phl_info, PHL_CTRL_RX);
 	rtw_phl_start_rx_process(phl_info);
-	ops->trx_resume(phl_info, PHL_REQ_PAUSE_TX);
+	ops->trx_resume(phl_info, PHL_CTRL_TX);
 	rtw_phl_tx_req_notify(phl_info);
 }
 
@@ -419,7 +419,7 @@ static void _ser_resume_trx_usb(
 	struct phl_info_t *phl_info = cser->phl_info;
 	struct phl_hci_trx_ops *ops = phl_info->hci_trx_ops;
 
-	ops->trx_resume(phl_info, PHL_REQ_PAUSE_TX);
+	ops->trx_resume(phl_info, PHL_CTRL_TX);
 	rtw_phl_tx_req_notify(phl_info);
 }
 
@@ -429,7 +429,7 @@ static void _ser_resume_trx_sdio(
 	struct phl_info_t *phl_info = cser->phl_info;
 	struct phl_hci_trx_ops *ops = phl_info->hci_trx_ops;
 
-	ops->trx_resume(phl_info, PHL_REQ_PAUSE_RX);
+	ops->trx_resume(phl_info, PHL_CTRL_RX);
 	rtw_phl_start_rx_process(phl_info);
 	ops->trx_resume(phl_info, PHL_REQ_PAUSE_TX);
 	rtw_phl_tx_req_notify(phl_info);
@@ -568,7 +568,7 @@ enum phl_mdl_ret_code _ser_hdl_internal_evt_pcie(
 				_ser_reset_status(cser);
 				break;
 			}
-			ops->trx_resume(phl_info, PHL_REQ_PAUSE_RX);
+			ops->trx_resume(phl_info, PHL_CTRL_RX);
 			rtw_phl_start_rx_process(phl_info);
 
 			/* send M4 event and wait M5*/
@@ -720,7 +720,7 @@ enum phl_mdl_ret_code _ser_hdl_internal_evt_usb(
 				_ser_polling_event(cser);
 				break;
 			}
-			ops->trx_resume(phl_info, PHL_REQ_PAUSE_RX);
+			ops->trx_resume(phl_info, PHL_CTRL_RX);
 			rtw_phl_start_rx_process(phl_info);
 
 			/* send M4 event */
@@ -897,7 +897,7 @@ enum phl_mdl_ret_code _ser_hdl_internal_evt_sdio(
 				_ser_reset_status(cser);
 				break;
 			}
-			ops->trx_resume(phl_info, PHL_REQ_PAUSE_RX);
+			ops->trx_resume(phl_info, PHL_CTRL_RX);
 			rtw_phl_start_rx_process(phl_info);
 
 			rtw_hal_config_interrupt(phl_info->hal, RTW_PHL_SER_HANDSHAKE_MODE);

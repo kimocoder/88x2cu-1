@@ -478,7 +478,7 @@ _phl_pkt_ofld_construct_sa_query_pkt(struct pkt_ofld_obj *ofld_obj, u8 **pkt_buf
 }
 
 static enum rtw_phl_status
-_phl_pkt_ofld_construct_packet(struct pkt_ofld_obj *ofld_obj, u8 macid,
+_phl_pkt_ofld_construct_packet(struct pkt_ofld_obj *ofld_obj, u16 macid,
 			u8 type, u8 **pkt_buf, u16 *len, void *buf)
 {
 	struct rtw_phl_stainfo_t *phl_sta = rtw_phl_get_stainfo_by_macid(
@@ -532,7 +532,7 @@ _phl_pkt_ofld_construct_packet(struct pkt_ofld_obj *ofld_obj, u8 macid,
 #endif // if 0 NEO
 
 static void
-_phl_pkt_ofld_init_entry(struct pkt_ofld_entry *entry, u8 macid)
+_phl_pkt_ofld_init_entry(struct pkt_ofld_entry *entry, u16 macid)
 {
 	u8 idx;
 
@@ -547,7 +547,7 @@ _phl_pkt_ofld_init_entry(struct pkt_ofld_entry *entry, u8 macid)
 }
 
 static u8
-_phl_pkt_ofld_is_entry_exist(struct pkt_ofld_obj *ofld_obj, u8 macid)
+_phl_pkt_ofld_is_entry_exist(struct pkt_ofld_obj *ofld_obj, u16 macid)
 {
 	struct pkt_ofld_entry *pos = NULL;
 	u8 find = false;
@@ -615,7 +615,7 @@ _phl_pkt_ofld_reset_entry(struct pkt_ofld_obj *ofld_obj,
 
 static void
 _phl_pkt_ofld_add_entry(struct pkt_ofld_obj *ofld_obj,
-				struct pkt_ofld_entry *entry, u8 macid)
+				struct pkt_ofld_entry *entry, u16 macid)
 {
 	PHL_TRACE(COMP_PHL_PKTOFLD, _PHL_INFO_,
 		"[PKT] New entry %p, mac id = %d\n", entry, macid);
@@ -643,7 +643,7 @@ _phl_pkt_ofld_del_entry(struct pkt_ofld_obj *ofld_obj, struct pkt_ofld_entry *en
 }
 
 static struct pkt_ofld_entry *
-_phl_pkt_ofld_get_entry(struct pkt_ofld_obj *ofld_obj, u8 macid)
+_phl_pkt_ofld_get_entry(struct pkt_ofld_obj *ofld_obj, u16 macid)
 {
 	struct pkt_ofld_entry *pos = NULL;
 	u8 find = false;

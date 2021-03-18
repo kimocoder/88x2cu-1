@@ -314,7 +314,7 @@
 //#define DBG_RX_DROP_FRAME
 //#define DBG_RX_DECRYPTOR
 
-#define DBG_MEM_ALLOC
+#define DBG_MEM_ERR_FREE
 
 /*
 #define DBG_CONFIG_ERROR_DETECT_INT

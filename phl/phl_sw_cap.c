@@ -109,6 +109,7 @@ phl_sw_cap_init(struct rtw_phl_com_t* phl_com)
 		_phl_sw_cap_para_init(phl_com, &phy_sw_cap->mac_reg_info);
 		_phl_sw_cap_para_init(phl_com, &phy_sw_cap->bb_phy_reg_info);
 		_phl_sw_cap_para_init(phl_com, &phy_sw_cap->bb_phy_reg_mp_info);
+		_phl_sw_cap_para_init(phl_com, &phy_sw_cap->bb_phy_reg_gain_info);
 		_phl_sw_cap_para_init(phl_com, &phy_sw_cap->rf_radio_a_info);
 		_phl_sw_cap_para_init(phl_com, &phy_sw_cap->rf_radio_b_info);
 		_phl_sw_cap_para_init(phl_com, &phy_sw_cap->rf_txpwr_byrate_info);
@@ -140,6 +141,7 @@ phl_sw_cap_deinit(struct rtw_phl_com_t* phl_com)
 		_phl_sw_cap_para_free(phl_com, &phy_sw_cap->mac_reg_info);
 		_phl_sw_cap_para_free(phl_com, &phy_sw_cap->bb_phy_reg_info);
 		_phl_sw_cap_para_free(phl_com, &phy_sw_cap->bb_phy_reg_mp_info);
+		_phl_sw_cap_para_init(phl_com, &phy_sw_cap->bb_phy_reg_gain_info);
 
 		_phl_sw_cap_para_free(phl_com, &phy_sw_cap->rf_radio_a_info);
 		_phl_sw_cap_para_free(phl_com, &phy_sw_cap->rf_radio_b_info);
@@ -298,7 +300,12 @@ _phl_init_protocol_cap(struct phl_info_t *phl_info,
 		proto_role_cap->htc_rx = 1;
 		proto_role_cap->sm_ps = 0;
 		proto_role_cap->trig_padding = 0;
+#ifdef CONFIG_PHL_TWT
+		proto_role_cap->twt =
+			phl_com->dev_cap.twt_sup & RTW_PHL_TWT_RSP_SUP;
+#else
 		proto_role_cap->twt = 0;
+#endif /* CONFIG_PHL_TWT */
 		proto_role_cap->all_ack = 1;
 		proto_role_cap->a_ctrl = 0xe;
 		proto_role_cap->ops = 1;

@@ -77,6 +77,7 @@ char *MSTAT_FUNC_str[] = {
 };
 #endif
 
+#ifdef DBG_MEM_ALLOC
 void rtw_mstat_dump(void *sel)
 {
 	int i;
@@ -176,11 +177,13 @@ void rtw_mstat_update(const enum mstat_f flags, const MSTAT_STATUS status, u32 s
 	update_time = rtw_get_current_time();
 	/* } */
 }
+#endif /* DBG_MEM_ALLOC */
 
 #ifndef SIZE_MAX
 #define SIZE_MAX (~(size_t)0)
 #endif
 
+#ifdef DBG_MEM_ALLOC
 struct mstat_sniff_rule {
 	enum mstat_f flags;
 	size_t lb;
@@ -205,6 +208,7 @@ bool match_mstat_sniff_rules(const enum mstat_f flags, const size_t size)
 
 	return _FALSE;
 }
+#endif /* DBG_MEM_ALLOC */
 
 inline void *dbg_rtw_vmalloc(u32 sz, const enum mstat_f flags, const char *func, const int line)
 {

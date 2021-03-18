@@ -773,7 +773,7 @@ void rtw_surveydone_event_callback(_adapter	*adapter, u8 *pbuf)
 		}
 	}
 
-	/* RTW_INFO("scan complete in %dms\n",rtw_get_passing_time_ms(pmlmepriv->scan_start_time)); */
+	RTW_INFO("scan complete in %dms\n",rtw_get_passing_time_ms(pmlmepriv->scan_start_time));
 
 	_rtw_spinunlock_bh(&pmlmepriv->lock);
 
@@ -1292,12 +1292,6 @@ static const char *const _scan_state_str[] = {
 	"SCAN_STATE_MAX",
 };
 
-const char *scan_state_str(u8 state)
-{
-	state = (state >= SCAN_STATE_MAX) ? SCAN_STATE_MAX : state;
-	return _scan_state_str[state];
-}
-
 void rtw_survey_cmd_callback(_adapter	*padapter ,  struct cmd_obj *pcmd)
 {
 	struct	mlme_priv *pmlmepriv = &padapter->mlmepriv;
@@ -1315,6 +1309,13 @@ void rtw_survey_cmd_callback(_adapter	*padapter ,  struct cmd_obj *pcmd)
 	rtw_free_cmd_obj(pcmd);
 
 }
+
+const char *scan_state_str(u8 state)
+{
+	state = (state >= SCAN_STATE_MAX) ? SCAN_STATE_MAX : state;
+	return _scan_state_str[state];
+}
+
 
 static bool scan_abort_hdl(_adapter *adapter)
 {
@@ -1393,11 +1394,12 @@ static void sitesurvey_res_reset(_adapter *adapter, struct sitesurvey_parm *parm
 	ss->acs = parm->acs;
 }
 
-static u8 sitesurvey_pick_ch_behavior(_adapter *padapter, u8 *ch, enum rtw_phl_scan_type *type)
+static u8 sitesurvey_pick_ch_behavior(_adapter *padapter, u8 *ch,
+			enum rtw_phl_scan_type *type)
 {
 	u8 next_state;
 	u8 scan_ch = 0;
-	enum rtw_phl_scan_type scan_type = RTW_PHL_SCAN_PASSIVE;
+	enum rtw_phl_scan_type stype = RTW_PHL_SCAN_PASSIVE;
 	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
 	struct ss_res *ss = &pmlmeext->sitesurvey_res;
 	struct rf_ctl_t *rfctl = adapter_to_rfctl(padapter);
@@ -1418,7 +1420,7 @@ static u8 sitesurvey_pick_ch_behavior(_adapter *padapter, u8 *ch, enum rtw_phl_s
 			scan_ch = pwdinfo->rx_invitereq_info.operation_ch[ss->channel_idx];
 		else
 			scan_ch = pwdinfo->p2p_info.operation_ch[ss->channel_idx];
-		scan_type = RTW_PHL_SCAN_ACTIVE;
+		stype = RTW_PHL_SCAN_ACTIVE;
 	} else if (rtw_p2p_findphase_ex_is_social(pwdinfo)) {
 		/*
 		* Commented by Albert 2011/06/03
@@ -1427,9 +1429,9 @@ static u8 sitesurvey_pick_ch_behavior(_adapter *padapter, u8 *ch, enum rtw_phl_s
 		scan_ch = pwdinfo->social_chan[ss->channel_idx];
 		ch_set_idx = rtw_chset_search_ch(rfctl->channel_set, scan_ch);
 		if (ch_set_idx >= 0)
-			scan_type = rfctl->channel_set[ch_set_idx].flags & RTW_CHF_NO_IR ? RTW_PHL_SCAN_PASSIVE : RTW_PHL_SCAN_ACTIVE;
+			stype = rfctl->channel_set[ch_set_idx].flags & RTW_CHF_NO_IR ? RTW_PHL_SCAN_PASSIVE : RTW_PHL_SCAN_ACTIVE;
 		else
-			scan_type = SCAN_ACTIVE;
+			stype = SCAN_ACTIVE;
 	} else
 #endif /* CONFIG_P2P */
 	{
@@ -1472,10 +1474,10 @@ static u8 sitesurvey_pick_ch_behavior(_adapter *padapter, u8 *ch, enum rtw_phl_s
 
 			#if defined(CONFIG_RTW_ACS) && defined(CONFIG_RTW_ACS_DBG)
 			if (IS_ACS_ENABLE(padapter) && rtw_is_acs_passiv_scan(padapter))
-				scan_type = RTW_PHL_SCAN_PASSIVE;
+				stype = RTW_PHL_SCAN_PASSIVE;
 			else
 			#endif /*CONFIG_RTW_ACS*/
-				scan_type = (ch->flags & RTW_IEEE80211_CHAN_PASSIVE_SCAN) ? RTW_PHL_SCAN_PASSIVE : RTW_PHL_SCAN_ACTIVE;
+				stype = (ch->flags & RTW_IEEE80211_CHAN_PASSIVE_SCAN) ? RTW_PHL_SCAN_PASSIVE : RTW_PHL_SCAN_ACTIVE;
 		}
 	}
 
@@ -1544,12 +1546,13 @@ static u8 sitesurvey_pick_ch_behavior(_adapter *padapter, u8 *ch, enum rtw_phl_s
 	if (ch)
 		*ch = scan_ch;
 	if (type)
-		*type = scan_type;
+		*type = stype;
 
 	return next_state;
 }
 
-void site_survey(_adapter *padapter, u8 survey_channel, enum rtw_phl_scan_type ScanType)
+void site_survey(_adapter *padapter, u8 survey_channel,
+	enum rtw_phl_scan_type ScanType)
 {
 	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
 	struct ss_res *ss = &pmlmeext->sitesurvey_res;
@@ -1562,7 +1565,10 @@ void site_survey(_adapter *padapter, u8 survey_channel, enum rtw_phl_scan_type S
 #endif
 
 	if (survey_channel != 0) {
-		set_channel_bwmode(padapter, survey_channel, HAL_PRIME_CHNL_OFFSET_DONT_CARE, CHANNEL_WIDTH_20);
+		set_channel_bwmode(padapter,
+			survey_channel,
+			HAL_PRIME_CHNL_OFFSET_DONT_CARE,
+			CHANNEL_WIDTH_20);
 
 		if (ScanType == RTW_PHL_SCAN_PASSIVE && ss->force_ssid_scan)
 			ssid_scan = 1;
