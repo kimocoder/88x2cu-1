@@ -20,12 +20,20 @@ ATOMIC_T _malloc_cnt = ATOMIC_INIT(0);
 ATOMIC_T _malloc_size = ATOMIC_INIT(0);
 #endif /* DBG_MEMORY_LEAK */
 
-#ifdef DBG_MEM_ALLOC
+#ifdef DBG_MEM_ERR_FREE
 
 #if (KERNEL_VERSION(3, 7, 0) <= LINUX_VERSION_CODE)
 #define DBG_MEM_HASHBITS 10
 struct hlist_head dbg_mem_ht[1 << DBG_MEM_HASHBITS];
-#endif
+
+struct hash_mem {
+	void *mem;
+	int sz;
+	int type;
+	struct hlist_node node;
+};
+#endif /* LINUX_VERSION_CODE */
+
 
 void rtw_dbg_mem_init(void)
 {
@@ -128,7 +136,7 @@ bool rtw_dbg_mem_free(void *mem, int sz)
 	return true;
 }
 #endif /* LINUX_VERSION_CODE */
-#endif /* DBG_MEM_ALLOC */
+#endif /* DBG_MEM_ERR_FREE */
 
 /*
 * Translate the OS dependent @param error_code to OS independent RTW_STATUS_CODE

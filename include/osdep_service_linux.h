@@ -148,35 +148,34 @@ extern ATOMIC_T _malloc_size;
 #endif
 
 
-#if defined(DBG_MEM_ALLOC)
+#ifdef DBG_MEM_ERR_FREE
+
+#define DBG_MEM_TYPE_PHY 0
+#define DBG_MEM_TYPE_VIR 1
 
 void rtw_dbg_mem_init(void);
 void rtw_dbg_mem_deinit(void);
 
-#if (KERNEL_VERSION(3, 7, 0) <= LINUX_VERSION_CODE)
+void rtw_dbg_mem_alloc(void *mem, int sz, int type);
+bool rtw_dbg_mem_free(void *mem, int sz, int type);
 
-struct hash_mem {
-	void *mem;
-	int sz;
-	struct hlist_node node;
-};
-
-void rtw_dbg_mem_alloc(void *mem, int sz);
-bool rtw_dbg_mem_free(void *mem, int sz);
-
-#else /* LINUX_VERSION_CODE */
+#else /* DBG_MEM_ERR_FREE */
 
 #define rtw_dbg_mem_alloc() do { } while (0)
 #define rtw_dbg_mem_free() do { } while (0)
 
-#endif /* LINUX_VERSION_CODE */
-#endif /* DBG_MEM_ALLOC */
+#endif /* DBG_MEM_ERR_FREE */
 
 static inline void *_rtw_vmalloc(u32 sz)
 {
 	void *pbuf;
 
 	pbuf = vmalloc(sz);
+
+#ifdef DBG_MEM_ERR_FREE
+	if (pbuf)
+		rtw_dbg_mem_alloc(pbuf, sz, DBG_MEM_TYPE_VIR);
+#endif /* DBG_MEM_ERR_FREE */
 
 #ifdef DBG_MEMORY_LEAK
 	if (pbuf != NULL) {
@@ -201,6 +200,11 @@ static inline void *_rtw_zvmalloc(u32 sz)
 
 static inline void _rtw_vmfree(void *pbuf, u32 sz)
 {
+#ifdef DBG_MEM_ERR_FREE
+	if (!rtw_dbg_mem_free(pbuf, sz, DBG_MEM_TYPE_VIR))
+		return;
+#endif /* DBG_MEM_ERR_FREE */
+
 	vfree(pbuf);
 
 #ifdef DBG_MEMORY_LEAK
@@ -220,10 +224,10 @@ static inline void *_rtw_malloc(u32 sz)
 	#endif
 		pbuf = kmalloc(sz, in_interrupt() ? GFP_ATOMIC : GFP_KERNEL);
 
-#ifdef DBG_MEM_ALLOC
+#ifdef DBG_MEM_ERR_FREE
 	if (pbuf)
-		rtw_dbg_mem_alloc(pbuf, sz);
-#endif /* DBG_MEM_ALLOC */
+		rtw_dbg_mem_alloc(pbuf, sz, DBG_MEM_TYPE_PHY);
+#endif /* DBG_MEM_ERR_FREE */
 
 #ifdef DBG_MEMORY_LEAK
 	if (pbuf != NULL) {
@@ -247,10 +251,10 @@ static inline void *_rtw_zmalloc(u32 sz)
 	/*kzalloc in KERNEL_VERSION(2, 6, 14)*/
 	void *pbuf = kzalloc( sz, in_interrupt() ? GFP_ATOMIC : GFP_KERNEL);
 
-#ifdef DBG_MEM_ALLOC
+#ifdef DBG_MEM_ERR_FREE
 	if (pbuf)
-		rtw_dbg_mem_alloc(pbuf, sz);
-#endif /* DBG_MEM_ALLOC */
+		rtw_dbg_mem_alloc(pbuf, sz, DBG_MEM_TYPE_PHY);
+#endif /* DBG_MEM_ERR_FREE */
 
 #endif
 	return pbuf;
@@ -258,10 +262,10 @@ static inline void *_rtw_zmalloc(u32 sz)
 
 static inline void _rtw_mfree(void *pbuf, u32 sz)
 {
-#ifdef DBG_MEM_ALLOC
-	if (!rtw_dbg_mem_free(pbuf, sz))
+#ifdef DBG_MEM_ERR_FREE
+	if (!rtw_dbg_mem_free(pbuf, sz, DBG_MEM_TYPE_PHY))
 		return;
-#endif /* DBG_MEM_ALLOC */
+#endif /* DBG_MEM_ERR_FREE */
 
 	#ifdef RTK_DMP_PLATFORM
 	if (sz > 0x4000)
