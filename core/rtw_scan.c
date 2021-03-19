@@ -2850,7 +2850,7 @@ u8 rtw_sitesurvey_cmd(_adapter *padapter, struct sitesurvey_parm *pparm)
 
 	RTW_INFO("%s NEO TODO\n", __func__);
 
-#if 0 // NEO G6
+#if 1 // NEO G6
 	if (pparm == NULL) {
 		tmp_parm = rtw_zmalloc(sizeof(struct sitesurvey_parm));
 		if (tmp_parm == NULL) {
@@ -2916,7 +2916,10 @@ u8 rtw_sitesurvey_cmd(_adapter *padapter, struct sitesurvey_parm *pparm)
 	//rtw_free_network_queue(padapter, _FALSE);
 
 	RTW_INFO("%s NEO after rtw_phl_cmd_scan_request\n", __func__);
-
+	if (tmp_parm)
+		rtw_mfree(tmp_parm, sizeof(*tmp_parm));
+	res = _SUCCESS;
+	return res;
 
 _err_req_param:
 	_free_phl_param(padapter, phl_param);
@@ -2924,6 +2927,8 @@ _err_param:
 	if (tmp_parm)
 		rtw_mfree(tmp_parm, sizeof(*tmp_parm));
 _err_exit:
+	rtw_warn_on(1);
+	return res;
 
 #else // NEO
 
@@ -2974,8 +2979,8 @@ _err_exit:
 		_clr_fwstate_(pmlmepriv, WIFI_UNDER_SURVEY);
 	}
 
-#endif // NEO
 	return res;
+#endif // NEO
 }
 #else /*!CONFIG_CMD_SCAN*/
 
