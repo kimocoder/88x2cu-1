@@ -24,6 +24,21 @@ ATOMIC_T _malloc_size = ATOMIC_INIT(0);
 
 #if (KERNEL_VERSION(3, 7, 0) <= LINUX_VERSION_CODE)
 #define DBG_MEM_HASHBITS 10
+
+/*
+ * DBG_MEM_ERR_FREE is only for the debug purpose
+ *
+ * There is the limitation that this mechansim only can
+ * support one wifi device, and has problem if there
+ * are two or more wifi devices with one dirver on
+ * the same system. It's because dbg_mem_ht is global
+ * variable, and if we move this dbg_mem_ht into struct
+ * dvobj_priv to support more wifi devices, the memory
+ * allocation functions, like rtw_malloc(0, need to have
+ * the parameter dvobj to get relative hash table, and
+ * then it is the huge changes for the driver currently.
+ *
+ */
 struct hlist_head dbg_mem_ht[1 << DBG_MEM_HASHBITS];
 
 struct hash_mem {
@@ -59,6 +74,8 @@ void rtw_dbg_mem_deinit(void)
 			hm = container_of(p, struct hash_mem, node);
 			prev = p;
 			p = p->next;
+
+			RTW_ERR("%s: memory leak - 0x%x\n", __func__, hm->mem);
 			hash_del(prev);
 			kfree(hm);
 		}
