@@ -1751,11 +1751,9 @@ phl_mr_offch_hdl(struct phl_info_t *phl_info,
 		 void *obj_priv,
 		 u8 (*issue_null_data)(void *priv, u8 ridx, bool ps))
 {
-	RTW_ERR("%s NEO TODO\n", __func__);
-	return RTW_PHL_STATUS_FAILURE;
-#if 0 // NEO
 	enum rtw_phl_status psts = RTW_PHL_STATUS_SUCCESS;
 #ifdef CONFIG_MR_SUPPORT
+aa
 	struct rtw_phl_com_t *phl_com = wrole->phl_com;
 	struct mr_ctl_t *mr_ctl = phlcom_to_mr_ctrl(phl_com);
 	u8 hw_band = wrole->hw_band;
@@ -1867,12 +1865,14 @@ phl_mr_offch_hdl(struct phl_info_t *phl_info,
 #endif
 		}
 
-	} else if (wrole->type == PHL_RTYPE_AP) {
+	}
+#if 0 // NEO
+	else if (wrole->type == PHL_RTYPE_AP) {
 		rtw_hal_beacon_stop(phl_info->hal, wrole, off_ch);
 	}
+#endif // if 0 NEO
 #endif
 	return psts;
-#endif // if 0 NEO
 }
 
 #ifdef CONFIG_FSM

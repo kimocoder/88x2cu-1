@@ -57,14 +57,18 @@ enum rtw_hal_status rtw_hal_set_ch_bw(void *hal, u8 band_idx,
 
 	RTW_INFO("%s NEO TODO\n", __func__);
 
-
 	if ((chan != chandef->chan) || (bw != chandef->bw)) {
 		if (band_idx == 1) {
 			RTW_ERR("%s: band_idx==1\n", __func__);
 			goto err_ret;
 		}
 		center_ch = rtw_phl_get_center_ch(chan, bw, offset);
-		RTW_INFO("%s NEO center_ch=%d\n", center_ch);
+		PHL_INFO("Using central channel %u for primary channel %u BW %u\n",
+		         center_ch, chan, bw);
+
+		rtw_set_oper_ch(padapter, chan);
+		rtw_set_oper_bw(padapter, bw);
+		rtw_set_oper_choffset(padapter, HAL_PRIME_CHNL_OFFSET_DONT_CARE);
 	}
 
 err_ret:

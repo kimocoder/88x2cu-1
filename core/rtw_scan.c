@@ -2865,6 +2865,11 @@ u8 rtw_sitesurvey_cmd(_adapter *padapter, struct sitesurvey_parm *pparm)
 	_rtw_memcpy(ch, pparm->ch,
 		sizeof(struct rtw_ieee80211_channel) * pparm->ch_num);
 
+	/* modify ch list according to channel plan */
+	pparm->ch_num = rtw_scan_ch_decision(padapter,
+			pparm->ch, RTW_CHANNEL_SCAN_AMOUNT,
+			ch, pparm->ch_num, pparm->acs);
+
 	if (pparm->duration == 0)
 		pparm->duration = SURVEY_TO; /* ms */
 
