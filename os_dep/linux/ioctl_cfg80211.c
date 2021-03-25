@@ -3400,21 +3400,6 @@ exit:
 	return ret;
 }
 
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 5, 0))
-static void cfg80211_rtw_abort_scan(struct wiphy *wiphy,
-				    struct wireless_dev *wdev)
-{
-	_adapter *padapter = wiphy_to_adapter(wiphy);
-
-	RTW_INFO("=>"FUNC_ADPT_FMT" - Abort Scan\n", FUNC_ADPT_ARG(padapter));
-	if (wdev->iftype != NL80211_IFTYPE_STATION) {
-		RTW_ERR("abort scan ignored, iftype(%d)\n", wdev->iftype);
-		return;
-	}
-	rtw_scan_abort(padapter);
-}
-#endif
-
 static int cfg80211_rtw_set_wiphy_params(struct wiphy *wiphy, u32 changed)
 {
 #if 0
@@ -10144,9 +10129,6 @@ static struct cfg80211_ops rtw_cfg80211_ops = {
 #endif /*CONFIG_GTK_OL*/
 	.get_station = cfg80211_rtw_get_station,
 	.scan = cfg80211_rtw_scan,
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(4, 5, 0))
-	.abort_scan = cfg80211_rtw_abort_scan,
-#endif
 	.set_wiphy_params = cfg80211_rtw_set_wiphy_params,
 	.connect = cfg80211_rtw_connect,
 	.disconnect = cfg80211_rtw_disconnect,
