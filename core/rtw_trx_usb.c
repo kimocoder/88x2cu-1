@@ -43,7 +43,7 @@ static void usb_xmit_tasklet(_adapter *padapter)
 #endif
 }
 
-s32 g6_usb_init_xmit_priv(_adapter *adapter)
+s32 usb_init_xmit_priv(_adapter *adapter)
 {
 	s32 ret = _SUCCESS;
 	struct xmit_priv *pxmitpriv = &adapter->xmitpriv;
@@ -56,11 +56,26 @@ s32 g6_usb_init_xmit_priv(_adapter *adapter)
 	return _SUCCESS;
 }
 
-void g6_usb_free_xmit_priv(_adapter *adapter)
+void usb_free_xmit_priv(_adapter *adapter)
 {
 }
 
-s32 g6_usb_xmitframe_enqueue(_adapter *adapter, struct xmit_frame *pxmitframe)
+#if 0 /*def CONFIG_XMIT_THREAD_MODE*/
+/*
+ * Description
+ *	Transmit xmitbuf to hardware tx fifo
+ *
+ * Return
+ *	_SUCCESS	ok
+ *	_FAIL		something error
+ */
+s32 usb_xmit_buf_handler(_adapter *adapter)
+{
+	return _SUCCESS;
+}
+#endif /* CONFIG_XMIT_THREAD_MODE */
+
+s32 usb_xmitframe_enqueue(_adapter *adapter, struct xmit_frame *pxmitframe)
 {
 	return _SUCCESS;
 }
@@ -87,9 +102,12 @@ void g6_usb_free_recv_priv(struct dvobj_priv *dvobj)
 }
 
 struct rtw_intf_ops usb_ops = {
-	.init_xmit_priv = g6_usb_init_xmit_priv,
-	.free_xmit_priv = g6_usb_free_xmit_priv,
-	.xmitframe_enqueue = g6_usb_xmitframe_enqueue,
+	.init_xmit_priv = usb_init_xmit_priv,
+	.free_xmit_priv = usb_free_xmit_priv,
+	.xmitframe_enqueue = usb_xmitframe_enqueue,
+	#if 0 /*def CONFIG_XMIT_THREAD_MODE*/
+	.xmit_buf_handler = usb_xmit_buf_handler,
+	#endif
 
 	.init_recv_priv = g6_usb_init_recv_priv,
 	.free_recv_priv = g6_usb_free_recv_priv,
