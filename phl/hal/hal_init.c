@@ -1128,14 +1128,12 @@ void rtw_hal_deinit(struct rtw_phl_com_t *phl_com, void *hal)
 	#endif
 
 	if (hal_info->hal_com) {
-#if 0 // NEO TODO
 		if(hal_info->hal_com->bf_obj)
 			hal_bf_deinit(hal_info);
 		if(hal_info->hal_com->csi_obj)
 			hal_csi_deinit(hal_info);
 		if(hal_info->hal_com->snd_obj)
 			hal_snd_obj_deinit(hal_info);
-#endif // NEO if 0
 		_os_mem_free(drv_priv,
 			hal_info->hal_com, sizeof(struct rtw_hal_com_t));
 		hal_info->hal_com = NULL;

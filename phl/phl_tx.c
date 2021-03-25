@@ -1203,8 +1203,7 @@ void phl_datapath_deinit(struct phl_info_t *phl_info)
 
 	_phl_free_h2c_pool(phl_info);
 
-	// NEO : mark off first
-	//hci_trx_ops->hci_trx_deinit(phl_info);
+	hci_trx_ops->hci_trx_deinit(phl_info);
 
 	phl_rx_deinit(phl_info);
 
