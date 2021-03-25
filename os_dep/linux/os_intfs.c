@@ -915,7 +915,7 @@ u8 rtw_init_default_value(_adapter *padapter)
 	RTW_ENABLE_FUNC(adapter_to_dvobj(padapter), DF_RX_BIT);
 	RTW_ENABLE_FUNC(adapter_to_dvobj(padapter), DF_TX_BIT);
 	padapter->bLinkInfoDump = 0;
-	padapter->bNotifyChannelChange = _FALSE;
+	padapter->bNotifyChannelChange = _TRUE;
 #ifdef CONFIG_P2P
 	padapter->bShowGetP2PState = 1;
 #endif

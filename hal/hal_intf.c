@@ -1026,7 +1026,7 @@ void	rtw_hal_set_chnl_bw(_adapter *padapter, u8 channel, enum channel_width Band
 	pHalData->cch_40 = cch_40;
 	pHalData->cch_20 = cch_20;
 
-	if (0)
+	if (1)
 		RTW_INFO("%s cch:%u, %s, offset40:%u, offset80:%u (%u, %u, %u)\n", __func__
 			, channel, ch_width_str(Bandwidth), Offset40, Offset80
 			, pHalData->cch_80, pHalData->cch_40, pHalData->cch_20);

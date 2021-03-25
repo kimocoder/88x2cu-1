@@ -54,8 +54,39 @@ enum rtw_hal_status rtw_hal_set_ch_bw(void *hal, u8 band_idx,
 #if 1 // NEO
 	struct dvobj_priv *dvobj = hal_com->drv_priv;
 	_adapter *padapter = dvobj_get_primary_adapter(dvobj);
+	u8 channel_offset, chnl_offset80 = HAL_PRIME_CHNL_OFFSET_DONT_CARE;
 
-	RTW_INFO("%s NEO TODO\n", __func__);
+
+	switch (offset) {
+	case CHAN_OFFSET_NO_EXT:
+		channel_offset = HAL_PRIME_CHNL_OFFSET_DONT_CARE;
+		break;
+	case CHAN_OFFSET_UPPER:
+		channel_offset = HAL_PRIME_CHNL_OFFSET_UPPER;
+		break;
+	case CHAN_OFFSET_LOWER:
+		channel_offset = HAL_PRIME_CHNL_OFFSET_LOWER;
+		break;
+	case CHAN_OFFSET_NO_DEF:
+	default:
+		RTW_ERR("%s offset(%d) is not as expected\n", offset);
+		break;
+	}
+
+	RTW_INFO("%s NEO offset(%d), channel_offset(%d)\n", __func__, offset, channel_offset);
+
+	if (bw == CHANNEL_WIDTH_80) {
+		if (center_ch > chan)
+			chnl_offset80 = HAL_PRIME_CHNL_OFFSET_LOWER;
+		else if (center_ch < chan)
+			chnl_offset80 = HAL_PRIME_CHNL_OFFSET_UPPER;
+		else
+			chnl_offset80 = HAL_PRIME_CHNL_OFFSET_DONT_CARE;
+	}
+
+	RTW_INFO("%s NEO bw(%d), center_ch(%d), channel(%d), chnl_offset80(%d)\n",
+		 __func__, bw, center_ch, chan, chnl_offset80);
+
 
 	if ((chan != chandef->chan) || (bw != chandef->bw)) {
 		if (band_idx == 1) {
@@ -68,7 +99,9 @@ enum rtw_hal_status rtw_hal_set_ch_bw(void *hal, u8 band_idx,
 
 		rtw_set_oper_ch(padapter, chan);
 		rtw_set_oper_bw(padapter, bw);
-		rtw_set_oper_choffset(padapter, HAL_PRIME_CHNL_OFFSET_DONT_CARE);
+		rtw_set_oper_choffset(padapter, channel_offset);
+
+		rtw_hal_set_chnl_bw(padapter, center_ch, bw, channel_offset, chnl_offset80);
 	}
 
 err_ret:
