@@ -1495,7 +1495,7 @@ static void rtw_ap_check_scan(_adapter *padapter)
 	if (_TRUE == do_scan) {
 		RTW_INFO("%s : drv scans by itself and wait_completed\n", __func__);
 		rtw_drv_scan_by_self(padapter, reason);
-		rtw_scan_wait_completed(padapter);
+		rtw_scan_abort(padapter, 0);
 	}
 
 #ifdef CONFIG_RTW_ACS
@@ -1633,11 +1633,11 @@ static void _rtw_iface_undersurvey_chk(const char *func, _adapter *adapter)
 		}
 	}
 }
+
 void start_bss_network(_adapter *padapter, struct createbss_parm *parm)
 {
 #define DUMP_ADAPTERS_STATUS 0
 	u8 mlme_act = MLME_ACTION_UNKNOWN;
-	u8 val8;
 	u16 bcn_interval;
 	u32	acparm;
 	struct registry_priv	*pregpriv = &padapter->registrypriv;
@@ -1649,9 +1649,8 @@ void start_bss_network(_adapter *padapter, struct createbss_parm *parm)
 	WLAN_BSSID_EX *pnetwork_mlmeext = &(pmlmeinfo->network);
 	struct dvobj_priv *pdvobj = padapter->dvobj;
 	s16 req_ch = REQ_CH_NONE, req_bw = REQ_BW_NONE, req_offset = REQ_OFFSET_NONE;
-	u8 u_ch = 0, u_bw, u_offset;
-	bool set_u_ch;
-	u8 doiqk = _FALSE;
+	u8 ch_to_set = 0, bw_to_set, offset_to_set;
+	u8 do_rfk = _FALSE;
 	/* use for check ch bw offset can be allowed or not */
 	u8 chbw_allow = _TRUE;
 	int i;
@@ -1677,6 +1676,7 @@ void start_bss_network(_adapter *padapter, struct createbss_parm *parm)
 	}
 
 	bcn_interval = (u16)pnetwork->Configuration.BeaconPeriod;
+	pmlmeinfo->bcn_interval = bcn_interval;
 
 	/* check if there is wps ie, */
 	/* if there is wpsie in beacon, the hostapd will update beacon twice when stating hostapd, */
@@ -1697,43 +1697,42 @@ void start_bss_network(_adapter *padapter, struct createbss_parm *parm)
 		/* pmlmeinfo->HT_caps_enable = _TRUE; */
 
 		update_hw_ht_param(padapter);
-	}
+	} else
+		pmlmeinfo->HT_enable = _FALSE;
 #endif /* #CONFIG_80211N_HT */
 
 #ifdef CONFIG_80211AC_VHT
 	if (pmlmepriv->vhtpriv.vht_option) {
 		pmlmeinfo->VHT_enable = _TRUE;
 		update_hw_vht_param(padapter);
-	}
+	} else
+		pmlmeinfo->VHT_enable = _FALSE;
 #endif /* CONFIG_80211AC_VHT */
+
+#ifdef CONFIG_80211AX_HE
+	if (pmlmepriv->hepriv.he_option) {
+		pmlmeinfo->HE_enable = _TRUE;
+		update_hw_he_param(padapter);
+	} else
+		pmlmeinfo->HE_enable = _FALSE;
+#endif /* CONFIG_80211AX_HE */
 
 	if (pmlmepriv->cur_network.join_res != _TRUE) { /* setting only at  first time */
 		/* WEP Key will be set before this function, do not clear CAM. */
 		if ((psecuritypriv->dot11PrivacyAlgrthm != _WEP40_) && (psecuritypriv->dot11PrivacyAlgrthm != _WEP104_)
 			&& !MLME_IS_MESH(padapter) /* mesh group key is set before this function */
 		)
-			flush_all_cam_entry(padapter);	/* clear CAM */
+			flush_all_cam_entry(padapter, PHL_CMD_DIRECTLY, 0);	/* clear CAM */
 	}
 
-	/* set MSR to AP_Mode		 */
-	Set_MSR(padapter, _HW_STATE_AP_);
-
-	/* Set BSSID REG */
-	rtw_hal_set_hwreg(padapter, HW_VAR_BSSID, pnetwork->MacAddress);
-
-	/* Set Security */
-	val8 = (psecuritypriv->dot11AuthAlgrthm == dot11AuthAlgrthm_8021X) ? 0xcc : 0xcf;
-	rtw_hal_set_hwreg(padapter, HW_VAR_SEC_CFG, (u8 *)(&val8));
-
-	/* Beacon Control related register */
-	rtw_hal_set_hwreg(padapter, HW_VAR_BEACON_INTERVAL, (u8 *)(&bcn_interval));
-
-	rtw_hal_rcr_set_chk_bssid(padapter, mlme_act);
+#ifdef CONFIG_RTW_MULTI_AP
+	rtw_map_config_monitor(padapter, mlme_act);
+#endif
 
 chbw_decision:
 	ifbmp_ch_changed = rtw_ap_chbw_decision(padapter, parm->ifbmp, parm->excl_ifbmp
 						, req_ch, req_bw, req_offset
-						, &u_ch, &u_bw, &u_offset, &chbw_allow, &set_u_ch);
+						, &ch_to_set, &bw_to_set, &offset_to_set, &chbw_allow);
 
 	for (i = 0; i < pdvobj->iface_nums; i++) {
 		if (!(parm->ifbmp & BIT(i)) || !pdvobj->padapters[i])
@@ -1755,185 +1754,28 @@ chbw_decision:
 	rtw_dfs_rd_en_decision(padapter, mlme_act, parm->excl_ifbmp);
 #endif
 
-#ifdef CONFIG_MCC_MODE
-	if (MCC_EN(padapter)) {
-		/* 
-		* due to check under rtw_ap_chbw_decision
-		* if under MCC mode, means req channel setting is the same as current channel setting
-		* if not under MCC mode, mean req channel setting is not the same as current channel setting
-		*/
-		if (rtw_hal_check_mcc_status(padapter, MCC_STATUS_DOING_MCC)) {
-				RTW_INFO(FUNC_ADPT_FMT": req channel setting is the same as current channel setting, go to update BCN\n"
-				, FUNC_ADPT_ARG(padapter));
-
-				goto update_beacon;
-
-		}
-	}
-
-	/* issue null data to AP for all interface connecting to AP before switch channel setting for softap */
-	rtw_hal_mcc_issue_null_data(padapter, chbw_allow, 1);
-#endif /* CONFIG_MCC_MODE */
-
-	if (!IS_CH_WAITING(adapter_to_rfctl(padapter))) {
-		doiqk = _TRUE;
-		rtw_hal_set_hwreg(padapter , HW_VAR_DO_IQK , &doiqk);
-	}
-
-	if (set_u_ch)
-		set_channel_bwmode(padapter, u_ch, u_offset, u_bw);
-
-	doiqk = _FALSE;
-	rtw_hal_set_hwreg(padapter , HW_VAR_DO_IQK , &doiqk);
-
-#ifdef CONFIG_MCC_MODE
-	/* after set_channel_bwmode for backup IQK */
-	if (rtw_hal_set_mcc_setting_start_bss_network(padapter, chbw_allow) == _FAIL) {
-		/* MCC setting fail, update to buddy's channel */
-		rtw_mi_get_ch_setting_union_no_self(padapter, &u_ch, &u_bw, &u_offset);
-		pnetwork->Configuration.DSConfig = u_ch;
-		padapter->mlmeextpriv.cur_channel = u_ch;
-		padapter->mlmeextpriv.cur_bwmode = u_bw;
-		padapter->mlmeextpriv.cur_ch_offset = u_offset;
-
-		if (ifbmp_ch_changed == 0) {
-			u8 ht_option = 0;
-
-#ifdef CONFIG_80211N_HT
-			ht_option = padapter->mlmepriv.htpriv.ht_option;
-#endif
-
-			rtw_cfg80211_ch_switch_notify(padapter
-				, padapter->mlmeextpriv.cur_channel
-				, padapter->mlmeextpriv.cur_bwmode
-				, padapter->mlmeextpriv.cur_ch_offset
-				, ht_option, 0);
-		}
-	}
-#endif
-
-#if defined(CONFIG_IOCTL_CFG80211) && (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0))
-	for (i = 0; i < pdvobj->iface_nums; i++) {
-		if (!(ifbmp_ch_changed & BIT(i)) || !pdvobj->padapters[i])
-			continue;
-
-		{
-			u8 ht_option = 0;
-
-			#ifdef CONFIG_80211N_HT
-			ht_option = pdvobj->padapters[i]->mlmepriv.htpriv.ht_option;
-			#endif
-
-			rtw_cfg80211_ch_switch_notify(pdvobj->padapters[i]
-				, pdvobj->padapters[i]->mlmeextpriv.cur_channel
-				, pdvobj->padapters[i]->mlmeextpriv.cur_bwmode
-				, pdvobj->padapters[i]->mlmeextpriv.cur_ch_offset
-				, ht_option, 0);
-		}
-	}
-#endif /* defined(CONFIG_IOCTL_CFG80211) && (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 5, 0)) */
-
-	rtw_rfctl_update_op_mode(adapter_to_rfctl(padapter), parm->ifbmp, 1);
-
-	if (DUMP_ADAPTERS_STATUS) {
-		RTW_INFO(FUNC_ADPT_FMT" done\n", FUNC_ADPT_ARG(padapter));
-		dump_adapters_status(RTW_DBGDUMP , adapter_to_dvobj(padapter));
-	}
-
-#ifdef CONFIG_MCC_MODE
-update_beacon:
-#endif
-
-	for (i = 0; i < pdvobj->iface_nums; i++) {
-		struct mlme_priv *mlme;
-
-		if (!(parm->ifbmp & BIT(i)) || !pdvobj->padapters[i])
-			continue;
-
-		/* update beacon content only if bstart_bss is _TRUE */
-		if (pdvobj->padapters[i]->mlmeextpriv.bstart_bss != _TRUE)
-			continue;
-
-		mlme = &(pdvobj->padapters[i]->mlmepriv);
-
-		#ifdef CONFIG_80211N_HT
-		if ((ATOMIC_READ(&mlme->olbc) == _TRUE) || (ATOMIC_READ(&mlme->olbc_ht) == _TRUE)) {
-			/* AP is not starting a 40 MHz BSS in presence of an 802.11g BSS. */
-			mlme->ht_op_mode &= (~HT_INFO_OPERATION_MODE_OP_MODE_MASK);
-			mlme->ht_op_mode |= OP_MODE_MAY_BE_LEGACY_STAS;
-			update_beacon(pdvobj->padapters[i], _HT_ADD_INFO_IE_, NULL, _FALSE, 0);
-		}
-		#endif
-
-		update_beacon(pdvobj->padapters[i], _TIM_IE_, NULL, _FALSE, 0);
-	}
-
-	if (mlme_act != MLME_OPCH_SWITCH
-		&& pmlmeext->bstart_bss == _TRUE
-	) {
-#ifdef CONFIG_SUPPORT_MULTI_BCN
-		_rtw_spinlock_bh(&pdvobj->ap_if_q.lock);
-		if (rtw_is_list_empty(&padapter->list)) {
-			#ifdef CONFIG_FW_HANDLE_TXBCN
-			padapter->vap_id = rtw_ap_allocate_vapid(pdvobj);
-			#endif
-			rtw_list_insert_tail(&padapter->list, get_list_head(&pdvobj->ap_if_q));
-			pdvobj->nr_ap_if++;
-			pdvobj->inter_bcn_space = DEFAULT_BCN_INTERVAL / pdvobj->nr_ap_if;
-		}
-		_rtw_spinunlock_bh(&pdvobj->ap_if_q.lock);
-
-		#ifdef CONFIG_SWTIMER_BASED_TXBCN
-		rtw_ap_set_mbid_num(padapter, pdvobj->nr_ap_if);
-		rtw_hal_set_hwreg(padapter, HW_VAR_BEACON_INTERVAL, (u8 *)(&pdvobj->inter_bcn_space));
-		#endif /*CONFIG_SWTIMER_BASED_TXBCN*/
-
-#endif /*CONFIG_SUPPORT_MULTI_BCN*/
-
-		#ifdef CONFIG_HW_P0_TSF_SYNC
-		correct_TSF(padapter, mlme_act);
-		#endif
-	}
-
-	rtw_scan_wait_completed(padapter);
-
-	_rtw_iface_undersurvey_chk(__func__, padapter);
-	/* send beacon */
-	ResumeTxBeacon(padapter);
 	{
-#if !defined(CONFIG_INTERRUPT_BASED_TXBCN)
-#if defined(CONFIG_USB_HCI) || defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI) || defined(CONFIG_PCI_BCN_POLLING)
-#ifdef CONFIG_SWTIMER_BASED_TXBCN
-		if (pdvobj->nr_ap_if == 1
-			&& mlme_act != MLME_OPCH_SWITCH
-		) {
-			RTW_INFO("start SW BCN TIMER!\n");
-			_set_timer(&pdvobj->txbcn_timer, bcn_interval);
-		}
-#else
-		for (i = 0; i < pdvobj->iface_nums; i++) {
-			if (!(parm->ifbmp & BIT(i)) || !pdvobj->padapters[i])
-				continue;
+		u8 phl_uch = pmlmeext->chandef.chan;
+		enum channel_width phl_ubw = pmlmeext->chandef.bw;
+		enum chan_offset phl_uoffset = pmlmeext->chandef.offset;
+		bool is_chctx_add = false;
+		struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
 
-			if (send_beacon(pdvobj->padapters[i]) == _FAIL)
-				RTW_INFO(ADPT_FMT" issue_beacon, fail!\n", ADPT_ARG(pdvobj->padapters[i]));
-		}
-#endif
-#endif
-#endif /* !defined(CONFIG_INTERRUPT_BASED_TXBCN) */
+		is_chctx_add = rtw_phl_chanctx_add(dvobj->phl, padapter->phl_role,
+		&phl_uch, &phl_ubw, &phl_uoffset);
 
-#ifdef CONFIG_FW_HANDLE_TXBCN
-		if (mlme_act != MLME_OPCH_SWITCH
-			&& pmlmeext->bstart_bss == _TRUE)
-			rtw_ap_mbid_bcn_en(padapter, padapter->vap_id);
-#endif
+		RTW_INFO("%s => chctx_add:%s\n", __func__, (is_chctx_add) ? "Y" : "N");
+		RTW_INFO("Core - CH:%d, BW:%d OFF:%d\n", ch_to_set, bw_to_set, offset_to_set);
+		RTW_INFO("PHL- CH:%d, BW:%d OFF:%d\n",phl_uch, phl_ubw, phl_uoffset);
 	}
-#ifdef CONFIG_RTW_TOKEN_BASED_XMIT
-	if (MLME_IS_AP(padapter) && padapter->tbtx_capability == _TRUE) {
-		_set_timer(&pmlmeext->tbtx_token_dispatch_timer, 1);
-		RTW_INFO("Start token dispatch\n");
-	}
-#endif
+
+
+	parm->ifbmp_ch_changed = ifbmp_ch_changed;
+	parm->ch_to_set = ch_to_set;
+	parm->offset_to_set = offset_to_set;
+	parm->bw_to_set = bw_to_set;
+	parm->do_rfk = do_rfk;
+
 }
 
 int rtw_check_beacon_data(_adapter *padapter, u8 *pbuf,  int len)

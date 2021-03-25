@@ -615,7 +615,7 @@ static u8 _rtw_mi_scan_abort(_adapter *adapter, void *data)
 	bool bwait = *(bool *)data;
 
 	if (bwait)
-		rtw_scan_abort(adapter);
+		rtw_scan_abort(adapter, 0);
 	else
 		rtw_scan_abort_no_wait(adapter);
 

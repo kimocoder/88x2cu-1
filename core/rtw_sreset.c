@@ -237,7 +237,7 @@ void sreset_stop_adapter(_adapter *padapter)
 #endif
 
 	if (check_fwstate(pmlmepriv, WIFI_UNDER_SURVEY))
-		rtw_scan_abort(padapter);
+		rtw_scan_abort(padapter, 0);
 
 	if (check_fwstate(pmlmepriv, WIFI_UNDER_LINKING)) {
 		rtw_set_to_roam(padapter, 0);

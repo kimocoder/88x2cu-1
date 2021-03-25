@@ -18,7 +18,7 @@
 /*rtw_mlme.h*/
 void rtw_drv_scan_by_self(_adapter *padapter, u8 reason);
 void rtw_scan_abort_no_wait(_adapter *adapter);
-void rtw_scan_abort(_adapter *adapter);
+u32 rtw_scan_abort(_adapter *adapter, u32 timeout_ms);
 void rtw_scan_timeout_handler(void *ctx);
 void rtw_survey_event_callback(_adapter *adapter, u8 *pbuf);
 void rtw_surveydone_event_callback(_adapter *adapter, u8 *pbuf);

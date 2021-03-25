@@ -203,59 +203,79 @@ exit:
 }
 #endif /* CONFIG_RTW_ACS */
 
-static u32 _rtw_wait_scan_done(_adapter *adapter, u8 abort, u32 timeout_ms)
+static u32 _rtw_wait_scan_done(_adapter *adapter, u32 timeout_ms)
 {
 	systime start;
 	u32 pass_ms;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
 	struct mlme_priv *pmlmepriv = &(adapter->mlmepriv);
 	struct mlme_ext_priv *pmlmeext = &(adapter->mlmeextpriv);
+	u8 abort_timeout = false;
 
 	start = rtw_get_current_time();
 
-	pmlmeext->scan_abort = abort;
-
-	while (check_fwstate(pmlmepriv, WIFI_UNDER_SURVEY)
+	while ((rtw_cfg80211_get_is_roch(adapter) == _TRUE || check_fwstate(pmlmepriv, WIFI_UNDER_SURVEY))
 	       && rtw_get_passing_time_ms(start) <= timeout_ms) {
 
-		if (RTW_CANNOT_RUN(dvobj))
+		if (RTW_CANNOT_RUN(adapter_to_dvobj(adapter)))
 			break;
 
 		RTW_INFO(FUNC_NDEV_FMT"fw_state=WIFI_UNDER_SURVEY!\n", FUNC_NDEV_ARG(adapter->pnetdev));
 		rtw_msleep_os(20);
+		abort_timeout = true;
 	}
 
-	if (_TRUE == abort) {
-		if (check_fwstate(pmlmepriv, WIFI_UNDER_SURVEY)) {
-			if (!RTW_CANNOT_RUN(dvobj))
-				RTW_INFO(FUNC_NDEV_FMT"waiting for scan_abort time out!\n", FUNC_NDEV_ARG(adapter->pnetdev));
-#ifdef CONFIG_PLATFORM_MSTAR
-			/*_clr_fwstate_(pmlmepriv, WIFI_UNDER_SURVEY);*/
-			set_survey_timer(pmlmeext, 0);
-			mlme_set_scan_to_timer(pmlmepriv, 50);
-#endif
-			rtw_indicate_scan_done(adapter, _TRUE);
-		}
+	if (_TRUE == abort_timeout && check_fwstate(pmlmepriv, WIFI_UNDER_SURVEY)) {
+		if (!RTW_CANNOT_RUN(adapter_to_dvobj(adapter)))
+			RTW_ERR(FUNC_NDEV_FMT"waiting for scan_abort time out!\n",
+					FUNC_NDEV_ARG(adapter->pnetdev));
+		pmlmeext->scan_abort_to = _TRUE;
+		#ifdef CONFIG_PLATFORM_MSTAR
+		/*_clr_fwstate_(pmlmepriv, WIFI_UNDER_SURVEY);*/
+		/*set_survey_timer(pmlmeext, 0);*/
+		mlme_set_scan_to_timer(pmlmepriv, 50);
+		#endif
+		rtw_indicate_scan_done(adapter, _TRUE);
 	}
 
 	pmlmeext->scan_abort = _FALSE;
+	RTW_INFO(FUNC_ADPT_FMT "- %s....scan_abort:%d\n",
+		FUNC_ADPT_ARG(adapter), __func__, pmlmeext->scan_abort);
 	pass_ms = rtw_get_passing_time_ms(start);
 
+	RTW_INFO("%s scan timeout value:%d ms, total take:%d ms\n",
+				__func__, timeout_ms, pass_ms);
 	return pass_ms;
-
 }
 
-void rtw_scan_wait_completed(_adapter *adapter)
+/*
+* timeout_ms > 0:rtw_scan_abort_timeout , = 0:rtw_scan_wait_completed
+*/
+u32 rtw_scan_abort(_adapter *adapter, u32 timeout_ms)
 {
+	struct mlme_priv *pmlmepriv = &(adapter->mlmepriv);
 	struct mlme_ext_priv *pmlmeext = &adapter->mlmeextpriv;
-	struct ss_res *ss = &pmlmeext->sitesurvey_res;
+	enum rtw_phl_status psts = RTW_PHL_STATUS_FAILURE;
+	u32 pass_ms = 0;
 
-	_rtw_wait_scan_done(adapter, _FALSE, ss->scan_timeout_ms);
-}
+	if (rtw_cfg80211_get_is_roch(adapter) == _TRUE || check_fwstate(pmlmepriv, WIFI_UNDER_SURVEY)) {
+		pmlmeext->scan_abort = _TRUE;
+		RTW_INFO(FUNC_ADPT_FMT "- %s....scan_abort:%d\n",
+			FUNC_ADPT_ARG(adapter), __func__, pmlmeext->scan_abort);
+		rtw_sctx_init(&pmlmeext->sitesurvey_res.sctx, timeout_ms);
 
-u32 rtw_scan_abort_timeout(_adapter *adapter, u32 timeout_ms)
-{
-	return _rtw_wait_scan_done(adapter, _TRUE, timeout_ms);
+		#ifdef CONFIG_CMD_SCAN
+		if (pmlmeext->sitesurvey_res.scan_param)
+			psts = rtw_phl_cmd_scan_cancel(adapter_to_dvobj(adapter)->phl,
+					pmlmeext->sitesurvey_res.scan_param);
+		#else
+		psts = rtw_phl_scan_cancel(adapter_to_dvobj(adapter)->phl);
+		#endif
+
+		if (psts == RTW_PHL_STATUS_SUCCESS)
+			rtw_sctx_wait(&pmlmeext->sitesurvey_res.sctx, __func__);
+		pass_ms = _rtw_wait_scan_done(adapter, timeout_ms);
+	}
+	return pass_ms;
 }
 
 void rtw_scan_abort_no_wait(_adapter *adapter)
@@ -266,12 +286,6 @@ void rtw_scan_abort_no_wait(_adapter *adapter)
 	if (check_fwstate(pmlmepriv, WIFI_UNDER_SURVEY))
 		pmlmeext->scan_abort = _TRUE;
 }
-
-void rtw_scan_abort(_adapter *adapter)
-{
-	rtw_scan_abort_timeout(adapter, 200);
-}
-
 
 /*
 * rtw_scan_timeout_handler - Timeout/Faliure handler for CMD SiteSurvey

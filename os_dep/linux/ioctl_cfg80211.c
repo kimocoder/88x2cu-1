@@ -3969,7 +3969,7 @@ static int cfg80211_rtw_leave_ibss(struct wiphy *wiphy, struct net_device *ndev)
 	rtw_set_to_roam(padapter, 0);
 
 	if (check_fwstate(&padapter->mlmepriv, WIFI_ASOC_STATE)) {
-		rtw_scan_abort(padapter);
+		rtw_scan_abort(padapter, 0);
 		LeaveAllPowerSaveMode(padapter);
 
 		rtw_wdev->iftype = NL80211_IFTYPE_STATION;
@@ -4009,7 +4009,7 @@ static int _rtw_disconnect(struct wiphy *wiphy, struct net_device *ndev)
 
 	/* if(check_fwstate(&padapter->mlmepriv, WIFI_ASOC_STATE)) */
 	{
-		rtw_scan_abort(padapter);
+		rtw_scan_abort(padapter, 0);
 		rtw_join_abort_timeout(padapter, 300);
 		LeaveAllPowerSaveMode(padapter);
 		rtw_disassoc_cmd(padapter, 500, RTW_CMDF_WAIT_ACK);
@@ -7413,7 +7413,7 @@ static s32 cfg80211_rtw_remain_on_channel(struct wiphy *wiphy,
 		goto exit;
 	}
 
-	rtw_scan_abort(padapter);
+	rtw_scan_abort(padapter, 0);
 #if defined(CONFIG_CONCURRENT_MODE) && defined(CONFIG_P2P)
 	/*don't scan_abort during p2p_listen.*/
 	if (is_p2p_find)
@@ -7681,7 +7681,7 @@ static void cfg80211_rtw_stop_p2p_device(struct wiphy *wiphy, struct wireless_de
 	RTW_INFO(FUNC_WIPHY_FMT" wdev=%p\n", FUNC_WIPHY_ARG(wiphy), wdev);
 
 	if (rtw_cfg80211_is_p2p_scan(adapter))
-		rtw_scan_abort(adapter);
+		rtw_scan_abort(adapter, 0);
 
 	rtw_p2p_enable(adapter, P2P_ROLE_DISABLE);
 }

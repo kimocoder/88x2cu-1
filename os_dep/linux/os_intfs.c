@@ -2525,7 +2525,7 @@ static int netdev_close(struct net_device *pnetdev)
 		rtw_p2p_enable(padapter, P2P_ROLE_DISABLE);
 #endif /* CONFIG_P2P */
 
-	rtw_scan_abort(padapter); /* stop scanning process before wifi is going to down */
+	rtw_scan_abort(padapter, 0); /* stop scanning process before wifi is going to down */
 #ifdef CONFIG_IOCTL_CFG80211
 	rtw_cfg80211_wait_scan_req_empty(padapter, 200);
 	adapter_wdev_data(padapter)->bandroid_scan = _FALSE;
@@ -2548,7 +2548,7 @@ static int netdev_close(struct net_device *pnetdev)
 		return 0;
 	}
 
-	rtw_scan_abort(padapter); /* stop scanning process before wifi is going to down */
+	rtw_scan_abort(padapter, 0); /* stop scanning process before wifi is going to down */
 #ifdef CONFIG_IOCTL_CFG80211
 	rtw_cfg80211_wait_scan_req_empty(padapter, 200);
 #endif

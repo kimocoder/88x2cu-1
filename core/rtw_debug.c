@@ -2175,19 +2175,6 @@ ssize_t proc_set_scan_param(struct file *file, const char __user *buffer, size_t
 	return count;
 }
 
-int proc_get_scan_abort(struct seq_file *m, void *v)
-{
-	struct net_device *dev = m->private;
-	_adapter *adapter = (_adapter *)rtw_netdev_priv(dev);
-	u32 pass_ms;
-
-	pass_ms = rtw_scan_abort_timeout(adapter, 10000);
-
-	RTW_PRINT_SEL(m, "%u\n", pass_ms);
-
-	return 0;
-}
-
 #ifdef CONFIG_RTW_REPEATER_SON
 int proc_get_rson_data(struct seq_file *m, void *v)
 {
@@ -2233,6 +2220,14 @@ ssize_t proc_set_rson_data(struct file *file, const char __user *buffer, size_t 
 	return count;
 }
 #endif /*CONFIG_RTW_REPEATER_SON*/
+
+int proc_get_scan_abort(struct seq_file *m, void *v)
+{
+	struct net_device *dev = m->private;
+	_adapter *adapter = (_adapter *)rtw_netdev_priv(dev);
+
+	return 0;
+}
 
 int proc_get_survey_info(struct seq_file *m, void *v)
 {
