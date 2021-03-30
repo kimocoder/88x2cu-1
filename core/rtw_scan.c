@@ -2858,13 +2858,6 @@ u8 rtw_sitesurvey_cmd(_adapter *padapter, struct sitesurvey_parm *pparm)
 	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
 	struct sitesurvey_parm *tmp_parm = NULL;
 
-	struct cmd_obj *cmd;
-	struct sitesurvey_parm	*psurveyPara;
-	struct cmd_priv	*pcmdpriv = &dvobj->cmdpriv;
-
-	RTW_INFO("%s NEO TODO\n", __func__);
-
-#if 1 // NEO G6
 	if (pparm == NULL) {
 		tmp_parm = rtw_zmalloc(sizeof(struct sitesurvey_parm));
 		if (tmp_parm == NULL) {
@@ -2898,6 +2891,7 @@ u8 rtw_sitesurvey_cmd(_adapter *padapter, struct sitesurvey_parm *pparm)
 	scan_channel_list_filled(padapter, phl_param, pparm);
 
 	/* STEP_2 copy the ssid info to phl param */
+	phl_param->ssid_num = rtw_min(pparm->ssid_num, SCAN_SSID_AMOUNT);
 	for (i = 0; i < phl_param->ssid_num; ++i) {
 		phl_param->ssid[i].ssid_len = pparm->ssid[i].SsidLength;
 		_rtw_memcpy(&phl_param->ssid[i].ssid, &pparm->ssid[i].Ssid, phl_param->ssid[i].ssid_len);
@@ -2931,10 +2925,14 @@ u8 rtw_sitesurvey_cmd(_adapter *padapter, struct sitesurvey_parm *pparm)
 		goto _err_req_param;
 	}
 
-	//pmlmeext->sitesurvey_res.scan_param = phl_param;
-	//rtw_free_network_queue(padapter, _FALSE);
+	pmlmeext->sitesurvey_res.scan_param = phl_param;
+	rtw_free_network_queue(padapter, _FALSE);
 
-	RTW_INFO("%s NEO after rtw_phl_cmd_scan_request\n", __func__);
+	pmlmepriv->scan_start_time = rtw_get_current_time();
+	scan_timeout_ms = rtw_scan_timeout_decision(padapter);
+	mlme_set_scan_to_timer(pmlmepriv, scan_timeout_ms);
+
+	//rtw_led_control(padapter, LED_CTL_SITE_SURVEY);
 	if (tmp_parm)
 		rtw_mfree(tmp_parm, sizeof(*tmp_parm));
 	res = _SUCCESS;
@@ -2949,58 +2947,8 @@ _err_exit:
 	rtw_warn_on(1);
 	return res;
 
-#else // NEO
-
-#ifdef CONFIG_LPS
-	if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE)
-		rtw_lps_ctrl_wk_cmd(padapter, LPS_CTRL_SCAN, 0);
-#endif
-
-#ifdef CONFIG_P2P_PS
-	if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE)
-		p2p_ps_wk_cmd(padapter, P2P_PS_SCAN, 1);
-#endif /* CONFIG_P2P_PS */
-
-	cmd = (struct cmd_obj *)rtw_zmalloc(sizeof(struct cmd_obj));
-	if (cmd == NULL)
-		return _FAIL;
-	cmd->padapter = padapter;
-
-	psurveyPara = (struct sitesurvey_parm *)rtw_zmalloc(sizeof(struct sitesurvey_parm));
-	if (psurveyPara == NULL) {
-		rtw_mfree((unsigned char *) cmd, sizeof(struct cmd_obj));
-		return _FAIL;
-	}
-
-	if (pparm)
-		_rtw_memcpy(psurveyPara, pparm, sizeof(struct sitesurvey_parm));
-	else
-		psurveyPara->scan_mode = pmlmepriv->scan_mode;
-
-	rtw_free_network_queue(padapter, _FALSE);
-
-	init_h2fwcmd_w_parm_no_rsp(cmd, psurveyPara, CMD_SITE_SURVEY);
-
-	set_fwstate(pmlmepriv, WIFI_UNDER_SURVEY);
-
-
-	res = rtw_enqueue_cmd(pcmdpriv, cmd);
-
-	if (res == _SUCCESS) {
-		u32 scan_timeout_ms;
-
-		pmlmepriv->scan_start_time = rtw_get_current_time();
-		scan_timeout_ms = rtw_scan_timeout_decision(padapter);
-		mlme_set_scan_to_timer(pmlmepriv,scan_timeout_ms);
-
-		rtw_led_control(padapter, LED_CTL_SITE_SURVEY);
-	} else {
-		_clr_fwstate_(pmlmepriv, WIFI_UNDER_SURVEY);
-	}
-
-	return res;
-#endif // NEO
 }
+
 #else /*!CONFIG_CMD_SCAN*/
 
 /**

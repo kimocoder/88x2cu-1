@@ -2078,6 +2078,13 @@ unsigned int OnProbeRsp(_adapter *padapter, union recv_frame *precv_frame)
 	}
 #endif
 
+	// NEO - for debug
+	{
+	struct mlme_ext_info *pmlmeinfo = &(pmlmeext->mlmext_info);
+
+	print_hex_dump(KERN_INFO, "OnProbeRsp: frame: ", DUMP_PREFIX_OFFSET, 16, 1, GetAddr3Ptr(pframe), ETH_ALEN, 1);
+	print_hex_dump(KERN_INFO, "OnProbeRsp: mac: ", DUMP_PREFIX_OFFSET, 16, 1, get_my_bssid(&pmlmeinfo->network), ETH_ALEN, 1);
+	}
 
 	if ((mlmeext_chk_scan_state(pmlmeext, SCAN_PROCESS))
 		|| (MLME_IS_MESH(padapter) && check_fwstate(&padapter->mlmepriv, WIFI_ASOC_STATE))
@@ -2096,9 +2103,11 @@ unsigned int OnProbeRsp(_adapter *padapter, union recv_frame *precv_frame)
 			}
 		}
 
+
 		rtw_mi_report_survey_event(padapter, precv_frame);
 		return _SUCCESS;
 	}
+
 
 #if 0 /* move to validate_recv_mgnt_frame */
 	if (_rtw_memcmp(GetAddr3Ptr(pframe), get_my_bssid(&pmlmeinfo->network), ETH_ALEN)) {
