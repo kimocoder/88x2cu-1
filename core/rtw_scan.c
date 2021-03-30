@@ -2826,12 +2826,14 @@ static void scan_channel_list_filled(_adapter *padapter,
 	struct phl_scan_channel *phl_ch = phl_param->ch;
 	u8 i = 0;
 
+	RTW_INFO("%s param->ch_num:%d\n", __func__, param->ch_num);
 	for (i = 0; i < param->ch_num; i++) {
 		phl_ch[i].channel = param->ch[i].hw_value;
 		phl_ch[i].scan_mode = NORMAL_SCAN_MODE;
 		phl_ch[i].bw = param->bw;
 		phl_ch[i].duration = param->duration;
 
+		RTW_INFO("%s param->ch[i].flags:0x%x\n", __func__, param->ch[i].flags);
 		if (param->ch[i].flags & RTW_IEEE80211_CHAN_PASSIVE_SCAN) {
 			phl_ch[i].type = RTW_PHL_SCAN_PASSIVE;
 

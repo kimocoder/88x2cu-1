@@ -8722,6 +8722,7 @@ exit:
 
 inline void issue_probereq(_adapter *padapter, const NDIS_802_11_SSID *pssid, const u8 *da)
 {
+	RTW_INFO("%s\n", __func__);
 	_issue_probereq(padapter, pssid, da, 0, 1, _FALSE);
 }
 

@@ -684,12 +684,6 @@ const u8 _ch_width_to_bw_cap[CHANNEL_WIDTH_MAX] = {
 	[CHANNEL_WIDTH_10]		= BW_CAP_10M,
 };
 
-const char *const _band_str[] = {
-	"2.4G",
-	"5G",
-	"BAND_MAX",
-};
-
 const u8 _band_to_band_cap[] = {
 	BAND_CAP_2G,
 	BAND_CAP_5G,

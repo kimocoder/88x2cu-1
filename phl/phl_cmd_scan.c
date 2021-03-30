@@ -190,8 +190,8 @@ next_ch:
 		return NULL;
 	}
 
-	PHL_INFO("%s: repeat[%d] ch_idx=[%d/%d], ch_number=%d, scan_mode= %s\n", __func__,
-		 param->repeat, param->ch_idx, param->ch_num, param->scan_ch->channel,
+	PHL_INFO("%s: repeat[%d] ch_idx=[%d/%d], ch_number=%d, type=%d, scan_mode= %s\n", __func__,
+		 param->repeat, param->ch_idx, param->ch_num, param->scan_ch->channel, param->scan_ch->type,
 		(param->scan_ch->scan_mode == BACKOP_MODE)? "OP_CH": "Non-OP");
 
 	return param->scan_ch;
@@ -602,11 +602,14 @@ enum phl_mdl_ret_code _cmd_scan_hdl_internal_evt(
 			rtw_phl_set_ch_bw(wifi_role, (u8)scan_ch->channel,
 					  scan_ch->bw, scan_ch->offset, false);
 
+			RTW_INFO("%s NEO DO scan_mode:%d, type:%d\n", __func__, scan_ch->scan_mode, scan_ch->type);
 			if ((scan_ch->scan_mode != BACKOP_MODE) &&
 			    (scan_ch->type == RTW_PHL_SCAN_ACTIVE)) {
 
-				if (param->ops->scan_issue_pbreq)
+				if (param->ops->scan_issue_pbreq) {
+					RTW_INFO("%s scan_issue_pbreq\n", __func__);
 					param->ops->scan_issue_pbreq(param->priv, param);
+				}
 			}
 
 			if ((scan_ch->scan_mode == BACKOP_MODE) && tx_pause) {

@@ -15,8 +15,6 @@
 #define _PHL_CHAN_C_
 #include "phl_headers.h"
 
-#if 0 // NEO TODO
-
 const char *const _band_str[] = {
 	"BAND_ON_24G",
 	"BAND_ON_5G",
@@ -77,6 +75,8 @@ phl_radar_detect_hdl(struct phl_info_t *phl_info,
 
 	if (overlap_radar_range && !dfs_info->dfs_enabled) {
 		/*radar_detect_enable*/
+		RTW_INFO("%s NEO TODO rtw_hal_radar_detect_cfg\n", __func__);
+#if 0 // NEO
 		if (rtw_hal_radar_detect_cfg(phl_info->hal, true) ==
 			RTW_HAL_STATUS_SUCCESS) {
 			dfs_info->dfs_enabled = true;
@@ -88,9 +88,11 @@ phl_radar_detect_hdl(struct phl_info_t *phl_info,
 			PHL_ERR("[DFS] chan(%d) in radar range, enable dfs failed\n",
 				channel);
 		}
-
+#endif // if 0 NEO
 	} else if (!overlap_radar_range && dfs_info->dfs_enabled) {
 		/*radar_detect_disable*/
+		RTW_INFO("%s NEO TODO rtw_hal_radar_detect_cfg\n", __func__);
+#if 0 // NEO
 		if (rtw_hal_radar_detect_cfg(phl_info->hal, false) ==
 			RTW_HAL_STATUS_SUCCESS) {
 			dfs_info->dfs_enabled = false;
@@ -102,11 +104,11 @@ phl_radar_detect_hdl(struct phl_info_t *phl_info,
 			PHL_ERR("[DFS] chan(%d) not in radar range, disable dfs failed\n",
 				channel);
 		}
+#endif // if 0 NEO
 	}
 	return rst;
 }
 #endif /*CONFIG_PHL_DFS*/
-#endif // if 0 NEO
 
 enum rtw_phl_status
 rtw_phl_set_ch_bw(struct rtw_wifi_role_t *wifi_role,
