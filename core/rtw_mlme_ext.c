@@ -1563,16 +1563,16 @@ static void _mgt_dispatcher(_adapter *padapter, struct mlme_handler *ptable, uni
 		{
 			struct rtw_wdev_priv *pwdev_priv = adapter_wdev_data(padapter);
 
+			if (pwdev_priv->random_mac_enabled == false)
+				return;
+
 			if (check_fwstate(&padapter->mlmepriv, WIFI_STATION_STATE) != _TRUE)
 				return;
 
-		    if (check_fwstate(&padapter->mlmepriv, WIFI_ASOC_STATE) == _TRUE)
+			if (check_fwstate(&padapter->mlmepriv, WIFI_ASOC_STATE) == _TRUE)
 				return;
 
-		    if ( pwdev_priv->pno_mac_addr[0] == 0xFF)
-				return;
-
-		    if (!_rtw_memcmp(GetAddr1Ptr(pframe), adapter_pno_mac_addr(padapter), ETH_ALEN))
+			if (!_rtw_memcmp(GetAddr1Ptr(pframe), adapter_pno_mac_addr(padapter), ETH_ALEN))
 				return;
 		}
 #else
@@ -1617,13 +1617,13 @@ void mgt_dispatcher(_adapter *padapter, union recv_frame *precv_frame)
 		{
 			struct rtw_wdev_priv *pwdev_priv = adapter_wdev_data(padapter);
 
+			if (pwdev_priv->random_mac_enabled == false)
+				return;
+
 			if (check_fwstate(&padapter->mlmepriv, WIFI_STATION_STATE) != _TRUE)
 				return;
 
 			if (check_fwstate(&padapter->mlmepriv, WIFI_ASOC_STATE) == _TRUE)
-				return;
-
-			if ( pwdev_priv->pno_mac_addr[0] == 0xFF)
 				return;
 
 			if (!_rtw_memcmp(GetAddr1Ptr(pframe), adapter_pno_mac_addr(padapter), ETH_ALEN))
@@ -2079,12 +2079,8 @@ unsigned int OnProbeRsp(_adapter *padapter, union recv_frame *precv_frame)
 #endif
 
 	// NEO - for debug
-	{
-	struct mlme_ext_info *pmlmeinfo = &(pmlmeext->mlmext_info);
-
-	print_hex_dump(KERN_INFO, "OnProbeRsp: frame: ", DUMP_PREFIX_OFFSET, 16, 1, GetAddr3Ptr(pframe), ETH_ALEN, 1);
-	print_hex_dump(KERN_INFO, "OnProbeRsp: mac: ", DUMP_PREFIX_OFFSET, 16, 1, get_my_bssid(&pmlmeinfo->network), ETH_ALEN, 1);
-	}
+	print_hex_dump(KERN_INFO, "OnProbeRsp: frame: ", DUMP_PREFIX_OFFSET, 16, 1, GetAddr1Ptr(pframe), ETH_ALEN, 1);
+	print_hex_dump(KERN_INFO, "OnProbeRsp: mac: ", DUMP_PREFIX_OFFSET, 16, 1, adapter_mac_addr(padapter), ETH_ALEN, 1);
 
 	if ((mlmeext_chk_scan_state(pmlmeext, SCAN_PROCESS))
 		|| (MLME_IS_MESH(padapter) && check_fwstate(&padapter->mlmepriv, WIFI_ASOC_STATE))
@@ -8613,7 +8609,7 @@ int _issue_probereq(_adapter *padapter, const NDIS_802_11_SSID *pssid, const u8 
 	pwlanhdr = (struct rtw_ieee80211_hdr *)pframe;
 
 #if defined(CONFIG_RTW_CFGVENDOR_RANDOM_MAC_OUI) || defined(CONFIG_RTW_SCAN_RAND)
-	if ((pwdev_priv->pno_mac_addr[0] != 0xFF)
+	if (pwdev_priv->random_mac_enabled
 	    && (check_fwstate(&padapter->mlmepriv, WIFI_STATION_STATE) == _TRUE)
 	    && (check_fwstate(&padapter->mlmepriv, WIFI_ASOC_STATE) == _FALSE))
 		mac = pwdev_priv->pno_mac_addr;
@@ -8637,7 +8633,7 @@ int _issue_probereq(_adapter *padapter, const NDIS_802_11_SSID *pssid, const u8 
 	_rtw_memcpy(pwlanhdr->addr2, mac, ETH_ALEN);
 
 #if defined(CONFIG_RTW_CFGVENDOR_RANDOM_MAC_OUI) || defined(CONFIG_RTW_SCAN_RAND)
-	if ((pwdev_priv->pno_mac_addr[0] != 0xFF)
+	if (pwdev_priv->random_mac_enabled
 	    && (check_fwstate(&padapter->mlmepriv, WIFI_STATION_STATE) == _TRUE)
 	    && (check_fwstate(&padapter->mlmepriv, WIFI_ASOC_STATE) == _FALSE)) {
 #ifdef CONFIG_RTW_DEBUG

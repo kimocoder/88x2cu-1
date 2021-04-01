@@ -603,6 +603,7 @@ enum phl_mdl_ret_code _cmd_scan_hdl_internal_evt(
 					  scan_ch->bw, scan_ch->offset, false);
 
 			RTW_INFO("%s NEO DO scan_mode:%d, type:%d\n", __func__, scan_ch->scan_mode, scan_ch->type);
+			scan_ch->type = RTW_PHL_SCAN_ACTIVE; // NEO: force to active first to see if can issue probe req
 			if ((scan_ch->scan_mode != BACKOP_MODE) &&
 			    (scan_ch->type == RTW_PHL_SCAN_ACTIVE)) {
 

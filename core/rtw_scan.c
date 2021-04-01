@@ -2300,13 +2300,13 @@ static u8 _free_phl_param(_adapter *adapter, struct rtw_phl_scan_param *phl_para
 }
 #endif /*CONFIG_CMD_SCAN*/
 
+
 static int scan_issue_pbreq_cb(void *priv, struct rtw_phl_scan_param *param)
 {
 	struct scan_priv *scan_priv = (struct scan_priv *)priv;
 	_adapter *padapter = scan_priv->padapter;
 	NDIS_802_11_SSID ssid;
 	int i;
-
 
 	/* active scan behavior */
 	if (padapter->registrypriv.wifi_spec)
@@ -2353,6 +2353,7 @@ static int scan_complete_cb(void *priv, struct rtw_phl_scan_param *param)
 	bool acs = _FALSE;
 	int ret = _FAIL;
 
+
 	if (!rtw_is_adapter_up(padapter))
 		goto _exit;
 
@@ -2394,6 +2395,7 @@ static int scan_start_cb(void *priv, struct rtw_phl_scan_param *param)
 	#ifdef CONFIG_CMD_SCAN
 	pmlmeext->sitesurvey_res.scan_param = param;
 	#endif
+
 	return 0;
 }
 
@@ -2656,6 +2658,58 @@ static u8 _free_phl_param(_adapter *adapter, struct rtw_phl_scan_param *phl_para
 }
 #endif /*CONFIG_CMD_SCAN*/
 
+#if defined(CONFIG_RTW_CFGVENDOR_RANDOM_MAC_OUI) || defined(CONFIG_RTW_SCAN_RAND)
+static int scan_set_random_mac(_adapter *padapter)
+{
+	struct rtw_wdev_priv *pwdev_priv = adapter_wdev_data(padapter);
+	u16 seq_num;
+
+	RTW_INFO("%s\n", __func__);
+
+	if (!pwdev_priv->random_mac_enabled) {
+		RTW_INFO("%s random_mac_enabled is false\n", __func__);
+		return 0;
+	}
+
+	if (check_fwstate(&padapter->mlmepriv, WIFI_STATION_STATE) == _FALSE) {
+		RTW_INFO("%s not STA mode\n", __func__);
+		return 0;
+	}
+
+	if (check_fwstate(&padapter->mlmepriv, WIFI_ASOC_STATE) == _TRUE) {
+		RTW_INFO("%s STA is associated\n", __func__);
+		return 0;
+	}
+
+	/* set to random mac address */
+	rtw_ps_deny(padapter, PS_DENY_IOCTL);
+	LeaveAllPowerSaveModeDirect(padapter);
+	rtw_hal_set_hwreg(padapter, HW_VAR_MAC_ADDR, pwdev_priv->pno_mac_addr);
+	rtw_ps_deny_cancel(padapter, PS_DENY_IOCTL);
+
+	/* set to random seq. num */
+	get_random_bytes(&seq_num, 2);
+	pwdev_priv->pno_scan_seq_num = seq_num & 0xFFF;
+	RTW_INFO("%s pno_scan_seq_num %d\n", __func__,
+		 pwdev_priv->pno_scan_seq_num);
+
+	return 0;
+}
+
+static int scan_restore_mac(_adapter *padapter)
+{
+	RTW_INFO("%s\n", __func__);
+
+	/* set to original mac address */
+	rtw_ps_deny(padapter, PS_DENY_IOCTL);
+	LeaveAllPowerSaveModeDirect(padapter);
+	rtw_hal_set_hwreg(padapter, HW_VAR_MAC_ADDR, adapter_mac_addr(padapter));
+	rtw_ps_deny_cancel(padapter, PS_DENY_IOCTL);
+
+	return 0;
+}
+#endif /* CONFIG_RTW_CFGVENDOR_RANDOM_MAC_OUI / CONFGI_RTW_SCAN_RAND */
+
 static int scan_complete_cb(void *priv, struct rtw_phl_scan_param *param)
 {
 	struct scan_priv *scan_priv = (struct scan_priv *)priv;
@@ -2666,6 +2720,10 @@ static int scan_complete_cb(void *priv, struct rtw_phl_scan_param *param)
 	int ret = _FAIL;
 
 	RTW_INFO("%s NEO DO\n", __func__);
+
+#if defined(CONFIG_RTW_CFGVENDOR_RANDOM_MAC_OUI) || defined(CONFIG_RTW_SCAN_RAND)
+	scan_restore_mac(padapter);
+#endif /* CONFIG_RTW_CFGVENDOR_RANDOM_MAC_OUI / CONFGI_RTW_SCAN_RAND */
 
 	if (!rtw_is_adapter_up(padapter))
 		goto _exit;
@@ -2710,6 +2768,11 @@ static int scan_start_cb(void *priv, struct rtw_phl_scan_param *param)
 	#ifdef CONFIG_CMD_SCAN
 	pmlmeext->sitesurvey_res.scan_param = param;
 	#endif
+
+#if defined(CONFIG_RTW_CFGVENDOR_RANDOM_MAC_OUI) || defined(CONFIG_RTW_SCAN_RAND)
+	scan_set_random_mac(padapter);
+#endif /* CONFIG_RTW_CFGVENDOR_RANDOM_MAC_OUI / CONFGI_RTW_SCAN_RAND */
+
 	return 0;
 }
 

@@ -186,6 +186,7 @@ struct rtw_wdev_priv {
 #endif
 
 #if defined(CONFIG_RTW_CFGVENDOR_RANDOM_MAC_OUI) || defined(CONFIG_RTW_SCAN_RAND)
+	bool random_mac_enabled;
 	u8 pno_mac_addr[ETH_ALEN];
 	u16 pno_scan_seq_num;
 #endif

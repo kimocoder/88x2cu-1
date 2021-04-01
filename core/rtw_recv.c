@@ -4510,8 +4510,13 @@ s32 pre_recv_entry(union recv_frame *precvframe, u8 *pphy_status)
 		iface = rtw_get_iface_by_macddr(primary_padapter , ra);
 		if (!iface) {
 			#if defined(CONFIG_RTW_CFGVENDOR_RANDOM_MAC_OUI) || defined(CONFIG_RTW_SCAN_RAND)
-			if (_rtw_memcmp(ra, adapter_pno_mac_addr(primary_padapter), ETH_ALEN))
+			{
+			struct rtw_wdev_priv *pwdev_priv = adapter_wdev_data(primary_padapter);
+
+			if (pwdev_priv->random_mac_enabled &&
+			   _rtw_memcmp(ra, adapter_pno_mac_addr(primary_padapter), ETH_ALEN))
 				goto query_phy_status;
+			}
 			#endif
 
 			#ifdef CONFIG_RTW_MULTI_AP
@@ -5430,9 +5435,9 @@ s32 rtw_core_update_recvframe(struct dvobj_priv *dvobj,
 			prframe->u.hdr.pkt->dev = iface->pnetdev;
 		}
 		else {
-			#if 0 /*#ifdef CONFIG_RTW_CFGVENDOR_RANDOM_MAC_OUI - TODO*/
-			if (_rtw_memcmp(ra, adapter_pno_mac_addr(primary_padapter), ETH_ALEN))
-					goto query_phy_status;
+			#if defined(CONFIG_RTW_CFGVENDOR_RANDOM_MAC_OUI) || defined(CONFIG_RTW_SCAN_RAND)
+			if (_rtw_memcmp(pda, adapter_pno_mac_addr(primary_padapter), ETH_ALEN))
+				goto exit;
 			#endif
 
 			#if 0 /*#ifdef CONFIG_RTW_MULTI_AP - TODO*/

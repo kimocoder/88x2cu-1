@@ -3194,14 +3194,14 @@ static int cfg80211_rtw_scan(struct wiphy *wiphy
 #ifdef CONFIG_RTW_SCAN_RAND
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 19, 0))
 	if (request->flags & NL80211_SCAN_FLAG_RANDOM_ADDR) {
+		pwdev_priv->random_mac_enabled = true;
 		get_random_mask_addr(pwdev_priv->pno_mac_addr, request->mac_addr,
 				     request->mac_addr_mask);
-		print_hex_dump(KERN_DEBUG, "random mac_addr: ", 
+		print_hex_dump(KERN_INFO, "random mac_addr: ",
 			DUMP_PREFIX_OFFSET, 16, 1, pwdev_priv->pno_mac_addr, ETH_ALEN, 1);
+	} else {
+		pwdev_priv->random_mac_enabled = false;
 	}
-	else
-		memset(pwdev_priv->pno_mac_addr, 0xFF, ETH_ALEN);
-
 #endif
 #endif
 
@@ -9881,6 +9881,7 @@ static int rtw_cfg80211_init_wiphy(_adapter *adapter, struct wiphy *wiphy)
 
 #ifdef CONFIG_RTW_SCAN_RAND
 	#if (KERNEL_VERSION(3, 19, 0) <= LINUX_VERSION_CODE)
+	RTW_INFO("%s: add NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR\n", __func__);
 	wiphy->features |= NL80211_FEATURE_SCAN_RANDOM_MAC_ADDR;
 	#endif
 #endif
