@@ -149,9 +149,10 @@ struct phl_sound_param {
 struct phl_snd_ops
 {
 	enum rtw_phl_status (*snd_send_ndpa)(void *drv_priv,
-					     struct rtw_wifi_role_t *wrole,
-					     u8 *snd_dialog_tkn, u32 *ndpa_sta,
-					     enum channel_width snd_bw);
+                                             struct rtw_wifi_role_t *wrole,
+                                             u8 *snd_dialog_tkn,
+                                             u32 *ndpa_sta,
+                                             enum channel_width snd_bw);
 };
 
 struct phl_sound_obj {

@@ -16,7 +16,6 @@
 #define _TEST_MODULE_H_
 
 #ifdef CONFIG_PHL_TEST_SUITE
-aa
 u8 phl_test_module_init(struct phl_info_t *phl_info);
 void phl_test_module_deinit(struct rtw_phl_com_t* phl_com);
 u8 phl_test_module_start(struct rtw_phl_com_t* phl_com);

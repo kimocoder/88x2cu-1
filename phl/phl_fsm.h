@@ -219,6 +219,8 @@ char *phl_fsm_evt_name(struct fsm_obj *obj, u16 event);
 u32 phl_fsm_time_pass(u32 start);
 u32 phl_fsm_time_left(u32 start, u32 end);
 
+
+#ifndef CONFIG_PHL_WPP
 #define FSM_PRINT(fsm, fmt, ...) \
 	do {\
 		if (!fsm || phl_fsm_dbg_level(fsm, FSM_DBG_PRINT)) \
@@ -260,44 +262,21 @@ u32 phl_fsm_time_left(u32 start, u32 end);
 		if (!fsm || phl_fsm_evt_level(fsm, level_)) \
 			PHL_TRACE(COMP_PHL_FSM, _PHL_INFO_, fmt, ##__VA_ARGS__); \
 	} while (0)
-
-#ifdef CONFIG_PHL_WPP
-
-#ifdef FSM_ERR
-#undef FSM_ERR
-#define FSM_ERR(fsm, fmt, ...)
-#endif
-
-#ifdef FSM_WARN
-#undef FSM_WARN
-#define FSM_WARN(fsm, fmt, ...)
-#endif
-
-#ifdef FSM_INFO
-#undef FSM_INFO
-#define FSM_INFO(fsm, fmt, ...)
-#endif
-
-#ifdef FSM_DBG
-#undef FSM_DBG
-#define FSM_DBG(fsm, fmt, ...)
-#endif
-
-#ifdef FSM_PRINT
+#else
 #undef FSM_PRINT
 #define FSM_PRINT(fsm, fmt, ...)
-#endif
-
-#ifdef FSM_MSG
+#undef FSM_ERR
+#define FSM_ERR(fsm, fmt, ...)
+#undef FSM_WARN
+#define FSM_WARN(fsm, fmt, ...)
+#undef FSM_INFO
+#define FSM_INFO(fsm, fmt, ...)
+#undef FSM_DBG
+#define FSM_DBG(fsm, fmt, ...)
 #undef FSM_MSG
-#define FSM_MSG(fsm, fmt, ...)
-#endif
-
-#ifdef FSM_EV_MSG
+#define FSM_MSG(fsm, level, fmt, ...)
 #undef FSM_EV_MSG
-#define FSM_EV_MSG(fsm, fmt, ...)
-#endif
-
+#define FSM_EV_MSG(fsm, level, fmt, ...)
 #endif  /* CONFIG_PHL_WPP */
 
 #endif /* __PHL_FSM_H__ */

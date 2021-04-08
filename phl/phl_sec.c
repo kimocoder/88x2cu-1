@@ -224,7 +224,7 @@ u8 rtw_phl_get_sec_cam_idx(void *phl,
                            u8 keyid,
                            u8 key_type)
 {
-	u8 ret = 0, i = 0;
+	u8 ret = 0;
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 
 	ret = (u8) rtw_hal_search_key_idx(phl_info->hal, sta, keyid, key_type);

@@ -184,7 +184,6 @@ static void _select_channels_by_group(struct instance_strategy *strategy,
 {
 	u8 skip = strategy->skip;
 	u8 chnl = 0, property = 0, gpidx = 0, keep = 0;
-	u8 chidx[FREQ_GROUP_MAX] = {0};
 	u8 i = 0;
 
 	for (i = 0; i < plan->cnt; i++) {

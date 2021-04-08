@@ -17,7 +17,6 @@
 #include "phl_headers.h"
 
 #ifdef CONFIG_FSM
-#include "phl_fsm.h"
 
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 
@@ -66,7 +65,7 @@ enum rtw_phl_status rtw_phl_job_fill_fptr(void *phl, struct phl_cmd_job *job,
 
 	job->id = JOB_RUN_FUNC;
 	job->pwr_level = pwr;
-	job->u.cmd.fptr = func;
+	job->u.cmd.fptr = (int (*)(void *priv, void *param, bool discard))func;
 	job->u.cmd.priv = priv;
 	job->u.cmd.parm = parm;
 	_os_mem_set(d, job->u.cmd.name, 0, RTW_PHL_JOB_NAME_LEN);

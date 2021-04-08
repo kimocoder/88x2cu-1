@@ -132,6 +132,12 @@ phl_mr_check_ecsa(struct phl_info_t *phl_info,
 void
 phl_mr_check_ecsa_cancel(struct phl_info_t *phl_info,
 			 struct rtw_wifi_role_t *wrole);
+
+#ifdef CONFIG_MCC_SUPPORT
+u8 phl_mr_query_mcc_inprogress (struct phl_info_t *phl_info, struct rtw_wifi_role_t *wrole,
+				enum rtw_phl_mcc_chk_inprocess_type check_type);
+#endif
+
 #ifdef DBG_PHL_MR
 enum rtw_phl_status phl_mr_info_dbg(struct phl_info_t *phl_info);
 

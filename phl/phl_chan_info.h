@@ -14,7 +14,6 @@
  *****************************************************************************/
 #ifndef _PHL_CHAN_INFO_H_
 #define _PHL_CHAN_INFO_H_
-#include "phl_headers.h"
 
 #ifdef CONFIG_PHL_CHANNEL_INFO
 enum rtw_phl_status phl_chaninfo_init(struct phl_info_t *phl_info);

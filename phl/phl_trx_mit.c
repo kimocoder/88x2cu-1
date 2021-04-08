@@ -16,17 +16,10 @@
 #include "phl_headers.h"
 
 #if defined(CONFIG_PCI_HCI) && defined(PCIE_TRX_MIT_EN)
-struct _phl_pcie_trx_mit_info_t {
-	u32 tx_timer;
-	u8 tx_counter;
-	u32 rx_timer;
-	u8 rx_counter;
-};
-
 enum rtw_phl_status phl_pcie_trx_mit_start(struct phl_info_t *phl_info,
 					   u8 dispr_idx)
 {
-	struct _phl_pcie_trx_mit_info_t info = {0};
+	struct rtw_pcie_trx_mit_info_t info = {0};
 
 	if (dispr_idx != HW_BAND_0)
 		return RTW_PHL_STATUS_SUCCESS;
@@ -44,18 +37,20 @@ enum rtw_phl_status phl_pcie_trx_mit_start(struct phl_info_t *phl_info,
 enum rtw_phl_status
 phl_evt_pcie_trx_mit_hdlr(struct phl_info_t *phl_info, u8 *mit_info)
 {
-	struct _phl_pcie_trx_mit_info_t *info = (struct _phl_pcie_trx_mit_info_t *)mit_info;
+	struct rtw_pcie_trx_mit_info_t *info = (struct rtw_pcie_trx_mit_info_t *)mit_info;
 
 	PHL_INFO("%s :: tx_timer == %d us, tx_counter = %d, rx_timer == %d us, "
-		 "rx_counter = %d\n",
+		 "rx_counter = %d, fixed_mitigation=%d\n",
 		 __func__, info->tx_timer, info->tx_counter, info->rx_timer,
-		 info->rx_counter);
+		 info->rx_counter, info->fixed_mitigation);
 
 	if (RTW_HAL_STATUS_SUCCESS !=
 	    rtw_hal_pcie_trx_mit(phl_info->hal, info->tx_timer,
 				 info->tx_counter, info->rx_timer,
 				 info->rx_counter))
 		return RTW_PHL_STATUS_FAILURE;
+
+	phl_info->hci->fixed_mitigation = info->fixed_mitigation;
 
 	return RTW_PHL_STATUS_SUCCESS;
 }
@@ -74,16 +69,21 @@ phl_pcie_trx_mit(struct phl_info_t *phl_info,
 {
 #ifdef CONFIG_CMD_DISP
 	void *drv_priv = phl_to_drvpriv(phl_info);
-	struct _phl_pcie_trx_mit_info_t *info = NULL;
+	struct rtw_pcie_trx_mit_info_t *info = NULL;
 
 	enum rtw_phl_status psts = RTW_PHL_STATUS_FAILURE;
-	u32 info_len = sizeof(struct _phl_pcie_trx_mit_info_t);
+	u32 info_len = sizeof(struct rtw_pcie_trx_mit_info_t);
 
 	info = _os_mem_alloc(drv_priv, info_len);
 	if (info == NULL) {
 		PHL_ERR("%s: alloc mit_info failed!\n", __func__);
 		goto _exit;
 	}
+
+	info->tx_timer = tx_timer;
+	info->tx_counter = tx_counter;
+	info->rx_timer = rx_timer;
+	info->rx_counter = rx_counter;
 
 	psts = phl_cmd_enqueue(phl_info,
 	                       HW_BAND_0,
@@ -109,6 +109,9 @@ void phl_pcie_trx_mit_watchdog(struct phl_info_t *phl_info)
 
 	struct rtw_stats *phl_stats = &phl_info->phl_com->phl_stats;
 
+	if (phl_info->hci->fixed_mitigation == 1)
+		return;
+
 	if (rx_traffic_lvl == phl_stats->rx_traffic.lvl)
 		return;
 
@@ -119,5 +122,5 @@ void phl_pcie_trx_mit_watchdog(struct phl_info_t *phl_info)
 	else
 		phl_pcie_trx_mit(phl_info, 0, 0, 0, 0);
 }
-
 #endif /*defined(CONFIG_PCI_HCI) && defined(PCIE_TRX_MIT_EN)*/
+
