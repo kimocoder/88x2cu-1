@@ -17,7 +17,6 @@
 #include "phl_headers.h"
 
 #ifdef CONFIG_FSM
-#include "phl_fsm.h"
 #include "phl_scan.h"
 
 #ifdef FSM_DBG_MEM_OVERWRITE
@@ -184,7 +183,7 @@ static int off_ch_return_set_ch_bw(struct scan_obj *pscan)
 
 	PHL_DUMP_CHAN_DEF_EX(&chandef);
 
-	rtw_phl_set_ch_bw(wrole, chandef.chan, chandef.bw, chandef.offset, false);
+	phl_set_ch_bw(wrole, &chandef, false);
 
 	FSM_INFO(pscan->fsm, "%s %s() channel=%d, bw=%d, offest=%d\n",
 		phl_fsm_obj_name(pscan->fsm_obj), __func__,
@@ -236,7 +235,7 @@ static int scan_complete(struct scan_obj *pscan)
 			pscan->param->wifi_role->hw_band);
 	else
 		rtw_hal_notify_scan_complete(phl_info->hal, 0);
-
+	phl_p2pps_noa_resume_all(phl_info, param->wifi_role);
 	if (phl_mr_mcc_state_change(phl_info, param->wifi_role, true)
 				== RTW_PHL_STATUS_FAILURE) {
 		FSM_ERR(pscan->fsm,
@@ -369,12 +368,18 @@ done:
 static void scan_set_channel_bw(struct scan_obj *pscan, u16 ch,
 	enum channel_width bw, enum chan_offset offset, u8 phy_idx)
 {
+	struct rtw_chan_def chdef = {0};
+
 	FSM_INFO(pscan->fsm,
 		"%s %s() ch=%d, bw=%d, offest=%d, duration=%d\n",
 		phl_fsm_obj_name(pscan->fsm_obj), __func__,
 		ch, bw, offset, pscan->param->scan_ch->duration);
 
-	rtw_phl_set_ch_bw(pscan->param->wifi_role, (u8)ch, bw, offset, false);
+	chdef.chan = (u8)ch;
+	chdef.bw = bw;
+	chdef.offset = offset;
+
+	phl_set_ch_bw(pscan->param->wifi_role, &chdef, false);
 
 	if (pscan->ops->scan_ch_ready)
 		pscan->ops->scan_ch_ready(pscan->param->priv, pscan->param);
@@ -502,6 +507,7 @@ static int scan_start(struct scan_obj *pscan)
 		return -1;
 	}
 
+	phl_p2pps_noa_pause_all(phl_info, param->wifi_role);
 	param->start_time = _os_get_cur_time_ms();
 
 	/* check max scan time */
@@ -1036,7 +1042,6 @@ static void scan_debug(void *obj, char input[][MAX_ARGV], u32 input_num,
 	char *output, u32 *out_len)
 {
 	struct scan_obj *pscan = (struct scan_obj *)obj;
-	void *d = phl_to_drvpriv(pscan->phl_info);
 	char *ptr = output;
 	int len = *out_len;
 	int token;
@@ -1299,7 +1304,6 @@ enum rtw_phl_status rtw_phl_scan_del_request(void *phl, u32 token)
 	void *d = phl_to_drvpriv(phl_info);
 	struct fsm_msg *msg, *msg_t;
 	struct rtw_phl_scan_param *param = NULL;
-	int del = 0;
 	_os_list *obj;
 
 	if (token == ALL_TOKEN) {

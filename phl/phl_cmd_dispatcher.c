@@ -741,7 +741,6 @@ u8 register_cur_cmd_req(struct cmd_dispatcher *obj,
 void cancel_all_cmd_req(struct cmd_dispatcher *obj)
 {
 	u8 i = 0;
-	void *d = phl_to_drvpriv(obj->phl_info);
 	struct phl_cmd_token_req_ex* req_ex = NULL;
 
 	for (i = 0; i < MAX_CMD_REQ_NUM;i++) {
@@ -1105,7 +1104,7 @@ void msg_post_phase_hdl(struct cmd_dispatcher *obj, struct phl_dispr_msg_ex *ex)
 				return;
 		}
 		q = &(obj->module_q[(u8)i]);
-		if (pq_get_front(d, q, &node, _bh) == false)
+		if (pq_get_tail(d, q, &node, _bh) == false)
 			continue;
 		do {
 			mdl = (struct phl_bk_module*)node;
@@ -1115,7 +1114,7 @@ void msg_post_phase_hdl(struct cmd_dispatcher *obj, struct phl_dispr_msg_ex *ex)
 			ret = feed_mdl_msg(obj, mdl, ex);
 			if (STOP_DISPATCH_MSG(ret))
 				return;
-		} while(pq_get_next(d, q, node, &node, _bh));
+		} while(pq_get_prev(d, q, node, &node, _bh));
 	}
 }
 
@@ -1771,7 +1770,6 @@ dispr_get_bk_module_handle(void *dispr,
 	struct cmd_dispatcher *obj = (struct cmd_dispatcher *)dispr;
 	void *d = phl_to_drvpriv(obj->phl_info);
 	_os_list *mdl = NULL;
-	struct phl_bk_module *module = NULL;
 	enum rtw_phl_status phl_stat = RTW_PHL_STATUS_FAILURE;
 	enum phl_bk_module_priority priority = _get_mdl_priority(id);
 
@@ -1836,7 +1834,6 @@ dispr_set_src_info(void *dispr,
 	enum rtw_phl_status phl_stat = RTW_PHL_STATUS_FAILURE;
 	u8 id = MSG_MDL_ID_FIELD(msg->msg_id);
 	struct phl_cmd_token_req_ex *cur_req = obj->cur_cmd_req;
-	u8 i = 0;
 	enum phl_mdl_ret_code ret = MDL_RET_FAIL;
 	struct phl_dispr_msg_ex *ex = (struct phl_dispr_msg_ex *)msg;
 	u8 cur_req_id = get_cur_cmd_req_id(obj, NULL);
@@ -1869,7 +1866,6 @@ dispr_query_src_info(void *dispr,
 	enum rtw_phl_status phl_stat = RTW_PHL_STATUS_FAILURE;
 	u8 id = MSG_MDL_ID_FIELD(msg->msg_id);
 	struct phl_cmd_token_req_ex *cur_req = obj->cur_cmd_req;
-	u8 i = 0;
 	struct phl_dispr_msg_ex *ex = (struct phl_dispr_msg_ex *)msg;
 	enum phl_mdl_ret_code ret = MDL_RET_FAIL;
 	u8 cur_req_id = get_cur_cmd_req_id(obj, NULL);
@@ -2010,7 +2006,6 @@ exit:
 enum rtw_phl_status dispr_cancel_msg(void *dispr, u32 *msg_hdl)
 {
 	struct cmd_dispatcher *obj = (struct cmd_dispatcher *)dispr;
-	void *d = phl_to_drvpriv(obj->phl_info);
 	struct phl_dispr_msg_ex *msg_ex = NULL;
 
 	if (!TEST_STATUS_FLAG(obj->status, DISPR_STARTED) || msg_hdl == NULL)
@@ -2038,7 +2033,6 @@ enum rtw_phl_status dispr_cancel_msg(void *dispr, u32 *msg_hdl)
 enum rtw_phl_status dispr_clr_pending_msg(void *dispr)
 {
 	struct cmd_dispatcher *obj = (struct cmd_dispatcher *)dispr;
-	void *d = phl_to_drvpriv(obj->phl_info);
 
 	SET_STATUS_FLAG(obj->status, DISPR_CLR_PEND_MSG);
 	notify_bk_thread(obj);
@@ -2087,7 +2081,6 @@ dispr_add_token_req(void *dispr,
 enum rtw_phl_status dispr_cancel_token_req(void *dispr, u32 *req_hdl)
 {
 	struct cmd_dispatcher *obj = (struct cmd_dispatcher *)dispr;
-	void *d = phl_to_drvpriv(obj->phl_info);
 	struct phl_cmd_token_req_ex *req_ex = NULL;
 
 	if (!TEST_STATUS_FLAG(obj->status, DISPR_STARTED) || req_hdl == NULL)
@@ -2274,7 +2267,7 @@ void send_bk_msg_phy_on(struct cmd_dispatcher *obj)
 	struct phl_msg msg = {0};
 	struct phl_msg_attribute attr = {0};
 
-	SET_MSG_MDL_ID_FIELD(msg.msg_id, PHL_MDL_PHY_MGNT);
+	SET_MSG_MDL_ID_FIELD(msg.msg_id, PHL_MDL_POWER_MGNT);
 	SET_MSG_EVT_ID_FIELD(msg.msg_id, MSG_EVT_PHY_ON);
 	dispr_send_msg((void*)obj, &msg, &attr, NULL);
 }
@@ -2284,7 +2277,7 @@ void send_bk_msg_phy_idle(struct cmd_dispatcher *obj)
 	struct phl_msg msg = {0};
 	struct phl_msg_attribute attr = {0};
 
-	SET_MSG_MDL_ID_FIELD(msg.msg_id, PHL_MDL_PHY_MGNT);
+	SET_MSG_MDL_ID_FIELD(msg.msg_id, PHL_MDL_POWER_MGNT);
 	SET_MSG_EVT_ID_FIELD(msg.msg_id, MSG_EVT_PHY_IDLE);
 	dispr_send_msg((void*)obj, &msg, &attr, NULL);
 }
