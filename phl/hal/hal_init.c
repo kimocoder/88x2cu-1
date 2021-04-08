@@ -1431,7 +1431,6 @@ rtw_hal_role_cfg(void *hal, struct rtw_wifi_role_t *wrole)
 	return RTW_HAL_STATUS_SUCCESS;
 }
 
-#if 0 // NEO
 
 enum rtw_hal_status
 rtw_hal_role_cfg_ex(void *hal, struct rtw_wifi_role_t *wrole,
@@ -1440,10 +1439,16 @@ rtw_hal_role_cfg_ex(void *hal, struct rtw_wifi_role_t *wrole,
 	struct hal_info_t *hal_info = (struct hal_info_t *)hal;
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
 
+#if 1 // NEO
+	RTW_INFO("%s NEO TODO\n", __func__);
+	return RTW_HAL_STATUS_FAILURE;
+#else
 	hal_status = rtw_hal_mac_port_cfg(hal_info, wrole, type, param);
-
 	return hal_status;
+#endif // NEO
 }
+
+#if 0 // NEO
 
 enum rtw_hal_status
 rtw_hal_beacon_stop(void *hal, struct rtw_wifi_role_t *wrole, bool stop)

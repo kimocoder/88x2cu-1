@@ -125,9 +125,11 @@ void rtw_hal_trx_deinit(void *hal);
 
 enum rtw_hal_status
 rtw_hal_role_cfg(void *hal, struct rtw_wifi_role_t *wrole);
+
 enum rtw_hal_status
 rtw_hal_role_cfg_ex(void *hal, struct rtw_wifi_role_t *wrole,
-				enum pcfg_type type, void *param);
+		    enum pcfg_type type, void *param);
+
 enum rtw_hal_status
 rtw_hal_beacon_stop(void *hal, struct rtw_wifi_role_t *wrole, bool stop);
 
@@ -160,6 +162,7 @@ rtw_hal_start_ba_session(void *hal, struct rtw_phl_stainfo_t *sta,
                             u16 ba_policy, u16 tid, u16 buf_size);
 enum rtw_hal_status
 rtw_hal_stop_ba_session(void *hal, struct rtw_phl_stainfo_t *sta, u16 tid);
+
 
 /**
  * rtw_hal_set_edca() - setup WMM EDCA parameter
@@ -559,7 +562,10 @@ rtw_hal_tx_pause(struct rtw_hal_com_t *hal_com,
 bool rtw_hal_is_macid_pause(struct rtw_hal_com_t *hal_com, u16 macid);
 
 enum rtw_hal_status
-rtw_hal_set_macid_pause(struct rtw_hal_com_t *hal_com, u16 macid, bool pause);
+rtw_hal_set_macid_pause(void *hal_com, u16 macid, bool pause);
+
+enum rtw_hal_status
+rtw_hal_set_macid_grp_pause(void *hal, u32 *macid_arr, u8 arr_size, bool pause);
 
 /**
  * rtw_hal_set_rxfltr_by_mode - Set rx filter option by scenario
@@ -763,5 +769,8 @@ enum rtw_hal_status rtw_hal_mcc_disable(void *hal, u8 group, u16 macid);
 
 enum rtw_hal_status rtw_hal_mcc_enable(void *hal, struct rtw_phl_mcc_en_info *info);
 #endif /* CONFIG_MCC_SUPPORT */
+
+enum rtw_hal_status
+rtw_hal_config_rts_th(void *hal, u8 band_idx, u16 rts_time_th, u16 rts_len_th);
 
 #endif /*_HAL_API_H_*/

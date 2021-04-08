@@ -35,6 +35,7 @@ phl_macid_is_valid(struct phl_info_t *phl_info, u16 macid)
 {
 	return (macid < phl_info->macid_ctrl.max_num) ? true : false;
 }
+u16 rtw_phl_get_macid_by_addr(void *phl, u8 *addr);
 
 /*********** stainfo_ctrl section ***********/
 enum rtw_phl_status
@@ -120,12 +121,11 @@ rtw_phl_get_stainfo_by_macid(void *phl, u16 macid);
 struct rtw_phl_stainfo_t *
 rtw_phl_get_stainfo_by_addr(void *phl, struct rtw_wifi_role_t *wrole, u8 *addr);
 
+struct rtw_phl_stainfo_t *
+rtw_phl_get_stainfo_by_addr_ex(void *phl, u8 *addr);
 
 struct rtw_phl_stainfo_t *
 rtw_phl_get_stainfo_self(void *phl, struct rtw_wifi_role_t *wrole);
-
-void
-rtw_phl_stainfo_link_notify(void *phl, struct rtw_wifi_role_t *wrole, bool add, u16 macid);
 
 #ifdef CONFIG_CMD_DISP
 enum rtw_phl_status

@@ -54,6 +54,8 @@ void rtw_phl_pkt_ofld_reset_all_entry(struct rtw_phl_com_t *phl_com);
 bool rtw_phl_query_regulation_info(void *phl, struct rtw_regulation_info *info);
 bool rtw_phl_regulation_query_ch(void *phl, u8 channel,
 				struct rtw_regulation_channel *ch);
+
+enum band_type rtw_phl_get_band_type(u8 chan);
 u8 rtw_phl_get_center_ch(u8 ch,
 	enum channel_width bw, enum chan_offset offset);
 

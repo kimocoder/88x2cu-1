@@ -801,30 +801,6 @@ static enum rtw_phl_status phl_fsm_module_stop(struct phl_info_t *phl_info)
 }
 #endif /* CONFIG_FSM */
 
-static enum rtw_phl_status phl_test_modeule_init(struct phl_info_t *phl_info)
-{
-	if (rtw_test_module_alloc(phl_info))
-		return RTW_PHL_STATUS_SUCCESS;
-	return RTW_PHL_STATUS_FAILURE;
-}
-
-static void phl_test_modeule_deinit(struct phl_info_t *phl_info)
-{
-	rtw_test_module_free(phl_info->phl_com);
-}
-
-static enum rtw_phl_status phl_test_modeule_start(struct phl_info_t *phl_info)
-{
-	if (rtw_test_module_init(phl_info->phl_com))
-		return RTW_PHL_STATUS_SUCCESS;
-	return RTW_PHL_STATUS_FAILURE;
-}
-
-static void phl_test_modeule_stop(struct phl_info_t *phl_info)
-{
-	rtw_test_module_deinit(phl_info->phl_com);
-}
-
 static enum rtw_phl_status phl_module_init(struct phl_info_t *phl_info)
 {
 	enum rtw_phl_status phl_status = RTW_PHL_STATUS_SUCCESS;
@@ -847,9 +823,9 @@ static enum rtw_phl_status phl_module_init(struct phl_info_t *phl_info)
 		goto pkt_ofld_init_fail;
 	}
 
-	phl_status = phl_test_modeule_init(phl_info);
-	if (phl_status != RTW_PHL_STATUS_SUCCESS) {
-		PHL_ERR("phl_test_modeule_init failed\n");
+	if (!phl_test_module_init(phl_info)) {
+		PHL_ERR("phl_test_module_init failed\n");
+		phl_status = RTW_PHL_STATUS_FAILURE;
 		goto error_test_module_init;
 	}
 
@@ -870,7 +846,7 @@ static enum rtw_phl_status phl_module_init(struct phl_info_t *phl_info)
 error_disp_eng_reg_init:
 	phl_disp_eng_deinit(phl_info);
 error_disp_eng_init:
-	phl_test_modeule_deinit(phl_info);
+	phl_test_module_deinit(phl_info->phl_com);
 error_test_module_init:
 	phl_pkt_ofld_deinit(phl_info);
 pkt_ofld_init_fail:
@@ -884,7 +860,7 @@ msg_hub_fail:
 static void phl_module_deinit(struct phl_info_t *phl_info)
 {
 	phl_disp_eng_deinit(phl_info);
-	phl_test_modeule_deinit(phl_info);
+	phl_test_module_deinit(phl_info->phl_com);
 	phl_pkt_ofld_deinit(phl_info);
 	phl_wow_mdl_deinit(phl_info);
 	phl_msg_hub_deinit(phl_info);
@@ -894,9 +870,9 @@ static enum rtw_phl_status phl_module_start(struct phl_info_t *phl_info)
 {
 	enum rtw_phl_status phl_status = RTW_PHL_STATUS_SUCCESS;
 
-	phl_status = phl_test_modeule_start(phl_info);
-	if (phl_status != RTW_PHL_STATUS_SUCCESS) {
-		PHL_ERR("phl_test_modeule_start failed\n");
+	if (!phl_test_module_start(phl_info->phl_com)) {
+		PHL_ERR("phl_test_module_start failed\n");
+		phl_status = RTW_PHL_STATUS_FAILURE;
 		goto error_test_mdl_start;
 	}
 
@@ -914,7 +890,7 @@ static enum rtw_phl_status phl_module_start(struct phl_info_t *phl_info)
 	return phl_status;
 
 error_disp_eng_start:
-	phl_test_modeule_stop(phl_info);
+	phl_test_module_stop(phl_info->phl_com);
 error_test_mdl_start:
 	return phl_status;
 }
@@ -924,7 +900,7 @@ static enum rtw_phl_status phl_module_stop(struct phl_info_t *phl_info)
 	enum rtw_phl_status phl_status = RTW_PHL_STATUS_SUCCESS;
 
 	phl_disp_eng_stop(phl_info);
-	phl_test_modeule_stop(phl_info);
+	phl_test_module_stop(phl_info->phl_com);
 
 	if(phl_info->msg_hub) {
 		phl_deregister_msg_entry(phl_info);

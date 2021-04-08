@@ -42,6 +42,8 @@
 #include "phl_wow.h"
 #include "phl_watchdog.h"
 #include "phl_struct.h"
+#include "phl_test_def.h"
+#include "phl_test.h"
 #include "phl_msg_hub.h"
 #include "phl_chan.h"
 #include "phl_role.h"

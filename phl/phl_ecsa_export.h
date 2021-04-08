@@ -18,6 +18,12 @@
 #define CHANNEL_SWITCH_MODE_NORMAL 0
 #define CHANNEL_SWITCH_MODE_STOP_TX 1
 
+enum phl_ecsa_type{
+	ECSA_TYPE_NONE = 0,
+	ECSA_TYPE_AP = 1,
+	ECSA_TYPE_STA = 2
+};
+
 enum phl_ecsa_param_flag{
 	ECSA_PARAM_FLAG_APPEND_BCN = BIT0,
 	ECSA_PARAM_FLAG_APPEND_PROBERSP = BIT1,
@@ -33,6 +39,7 @@ enum phl_ecsa_start_reason{
 };
 
 struct rtw_phl_ecsa_param{
+	enum phl_ecsa_type ecsa_type;
 	u8 flag;
 	u8 mode; /* CHANNEL_SWITCH_MODE_NORMAL or CHANNEL_SWITCH_MODE_STOP_TX */
 	u8 op_class;
@@ -48,6 +55,8 @@ struct rtw_phl_ecsa_param{
  * update_chan_info: Notify core to update AP mode channel information
  * check_ecsa_allow: Provide reason and ask core if ecsa is allowed or not,
  * 	core can provide a delay time(ms) to delay start ECSA
+ * ecsa_complete: Notify core to reset csa related Information
+ * check_tx_resume_allow: Check core is allowed to resume tx paused by csa mode == 1
  */
 struct rtw_phl_ecsa_ops{
 	void *priv;
@@ -60,6 +69,8 @@ struct rtw_phl_ecsa_ops{
 				 struct rtw_chan_def chan_def,
 				 enum phl_ecsa_start_reason reason,
 				 u32 *delay_start_ms);
+	void (*ecsa_complete)(void *priv, struct rtw_wifi_role_t *role);
+	bool (*check_tx_resume_allow)(void *priv, struct rtw_wifi_role_t *role);
 };
 
 #ifdef CONFIG_PHL_ECSA

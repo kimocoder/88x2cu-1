@@ -402,10 +402,6 @@ enum rtw_phl_status rtw_phl_chanctx_del_no_self(void *phl, struct rtw_wifi_role_
 int rtw_phl_mr_get_chanctx_num(void *phl, struct rtw_wifi_role_t *wifi_role);
 enum rtw_phl_status rtw_phl_mr_get_chandef(void *phl, struct rtw_wifi_role_t *wifi_role,
 							struct rtw_chan_def *chandef);
-#ifdef CONFIG_MCC_SUPPORT
-u8 rtw_phl_mr_query_mcc_inprogress (void *phl, struct rtw_wifi_role_t *wrole,
-							enum rtw_phl_mcc_chk_inprocess_type check_type);
-#endif
 
 u8 rtw_phl_mr_dump_mac_addr(void *phl,
 					struct rtw_wifi_role_t *wifi_role);

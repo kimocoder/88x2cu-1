@@ -82,4 +82,7 @@ enum rtw_phl_status
 phl_data_ctrler(struct phl_info_t *phl_info, struct phl_data_ctl_t *ctl,
 		struct phl_msg *msg);
 
+void rtw_phl_tx_stop(void *phl);
+void rtw_phl_tx_resume(void *phl);
+
 #endif	/* __PHL_TX_H_ */

@@ -99,6 +99,33 @@ u8 pq_get_next(void *d, struct phl_queue *queue, _os_list *cur_obj,
 	return ((*obj) == NULL || (*obj) == &(queue->queue)) ? (false) : (true);
 }
 
+u8 pq_get_tail(void *d, struct phl_queue *q, _os_list **obj, enum lock_type type)
+{
+	_os_spinlockfg sp_flags = 0;
+
+	(*obj) = NULL;
+
+	_os_spinlock(d, &q->lock, type, &sp_flags);
+	if(!list_empty(&q->queue) && (q->cnt > 0))
+		(*obj) = q->queue.prev;
+	_os_spinunlock(d, &q->lock, type, &sp_flags);
+	return ((*obj) == NULL || (*obj) == &q->queue) ? (false) : (true);
+}
+
+u8 pq_get_prev(void *d, struct phl_queue *queue, _os_list *cur_obj,
+	       _os_list **obj, enum lock_type type)
+{
+	_os_spinlockfg sp_flags;
+
+	(*obj) = NULL;
+	if(cur_obj == NULL)
+		return false;
+	_os_spinlock(d, &queue->lock, type, &sp_flags);
+	(*obj) = cur_obj->prev;
+	_os_spinunlock(d, &queue->lock, type, &sp_flags);
+	return ((*obj) == NULL || (*obj) == &(queue->queue)) ? (false) : (true);
+}
+
 u8 pq_search_node(void *d, struct phl_queue *q, _os_list **obj,
 		  enum lock_type type, bool bdel, void *priv,
 		  u8 (*search_fun)(void *d, void *obj, void *priv))

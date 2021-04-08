@@ -28,6 +28,9 @@
 
 #define phl_is_mp_mode(_phl_com)	(_phl_com->drv_mode >= RTW_DRV_MODE_MP_SMDL_START && _phl_com->drv_mode <= RTW_DRV_MODE_MP_SMDL_END)
 
+#define phl_to_p2pps_info(_phl)	(((_phl)->phl_com->p2pps_info))
+#define get_role_idx(_wrole) (_wrole->id)
+
 #ifndef is_broadcast_mac_addr
 #define is_broadcast_mac_addr(addr) ((((addr[0]) & 0xff) == 0xff) && (((addr[1]) & 0xff) == 0xff) && \
 	(((addr[2]) & 0xff) == 0xff) && (((addr[3]) & 0xff) == 0xff) && (((addr[4]) & 0xff) == 0xff) && \
@@ -105,6 +108,9 @@ u8 pq_get_next(void *d, struct phl_queue *queue, _os_list *cur_obj,
 	       _os_list **obj, enum lock_type type);
 u8 pq_get_front(void *d, struct phl_queue *queue, _os_list **obj,
 		enum lock_type type);
+u8 pq_get_tail(void *d, struct phl_queue *q, _os_list **obj, enum lock_type type);
+u8 pq_get_prev(void *d, struct phl_queue *queue, _os_list *cur_obj,
+	       _os_list **obj, enum lock_type type);
 void pq_del_node(void *d, struct phl_queue *q, _os_list *obj, enum lock_type type);
 
 u8 pq_search_node(void *d, struct phl_queue *q, _os_list **obj,

@@ -10,6 +10,7 @@ phl_path_d1 := $(src)/$(HAL)
 endif
 
 _HAL_FILES :=	$(phl_path)$(HAL)/hal_api_mac.o \
+			$(phl_path)$(HAL)/hal_api.o \
 			$(phl_path)$(HAL)/hal_api_bb.o \
 			$(phl_path)$(HAL)/hal_api_btc.o \
 			$(phl_path)$(HAL)/hal_api_rf.o \
@@ -41,8 +42,7 @@ _HAL_FILES :=	$(phl_path)$(HAL)/hal_api_mac.o \
 			$(phl_path)$(HAL)/hal_led.o \
 			$(phl_path)$(HAL)/hal_trx_mit.o \
 			$(phl_path)$(HAL)/hal_acs.o \
-			$(phl_path)$(HAL)/hal_mcc.o \
-			$(phl_path)$(HAL)/hal_api.o
+			$(phl_path)$(HAL)/hal_mcc.o
 
 ifeq ($(CONFIG_PCI_HCI), y)
 _HAL_FILES += $(phl_path)$(HAL)/hal_pci.o

@@ -629,7 +629,6 @@ bool rtw_hal_is_sta_linked(void *hal, struct rtw_phl_stainfo_t *sta)
 	return (sta->hal_sta->ra_info.ra_registered == true) ? true : false;
 }
 
-#if 0 // NEO
 
 enum rtw_hal_status
 rtw_hal_set_edca(void *hal, struct rtw_wifi_role_t *wrole, u8 ac, u32 edca)
@@ -638,11 +637,17 @@ rtw_hal_set_edca(void *hal, struct rtw_wifi_role_t *wrole, u8 ac, u32 edca)
 	enum rtw_hal_status hal_status;
 
 
+#if 1 //NEO
+	RTW_INFO("%s NEO TODO\n", __func__);
+	return RTW_HAL_STATUS_FAILURE;
+#else // NEO
 	hal_status = rtw_hal_mac_set_edca(hal_info->hal_com, wrole->hw_band,
 					  wrole->hw_wmm, ac, edca);
-
+#endif // NEO
 	return hal_status;
 }
+
+#if 0 // NEO
 
 enum rtw_hal_status
 rtw_hal_cfg_tx_ampdu(void *hal, struct rtw_phl_stainfo_t *sta)

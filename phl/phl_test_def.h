@@ -12,8 +12,8 @@
  * more details.
  *
  *****************************************************************************/
-#ifndef _TEST_MODULE_H_
-#define _TEST_MODULE_H_
+#ifndef _TEST_MODULE_DEF_H_
+#define _TEST_MODULE_DEF_H_
 
 #ifdef CONFIG_PHL_TEST_SUITE
 #define TEST_NAME_LEN		32
@@ -49,6 +49,7 @@ enum TEST_RUN_LVL{
 	TEST_LVL_HIGH,
 	TEST_LVL_MAX
 };
+
 enum TEST_BP_RETURN_TYPE{
 	BP_RET_SKIP_SECTION = 0,
 	BP_RET_RUN_ORIGIN_SEC,
@@ -80,13 +81,13 @@ struct test_bp_info{
 /**
  * test_obj_ctrl_interface - basic test control methods for generic management.
  * @start_test: test entry, initiate & run a test
- * @is_test_end: return true when test ends. 
+ * @is_test_end: return true when test ends.
  *		 NOTE: Do not use evt/lock inside this method for sync.
- * @is_test_pass: return true when test passed. 
- * @get_fail_rsn: if test fails, construct a reasonable string as fail description, 
+ * @is_test_pass: return true when test passed.
+ * @get_fail_rsn: if test fails, construct a reasonable string as fail description,
  *		  not just a status code.
- * @bp_handler: handle break point which is currently being hit, 
- *		use rtw_test_setup_bp to add new break point in source code
+ * @bp_handler: handle break point which is currently being hit,
+ *		use rtw_phl_test_setup_bp to add new break point in source code
  *		and add customized BP type in TEST_BP_INFO_TYPE for recognition.
  */
 
@@ -99,13 +100,14 @@ struct test_obj_ctrl_interface{
 };
 
 struct test_object {
- 	_os_list list;
+	_os_list list;
 	void* priv;
 	enum TEST_RUN_LVL run_lvl;
 	char name[TEST_NAME_LEN];
 	struct test_obj_ctrl_interface ctrl;
 	s32 total_time_ms; // optional, set 0 to use default see TEST_LVL_LOW_TO
 };
+
 struct test_rpt {
 	char name[TEST_NAME_LEN];
 	u8 status;
@@ -113,65 +115,38 @@ struct test_rpt {
 	u32 total_time; // in ms
 };
 
-struct phl_info_t;
+void rtw_phl_test_submodule_init(struct rtw_phl_com_t* phl_com, void *buf);
+void rtw_phl_test_submodule_deinit(struct rtw_phl_com_t* phl_com, void *buf);
+void rtw_phl_test_submodule_cmd_process(struct rtw_phl_com_t* phl_com, void *buf, u32 buf_len);
+void rtw_phl_test_submodule_get_rpt(struct rtw_phl_com_t* phl_com, void *buf, u32 buf_len);
 
-/* called in phl init*/
-u8 rtw_test_module_alloc(struct phl_info_t *phl_info);
-/* called in phl deinit*/
-void rtw_test_module_free(struct rtw_phl_com_t* phl_com);
-
-u8 rtw_test_module_init(struct rtw_phl_com_t* phl_com);
-void rtw_test_module_deinit(struct rtw_phl_com_t* phl_com);
-
-/* following methods are being called on demand*/
-u8 rtw_test_add_new_test_obj(struct rtw_phl_com_t* phl_com, char *name, void* priv,
-	enum TEST_RUN_LVL lvl,  struct test_obj_ctrl_interface* ctrl_intf,
-	s32 total_time_ms, u8 objid, u8 test_mode);
-u8 rtw_test_setup_bp(struct rtw_phl_com_t* phl_com,struct test_bp_info* bp_info, u8 submdid);
-u8 rtw_test_is_test_complete(struct rtw_phl_com_t* phl_com);
-u8 rtw_test_get_test_rpt(struct rtw_phl_com_t* phl_com, u8* buf, u32 len);
-u8 rtw_test_set_max_run_time(struct rtw_phl_com_t* phl_com, enum TEST_RUN_LVL lvl, u32 timeout_ms);
-
-/* phl test mp command */
-enum rtw_phl_status rtw_test_mp_alloc(struct phl_info_t *phl_info, void *hal, void **mp);
-void rtw_test_mp_free(void **mp);
-
-void rtw_test_mp_init(void *mp);
-void rtw_test_mp_deinit(void *mp);
-void rtw_test_mp_start(void *mp, u8 tm_mode);
-void rtw_test_mp_stop(void *mp, u8 tm_mode);
-void rtw_test_mp_cmd_process(void *mp, void *buf, u32 buf_len, u8 submdid);
-void rtw_test_mp_get_rpt(void *mp, void *buf, u32 buf_len);
-
-/* phl test verify command */
-enum rtw_phl_status rtw_test_verify_alloc(struct phl_info_t *phl_info, void *hal, void **ctx);
-void rtw_test_verify_free(void **ctx);
-void rtw_test_verify_init(void *ctx);
-void rtw_test_verify_deinit(void *ctx);
-void rtw_test_verify_start(void *ctx);
-void rtw_test_verify_stop(void *ctx);
-void rtw_test_verify_cmd_process(void *ctx, void *buf, u32 buf_len, u8 submdid);
-void rtw_test_verify_get_rpt(void *ctx, void *buf, u32 buf_len);
-
-/* test submodule function */
-void rtw_test_submodule_init(void *tm, void *buf);
-void rtw_test_submodule_deinit(void *tm, void *buf);
-void rtw_test_submodule_cmd_process(void *tm, void *buf, u32 buf_len);
-void rtw_test_submodule_get_rpt(void *tm, void *buf, u32 buf_len);
+u8 rtw_phl_test_add_new_test_obj(struct rtw_phl_com_t* phl_com,
+                                 char *name,
+                                 void* priv,
+                                 enum TEST_RUN_LVL lvl,
+                                 struct test_obj_ctrl_interface* ctrl_intf,
+                                 s32 total_time_ms,
+                                 u8 objid,
+                                 u8 test_mode);
+u8 rtw_phl_test_setup_bp(struct rtw_phl_com_t* phl_com,
+                         struct test_bp_info* bp_info,
+                         u8 submdid);
+u8 rtw_phl_test_is_test_complete(struct rtw_phl_com_t* phl_com);
+u8 rtw_phl_test_get_rpt(struct rtw_phl_com_t* phl_com, u8* buf, u32 len);
+u8 rtw_phl_test_set_max_run_time(struct rtw_phl_com_t* phl_com, enum TEST_RUN_LVL lvl, u32 timeout_ms);
 
 enum rtw_phl_status rtw_phl_reset(void *phl);
-
-
 #else
-#define rtw_test_module_alloc(phl_info) 1
-#define rtw_test_module_free(phl_com)
-#define rtw_test_module_init(phl_com) true
-#define rtw_test_module_deinit
-#define rtw_test_get_test_rpt(phl_com, buf, len)
-#define rtw_test_submodule_init(_tm, _buf)
-#define rtw_test_submodule_deinit(_tm, _buf)
-#define rtw_test_submodule_cmd_process(_tm, _buf, _buf_len)
-#define rtw_test_submodule_get_rpt(_tm, _buf, _buf_len)
+#define rtw_phl_test_submodule_init(phl_com, buf)
+#define rtw_phl_test_submodule_deinit(phl_com, buf)
+#define rtw_phl_test_submodule_cmd_process(phl_com, buf, buf_len)
+#define rtw_phl_test_submodule_get_rpt(phl_com, buf, buf_len)
+
+#define rtw_phl_test_add_new_test_obj(phl_com, name, priv, lvl, ctrl_intf, total_time_ms, objid, test_mode) true
+#define rtw_phl_test_setup_bp(phl_com, bp_info, submdid) true
+#define rtw_phl_test_is_test_complete(phl_com) true
+#define rtw_phl_test_get_rpt(phl_com, buf, len) true
+#define rtw_phl_test_set_max_run_time(phl_com, lvl, timeout_ms) true
 #endif /*CONFIG_PHL_TEST_SUITE*/
 
-#endif	/* _TEST_MODULE_H_ */
+#endif	/* _TEST_MODULE_DEF_H_ */

@@ -141,7 +141,7 @@ phl_sw_cap_deinit(struct rtw_phl_com_t* phl_com)
 		_phl_sw_cap_para_free(phl_com, &phy_sw_cap->mac_reg_info);
 		_phl_sw_cap_para_free(phl_com, &phy_sw_cap->bb_phy_reg_info);
 		_phl_sw_cap_para_free(phl_com, &phy_sw_cap->bb_phy_reg_mp_info);
-		_phl_sw_cap_para_init(phl_com, &phy_sw_cap->bb_phy_reg_gain_info);
+		_phl_sw_cap_para_free(phl_com, &phy_sw_cap->bb_phy_reg_gain_info);
 
 		_phl_sw_cap_para_free(phl_com, &phy_sw_cap->rf_radio_a_info);
 		_phl_sw_cap_para_free(phl_com, &phy_sw_cap->rf_radio_b_info);
