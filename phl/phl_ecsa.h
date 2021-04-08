@@ -21,6 +21,9 @@
 #define ECSA_DEFAULT_CHANNEL_SWITCH_COUNT 10
 #define ECSA_SWITCH_TIME_AFTER_LAST_COUNT_DOWN (10 * TU)
 
+#define IS_ECSA_TYPE_AP(_ecsa_ctrl) (_ecsa_ctrl->ecsa_param.ecsa_type == ECSA_TYPE_AP)
+#define IS_ECSA_TYPE_STA(_ecsa_ctrl) (_ecsa_ctrl->ecsa_param.ecsa_type == ECSA_TYPE_STA)
+
 enum phl_ecsa_state{
 	ECSA_STATE_NONE = 0,
 	ECSA_STATE_WAIT_DELAY = 1,
