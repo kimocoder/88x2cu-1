@@ -39,6 +39,9 @@ struct rtw_h2c_pkt *rtw_phl_query_h2c_pkt(struct rtw_phl_com_t *phl_com,
 
 	h2c_pkt = (struct rtw_h2c_pkt *)phl_query_idle_h2c_pkt(phl_info, type);
 
+	if (!h2c_pkt)
+		phl_dump_h2c_pool_stats(phl_info->h2c_pool);
+
 	return h2c_pkt;
 }
 
@@ -79,27 +82,6 @@ void rtw_phl_get_fw_ver(void *phl, char *ver_str, u16 len)
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 
 	rtw_hal_get_fw_ver(phl_info->hal, ver_str, len);
-}
-
-void rtw_phl_test_init(struct rtw_phl_com_t* phl_com, void *buf)
-{
-	rtw_test_submodule_init(phl_com->test_mgnt, buf);
-}
-void rtw_phl_test_deinit(struct rtw_phl_com_t* phl_com, void *buf)
-{
-	rtw_test_submodule_deinit(phl_com->test_mgnt, buf);
-}
-void rtw_phl_test_cmd_process(struct rtw_phl_com_t* phl_com, void *buf, u32 buf_len)
-{
-	rtw_test_submodule_cmd_process(phl_com->test_mgnt, buf, buf_len);
-}
-void rtw_phl_test_get_submodule_rpt(struct rtw_phl_com_t* phl_com, void *buf, u32 buf_len)
-{
-	rtw_test_submodule_get_rpt(phl_com->test_mgnt, buf, buf_len);
-}
-void rtw_phl_test_get_rpt(struct rtw_phl_com_t* phl_com, void *buf, u32 buf_len)
-{
-	rtw_test_get_test_rpt(phl_com, buf, buf_len);
 }
 
 #endif // if 0 NEO

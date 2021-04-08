@@ -28,6 +28,14 @@
 #define MAX_CH_NUM_5GHZ (MAX_CH_NUM_BAND1 + MAX_CH_NUM_BAND2 +\
 				MAX_CH_NUM_BAND3 + MAX_CH_NUM_BAND4)
 
+#define MAX_CH_NUM_UNII5 24 /* 1 ~ 93 */
+#define MAX_CH_NUM_UNII6 6 /* 97 ~ 117 */
+#define MAX_CH_NUM_UNII7 18 /* 121 ~ 189 */
+#define MAX_CH_NUM_UNII8 12 /* 193 ~ 237 */
+#define MAX_CH_NUM_6GHZ (MAX_CH_NUM_UNII5 + MAX_CH_NUM_UNII6 +\
+				MAX_CH_NUM_UNII7 + MAX_CH_NUM_UNII8)
+
+
 #define CH_2GHZ(_ch_) ((_ch_ <= 14) ? true : false)
 #define CH_5GHZ(_ch_) ((_ch_ > 14) ? true : false)
 #define CH_5GHZ_BAND1(_ch_) (((_ch_ >= 36) && (_ch_ <= 48)) ? true : false)
@@ -56,7 +64,8 @@ enum regulation_rsn {
 enum rtw_regulation_capability {
 	CAPABILITY_2GHZ = BIT(0),
 	CAPABILITY_5GHZ = BIT(1),
-	CAPABILITY_DFS = BIT(2)
+	CAPABILITY_DFS = BIT(2),
+	CAPABILITY_6GHZ = BIT(3)
 };
 
 enum rtw_regulation_query {
@@ -66,27 +75,37 @@ enum rtw_regulation_query {
 	REGULQ_CHPLAN_5GHZ_BAND1,
 	REGULQ_CHPLAN_5GHZ_BAND2,
 	REGULQ_CHPLAN_5GHZ_BAND3,
-	REGULQ_CHPLAN_5GHZ_BAND4
+	REGULQ_CHPLAN_5GHZ_BAND4,
+	REGULQ_CHPLAN_6GHZ_UNII5,
+	REGULQ_CHPLAN_6GHZ_UNII6,
+	REGULQ_CHPLAN_6GHZ_UNII7,
+	REGULQ_CHPLAN_6GHZ_UNII8,
+	REGULQ_CHPLAN_6GHZ,
+	REGULQ_CHPLAN_6GHZ_PSC
 };
 
 enum ch_property {
-	CH_PASSIVE = BIT(0),
-	CH_DFS = BIT(1)
+	CH_PASSIVE = BIT(0), /* regulatory passive channel */
+	CH_DFS = BIT(1), /* 5 ghz DFS channel */
+	CH_PSC = BIT(2) /* 6 ghz preferred scanning channel */
 };
 
 struct rtw_regulation_channel {
+	enum band_type band;
 	u8 channel;
 	u8 property;
 };
 
 struct rtw_regulation_chplan {
 	u32 cnt;
-	struct rtw_regulation_channel ch[MAX_CH_NUM_2GHZ + MAX_CH_NUM_5GHZ];
+	struct rtw_regulation_channel ch[MAX_CH_NUM_2GHZ +
+					MAX_CH_NUM_5GHZ +
+					MAX_CH_NUM_6GHZ];
 };
 
 struct rtw_chlist {
 	u32 cnt;
-	u8 ch[MAX_CH_NUM_2GHZ + MAX_CH_NUM_5GHZ];
+	u8 ch[MAX_CH_NUM_2GHZ + MAX_CH_NUM_5GHZ + MAX_CH_NUM_6GHZ];
 };
 
 struct rtw_regulation_info {
@@ -127,6 +146,8 @@ struct rtw_user_def_chplan {
 	u32 ch5g;
 	u32 passive5g;
 	u32 dfs5g;
+
+	u32 regulatory_idx;
 };
 
 /*

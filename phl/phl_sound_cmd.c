@@ -122,7 +122,6 @@ _phl_snd_cmd_module_msg_msg_hdlr_post(struct phl_info_t *phl,
 			mstatus = MDL_RET_FAIL;
 			break;
 		}
-
 		rtw_hal_beamform_set_vht_gid(phl->hal, msg->band_idx, gid_tbl);
 		mstatus = MDL_RET_SUCCESS;
 	}
@@ -222,7 +221,6 @@ rtw_phl_snd_cmd_set_vht_gid(void *phl,
 {
 	enum rtw_phl_status phl_status = RTW_PHL_STATUS_FAILURE;
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct phl_cmd_dispatch_engine *disp_eng = &(phl_info->disp_eng);
 	struct phl_msg msg = {0};
 	struct phl_msg_attribute attr = {0};
 	void *d = phl_to_drvpriv(phl_info);
