@@ -19,14 +19,21 @@
 
 struct phl_watchdog {
 	_os_timer wdog_timer;
-	void (*core_wdog)(void *drv_priv);
+
+	/* Only sw statistics or sw behavior or trigger FG cmd */
+	void (*core_sw_wdog)(void *drv_priv);
+
+	/* I/O, tx behavior, request power, ... */
+	void (*core_hw_wdog)(void *drv_priv);
 	u16 period;
 };
 
 enum rtw_phl_status
-phl_watchdog_cmd_hdl(struct phl_info_t *phl_info);
+phl_watchdog_cmd_hdl(struct phl_info_t *phl_info, enum rtw_phl_status psts);
 
+#ifdef CONFIG_FSM
 void rtw_phl_watchdog_callback(void *phl);
+#endif
 
 #endif /*_PHL_WATCHDOG_H_*/
 

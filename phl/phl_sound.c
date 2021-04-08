@@ -161,11 +161,13 @@ rtw_phl_sound_start(void *phl, u8 wrole_idx, u8 st_dlg_tkn, u8 period, u8 test_f
 enum rtw_phl_status
 rtw_phl_sound_down_ev(void *phl)
 {
-	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
+	enum rtw_phl_status status = RTW_PHL_STATUS_SUCCESS;
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	struct phl_sound_obj *snd = (struct phl_sound_obj *)phl_info->snd_obj;
 #ifdef CONFIG_FSM	
 	status = phl_snd_fsm_ev_c2h_snd_down(phl);
+#else
+	return RTW_PHL_STATUS_FAILURE;
 #endif
 	return status;
 }

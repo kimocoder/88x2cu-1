@@ -118,8 +118,82 @@ static enum phl_mdl_ret_code _btc_cmd_stop(void *dispr, void *priv)
 }
 
 static enum phl_mdl_ret_code
-_pre_msg_hdlr(struct phl_info_t *phl_info, void *dispr,
-				    struct phl_msg *msg)
+_btc_internal_pre_msg_hdlr(struct phl_info_t *phl_info,
+                           void *dispr,
+                           struct phl_msg *msg)
+{
+	enum phl_mdl_ret_code ret = MDL_RET_IGNORE;
+	enum phl_msg_evt_id evt_id = MSG_EVT_ID_FIELD(msg->msg_id);
+
+	/*PHL_INFO("[BTCCMD], msg->band_idx = %d,  msg->msg_id = 0x%x\n",
+		msg->band_idx, msg->msg_id);*/
+
+	switch(evt_id) {
+	case MSG_EVT_BTC_REQ_BT_SLOT:
+		PHL_INFO("[BTCCMD], MSG_EVT_BTC_REQ_BT_SLOT \n");
+		ret = MDL_RET_SUCCESS;
+		break;
+
+	case MSG_EVT_PACKET_NTFY:
+		PHL_INFO("[BTCCMD], MSG_EVT_PACKET_NTFY \n");
+		_hdl_pkt_notify(phl_info, msg);
+		ret = MDL_RET_SUCCESS;
+		break;
+
+	default:
+		break;
+	}
+
+	return ret;
+}
+
+static enum phl_mdl_ret_code
+_btc_internal_post_msg_hdlr(struct phl_info_t *phl_info,
+                            void *dispr,
+                            struct phl_msg *msg)
+{
+	enum phl_mdl_ret_code ret = MDL_RET_IGNORE;
+	enum phl_msg_evt_id evt_id = MSG_EVT_ID_FIELD(msg->msg_id);
+
+	switch(evt_id) {
+	case MSG_EVT_BTC_TMR:
+		PHL_DBG("[BTCCMD], MSG_EVT_BTC_TMR \n");
+		_hdl_tmr(phl_info);
+		ret = MDL_RET_SUCCESS;
+		break;
+
+	case MSG_EVT_BTC_FWEVNT:
+		PHL_DBG("[BTCCMD], MSG_EVT_BTC_FWEVNT \n");
+		rtw_hal_btc_fwinfo_ntfy(phl_info->hal);
+		ret = MDL_RET_SUCCESS;
+		break;
+
+	default:
+		break;
+	}
+
+	return ret;
+}
+
+static enum phl_mdl_ret_code
+_btc_internal_msg_hdlr(struct phl_info_t *phl_info,
+                       void *dispr,
+                       struct phl_msg *msg)
+{
+	enum phl_mdl_ret_code ret = MDL_RET_FAIL;
+
+	if (IS_MSG_IN_PRE_PHASE(msg->msg_id))
+		ret = _btc_internal_pre_msg_hdlr(phl_info, dispr, msg);
+	else
+		ret = _btc_internal_post_msg_hdlr(phl_info, dispr, msg);
+
+	return ret;
+}
+
+static enum phl_mdl_ret_code
+_btc_external_pre_msg_hdlr(struct phl_info_t *phl_info,
+                           void *dispr,
+                           struct phl_msg *msg)
 {
 	enum phl_mdl_ret_code ret = MDL_RET_IGNORE;
 	enum phl_msg_evt_id evt_id = MSG_EVT_ID_FIELD(msg->msg_id);
@@ -129,23 +203,18 @@ _pre_msg_hdlr(struct phl_info_t *phl_info, void *dispr,
 
 	switch(evt_id) {
 		case MSG_EVT_SCAN_START:
+			if (MSG_MDL_ID_FIELD(msg->msg_id) != PHL_FG_MDL_SCAN)
+				break;
+
 			PHL_INFO("[BTCCMD], MSG_EVT_SCAN_START \n");
 			ret = MDL_RET_SUCCESS;
 			break;
 
 		case MSG_EVT_CONNECT_START:
+			if (MSG_MDL_ID_FIELD(msg->msg_id) != PHL_FG_MDL_CONNECT)
+				break;
+
 			PHL_INFO("[BTCCMD], MSG_EVT_CONNECT_START \n");
-			ret = MDL_RET_SUCCESS;
-			break;
-
-		case MSG_EVT_BTC_REQ_BT_SLOT:
-			PHL_INFO("[BTCCMD], MSG_EVT_BTC_REQ_BT_SLOT \n");
-			ret = MDL_RET_SUCCESS;
-			break;
-
-		case MSG_EVT_PACKET_NTFY:
-			PHL_INFO("[BTCCMD], MSG_EVT_PACKET_NTFY \n");
-			_hdl_pkt_notify(phl_info, msg);
 			ret = MDL_RET_SUCCESS;
 			break;
 
@@ -157,38 +226,36 @@ _pre_msg_hdlr(struct phl_info_t *phl_info, void *dispr,
 }
 
 static enum phl_mdl_ret_code
-_post_msg_hdlr(struct phl_info_t *phl_info, void *dispr,
-				     struct phl_msg *msg)
+_btc_external_post_msg_hdlr(struct phl_info_t *phl_info,
+                            void *dispr,
+                            struct phl_msg *msg)
 {
 	enum phl_mdl_ret_code ret = MDL_RET_IGNORE;
 	enum phl_msg_evt_id evt_id = MSG_EVT_ID_FIELD(msg->msg_id);
 
 	switch(evt_id) {
 		case MSG_EVT_SCAN_END:
+			if (MSG_MDL_ID_FIELD(msg->msg_id) != PHL_FG_MDL_SCAN)
+				break;
+
 			PHL_DBG("[BTCCMD], MSG_EVT_SCAN_END \n");
 			ret = MDL_RET_SUCCESS;
 			break;
 
 		case MSG_EVT_CONNECT_END:
+			if (MSG_MDL_ID_FIELD(msg->msg_id) != PHL_FG_MDL_CONNECT)
+				break;
+
 			PHL_DBG("[BTCCMD], MSG_EVT_CONNECT_END \n");
 			ret = MDL_RET_SUCCESS;
 			break;
 
 		case MSG_EVT_ROLE_NTFY:
+			if (MSG_MDL_ID_FIELD(msg->msg_id) != PHL_MDL_MRC)
+				break;
+
 			PHL_DBG("[BTCCMD], MSG_EVT_ROLE_NTFY \n");
 			_hdl_role_notify(phl_info, msg);
-			ret = MDL_RET_SUCCESS;
-			break;
-
-		case MSG_EVT_BTC_TMR:
-			PHL_DBG("[BTCCMD], MSG_EVT_BTC_TMR \n");
-			_hdl_tmr(phl_info);
-			ret = MDL_RET_SUCCESS;
-			break;
-
-		case MSG_EVT_BTC_FWEVNT:
-			PHL_DBG("[BTCCMD], MSG_EVT_BTC_FWEVNT \n");
-			rtw_hal_btc_fwinfo_ntfy(phl_info->hal);
 			ret = MDL_RET_SUCCESS;
 			break;
 
@@ -199,8 +266,23 @@ _post_msg_hdlr(struct phl_info_t *phl_info, void *dispr,
 	return ret;
 }
 
-static enum phl_mdl_ret_code _btc_msg_hdlr(void *dispr, void *priv,
-						      struct phl_msg *msg)
+static enum phl_mdl_ret_code
+_btc_external_msg_hdlr(struct phl_info_t *phl_info,
+                       void *dispr,
+                       struct phl_msg *msg)
+{
+	enum phl_mdl_ret_code ret = MDL_RET_FAIL;
+
+	if (IS_MSG_IN_PRE_PHASE(msg->msg_id))
+		ret = _btc_external_pre_msg_hdlr(phl_info, dispr, msg);
+	else
+		ret = _btc_external_post_msg_hdlr(phl_info, dispr, msg);
+
+	return ret;
+}
+
+static enum phl_mdl_ret_code
+_btc_msg_hdlr(void *dispr, void *priv, struct phl_msg *msg)
 {
 	enum phl_mdl_ret_code ret = MDL_RET_IGNORE;
 	struct phl_info_t *phl_info = (struct phl_info_t *)priv;
@@ -221,10 +303,15 @@ static enum phl_mdl_ret_code _btc_msg_hdlr(void *dispr, void *priv,
 		return ret;
 	}
 
-	if (IS_MSG_IN_PRE_PHASE(msg->msg_id))
-		ret = _pre_msg_hdlr(phl_info, dispr, msg);
-	else
-		ret = _post_msg_hdlr(phl_info, dispr, msg);
+	switch(MSG_MDL_ID_FIELD(msg->msg_id)) {
+		case PHL_MDL_BTC:
+			ret = _btc_internal_msg_hdlr(phl_info, dispr, msg);
+			break;
+
+		default:
+			ret = _btc_external_msg_hdlr(phl_info, dispr, msg);
+			break;
+	}
 
 	FUNCOUT();
 	return ret;
@@ -251,9 +338,7 @@ _btc_query_info(void *dispr, void *priv,
 enum rtw_phl_status phl_register_btc_module(struct phl_info_t *phl_info)
 {
 	enum rtw_phl_status phl_status = RTW_PHL_STATUS_FAILURE;
-	struct phl_cmd_dispatch_engine *disp_eng = &(phl_info->disp_eng);
 	struct phl_bk_module_ops bk_ops = {0};
-	u8 i = 0;
 
 	PHL_INFO("[BTCCMD], %s(): \n", __func__);
 
@@ -268,7 +353,7 @@ enum rtw_phl_status phl_register_btc_module(struct phl_info_t *phl_info)
 	phl_status = phl_disp_eng_register_module(phl_info, HW_BAND_0,
 						PHL_MDL_BTC, &bk_ops);
 	if (RTW_PHL_STATUS_SUCCESS != phl_status) {
-		PHL_ERR(" Failed to register BTC module in cmd disp (%d) \n", i+1);
+		PHL_ERR("Failed to register BTC module in cmd dispr of hw band 0\n");
 	}
 
 	return phl_status;
