@@ -111,18 +111,19 @@ phl_radar_detect_hdl(struct phl_info_t *phl_info,
 #endif /*CONFIG_PHL_DFS*/
 
 enum rtw_phl_status
-rtw_phl_set_ch_bw(struct rtw_wifi_role_t *wifi_role,
-		  u8 chan, enum channel_width bw, enum chan_offset offset, bool do_rfk)
+phl_set_ch_bw(struct rtw_wifi_role_t *wifi_role,
+	      struct rtw_chan_def *chdef, bool do_rfk)
 {
 	struct phl_info_t *phl_info = wifi_role->phl_com->phl_priv;
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_FAILURE;
 
+	chdef->band = rtw_phl_get_band_type(chdef->chan);
 #ifdef CONFIG_PHL_DFS
-	phl_radar_detect_hdl(phl_info, chan, bw, offset);
+	phl_radar_detect_hdl(phl_info, chdef->chan, chdef->bw, chdef->offset);
 #endif
 
 	hstatus = rtw_hal_set_ch_bw(phl_info->hal, wifi_role->hw_band,
-				    chan, bw, offset, do_rfk);
+				    chdef, do_rfk);
 	if (RTW_HAL_STATUS_SUCCESS != hstatus)
 		PHL_ERR("%s rtw_hal_set_ch_bw: statuts = %u\n", __func__, hstatus);
 
@@ -141,11 +142,9 @@ phl_cmd_set_ch_bw_hdl(struct phl_info_t *phl_info, u8 *param)
 {
 	struct setch_param *ch_param = (struct setch_param *)param;
 
-	return rtw_phl_set_ch_bw(ch_param->wrole,
-	                         ch_param->chdef.chan,
-	                         ch_param->chdef.bw,
-	                         ch_param->chdef.offset,
-	                         ch_param->do_rfk);
+	return phl_set_ch_bw(ch_param->wrole,
+				&(ch_param->chdef),
+				ch_param->do_rfk);
 }
 
 static void _phl_set_ch_bw_done(void *drv_priv, u8 *cmd, u32 cmd_len, enum rtw_phl_status status)
@@ -171,11 +170,7 @@ rtw_phl_cmd_set_ch_bw(struct rtw_wifi_role_t *wifi_role,
 	u32 param_len;
 
 	if (cmd_type == PHL_CMD_DIRECTLY) {
-		psts = rtw_phl_set_ch_bw(wifi_role,
-		                         chdef->chan,
-		                         chdef->bw,
-		                         chdef->offset,
-		                         do_rfk);
+		psts = phl_set_ch_bw(wifi_role, chdef, do_rfk);
 		goto _exit;
 	}
 
@@ -1150,6 +1145,12 @@ bool rtw_phl_chanctx_test(void *phl, struct rtw_wifi_role_t *wifi_role, bool is_
 #endif
 
 #endif // if 0 NEO
+
+enum band_type rtw_phl_get_band_type(u8 chan)
+{
+	/*TODO - BAND_ON_6G*/
+	return (chan > 14) ? BAND_ON_5G : BAND_ON_24G;
+}
 
 u8 rtw_phl_get_center_ch(u8 ch,
 			enum channel_width bw, enum chan_offset offset)

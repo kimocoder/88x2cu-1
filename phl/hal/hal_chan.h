@@ -16,8 +16,7 @@
 #define _HAL_CHAN_H_
 
 enum rtw_hal_status rtw_hal_set_ch_bw(void *hal, u8 band_idx,
-		u8 chan, enum channel_width bw, enum chan_offset offset,
-		bool do_rfk);
+		struct rtw_chan_def *chdef, bool do_rfk);
 
 
 #ifdef DBG_PHL_CHAN

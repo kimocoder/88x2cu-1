@@ -19,7 +19,7 @@
 #define PHL_VERSION(a, b, c, d) (((a) << 48) + ((b) << 32) + ((c) << 16) + (d))
 
 #define PHL_MAJOR_VER	0001
-#define PHL_MINOR_VER	0014
+#define PHL_MINOR_VER	0015
 #define PHL_HOTFIX_VER	0000
 #define PHL_BRANCH_IDX	0000
 

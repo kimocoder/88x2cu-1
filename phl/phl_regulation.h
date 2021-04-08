@@ -15,7 +15,7 @@
 #ifndef _PHL_REGULATION_H_
 #define _PHL_REGULATION_H_
 
-#define MAX_CH_NUM_GROUP 14
+#define MAX_CH_NUM_GROUP 24
 
 enum rtw_regulation_freq_group {
 	FREQ_GROUP_2GHZ = 0x0,
@@ -23,6 +23,11 @@ enum rtw_regulation_freq_group {
 	FREQ_GROUP_5GHZ_BAND2,
 	FREQ_GROUP_5GHZ_BAND3,
 	FREQ_GROUP_5GHZ_BAND4,
+	FREQ_GROUP_6GHZ_UNII5,
+	FREQ_GROUP_6GHZ_UNII6,
+	FREQ_GROUP_6GHZ_UNII7,
+	FREQ_GROUP_6GHZ_UNII8,
+	FREQ_GROUP_6GHZ_PSC,
 	FREQ_GROUP_MAX
 };
 
@@ -42,11 +47,11 @@ struct rtw_regulation_chplan_group {
 
 #define MAX_HISTORY_NUM 20
 
-#define INVALID_DOMAIN_CODE 0xff
+#define INVALID_DOMAIN_CODE 0xffff
 #define INVALID_CHDEF 0xff
 
 struct rtw_domain {
-	u8 code;
+	u16 code;
 	u8 reason;
 };
 
@@ -70,6 +75,15 @@ struct rtw_regulation {
 	u8 regulation_5g;
 
 	struct rtw_regulation_chplan_group chplan[FREQ_GROUP_MAX];
+
+	/* 6 ghz */
+	u8 invalid_cnt_6g;
+	u8 history_cnt_6g;
+	struct rtw_domain history_6g[MAX_HISTORY_NUM];
+	bool valid_6g; /* true if domain code successfully set */
+	struct rtw_domain domain_6g;
+	u8 ch_idx6g; /* 6ghz chdef index */
+	u8 regulation_6g;
 };
 
 #endif /* _PHL_REGULATION_H_ */

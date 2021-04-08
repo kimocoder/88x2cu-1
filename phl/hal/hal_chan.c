@@ -40,12 +40,12 @@ rtw_hal_radar_detect_cfg(void *hal, bool dfs_enable)
 #endif // if 0 NEO
 
 enum rtw_hal_status rtw_hal_set_ch_bw(void *hal, u8 band_idx,
-		u8 chan, enum channel_width bw, enum chan_offset offset, bool do_rfk)
+		struct rtw_chan_def *chdef, bool do_rfk)
 {
 	struct hal_info_t *hal_info = (struct hal_info_t *)hal;
 	struct rtw_hal_com_t *hal_com = hal_info->hal_com;
+	struct rtw_chan_def *cur_chdef = &(hal_com->band[band_idx].cur_chandef);
 	enum rtw_hal_status status = RTW_HAL_STATUS_SUCCESS;
-	struct rtw_chan_def *chandef = &(hal_com->band[band_idx].cur_chandef);
 	u8 center_ch = 0;
 	u8 central_ch_seg1 = 0;
 	enum band_type change_band;
@@ -55,6 +55,9 @@ enum rtw_hal_status rtw_hal_set_ch_bw(void *hal, u8 band_idx,
 	struct dvobj_priv *dvobj = hal_com->drv_priv;
 	_adapter *padapter = dvobj_get_primary_adapter(dvobj);
 	u8 channel_offset, chnl_offset80 = HAL_PRIME_CHNL_OFFSET_DONT_CARE;
+	u8 chan = chdef->chan;
+	enum channel_width bw = chdef->bw;
+	enum chan_offset offset = chdef->offset;
 
 
 	switch (offset) {
@@ -88,7 +91,7 @@ enum rtw_hal_status rtw_hal_set_ch_bw(void *hal, u8 band_idx,
 		 __func__, bw, center_ch, chan, chnl_offset80);
 
 
-	if ((chan != chandef->chan) || (bw != chandef->bw)) {
+	if ((chdef->chan != cur_chdef->chan) || (chdef->bw != cur_chdef->bw)) {
 		if (band_idx == 1) {
 			RTW_ERR("%s: band_idx==1\n", __func__);
 			goto err_ret;
@@ -107,7 +110,7 @@ enum rtw_hal_status rtw_hal_set_ch_bw(void *hal, u8 band_idx,
 err_ret:
 	return status;
 #else
-	if ((chan != chandef->chan) || (bw != chandef->bw)) {
+	if ((chandef->chan != cur_chdef->chan) || (chandef->bw != cur_chdef->bw)) {
 		if (band_idx == 1)
 			phy_idx = HW_PHY_1;
 

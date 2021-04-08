@@ -1081,13 +1081,6 @@ enum rtw_phl_status rtw_phl_init(void *drv_priv, void **phl,
 		goto error_module_init;
 	}
 
-	/* init led_ctrl */
-	phl_status = phl_led_ctrl_init(phl_info);
-	if (phl_status != RTW_PHL_STATUS_SUCCESS) {
-		PHL_ERR("phl_led_ctrl_init failed\n");
-		goto error_led_ctrl_init;
-	}
-
 	/* init macid_ctrl , stainfo_ctrl*/
 	/* init after get hw cap - macid number*/
 	phl_status = phl_macid_ctrl_init(phl_info);
@@ -1108,7 +1101,6 @@ enum rtw_phl_status rtw_phl_init(void *drv_priv, void **phl,
 error_stainfo_ctrl_init:
 	phl_macid_ctrl_deinit(phl_info);
 error_macid_ctrl_init:
-	phl_led_ctrl_deinit(phl_info);
 error_led_ctrl_init:
 	phl_module_deinit(phl_info);
 
@@ -1151,7 +1143,6 @@ void rtw_phl_deinit(void *phl)
 	if (phl_info) {
 		phl_stainfo_ctrl_deinie(phl_info);
 		phl_macid_ctrl_deinit(phl_info);
-		phl_led_ctrl_deinit(phl_info);
 		/*deinit mr_ctrl, wifi_role[]*/
 		phl_module_deinit(phl_info);
 		phl_mr_ctrl_deinit(phl_info);

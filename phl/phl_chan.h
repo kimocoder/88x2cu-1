@@ -27,8 +27,8 @@ enum rtw_phl_status
 phl_chanctx_free(struct phl_info_t *phl_info, struct hw_band_ctl_t *band_ctl);
 
 enum rtw_phl_status
-rtw_phl_set_ch_bw(struct rtw_wifi_role_t *wifi_role,
-		  u8 chan, enum channel_width bw, enum chan_offset offset, bool do_rfk);
+phl_set_ch_bw(struct rtw_wifi_role_t *wifi_role,
+		 struct rtw_chan_def *chdef, bool do_rfk);
 
 
 #ifdef CONFIG_CMD_DISP
@@ -58,10 +58,19 @@ void phl_chan_dump_chandef(const char *caller, const int line, bool show_caller,
 enum rtw_phl_status
 rtw_phl_dbcc_test(void *phl, enum dbcc_test_id id, void *param);
 #endif
+
+enum band_type rtw_phl_get_band_type(u8 chan);
 u8 rtw_phl_get_center_ch(u8 ch,
 	enum channel_width bw, enum chan_offset offset);
 u8
 rtw_phl_get_operating_class(
 	struct rtw_chan_def chan_def
+);
+
+bool
+rtw_phl_get_chandef_from_operating_class(
+	u8 channel,
+	u8 operating_class,
+	struct rtw_chan_def *chan_def
 );
 #endif /*_PHL_CHANA_H_*/

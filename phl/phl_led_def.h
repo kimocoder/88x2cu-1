@@ -45,9 +45,14 @@ enum rtw_led_event {
 	RTW_LED_EVENT_PHL_STOP,
 	RTW_LED_EVENT_SW_RF_ON,
 	RTW_LED_EVENT_SW_RF_OFF,
-	RTW_LED_EVENT_SCAN,
-	RTW_LED_EVENT_TX,
-	RTW_LED_EVENT_RX,
+	RTW_LED_EVENT_SCAN_START,
+	RTW_LED_EVENT_LINK_START,
+	RTW_LED_EVENT_LINKED,
+	RTW_LED_EVENT_NO_LINK,
+	RTW_LED_EVENT_LINKED_CIPHER,
+	RTW_LED_EVENT_LINKED_NOCIPHER,
+	RTW_LED_EVENT_LINKED_24G,
+	RTW_LED_EVENT_LINKED_5G,
 	RTW_LED_EVENT_LENGTH
 };
 
@@ -59,7 +64,32 @@ enum rtw_led_state {
 enum rtw_led_action {
 	RTW_LED_ACTION_LOW,
 	RTW_LED_ACTION_HIGH,
+	RTW_LED_ACTION_HW_TRX,
 	RTW_LED_ACTION_TOGGLE,
+};
+
+enum rtw_led_opt {
+	RTW_LED_OPT_LOW = 0,
+	RTW_LED_OPT_HIGH = 1,
+	RTW_LED_OPT_UNKNOWN = 2
+};
+
+struct rtw_led_toggle_args_t {
+	enum rtw_led_opt start_opt;
+	u32 start_delay;
+	u32 loop;
+	u8 intervals_idx;
+};
+
+struct rtw_led_action_args_t {
+	enum rtw_led_id led_id;
+	enum rtw_led_action led_action;
+	struct rtw_led_toggle_args_t toggle_args;
+};
+
+struct rtw_led_intervals_t {
+	u32 *interval_arr;
+	u8 len;
 };
 
 #endif /*_PHL_LED_DEF_H_*/

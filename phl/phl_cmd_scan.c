@@ -190,8 +190,8 @@ next_ch:
 		return NULL;
 	}
 
-	PHL_INFO("%s: repeat[%d] ch_idx=[%d/%d], ch_number=%d, type=%d, scan_mode= %s\n", __func__,
-		 param->repeat, param->ch_idx, param->ch_num, param->scan_ch->channel, param->scan_ch->type,
+	PHL_INFO("%s: repeat[%d] ch_idx=[%d/%d], ch_number=%d, scan_mode= %s\n", __func__,
+		 param->repeat, param->ch_idx, param->ch_num, param->scan_ch->channel,
 		(param->scan_ch->scan_mode == BACKOP_MODE)? "OP_CH": "Non-OP");
 
 	return param->scan_ch;
@@ -371,13 +371,13 @@ void _cmd_abort_notify(void *dispr, void *drv,
 			PHL_ERR("%s :: [Abort] dispr_send_msg failed (0x%X)\n",
 				__func__, pstatus);
 
-			/*
-			cmd_scan can't recongine CANNOT_IO state in this situation.
-			Comment out RTW_PHL_STATUS_UNEXPECTED_ERROR */
-			/* if(pstatus == RTW_PHL_STATUS_UNEXPECTED_ERROR) */
-				/* driver is going to unload, clean resource only */
-				CLEAR_STATUS_FLAG(param->state, CMD_SCAN_STARTED);
-
+			if(pstatus == RTW_PHL_STATUS_UNEXPECTED_ERROR ||
+			   TEST_STATUS_FLAG(phl_com->dev_state, RTW_DEV_SURPRISE_REMOVAL)) {
+				/* clean sw resource only */
+				/* (1) driver is going to unload */
+				/* (2) Supprise remove */
+				SET_STATUS_FLAG(param->state, CMD_SCAN_DF_IO);
+			}
 			_cmd_abort_notify_cb(drv, &msg);
 		}
 	}
@@ -493,6 +493,7 @@ enum phl_mdl_ret_code _cmd_scan_hdl_internal_evt(
 	u8 idx = 0xff;
 	struct phl_scan_channel *scan_ch = NULL;
 	bool tx_pause = true;
+	struct rtw_chan_def chdef = {0};
 
 	phl_dispr_get_idx(dispr, &idx);
 	diff_time = phl_get_passing_time_ms(param->enqueue_time);
@@ -598,19 +599,17 @@ enum phl_mdl_ret_code _cmd_scan_hdl_internal_evt(
 				rtw_hal_scan_pause_tx_fifo(phl_info->hal, wifi_role->hw_band, true);
 				tx_pause = true;
 			}
+			chdef.chan = (u8)scan_ch->channel;
+			chdef.bw = scan_ch->bw;
+			chdef.offset = scan_ch->offset;
 
-			rtw_phl_set_ch_bw(wifi_role, (u8)scan_ch->channel,
-					  scan_ch->bw, scan_ch->offset, false);
+			phl_set_ch_bw(wifi_role, &chdef, false);
 
-			RTW_INFO("%s NEO DO scan_mode:%d, type:%d\n", __func__, scan_ch->scan_mode, scan_ch->type);
-			scan_ch->type = RTW_PHL_SCAN_ACTIVE; // NEO: force to active first to see if can issue probe req
 			if ((scan_ch->scan_mode != BACKOP_MODE) &&
 			    (scan_ch->type == RTW_PHL_SCAN_ACTIVE)) {
 
-				if (param->ops->scan_issue_pbreq) {
-					RTW_INFO("%s scan_issue_pbreq\n", __func__);
+				if (param->ops->scan_issue_pbreq)
 					param->ops->scan_issue_pbreq(param->priv, param);
-				}
 			}
 
 			if ((scan_ch->scan_mode == BACKOP_MODE) && tx_pause) {
@@ -675,7 +674,6 @@ enum phl_mdl_ret_code _phl_cmd_scan_req_acquired(
 	struct phl_msg msg = {0};
 	struct phl_msg_attribute attr = {0};
 
-	RTW_INFO("%s NEO DO\n", __func__);
 	FUNCIN();
 
 	param->start_time = _os_get_cur_time_ms();
@@ -734,10 +732,6 @@ enum phl_mdl_ret_code _phl_cmd_scan_req_ev_hdlr(
 	enum phl_mdl_ret_code ret = MDL_RET_IGNORE;
 
 	if(IS_MSG_FAIL(msg->msg_id)) {
-		struct rtw_phl_scan_param *param = (struct rtw_phl_scan_param*)priv;
-		struct rtw_phl_com_t *phl_com = param_to_phlcom(param);
-		void *d = phlcom_to_drvpriv(phl_com);
-
 		PHL_INFO("%s :: MSG(%d)_FAIL - EVT_ID=%d \n", __func__,
 			 MSG_MDL_ID_FIELD(msg->msg_id), MSG_EVT_ID_FIELD(msg->msg_id));
 
@@ -761,11 +755,14 @@ enum phl_mdl_ret_code _phl_cmd_scan_req_set_info(
 	void* dispr, void* priv, struct phl_module_op_info* info)
 {
 	enum phl_mdl_ret_code ret = MDL_RET_IGNORE;
-	struct rtw_phl_scan_param *param = (struct rtw_phl_scan_param*)priv;
-	u16 channel = 0;
+
 #ifdef RTW_WKARD_CMD_SCAN_EXTEND_ACTIVE_SCAN
 	switch(info->op_code) {
 		case FG_REQ_OP_NOTIFY_BCN_RCV:
+		{
+			struct rtw_phl_scan_param *param = (struct rtw_phl_scan_param*)priv;
+			u16 channel = 0;
+
 			/* this workaround might have race condition with background thread*/
 			channel = *(u8*)info->inbuf;
 			if (param->scan_ch &&
@@ -778,6 +775,7 @@ enum phl_mdl_ret_code _phl_cmd_scan_req_set_info(
 			    param->scan_ch->channel != channel)
 			    PHL_INFO(" %s :: channel %d mismatch from listen channel %d\n", __func__, channel, param->scan_ch->channel);
 			ret = MDL_RET_SUCCESS;
+		}
 			break;
 		default:
 			break;
@@ -908,12 +906,11 @@ enum rtw_phl_status rtw_phl_cmd_scan_request(void *phl,
 	struct rtw_phl_scan_param *param, enum PRECEDE order)
 {
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_FAILURE;
-	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	u8 band_idx = param->wifi_role->hw_band;
 	struct phl_cmd_token_req fgreq={0};
 
 #ifdef RTW_WKARD_SKIP_SCAN_IN_MCC
-	if(rtw_phl_mcc_inprogress(phl_info, band_idx)){
+	if(rtw_phl_mcc_inprogress((struct phl_info_t *)phl, band_idx)){
 		PHL_INFO("rtw_phl_cmd_scan_request: Skip scan in MCC!\n");
 		goto error;
 	}
@@ -943,7 +940,6 @@ enum rtw_phl_status rtw_phl_cmd_scan_cancel(void *phl,
 
 int rtw_phl_cmd_scan_inprogress(void *phl, u8 band_idx)
 {
-	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	struct phl_module_op_info op_info = {0};
 	u32	mdl = 0;
 

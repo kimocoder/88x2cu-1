@@ -724,6 +724,10 @@ _phl_mrc_module_msg_hdlr(void *dispr,
 							     msg);
 			break;
 		case MSG_EVT_TSF_SYNC_DONE:
+			if (MSG_MDL_ID_FIELD(msg->msg_id) != PHL_MDL_MRC) {
+				return MDL_RET_IGNORE;
+			}
+
 			/*
 			 * MR decides to call mcc enable or not
 			 */
@@ -746,6 +750,10 @@ _phl_mrc_module_msg_hdlr(void *dispr,
 			ret = MDL_RET_SUCCESS;
 			break;
 		case MSG_EVT_TX_RESUME:
+			if (MSG_MDL_ID_FIELD(msg->msg_id) != PHL_MDL_MRC) {
+				return MDL_RET_IGNORE;
+			}
+
 			/*
 			 * MR resume the tx of the role in remain chanctx
 			 */
@@ -1006,7 +1014,7 @@ _phl_mrc_module_msg_hdlr(void *dispr,
 
 			PHL_DUMP_CHAN_DEF_EX(&chandef);
 
-			rtw_phl_set_ch_bw(role, chandef.chan, chandef.bw, chandef.offset, false);
+			phl_set_ch_bw(role, &chandef, false);
 
 #ifdef RTW_WKARD_MRC_ISSUE_NULL_WITH_SCAN_OPS
 			/*

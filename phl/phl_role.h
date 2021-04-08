@@ -70,4 +70,6 @@ enum rtw_phl_status
 phl_wifi_role_stop_hdl(struct phl_info_t *phl_info, u8 *param);
 #endif
 
+enum rtw_phl_status
+phl_wifi_role_macid_all_pause(struct phl_info_t *phl_info, struct rtw_wifi_role_t *wrole, bool pause);
 #endif  /*_PHL_ROLE_H_*/

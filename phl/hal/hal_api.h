@@ -276,8 +276,7 @@ enum rtw_hal_status rtw_hal_radar_detect_cfg(void *hal, bool dfs_enable);
 
 enum rtw_hal_status
 rtw_hal_set_ch_bw(void *hal, u8 band_idx,
-		u8 chan, enum channel_width bw, enum chan_offset offset,
-		bool do_rfk);
+		  struct rtw_chan_def *chdef, bool do_rfk);
 u8 rtw_hal_get_cur_ch(void *hal, u8 band_idx);
 void rtw_hal_sync_cur_ch(void *hal, u8 band_idx, struct rtw_chan_def chandef);
 

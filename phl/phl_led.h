@@ -15,9 +15,6 @@
 #ifndef _PHL_LED_H_
 #define _PHL_LED_H_
 
-enum rtw_phl_status phl_led_ctrl_init(struct phl_info_t *phl_info);
-void phl_led_ctrl_deinit(struct phl_info_t *phl_info);
-
 enum rtw_phl_status phl_register_led_module(struct phl_info_t *phl_info);
 
 void phl_led_control(struct phl_info_t *phl_info, enum rtw_led_event led_event);
