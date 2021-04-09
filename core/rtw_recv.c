@@ -4111,7 +4111,7 @@ static void rtw_signal_stat_timer_hdl(void *ctx)
 
 	if (adapter_to_dvobj(adapter)->recvpriv.is_signal_dbg) {
 		/* update the user specific value, signal_strength_dbg, to signal_strength, rssi */
-		adapter_to_dvobj(adapter)->recvpriv.signal_strength = adapter_to_dvobj(adapter)->recvpriv.signal_strength_dbg;
+		adapter->recvinfo.signal_strength = adapter_to_dvobj(adapter)->recvpriv.signal_strength_dbg;
 		adapter_to_dvobj(adapter)->recvpriv.rssi = (s8)rtw_phl_rssi_to_dbm((u8)adapter_to_dvobj(adapter)->recvpriv.signal_strength_dbg);
 	} else {
 
@@ -4155,7 +4155,7 @@ static void rtw_signal_stat_timer_hdl(void *ctx)
 		ratio_total = ratio_pre_stat + ratio_curr_stat;
 
 		/* update value of signal_strength, rssi, signal_qual */
-		tmp_s = (ratio_curr_stat * avg_signal_strength + ratio_pre_stat * recvpriv->signal_strength);
+		tmp_s = (ratio_curr_stat * avg_signal_strength + ratio_pre_stat * adapter->recvinfo.signal_strength);
 		if (tmp_s % ratio_total)
 			tmp_s = tmp_s / ratio_total + 1;
 		else
@@ -4171,7 +4171,7 @@ static void rtw_signal_stat_timer_hdl(void *ctx)
 		if (tmp_q > 100)
 			tmp_q = 100;
 
-		recvpriv->signal_strength = tmp_s;
+		adapter->recvinfo.signal_strength = tmp_s;
 		recvpriv->rssi = (s8)rtw_phl_rssi_to_dbm(tmp_s);
 		recvpriv->signal_qual = tmp_q;
 
@@ -4181,7 +4181,7 @@ static void rtw_signal_stat_timer_hdl(void *ctx)
 			 ", on_cur_ch_ms:%d"
 			 "\n"
 			 , FUNC_ADPT_ARG(adapter)
-			 , recvpriv->signal_strength
+			 , adapter->recvinfo.signal_strength
 			 , recvpriv->rssi
 			 , recvpriv->signal_qual
 			 , num_signal_strength, num_signal_qual
@@ -4239,7 +4239,7 @@ static void rx_process_rssi(_adapter *padapter, union recv_frame *prframe)
 			adapter_to_dvobj(padapter)->recvpriv.signal_strength = adapter_to_dvobj(padapter)->recvpriv.signal_strength_dbg;
 			adapter_to_dvobj(padapter)->recvpriv.rssi = (s8)rtw_phl_rssi_to_dbm(adapter_to_dvobj(padapter)->recvpriv.signal_strength_dbg);
 		} else {
-			adapter_to_dvobj(padapter)->recvpriv.signal_strength = tmp_val;
+			padapter->recvinfo.signal_strength = tmp_val;
 			adapter_to_dvobj(padapter)->recvpriv.rssi = (s8)rtw_phl_rssi_to_dbm(tmp_val);
 		}
 

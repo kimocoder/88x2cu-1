@@ -843,7 +843,7 @@ struct cfg80211_bss *rtw_cfg80211_inform_bss(_adapter *padapter, struct wlan_net
 	/* We've set wiphy's signal_type as CFG80211_SIGNAL_TYPE_MBM: signal strength in mBm (100*dBm) */
 	if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE &&
 		is_same_network(&pmlmepriv->cur_network.network, &pnetwork->network, 0)) {
-		notify_signal = 100 * rtw_phl_rssi_to_dbm(adapter_to_dvobj(padapter)->recvpriv.signal_strength); /* dbm */
+		notify_signal = 100 * rtw_phl_rssi_to_dbm(padapter->recvinfo.signal_strength); /* dbm */
 	} else {
 		notify_signal = 100 * rtw_phl_rssi_to_dbm(pnetwork->network.PhyInfo.SignalStrength); /* dbm */
 	}
@@ -2526,7 +2526,7 @@ static int cfg80211_rtw_get_station(struct wiphy *wiphy,
 		}
 
 		sinfo->filled |= STATION_INFO_SIGNAL;
-		sinfo->signal = rtw_phl_rssi_to_dbm(adapter_to_dvobj(padapter)->recvpriv.signal_strength);
+		sinfo->signal = rtw_phl_rssi_to_dbm(padapter->recvinfo.signal_strength);
 
 		sinfo->filled |= STATION_INFO_TX_BITRATE;
 		sinfo->txrate.legacy = rtw_get_cur_max_rate(padapter);

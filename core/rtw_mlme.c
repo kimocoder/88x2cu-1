@@ -829,7 +829,7 @@ void rtw_update_network(WLAN_BSSID_EX *dst, WLAN_BSSID_EX *src,
 	/* The rule below is 1/5 for sample value, 4/5 for history value */
 	if (check_fwstate(&padapter->mlmepriv, WIFI_ASOC_STATE) && is_same_network(&(padapter->mlmepriv.cur_network.network), src, 0)) {
 		/* Take the recvpriv's value for the connected AP*/
-		ss_final = adapter_to_dvobj(padapter)->recvpriv.signal_strength;
+		ss_final = padapter->recvinfo.signal_strength;
 		sq_final = adapter_to_dvobj(padapter)->recvpriv.signal_qual;
 		/* the rssi value here is undecorated, and will be used for antenna diversity */
 		if (sq_smp != 101) /* from the right channel */
@@ -2362,7 +2362,7 @@ static void rtw_joinbss_update_network(_adapter *padapter, struct wlan_network *
 #ifdef CONFIG_SIGNAL_STAT_PROCESS
 	rtw_set_signal_stat_timer(&adapter_to_dvobj(padapter)->recvpriv);
 #endif
-	adapter_to_dvobj(padapter)->recvpriv.signal_strength = ptarget_wlan->network.PhyInfo.SignalStrength;
+	padapter->recvinfo.signal_strength = ptarget_wlan->network.PhyInfo.SignalStrength;
 	adapter_to_dvobj(padapter)->recvpriv.signal_qual = ptarget_wlan->network.PhyInfo.SignalQuality;
 	/* the ptarget_wlan->network.PhyInfo.rssi is raw data, we use ptarget_wlan->network.PhyInfo.SignalStrength instead (has scaled) */
 	adapter_to_dvobj(padapter)->recvpriv.rssi = rtw_phl_rssi_to_dbm(ptarget_wlan->network.PhyInfo.SignalStrength);
@@ -2370,7 +2370,7 @@ static void rtw_joinbss_update_network(_adapter *padapter, struct wlan_network *
 	RTW_INFO(FUNC_ADPT_FMT" signal_strength:%3u, rssi:%3d, signal_qual:%3u"
 		 "\n"
 		 , FUNC_ADPT_ARG(padapter)
-		 , adapter_to_dvobj(padapter)->recvpriv.signal_strength
+		 , padapter->recvinfo.signal_strength
 		 , adapter_to_dvobj(padapter)->recvpriv.rssi
 		 , adapter_to_dvobj(padapter)->recvpriv.signal_qual
 		);

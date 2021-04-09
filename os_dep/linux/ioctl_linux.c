@@ -723,8 +723,8 @@ static inline char   *iwe_stream_rssi_process(_adapter *padapter,
 
 	if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE &&
 	    is_same_network(&pmlmepriv->cur_network.network, &pnetwork->network, 0)) {
-		ss = adapter_to_dvobj(padapter)->recvpriv.signal_strength;
-		sq = adapter_to_dvobj(padapter)->recvpriv.signal_qual;
+		ss = padapter->recvinfo.signal_strength;
+		sq = padapter->recvinfo.signal_qual;
 	} else {
 		ss = pnetwork->network.PhyInfo.SignalStrength;
 		sq = pnetwork->network.PhyInfo.SignalQuality;
@@ -12379,9 +12379,9 @@ static struct iw_statistics *rtw_get_wireless_stats(struct net_device *dev)
 		/* RTW_INFO("No link  level:%d, qual:%d, noise:%d\n", tmp_level, tmp_qual, tmp_noise); */
 	} else {
 #ifdef CONFIG_SIGNAL_DISPLAY_DBM
-		tmp_level = rtw_phl_rssi_to_dbm(adapter_to_dvobj(padapter)->recvpriv.signal_strength);
+		tmp_level = rtw_phl_rssi_to_dbm(padapter->recvinfo.signal_strength);
 #else
-		tmp_level = adapter_to_dvobj(padapter)->recvpriv.signal_strength;
+		tmp_level = padapter->recvinfo.signal_strength;
 #endif
 
 		tmp_qual = adapter_to_dvobj(padapter)->recvpriv.signal_qual;
