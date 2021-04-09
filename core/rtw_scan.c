@@ -2866,7 +2866,7 @@ static int p2p_roch_complete_cb(void *priv, struct rtw_phl_scan_param *param)
 	rtw_back_opch(padapter);
 #endif
 #ifdef CONFIG_DEBUG_CFG80211
-	RTW_INFO("%s, role=%d, p2p_state=%d\n", __func__, rtw_p2p_role(pwdinfo));
+	RTW_INFO("%s, role=%d\n", __func__, rtw_p2p_role(pwdinfo));
 #endif
 
 	rtw_cfg80211_set_is_roch(padapter, _FALSE);

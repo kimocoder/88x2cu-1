@@ -843,9 +843,9 @@ struct cfg80211_bss *rtw_cfg80211_inform_bss(_adapter *padapter, struct wlan_net
 	/* We've set wiphy's signal_type as CFG80211_SIGNAL_TYPE_MBM: signal strength in mBm (100*dBm) */
 	if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE &&
 		is_same_network(&pmlmepriv->cur_network.network, &pnetwork->network, 0)) {
-		notify_signal = 100 * translate_percentage_to_dbm(adapter_to_dvobj(padapter)->recvpriv.signal_strength); /* dbm */
+		notify_signal = 100 * rtw_phl_rssi_to_dbm(adapter_to_dvobj(padapter)->recvpriv.signal_strength); /* dbm */
 	} else {
-		notify_signal = 100 * translate_percentage_to_dbm(pnetwork->network.PhyInfo.SignalStrength); /* dbm */
+		notify_signal = 100 * rtw_phl_rssi_to_dbm(pnetwork->network.PhyInfo.SignalStrength); /* dbm */
 	}
 
 #if 0
@@ -2442,7 +2442,7 @@ static void rtw_cfg80211_fill_mesh_only_sta_info(struct mesh_plink_ent *plink, s
 	sinfo->plink_state = rtw_plink_state_to_nl80211_plink_state(plink->plink_state);
 	if (!sta && plink->scanned) {
 		sinfo->filled |= STATION_INFO_SIGNAL;
-		sinfo->signal = translate_percentage_to_dbm(plink->scanned->network.PhyInfo.SignalStrength);
+		sinfo->signal = rtw_phl_rssi_to_dbm(plink->scanned->network.PhyInfo.SignalStrength);
 		sinfo->filled |= STATION_INFO_INACTIVE_TIME;
 		if (plink->plink_state == RTW_MESH_PLINK_UNKNOWN)
 			sinfo->inactive_time = 0 - 1;
@@ -2526,7 +2526,7 @@ static int cfg80211_rtw_get_station(struct wiphy *wiphy,
 		}
 
 		sinfo->filled |= STATION_INFO_SIGNAL;
-		sinfo->signal = translate_percentage_to_dbm(adapter_to_dvobj(padapter)->recvpriv.signal_strength);
+		sinfo->signal = rtw_phl_rssi_to_dbm(adapter_to_dvobj(padapter)->recvpriv.signal_strength);
 
 		sinfo->filled |= STATION_INFO_TX_BITRATE;
 		sinfo->txrate.legacy = rtw_get_cur_max_rate(padapter);
@@ -2537,7 +2537,7 @@ static int cfg80211_rtw_get_station(struct wiphy *wiphy,
 			|| check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _FALSE
 		) {
 			sinfo->filled |= STATION_INFO_SIGNAL;
-			sinfo->signal = translate_percentage_to_dbm(psta->cmn.rssi_stat.rssi);
+			sinfo->signal = rtw_phl_rssi_to_dbm(psta->cmn.rssi_stat.rssi);
 		}
 		sinfo->filled |= STATION_INFO_INACTIVE_TIME;
 		sinfo->inactive_time = rtw_get_passing_time_ms(psta->sta_stats.last_rx_time);
@@ -5899,7 +5899,7 @@ static int	cfg80211_rtw_dump_station(struct wiphy *wiphy, struct net_device *nde
 
 	if (psta) {
 		sinfo->filled |= STATION_INFO_SIGNAL;
-		sinfo->signal = translate_percentage_to_dbm(psta->cmn.rssi_stat.rssi);
+		sinfo->signal = rtw_phl_rssi_to_dbm(psta->cmn.rssi_stat.rssi);
 		sinfo->filled |= STATION_INFO_INACTIVE_TIME;
 		sinfo->inactive_time = rtw_get_passing_time_ms(psta->sta_stats.last_rx_time);
 	}

@@ -955,15 +955,6 @@ __inline static sint get_recvframe_len(union recv_frame *precvframe)
 }
 
 
-__inline static s32 translate_percentage_to_dbm(u32 SignalStrengthIndex)
-{
-	s32	SignalPower; /* in dBm. */
-
-	/* Translate to dBm (x=y-100) */
-	SignalPower = SignalStrengthIndex - 100;
-	return SignalPower;
-}
-
 struct sta_info;
 
 extern void _rtw_init_sta_recv_priv(struct sta_recv_priv *psta_recvpriv);

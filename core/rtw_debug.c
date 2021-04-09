@@ -2276,9 +2276,9 @@ int proc_get_survey_info(struct seq_file *m, void *v)
 
 		if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE &&
 		    is_same_network(&pmlmepriv->cur_network.network, &pnetwork->network, 0)) {
-			notify_signal = translate_percentage_to_dbm(adapter_to_dvobj(padapter)->recvpriv.signal_strength);/* dbm */
+			notify_signal = rtw_phl_rssi_to_dbm(adapter_to_dvobj(padapter)->recvpriv.signal_strength);/* dbm */
 		} else {
-			notify_signal = translate_percentage_to_dbm(pnetwork->network.PhyInfo.SignalStrength);/* dbm */
+			notify_signal = rtw_phl_rssi_to_dbm(pnetwork->network.PhyInfo.SignalStrength);/* dbm */
 		}
 
 #ifdef CONFIG_BACKGROUND_NOISE_MONITOR

@@ -869,39 +869,6 @@ void rtw_update_network(WLAN_BSSID_EX *dst, WLAN_BSSID_EX *src,
 			, dst->Ssid.Ssid, MAC_ARG(dst->MacAddress), dst->PhyInfo.SignalStrength, dst->PhyInfo.SignalQuality, dst->PhyInfo.rssi);
 	}
 #endif
-
-#if 0 /* old codes, may be useful one day...
- * 	RTW_INFO("update_network: rssi=0x%lx dst->Rssi=%d ,dst->Rssi=0x%lx , src->Rssi=0x%lx",(dst->Rssi+src->Rssi)/2,dst->Rssi,dst->Rssi,src->Rssi); */
-	if (check_fwstate(&padapter->mlmepriv, WIFI_ASOC_STATE) && is_same_network(&(padapter->mlmepriv.cur_network.network), src)) {
-
-		/* RTW_INFO("b:ssid=%s update_network: src->rssi=0x%d padapter->recvpriv.ui_rssi=%d\n",src->Ssid.Ssid,src->Rssi,padapter->recvpriv.signal); */
-		if (padapter->recvpriv.signal_qual_data.total_num++ >= PHY_LINKQUALITY_SLID_WIN_MAX) {
-			padapter->recvpriv.signal_qual_data.total_num = PHY_LINKQUALITY_SLID_WIN_MAX;
-			last_evm = padapter->recvpriv.signal_qual_data.elements[padapter->recvpriv.signal_qual_data.index];
-			padapter->recvpriv.signal_qual_data.total_val -= last_evm;
-		}
-		padapter->recvpriv.signal_qual_data.total_val += query_rx_pwr_percentage(src->Rssi);
-
-		padapter->recvpriv.signal_qual_data.elements[padapter->recvpriv.signal_qual_data.index++] = query_rx_pwr_percentage(src->Rssi);
-		if (padapter->recvpriv.signal_qual_data.index >= PHY_LINKQUALITY_SLID_WIN_MAX)
-			padapter->recvpriv.signal_qual_data.index = 0;
-
-		/* RTW_INFO("Total SQ=%d  pattrib->signal_qual= %d\n", padapter->recvpriv.signal_qual_data.total_val, src->Rssi); */
-
-		/* <1> Showed on UI for user,in percentage. */
-		tmpVal = padapter->recvpriv.signal_qual_data.total_val / padapter->recvpriv.signal_qual_data.total_num;
-		padapter->recvpriv.signal = (u8)tmpVal; /* Link quality */
-
-		src->Rssi = translate_percentage_to_dbm(padapter->recvpriv.signal) ;
-	} else {
-		/*	RTW_INFO("ELSE:ssid=%s update_network: src->rssi=0x%d dst->rssi=%d\n",src->Ssid.Ssid,src->Rssi,dst->Rssi); */
-		src->Rssi = (src->Rssi + dst->Rssi) / 2; /* dBM */
-	}
-
-	/*	RTW_INFO("a:update_network: src->rssi=0x%d padapter->recvpriv.ui_rssi=%d\n",src->Rssi,padapter->recvpriv.signal); */
-
-#endif
-
 }
 
 static void update_current_network(_adapter *adapter, WLAN_BSSID_EX *pnetwork)
@@ -2398,7 +2365,7 @@ static void rtw_joinbss_update_network(_adapter *padapter, struct wlan_network *
 	adapter_to_dvobj(padapter)->recvpriv.signal_strength = ptarget_wlan->network.PhyInfo.SignalStrength;
 	adapter_to_dvobj(padapter)->recvpriv.signal_qual = ptarget_wlan->network.PhyInfo.SignalQuality;
 	/* the ptarget_wlan->network.PhyInfo.rssi is raw data, we use ptarget_wlan->network.PhyInfo.SignalStrength instead (has scaled) */
-	adapter_to_dvobj(padapter)->recvpriv.rssi = translate_percentage_to_dbm(ptarget_wlan->network.PhyInfo.SignalStrength);
+	adapter_to_dvobj(padapter)->recvpriv.rssi = rtw_phl_rssi_to_dbm(ptarget_wlan->network.PhyInfo.SignalStrength);
 #if defined(DBG_RX_SIGNAL_DISPLAY_PROCESSING) && 1
 	RTW_INFO(FUNC_ADPT_FMT" signal_strength:%3u, rssi:%3d, signal_qual:%3u"
 		 "\n"

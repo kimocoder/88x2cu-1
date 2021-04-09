@@ -592,13 +592,14 @@ u8 rtw_core_register_phl_msg(struct dvobj_priv *dvobj)
 	return _SUCCESS;
 }
 
-#if 0 // NEO
 
 /*RTW_WKARD_CORE_RSSI_V1*/
 s8 rtw_phl_rssi_to_dbm(u8 rssi)
 {
 	return rssi - PHL_MAX_RSSI;
 }
+
+#if 0 // NEO
 
 #ifdef CONFIG_MCC
 int rtw_mcc_update_noa(void *priv, struct rtw_phl_mcc_noa *param)
