@@ -5850,7 +5850,7 @@ static int rtw_dbg_port(struct net_device *dev,
 		case 0x01: /* dbg mode */
 			padapter->recvinfo.is_signal_dbg = 1;
 			extra_arg = extra_arg > 100 ? 100 : extra_arg;
-			adapter_to_dvobj(padapter)->recvpriv.signal_strength_dbg = extra_arg;
+			padapter->recvinfo.signal_strength_dbg = extra_arg;
 			break;
 		}
 		break;

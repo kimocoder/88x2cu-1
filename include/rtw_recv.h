@@ -516,16 +516,9 @@ struct recv_priv {
 #endif
 
 	/* For display the phy informatiom */
-	u8 signal_strength_dbg;	/* for debug */
-
 	u8 signal_qual;
 	s8 rssi;	/* translate_percentage_to_dbm(ptarget_wlan->network.PhyInfo.SignalStrength); */
 	struct rx_raw_rssi raw_rssi_info;
-	/* s8 rxpwdb;	 */
-	/* int RxSNRdB[2]; */
-	/* s8 RxRssi[2]; */
-	/* int FalseAlmCnt_all; */
-
 
 #ifdef CONFIG_SIGNAL_STAT_PROCESS
 	_timer signal_stat_timer;

@@ -4111,8 +4111,8 @@ static void rtw_signal_stat_timer_hdl(void *ctx)
 
 	if (adapter->recvinfo.is_signal_dbg) {
 		/* update the user specific value, signal_strength_dbg, to signal_strength, rssi */
-		adapter->recvinfo.signal_strength = adapter_to_dvobj(adapter)->recvpriv.signal_strength_dbg;
-		adapter_to_dvobj(adapter)->recvpriv.rssi = (s8)rtw_phl_rssi_to_dbm((u8)adapter_to_dvobj(adapter)->recvpriv.signal_strength_dbg);
+		adapter->recvinfo.signal_strength = adapter->recvinfo.signal_strength_dbg;
+		adapter_to_dvobj(adapter)->recvpriv.rssi = (s8)rtw_phl_rssi_to_dbm(adapter->recvinfo.signal_strength_dbg);
 	} else {
 
 		if (recvpriv->signal_strength_data.update_req == 0) { /* update_req is clear, means we got rx */
@@ -4236,8 +4236,8 @@ static void rx_process_rssi(_adapter *padapter, union recv_frame *prframe)
 		tmp_val = adapter_to_dvobj(padapter)->recvpriv.signal_strength_data.total_val / adapter_to_dvobj(padapter)->recvpriv.signal_strength_data.total_num;
 
 		if (padapter->recvinfo.is_signal_dbg) {
-			adapter_to_dvobj(padapter)->recvpriv.signal_strength = adapter_to_dvobj(padapter)->recvpriv.signal_strength_dbg;
-			adapter_to_dvobj(padapter)->recvpriv.rssi = (s8)rtw_phl_rssi_to_dbm(adapter_to_dvobj(padapter)->recvpriv.signal_strength_dbg);
+			adapter_to_dvobj(padapter)->recvpriv.signal_strength = padapter->recvinfo.signal_strength_dbg;
+			adapter_to_dvobj(padapter)->recvpriv.rssi = (s8)rtw_phl_rssi_to_dbm(padapter->recvinfo.signal_strength_dbg);
 		} else {
 			padapter->recvinfo.signal_strength = tmp_val;
 			adapter_to_dvobj(padapter)->recvpriv.rssi = (s8)rtw_phl_rssi_to_dbm(tmp_val);
