@@ -406,134 +406,6 @@ struct recv_info {
 #define DBG_RX_BH_TRACKING 0
 #endif
 
-struct recv_priv {
-	struct dvobj_priv *dvobj;
-
-#ifdef CONFIG_RECV_THREAD_MODE
-	_sema	recv_sema;
-
-#endif
-
-	/* _queue	blk_strms[MAX_RX_NUMBLKS];    */ /* keeping the block ack frame until return ack */
-	_queue	free_recv_queue;
-	//_queue	recv_pending_queue;
-	//_queue	uc_swdec_pending_queue;
-
-
-	u8 *pallocated_frame_buf;
-	u8 *precv_frame_buf;
-
-	uint free_recvframe_cnt;
-
-	#if DBG_RX_BH_TRACKING
-	u32 rx_bh_stage;
-	u32 rx_bh_buf_dq_cnt;
-	void *rx_bh_lbuf;
-	void *rx_bh_cbuf;
-	void *rx_bh_cbuf_data;
-	u32 rx_bh_cbuf_dlen;
-	u32 rx_bh_cbuf_pos;
-	void *rx_bh_cframe;
-	#endif
-
-	_adapter	*adapter;
-
-	u32 is_any_non_be_pkts;
-
-	u64	rx_bytes;
-	u64	rx_pkts;
-	u64	rx_drop;
-
-	u64 dbg_rx_drop_count;
-	u64 dbg_rx_ampdu_drop_count;
-	u64 dbg_rx_ampdu_forced_indicate_count;
-	u64 dbg_rx_ampdu_loss_count;
-	u64 dbg_rx_dup_mgt_frame_drop_count;
-	u64 dbg_rx_ampdu_window_shift_cnt;
-	u64 dbg_rx_conflic_mac_addr_cnt;
-
-	uint  rx_icv_err;
-	uint  rx_largepacket_crcerr;
-	uint  rx_smallpacket_crcerr;
-	uint  rx_middlepacket_crcerr;
-
-	struct rtw_ip_dbg_cnt_statistic ip_statistic;
-
-#ifdef CONFIG_USB_HCI
-	/* u8 *pallocated_urb_buf; */
-	_sema allrxreturnevt;
-	uint	ff_hwaddr;
-	ATOMIC_T	rx_pending_cnt;
-
-#ifdef CONFIG_USB_INTERRUPT_IN_PIPE
-#ifdef PLATFORM_LINUX
-	PURB	int_in_urb;
-#endif
-
-	u8	*int_in_buf;
-#endif /* CONFIG_USB_INTERRUPT_IN_PIPE */
-
-#endif
-#if defined(PLATFORM_LINUX) || defined(PLATFORM_FREEBSD)
-	_tasklet irq_prepare_beacon_tasklet;
-	//_tasklet recv_tasklet;
-
-	struct sk_buff_head free_recv_skb_queue;
-	struct sk_buff_head rx_skb_queue;
-#ifdef CONFIG_RTW_NAPI
-		struct sk_buff_head rx_napi_skb_queue;
-#endif 
-#ifdef CONFIG_RX_INDICATE_QUEUE
-	_tasklet rx_indicate_tasklet;
-	struct ifqueue rx_indicate_queue;
-#endif /* CONFIG_RX_INDICATE_QUEUE */
-
-#endif /* defined(PLATFORM_LINUX) || defined(PLATFORM_FREEBSD) */
-
-	u8 *pallocated_recv_buf;
-	u8 *precv_buf;    /* 4 alignment */
-	_queue	free_recv_buf_queue;
-	u32	free_recv_buf_queue_cnt;
-
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI) || defined(CONFIG_USB_HCI)
-	_queue	recv_buf_pending_queue;
-#endif
-
-#if defined(CONFIG_SDIO_HCI)
-#ifdef CONFIG_SDIO_RECVBUF_PWAIT
-	struct rtw_pwait_ctx recvbuf_pwait;
-#endif
-#ifdef CONFIG_SDIO_RECVBUF_AGGREGATION
-	bool recvbuf_agg;
-#endif
-#endif /* CONFIG_SDIO_HCI */
-
-#ifdef CONFIG_PCI_HCI
-	/* Rx */
-	struct rtw_rx_ring	rx_ring[PCI_MAX_RX_QUEUE];
-	int rxringcount;	/* size should be PCI_MAX_RX_QUEUE */
-	u32	rxbuffersize;
-#endif
-
-	/* For display the phy informatiom */
-	u8 signal_qual;
-	s8 rssi;	/* translate_percentage_to_dbm(ptarget_wlan->network.PhyInfo.SignalStrength); */
-	struct rx_raw_rssi raw_rssi_info;
-
-#ifdef CONFIG_SIGNAL_STAT_PROCESS
-	_timer signal_stat_timer;
-	u32 signal_stat_sampling_interval;
-	/* u32 signal_stat_converging_constant; */
-	struct signal_stat signal_qual_data;
-	struct signal_stat signal_strength_data;
-#else /* CONFIG_SIGNAL_STAT_PROCESS */
-	struct smooth_rssi_data signal_qual_data;
-	struct smooth_rssi_data signal_strength_data;
-#endif /* CONFIG_SIGNAL_STAT_PROCESS */
-	u16 sink_udpport, pre_rtp_rxseq, cur_rtp_rxseq;
-
-	BOOLEAN store_law_data_flag;
-};
 
 #ifdef CONFIG_SDIO_RECVBUF_AGGREGATION
 #define recv_buf_agg(recvpriv) recvpriv->recvbuf_agg
@@ -716,6 +588,134 @@ enum rtw_rx_llc_hdl {
 	RTW_RX_LLC_KEEP		= 0,
 	RTW_RX_LLC_REMOVE	= 1,
 	RTW_RX_LLC_VLAN		= 2,
+};
+
+struct recv_priv {
+	struct dvobj_priv *dvobj;
+
+#ifdef CONFIG_RECV_THREAD_MODE
+	_sema	recv_sema;
+
+#endif
+
+	/* _queue	blk_strms[MAX_RX_NUMBLKS];    */ /* keeping the block ack frame until return ack */
+	_queue	free_recv_queue;
+	//_queue	recv_pending_queue;
+	//_queue	uc_swdec_pending_queue;
+
+
+	u8 *pallocated_frame_buf;
+	u8 *precv_frame_buf;
+
+	uint free_recvframe_cnt;
+
+	#if DBG_RX_BH_TRACKING
+	u32 rx_bh_stage;
+	u32 rx_bh_buf_dq_cnt;
+	void *rx_bh_lbuf;
+	void *rx_bh_cbuf;
+	void *rx_bh_cbuf_data;
+	u32 rx_bh_cbuf_dlen;
+	u32 rx_bh_cbuf_pos;
+	void *rx_bh_cframe;
+	#endif
+
+	_adapter	*adapter;
+
+	u32 is_any_non_be_pkts;
+
+	u64	rx_bytes;
+	u64	rx_pkts;
+	u64	rx_drop;
+
+	u64 dbg_rx_drop_count;
+	u64 dbg_rx_ampdu_drop_count;
+	u64 dbg_rx_ampdu_forced_indicate_count;
+	u64 dbg_rx_ampdu_loss_count;
+	u64 dbg_rx_dup_mgt_frame_drop_count;
+	u64 dbg_rx_ampdu_window_shift_cnt;
+	u64 dbg_rx_conflic_mac_addr_cnt;
+
+	uint  rx_icv_err;
+	uint  rx_largepacket_crcerr;
+	uint  rx_smallpacket_crcerr;
+	uint  rx_middlepacket_crcerr;
+
+	struct rtw_ip_dbg_cnt_statistic ip_statistic;
+
+#ifdef CONFIG_USB_HCI
+	/* u8 *pallocated_urb_buf; */
+	_sema allrxreturnevt;
+	uint	ff_hwaddr;
+	ATOMIC_T	rx_pending_cnt;
+
+#ifdef CONFIG_USB_INTERRUPT_IN_PIPE
+#ifdef PLATFORM_LINUX
+	PURB	int_in_urb;
+#endif
+
+	u8	*int_in_buf;
+#endif /* CONFIG_USB_INTERRUPT_IN_PIPE */
+
+#endif
+#if defined(PLATFORM_LINUX) || defined(PLATFORM_FREEBSD)
+	_tasklet irq_prepare_beacon_tasklet;
+	//_tasklet recv_tasklet;
+
+	struct sk_buff_head free_recv_skb_queue;
+	struct sk_buff_head rx_skb_queue;
+#ifdef CONFIG_RTW_NAPI
+		struct sk_buff_head rx_napi_skb_queue;
+#endif
+#ifdef CONFIG_RX_INDICATE_QUEUE
+	_tasklet rx_indicate_tasklet;
+	struct ifqueue rx_indicate_queue;
+#endif /* CONFIG_RX_INDICATE_QUEUE */
+
+#endif /* defined(PLATFORM_LINUX) || defined(PLATFORM_FREEBSD) */
+
+	u8 *pallocated_recv_buf;
+	u8 *precv_buf;    /* 4 alignment */
+	_queue	free_recv_buf_queue;
+	u32	free_recv_buf_queue_cnt;
+
+#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI) || defined(CONFIG_USB_HCI)
+	_queue	recv_buf_pending_queue;
+#endif
+
+#if defined(CONFIG_SDIO_HCI)
+#ifdef CONFIG_SDIO_RECVBUF_PWAIT
+	struct rtw_pwait_ctx recvbuf_pwait;
+#endif
+#ifdef CONFIG_SDIO_RECVBUF_AGGREGATION
+	bool recvbuf_agg;
+#endif
+#endif /* CONFIG_SDIO_HCI */
+
+#ifdef CONFIG_PCI_HCI
+	/* Rx */
+	struct rtw_rx_ring	rx_ring[PCI_MAX_RX_QUEUE];
+	int rxringcount;	/* size should be PCI_MAX_RX_QUEUE */
+	u32	rxbuffersize;
+#endif
+
+	/* For display the phy informatiom */
+	u8 signal_qual;
+	s8 rssi;	/* translate_percentage_to_dbm(ptarget_wlan->network.PhyInfo.SignalStrength); */
+	struct rx_raw_rssi raw_rssi_info;
+
+	#ifdef CONFIG_SIGNAL_STAT_PROCESS
+	_timer signal_stat_timer;
+	u32 signal_stat_sampling_interval;
+	#endif /* CONFIG_SIGNAL_STAT_PROCESS */
+
+	/* u32 signal_stat_converging_constant; */
+	struct signal_stat signal_qual_data;
+	struct signal_stat signal_strength_data;
+
+	u16 sink_udpport, pre_rtp_rxseq, cur_rtp_rxseq;
+
+	BOOLEAN store_law_data_flag;
 };
 
 bool rtw_rframe_del_wfd_ie(union recv_frame *rframe, u8 ies_offset);
