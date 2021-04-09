@@ -1436,7 +1436,9 @@ void init_mlme_ext_timer(_adapter *padapter)
 {
 	struct	mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
 
+#if 0
 	rtw_init_timer(&pmlmeext->survey_timer, survey_timer_hdl, padapter);
+#endif
 	rtw_init_timer(&pmlmeext->link_timer, link_timer_hdl, padapter);
 #ifdef CONFIG_RTW_80211R
 	rtw_init_timer(&pmlmeext->ft_link_timer, rtw_ft_link_timer_hdl, padapter);
