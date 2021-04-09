@@ -280,7 +280,7 @@ u32 rtw_scan_abort(_adapter *adapter, u32 timeout_ms)
 
 void rtw_scan_abort_no_wait(_adapter *adapter)
 {
-	struct mlme_ext_priv *pmlmeext = &(adapter->mlmeextpriv);
+	struct mlme_ext_priv *pmlmeext = &adapter->mlmeextpriv;
 
 	#ifdef CONFIG_CMD_SCAN
 	if (pmlmeext->sitesurvey_res.scan_param)
@@ -312,12 +312,7 @@ void rtw_scan_timeout_handler(void *ctx)
 #ifdef CONFIG_IOCTL_CFG80211
 	rtw_cfg80211_surveydone_event_callback(adapter);
 #endif /* CONFIG_IOCTL_CFG80211 */
-
 	rtw_indicate_scan_done(adapter, _TRUE);
-
-#if defined(CONFIG_CONCURRENT_MODE) && defined(CONFIG_IOCTL_CFG80211)
-	rtw_cfg80211_indicate_scan_done_for_buddy(adapter, _TRUE);
-#endif
 #endif
 }
 
@@ -667,12 +662,8 @@ exit:
 void rtw_surveydone_event_callback(_adapter	*adapter, u8 *pbuf)
 {
 	struct surveydone_event *parm = (struct surveydone_event *)pbuf;
-	struct	mlme_priv	*pmlmepriv = &(adapter->mlmepriv);
+	struct	mlme_priv	*pmlmepriv = &adapter->mlmepriv;
 	struct mlme_ext_priv	*pmlmeext = &adapter->mlmeextpriv;
-
-#ifdef CONFIG_MLME_EXT
-	mlmeext_surveydone_event_callback(adapter);
-#endif
 
 	_rtw_spinlock_bh(&pmlmepriv->lock);
 	if (pmlmepriv->wps_probe_req_ie) {
@@ -686,9 +677,6 @@ void rtw_surveydone_event_callback(_adapter	*adapter, u8 *pbuf)
 		RTW_INFO(FUNC_ADPT_FMT" fw_state:0x%x\n", FUNC_ADPT_ARG(adapter), get_fwstate(pmlmepriv));
 		/* rtw_warn_on(1); */
 	}
-
-	if (pmlmeext->scan_abort == _TRUE)
-		pmlmeext->scan_abort = _FALSE;
 
 	_clr_fwstate_(pmlmepriv, WIFI_UNDER_SURVEY);
 	_rtw_spinunlock_bh(&pmlmepriv->lock);
@@ -710,7 +698,7 @@ void rtw_surveydone_event_callback(_adapter	*adapter, u8 *pbuf)
 					/*_set_timer(&pmlmepriv->assoc_timer, MAX_JOIN_TIMEOUT);*/
 					set_assoc_timer(pmlmepriv, MAX_JOIN_TIMEOUT);
 				}
-				#ifdef CONFIG_AP_MODE
+				#ifdef CONFIG_AP_MODE // NEO
 				else {
 					WLAN_BSSID_EX    *pdev_network = &(adapter->registrypriv.dev_network);
 					u8 *pibss = adapter->registrypriv.dev_network.MacAddress;
@@ -743,8 +731,7 @@ void rtw_surveydone_event_callback(_adapter	*adapter, u8 *pbuf)
 			if (_SUCCESS == s_ret) {
 				/*_set_timer(&pmlmepriv->assoc_timer, MAX_JOIN_TIMEOUT);*/
 				set_assoc_timer(pmlmepriv, MAX_JOIN_TIMEOUT);
-			}
-			else if (s_ret == 2) { /* there is no need to wait for join */
+			} else if (s_ret == 2) { /* there is no need to wait for join */
 				_clr_fwstate_(pmlmepriv, WIFI_UNDER_LINKING);
 				rtw_indicate_connect(adapter);
 			} else {
@@ -881,13 +868,6 @@ u8 _rtw_sitesurvey_condition_check(const char *caller, _adapter *adapter, bool c
 	}
 #endif
 
-#ifdef CONFIG_RTW_REPEATER_SON
-	if (adapter->rtw_rson_scanstage == RSON_SCAN_PROCESS) {
-		RTW_INFO("%s ("ADPT_FMT") blocking scan for under rson scanning process\n", caller, ADPT_ARG(adapter));
-		ss_condition = SS_DENY_RSON_SCANING;
-		goto _exit;
-	}
-#endif
 #ifdef CONFIG_IOCTL_CFG80211
 	if (adapter_wdev_data(adapter)->block_scan == _TRUE) {
 		RTW_INFO("%s ("ADPT_FMT") wdev_priv.block_scan is set\n", caller, ADPT_ARG(adapter));
@@ -908,13 +888,13 @@ u8 _rtw_sitesurvey_condition_check(const char *caller, _adapter *adapter, bool c
 		goto _exit;
 	}
 
-#ifdef CONFIG_ADAPTIVITY_DENY_SCAN
+#if 0 /*GEORGIA_TODO_FIXIT*/
 	if (registry_par->adaptivity_en
-	    && rtw_phydm_get_edcca_flag(adapter)
-	    && rtw_is_2g_ch(GET_HAL_DATA(adapter)->current_channel)) {
+	    && rtw_hal_get_phy_edcca_flag(adapter)
+	    && rtw_is_2g_ch(GET_HAL_DATA(adapter_to_dvobj(adapter))->current_channel)) {
 		RTW_WARN(FUNC_ADPT_FMT": Adaptivity block scan! (ch=%u)\n",
 			 FUNC_ADPT_ARG(adapter),
-			 GET_HAL_DATA(adapter)->current_channel);
+			 GET_HAL_DATA(adapter_to_dvobj(adapter))->current_channel);
 		ss_condition = SS_DENY_ADAPTIVITY;
 		goto _exit;
 	}
@@ -1223,43 +1203,6 @@ u8 rtw_scan_backop_decision(_adapter *adapter)
 
 #if 0 /*#ifndef CONFIG_PHL_ARCH*/
 
-#define SCANNING_TIMEOUT_EX	2000
-u32 rtw_scan_timeout_decision(_adapter *padapter)
-{
-	u32 back_op_times= 0;
-	u8 max_chan_num;
-	u16 scan_ms;
-	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
-	struct ss_res *ss = &pmlmeext->sitesurvey_res;
-
-	if (is_supported_5g(padapter->registrypriv.wireless_mode)
-		&& is_supported_24g(padapter->registrypriv.wireless_mode)) 
-		max_chan_num = MAX_CHANNEL_NUM;/* dual band */
-	else
-		max_chan_num = MAX_CHANNEL_NUM_2G;/*single band*/
-
-	#ifdef CONFIG_SCAN_BACKOP
-	if (rtw_scan_backop_decision(padapter))
-		back_op_times = (max_chan_num / ss->scan_cnt_max) * ss->backop_ms;
-	#endif
-
-	if (ss->duration)
-		scan_ms = ss->duration;
-	else
-	#if defined(CONFIG_RTW_ACS) && defined(CONFIG_RTW_ACS_DBG)
-	if (IS_ACS_ENABLE(padapter) && rtw_is_acs_st_valid(padapter))
-		scan_ms = rtw_acs_get_adv_st(padapter);
-	else
-	#endif /*CONFIG_RTW_ACS*/
-		scan_ms = ss->scan_ch_ms;
-
-	ss->scan_timeout_ms = (scan_ms * max_chan_num) + back_op_times + SCANNING_TIMEOUT_EX;
-	#ifdef DBG_SITESURVEY
-	RTW_INFO("%s , scan_timeout_ms = %d (ms)\n", __func__, ss->scan_timeout_ms);
-	#endif /*DBG_SITESURVEY*/
-	return ss->scan_timeout_ms;
-}
-
 void survey_timer_hdl(void *ctx)
 {
 	_adapter *padapter = (_adapter *)ctx;
@@ -1408,6 +1351,7 @@ static void sitesurvey_res_reset(_adapter *adapter, struct sitesurvey_parm *parm
 	ss->token = parm->rrm_token;
 	ss->duration = parm->duration;
 	ss->scan_mode = parm->scan_mode;
+	ss->token = parm->rrm_token; // NEO : G6 duplicated, need to fix at G6
 	ss->acs = parm->acs;
 }
 
@@ -1584,7 +1528,7 @@ void site_survey(_adapter *padapter, u8 survey_channel,
 	if (survey_channel != 0) {
 		set_channel_bwmode(padapter,
 			survey_channel,
-			HAL_PRIME_CHNL_OFFSET_DONT_CARE,
+			CHAN_OFFSET_NO_EXT,
 			CHANNEL_WIDTH_20);
 
 		if (ScanType == RTW_PHL_SCAN_PASSIVE && ss->force_ssid_scan)
@@ -1758,19 +1702,11 @@ void sitesurvey_set_msr(_adapter *adapter, bool enter)
 	struct mlme_ext_info *pmlmeinfo = &(pmlmeext->mlmext_info);
 
 	if (enter) {
-#ifdef CONFIG_MI_WITH_MBSSID_CAM
-		rtw_hal_get_hwreg(adapter, HW_VAR_MEDIA_STATUS, (u8 *)(&pmlmeinfo->hw_media_state));
-#endif
 		/* set MSR to no link state */
 		network_type = _HW_STATE_NOLINK_;
 	} else {
-#ifdef CONFIG_MI_WITH_MBSSID_CAM
-		network_type = pmlmeinfo->hw_media_state;
-#else
 		network_type = pmlmeinfo->state & 0x3;
-#endif
 	}
-	Set_MSR(adapter, network_type);
 }
 
 u8 rtw_ps_annc(_adapter *adapter, bool ps);
@@ -2536,14 +2472,12 @@ static void scan_channel_list_filled(_adapter *padapter,
 	struct phl_scan_channel *phl_ch = phl_param->ch;
 	u8 i = 0;
 
-	RTW_INFO("%s param->ch_num:%d\n", __func__, param->ch_num);
 	for (i = 0; i < param->ch_num; i++) {
 		phl_ch[i].channel = param->ch[i].hw_value;
 		phl_ch[i].scan_mode = NORMAL_SCAN_MODE;
 		phl_ch[i].bw = param->bw;
 		phl_ch[i].duration = param->duration;
 
-		RTW_INFO("%s param->ch[i].flags:0x%x\n", __func__, param->ch[i].flags);
 		if (param->ch[i].flags & RTW_IEEE80211_CHAN_PASSIVE_SCAN) {
 			phl_ch[i].type = RTW_PHL_SCAN_PASSIVE;
 
@@ -2609,8 +2543,6 @@ u8 rtw_sitesurvey_cmd(_adapter *padapter, struct sitesurvey_parm *pparm)
 		_rtw_memcpy(&phl_param->ssid[i].ssid, &pparm->ssid[i].Ssid, phl_param->ssid[i].ssid_len);
 	}
 
-	RTW_INFO("%s NEO scan_type:%d\n", __func__, pparm->scan_type);
-
 	/* STEP_3 set ops according to scan_type */
 	switch (pparm->scan_type) {
 	#ifdef CONFIG_P2P
@@ -2619,9 +2551,19 @@ u8 rtw_sitesurvey_cmd(_adapter *padapter, struct sitesurvey_parm *pparm)
 		break;
 	#endif
 
+	#ifdef CONFIG_RTW_80211K
+	case RTW_SCAN_RRM:
+		phl_param->ops = &scan_ops_rrm_cb;
+		if (pparm->ch_num > 13) {
+			phl_param->back_op_mode = SCAN_BKOP_CNT;
+			phl_param->back_op_ch_cnt = 3;
+			phl_param->back_op_ch_dur_ms = SURVEY_TO;
+		}
+	break;
+	#endif
+
 	case RTW_SCAN_NORMAL:
 	default:
-		RTW_INFO("%s NEO RTW_SCAN_NORMAL\n", __func__);
 		phl_param->ops = &scan_ops_cb;
 		phl_param->back_op_mode = SCAN_BKOP_CNT;
 		phl_param->back_op_ch_cnt = 3;
@@ -2860,11 +2802,11 @@ static int roch_ready_cb(void *priv, struct rtw_phl_scan_param *param)
 	struct scan_priv *scan_priv = (struct scan_priv *)priv;
 	_adapter *padapter = scan_priv->padapter;
 #ifdef CONFIG_P2P
-	struct cfg80211_wifidirect_info *pcfg80211_wdinfo =
-		&padapter->cfg80211_wdinfo;
+	struct cfg80211_roch_info *pcfg80211_rochinfo =
+		&padapter->cfg80211_rochinfo;
 
 	RTW_INFO("%s cookie:0x%llx ch:%d\n", __func__,
-		pcfg80211_wdinfo->remain_on_ch_cookie, param->scan_ch->channel);
+		pcfg80211_rochinfo->remain_on_ch_cookie, param->scan_ch->channel);
 #endif /*CONFIG_P2P*/
 	if ((scan_priv->roch_step & ROCH_CH_READY))
 		return 0;
@@ -2903,8 +2845,8 @@ static int p2p_roch_complete_cb(void *priv, struct rtw_phl_scan_param *param)
 	_adapter *padapter = scan_priv->padapter;
 	int ret = _FAIL;
 	struct rtw_wdev_priv *pwdev_priv = adapter_wdev_data(padapter);
-	struct cfg80211_wifidirect_info *pcfg80211_wdinfo =
-		&padapter->cfg80211_wdinfo;
+	struct cfg80211_roch_info *pcfg80211_rochinfo =
+		&padapter->cfg80211_rochinfo;
 	struct wifidirect_info *pwdinfo = &padapter->wdinfo;
 
 	if (!rtw_is_adapter_up(padapter))
@@ -2923,14 +2865,12 @@ static int p2p_roch_complete_cb(void *priv, struct rtw_phl_scan_param *param)
 #ifndef CONFIG_CMD_SCAN
 	rtw_back_opch(padapter);
 #endif
-	rtw_p2p_set_state(pwdinfo, rtw_p2p_pre_state(pwdinfo));
 #ifdef CONFIG_DEBUG_CFG80211
-	RTW_INFO("%s, role=%d, p2p_state=%d\n", __func__,
-		rtw_p2p_role(pwdinfo), rtw_p2p_state(pwdinfo));
+	RTW_INFO("%s, role=%d, p2p_state=%d\n", __func__, rtw_p2p_role(pwdinfo));
 #endif
 
 	rtw_cfg80211_set_is_roch(padapter, _FALSE);
-	pcfg80211_wdinfo->ro_ch_wdev = NULL;
+	pcfg80211_rochinfo->ro_ch_wdev = NULL;
 	rtw_cfg80211_set_last_ro_ch_time(padapter);
 
 	ret = _SUCCESS;
@@ -2942,7 +2882,7 @@ _exit:
 		, scan_priv->channel_type, GFP_KERNEL);
 
 	RTW_INFO("cfg80211_remain_on_channel_expired cookie:0x%llx\n"
-		, pcfg80211_wdinfo->remain_on_ch_cookie);
+		, pcfg80211_rochinfo->remain_on_ch_cookie);
 
 	RTW_INFO(FUNC_ADPT_FMT" takes %d ms to scan %d/%d channels\n",
 			FUNC_ADPT_ARG(padapter), param->total_scan_time,
@@ -2967,15 +2907,15 @@ static int p2p_roch_start_cb(void *priv, struct rtw_phl_scan_param *param)
 {
 	struct scan_priv *scan_priv = (struct scan_priv *)priv;
 	_adapter *padapter = scan_priv->padapter;
-	struct cfg80211_wifidirect_info *pcfg80211_wdinfo;
+	struct cfg80211_roch_info *pcfg80211_rochinfo;
 	struct wifidirect_info *pwdinfo = &padapter->wdinfo;
 
-	pcfg80211_wdinfo = &padapter->cfg80211_wdinfo;
+	pcfg80211_rochinfo = &padapter->cfg80211_rochinfo;
 
 	//TODO remove
 	mlmeext_set_scan_state(&padapter->mlmeextpriv, SCAN_PROCESS);
 
-	if (rtw_p2p_chk_state(pwdinfo, P2P_STATE_NONE)
+	if (rtw_p2p_chk_role(pwdinfo, P2P_ROLE_DISABLE)
 #if defined(CONFIG_CONCURRENT_MODE) && defined(CONFIG_P2P)
 		&& ((padapter->iface_id ==
 			padapter->registrypriv.sel_p2p_iface))
@@ -2989,18 +2929,17 @@ static int p2p_roch_start_cb(void *priv, struct rtw_phl_scan_param *param)
 	}
 
 	rtw_cfg80211_set_is_roch(padapter, _TRUE);
-	pcfg80211_wdinfo->ro_ch_wdev = scan_priv->wdev;
-	pcfg80211_wdinfo->remain_on_ch_cookie = scan_priv->cookie;
-	pcfg80211_wdinfo->duration = scan_priv->duration;
+	pcfg80211_rochinfo->ro_ch_wdev = scan_priv->wdev;
+	pcfg80211_rochinfo->remain_on_ch_cookie = scan_priv->cookie;
+	pcfg80211_rochinfo->duration = scan_priv->duration;
 	rtw_cfg80211_set_last_ro_ch_time(padapter);
-	_rtw_memcpy(&pcfg80211_wdinfo->remain_on_ch_channel,
+	_rtw_memcpy(&pcfg80211_rochinfo->remain_on_ch_channel,
 		&scan_priv->channel, sizeof(struct ieee80211_channel));
 	#if (KERNEL_VERSION(3, 8, 0) > LINUX_VERSION_CODE)
-	pcfg80211_wdinfo->remain_on_ch_type = scan_priv->channel_type;
+	pcfg80211_rochinfo->remain_on_ch_type = scan_priv->channel_type;
 	#endif
-	pcfg80211_wdinfo->restore_channel = scan_priv->restore_ch;
+	pcfg80211_rochinfo->restore_channel = scan_priv->restore_ch;
 
-	rtw_p2p_set_state(pwdinfo, P2P_STATE_LISTEN);
 	#ifdef CONFIG_CMD_SCAN
 	padapter->mlmeextpriv.sitesurvey_res.scan_param = param;
 	#endif
@@ -3027,8 +2966,8 @@ static int roch_complete_cb(void *priv, struct rtw_phl_scan_param *param)
 	struct scan_priv *scan_priv = (struct scan_priv *)priv;
 	_adapter *padapter = scan_priv->padapter;
 #ifdef CONFIG_P2P
-	struct cfg80211_wifidirect_info *pcfg80211_wdinfo =
-		&padapter->cfg80211_wdinfo;
+	struct cfg80211_roch_info *pcfg80211_rochinfo =
+		&padapter->cfg80211_rochinfo;
 #endif /*CONFIG_P2P*/
 	struct mlme_ext_priv *pmlmeext = &padapter->mlmeextpriv;
 	int ret = _FAIL;
@@ -3059,7 +2998,7 @@ _exit:
 
 #ifdef CONFIG_P2P
 	RTW_INFO("cfg80211_remain_on_channel_expired cookie:0x%llx\n"
-		, pcfg80211_wdinfo->remain_on_ch_cookie);
+		, pcfg80211_rochinfo->remain_on_ch_cookie);
 #endif /*CONFIG_P2P*/
 
 	RTW_INFO(FUNC_ADPT_FMT" takes %d ms to scan %d/%d channels\n",
@@ -3103,6 +3042,39 @@ static struct rtw_phl_scan_ops remain_ops_cb = {
 };
 
 #ifdef CONFIG_IOCTL_CFG80211
+static u8 roch_stay_in_cur_chan(_adapter *padapter)
+{
+	int i;
+	_adapter *iface;
+	struct mlme_priv *pmlmepriv;
+	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
+	u8 rst = _FALSE;
+
+	for (i = 0; i < dvobj->iface_nums; i++) {
+		iface = dvobj->padapters[i];
+		if (iface) {
+			pmlmepriv = &iface->mlmepriv;
+
+			if (check_fwstate(pmlmepriv, WIFI_UNDER_LINKING | WIFI_UNDER_WPS | WIFI_UNDER_KEY_HANDSHAKE) == _TRUE) {
+				RTW_INFO(ADPT_FMT"- WIFI_UNDER_LINKING |WIFI_UNDER_WPS | WIFI_UNDER_KEY_HANDSHAKE (mlme state:0x%x)\n",
+						ADPT_ARG(iface), get_fwstate(&iface->mlmepriv));
+				rst = _TRUE;
+				break;
+			}
+			#ifdef CONFIG_AP_MODE
+			if (MLME_IS_AP(iface) || MLME_IS_MESH(iface)) {
+				if (rtw_ap_sta_states_check(iface) == _TRUE) {
+					rst = _TRUE;
+					break;
+				}
+			}
+			#endif
+		}
+	}
+
+	return rst;
+}
+
 #ifdef CONFIG_CMD_SCAN
 u8 rtw_phl_remain_on_ch_cmd(_adapter *padapter,
 	u64 cookie, struct wireless_dev *wdev,
@@ -3247,9 +3219,11 @@ u8 rtw_phl_remain_on_ch_cmd(_adapter *padapter,
 	phl_param.back_op_off_ch_dur_ms = bkop_parm->off_ch_dur;
 	phl_param.back_op_off_ch_ext_dur_ms = bkop_parm->off_ch_ext_dur;
 
+#ifdef CONFIG_P2P
 	if (is_p2p)
 		phl_param.ops = &p2p_remain_ops_cb;
 	else
+#endif
 		phl_param.ops = &remain_ops_cb;
 
 	RTW_INFO(FUNC_ADPT_FMT" ch:%u duration:%d, cookie:0x%llx\n"
