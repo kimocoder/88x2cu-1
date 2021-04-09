@@ -286,7 +286,6 @@ unsigned char ratetbl_val_2wifirate(unsigned char rate)
 
 }
 
-int is_basicrate(_adapter *padapter, unsigned char rate);
 int is_basicrate(_adapter *padapter, unsigned char rate)
 {
 	int i;
@@ -305,7 +304,6 @@ int is_basicrate(_adapter *padapter, unsigned char rate)
 	return _FALSE;
 }
 
-unsigned int ratetbl2rateset(_adapter *padapter, unsigned char *rateset);
 unsigned int ratetbl2rateset(_adapter *padapter, unsigned char *rateset)
 {
 	int i;
@@ -363,7 +361,7 @@ void set_mcs_rate_by_mask(u8 *mcs_set, u32 mask)
 }
 
 void UpdateBrateTbl(
-	PADAPTER		Adapter,
+	_adapter *adapter,
 	u8			*mBratesOS
 )
 {
@@ -2038,16 +2036,16 @@ void HTOnAssocRsp(_adapter *padapter)
 		/* switch to the 40M Hz mode accoring to the AP */
 		pmlmeext->cur_bwmode = CHANNEL_WIDTH_40;
 		switch ((pmlmeinfo->HT_info.infos[0] & 0x3)) {
-		case EXTCHNL_OFFSET_UPPER:
-			pmlmeext->cur_ch_offset = HAL_PRIME_CHNL_OFFSET_LOWER;
+		case IEEE80211_SCA:
+			pmlmeext->cur_ch_offset = CHAN_OFFSET_UPPER;
 			break;
 
-		case EXTCHNL_OFFSET_LOWER:
-			pmlmeext->cur_ch_offset = HAL_PRIME_CHNL_OFFSET_UPPER;
+		case IEEE80211_SCB:
+			pmlmeext->cur_ch_offset = CHAN_OFFSET_LOWER;
 			break;
 
 		default:
-			pmlmeext->cur_ch_offset = HAL_PRIME_CHNL_OFFSET_DONT_CARE;
+			pmlmeext->cur_ch_offset = CHAN_OFFSET_NO_EXT;
 			break;
 		}
 	}
@@ -2179,7 +2177,7 @@ int check_ielen(u8 *start, uint len)
 		left -= 2;
 
 		if (elen > left) {
-			RTW_INFO("IEEE 802.11 element parse failed (id=%d elen=%d left=%lu)\n",
+			RTW_ERR("IEEE 802.11 element parse failed (id=%d elen=%d left=%lu)\n",
 					id, elen, (unsigned long) left);
 			return _FALSE;
 		}
@@ -2200,7 +2198,8 @@ int validate_beacon_len(u8 *pframe, u32 len)
 	u8 ie_offset = _BEACON_IE_OFFSET_ + sizeof(struct rtw_ieee80211_hdr_3addr);
 
 	if (len < ie_offset) {
-		RTW_INFO("%s: incorrect beacon length(%d)\n", __func__, len);
+		RTW_ERR("%s: incorrect beacon length(%d)\n", __func__, len);
+		rtw_warn_on(1);
 		return _FALSE;
 	}
 
@@ -2210,7 +2209,6 @@ int validate_beacon_len(u8 *pframe, u32 len)
 	return _TRUE;
 }
 
-#ifdef CONFIG_CHECK_SPECIFIC_IE_CONTENT
 u8 support_rate_ranges[] = {
 	IEEE80211_CCK_RATE_1MB,
 	IEEE80211_CCK_RATE_2MB,
@@ -2281,7 +2279,6 @@ bool rtw_validate_value(u16 EID, u8 *p, u16 len)
 	};
 	return _TRUE;
 }
-#endif /* CONFIG_CHECK_SPECIFIC_IE_CONTENT */
 
 bool is_hidden_ssid(char *ssid, int len)
 {
@@ -2301,12 +2298,15 @@ void rtw_absorb_ssid_ifneed(_adapter *padapter, WLAN_BSSID_EX *bssid, u8 *pframe
 {
 	struct wlan_network *scanned = NULL;
 	WLAN_BSSID_EX	*snetwork;
-	u8 ie_offset, *p=NULL, *next_ie=NULL, *mac = get_addr2_ptr(pframe);
+	u8 ie_offset, *p=NULL, *next_ie=NULL;
+	u8 *mac;
 	sint ssid_len_ori;
 	u32 remain_len = 0;
 	u8 backupIE[MAX_IE_SZ];
-	u16 subtype = get_frame_sub_type(pframe);
+	u16 subtype;
 
+	mac = get_addr2_ptr(pframe);
+	subtype = get_frame_sub_type(pframe);
 	if (subtype == WIFI_BEACON) {
 		bssid->Reserved[0] = BSS_TYPE_BCN;
 		ie_offset = _BEACON_IE_OFFSET_;
