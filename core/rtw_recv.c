@@ -4109,7 +4109,7 @@ static void rtw_signal_stat_timer_hdl(void *ctx)
 	u32 num_signal_qual = 0;
 	u8 ratio_pre_stat = 0, ratio_curr_stat = 0, ratio_total = 0, ratio_profile = SIGNAL_STAT_CALC_PROFILE_0;
 
-	if (adapter_to_dvobj(adapter)->recvpriv.is_signal_dbg) {
+	if (adapter->recvinfo.is_signal_dbg) {
 		/* update the user specific value, signal_strength_dbg, to signal_strength, rssi */
 		adapter->recvinfo.signal_strength = adapter_to_dvobj(adapter)->recvpriv.signal_strength_dbg;
 		adapter_to_dvobj(adapter)->recvpriv.rssi = (s8)rtw_phl_rssi_to_dbm((u8)adapter_to_dvobj(adapter)->recvpriv.signal_strength_dbg);
@@ -4235,7 +4235,7 @@ static void rx_process_rssi(_adapter *padapter, union recv_frame *prframe)
 
 		tmp_val = adapter_to_dvobj(padapter)->recvpriv.signal_strength_data.total_val / adapter_to_dvobj(padapter)->recvpriv.signal_strength_data.total_num;
 
-		if (adapter_to_dvobj(padapter)->recvpriv.is_signal_dbg) {
+		if (padapter->recvinfo.is_signal_dbg) {
 			adapter_to_dvobj(padapter)->recvpriv.signal_strength = adapter_to_dvobj(padapter)->recvpriv.signal_strength_dbg;
 			adapter_to_dvobj(padapter)->recvpriv.rssi = (s8)rtw_phl_rssi_to_dbm(adapter_to_dvobj(padapter)->recvpriv.signal_strength_dbg);
 		} else {

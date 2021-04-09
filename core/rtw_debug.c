@@ -3628,7 +3628,7 @@ ssize_t proc_set_rx_signal(struct file *file, const char __user *buffer, size_t 
 
 		signal_strength = signal_strength > 100 ? 100 : signal_strength;
 
-		adapter_to_dvobj(padapter)->recvpriv.is_signal_dbg = is_signal_dbg;
+		padapter->recvinfo.is_signal_dbg = is_signal_dbg;
 		adapter_to_dvobj(padapter)->recvpriv.signal_strength_dbg = signal_strength;
 
 		if (is_signal_dbg)
