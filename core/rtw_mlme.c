@@ -2392,7 +2392,7 @@ static void rtw_joinbss_update_network(_adapter *padapter, struct wlan_network *
 	cur_network->aid = pnetwork->join_res;
 
 
-#ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS
+#ifdef CONFIG_SIGNAL_STAT_PROCESS
 	rtw_set_signal_stat_timer(&adapter_to_dvobj(padapter)->recvpriv);
 #endif
 	adapter_to_dvobj(padapter)->recvpriv.signal_strength = ptarget_wlan->network.PhyInfo.SignalStrength;
@@ -2408,7 +2408,7 @@ static void rtw_joinbss_update_network(_adapter *padapter, struct wlan_network *
 		 , adapter_to_dvobj(padapter)->recvpriv.signal_qual
 		);
 #endif
-#ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS
+#ifdef CONFIG_SIGNAL_STAT_PROCESS
 	rtw_set_signal_stat_timer(&adapter_to_dvobj(padapter)->recvpriv);
 #endif
 

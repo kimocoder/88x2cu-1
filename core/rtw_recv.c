@@ -17,7 +17,7 @@
 #include <drv_types.h>
 #include <hal_data.h>
 
-#ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS
+#ifdef CONFIG_SIGNAL_STAT_PROCESS
 static void rtw_signal_stat_timer_hdl(void *ctx);
 
 enum {
@@ -37,7 +37,7 @@ u8 signal_stat_calc_profile[SIGNAL_STAT_CALC_PROFILE_MAX][3] = {
 	#define RTW_SIGNAL_STATE_CALC_PROFILE SIGNAL_STAT_CALC_PROFILE_1
 #endif
 
-#endif /* CONFIG_NEW_SIGNAL_STAT_PROCESS */
+#endif /* CONFIG_SIGNAL_STAT_PROCESS */
 
 u8 rtw_bridge_tunnel_header[] = { 0xaa, 0xaa, 0x03, 0x00, 0x00, 0xf8 };
 u8 rtw_rfc1042_header[] = { 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00 };
@@ -142,14 +142,14 @@ sint rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter)
 
 	res = rtw_intf_init_recv_priv(adapter_to_dvobj(padapter));
 
-#ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS
+#ifdef CONFIG_SIGNAL_STAT_PROCESS
 	rtw_init_timer(&precvpriv->signal_stat_timer, rtw_signal_stat_timer_hdl, padapter);
 
 	precvpriv->signal_stat_sampling_interval = 2000; /* ms */
 	/* precvpriv->signal_stat_converging_constant = 5000; */ /* ms */
 
 	rtw_set_signal_stat_timer(precvpriv);
-#endif /* CONFIG_NEW_SIGNAL_STAT_PROCESS */
+#endif /* CONFIG_SIGNAL_STAT_PROCESS */
 
 	_rtw_memset(&precvpriv->ip_statistic, 0,
 			sizeof(struct rtw_ip_dbg_cnt_statistic));
@@ -4096,7 +4096,7 @@ _recv_entry_drop:
 	return ret;
 }
 
-#ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS
+#ifdef CONFIG_SIGNAL_STAT_PROCESS
 static void rtw_signal_stat_timer_hdl(void *ctx)
 {
 	_adapter *adapter = (_adapter *)ctx;
@@ -4194,21 +4194,21 @@ set_timer:
 	rtw_set_signal_stat_timer(recvpriv);
 
 }
-#endif /* CONFIG_NEW_SIGNAL_STAT_PROCESS */
+#endif /* CONFIG_SIGNAL_STAT_PROCESS */
 
 static void rx_process_rssi(_adapter *padapter, union recv_frame *prframe)
 {
 	struct rx_pkt_attrib *pattrib = &prframe->u.hdr.attrib;
-#ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS
+#ifdef CONFIG_SIGNAL_STAT_PROCESS
 	struct signal_stat *signal_stat = &adapter_to_dvobj(padapter)->recvpriv.signal_strength_data;
-#else /* CONFIG_NEW_SIGNAL_STAT_PROCESS */
+#else /* CONFIG_SIGNAL_STAT_PROCESS */
 	u32 last_rssi, tmp_val;
-#endif /* CONFIG_NEW_SIGNAL_STAT_PROCESS */
+#endif /* CONFIG_SIGNAL_STAT_PROCESS */
 
 	/* RTW_INFO("process_rssi=> pattrib->rssil(%d) signal_strength(%d)\n ",pattrib->recv_signal_power,pattrib->signal_strength); */
 	/* if(pRfd->Status.bPacketToSelf || pRfd->Status.bPacketBeacon) */
 	{
-#ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS
+#ifdef CONFIG_SIGNAL_STAT_PROCESS
 		if (signal_stat->update_req) {
 			signal_stat->total_num = 0;
 			signal_stat->total_val = 0;
@@ -4218,7 +4218,7 @@ static void rx_process_rssi(_adapter *padapter, union recv_frame *prframe)
 		signal_stat->total_num++;
 		signal_stat->total_val  += pattrib->phy_info.signal_strength;
 		signal_stat->avg_val = signal_stat->total_val / signal_stat->total_num;
-#else /* CONFIG_NEW_SIGNAL_STAT_PROCESS */
+#else /* CONFIG_SIGNAL_STAT_PROCESS */
 
 		/* Adapter->RxStats.RssiCalculateCnt++;	 */ /* For antenna Test */
 		if (adapter_to_dvobj(padapter)->recvpriv.signal_strength_data.total_num++ >= PHY_RSSI_SLID_WIN_MAX) {
@@ -4243,30 +4243,30 @@ static void rx_process_rssi(_adapter *padapter, union recv_frame *prframe)
 			adapter_to_dvobj(padapter)->recvpriv.rssi = (s8)translate_percentage_to_dbm(tmp_val);
 		}
 
-#endif /* CONFIG_NEW_SIGNAL_STAT_PROCESS */
+#endif /* CONFIG_SIGNAL_STAT_PROCESS */
 	}
 }
 
 static void rx_process_link_qual(_adapter *padapter, union recv_frame *prframe)
 {
 	struct rx_pkt_attrib *pattrib;
-#ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS
+#ifdef CONFIG_SIGNAL_STAT_PROCESS
 	struct signal_stat *signal_stat;
-#else /* CONFIG_NEW_SIGNAL_STAT_PROCESS */
+#else /* CONFIG_SIGNAL_STAT_PROCESS */
 	u32 last_evm = 0, tmpVal;
-#endif /* CONFIG_NEW_SIGNAL_STAT_PROCESS */
+#endif /* CONFIG_SIGNAL_STAT_PROCESS */
 
 	if (prframe == NULL || padapter == NULL)
 		return;
 
 	pattrib = &prframe->u.hdr.attrib;
-#ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS
+#ifdef CONFIG_SIGNAL_STAT_PROCESS
 	signal_stat = &adapter_to_dvobj(padapter)->recvpriv.signal_qual_data;
-#endif /* CONFIG_NEW_SIGNAL_STAT_PROCESS */
+#endif /* CONFIG_SIGNAL_STAT_PROCESS */
 
 	/* RTW_INFO("process_link_qual=> pattrib->signal_qual(%d)\n ",pattrib->signal_qual); */
 
-#ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS
+#ifdef CONFIG_SIGNAL_STAT_PROCESS
 	if (signal_stat->update_req) {
 		signal_stat->total_num = 0;
 		signal_stat->total_val = 0;
@@ -4277,7 +4277,7 @@ static void rx_process_link_qual(_adapter *padapter, union recv_frame *prframe)
 	signal_stat->total_val  += pattrib->phy_info.signal_quality;
 	signal_stat->avg_val = signal_stat->total_val / signal_stat->total_num;
 
-#else /* CONFIG_NEW_SIGNAL_STAT_PROCESS */
+#else /* CONFIG_SIGNAL_STAT_PROCESS */
 	if (pattrib->phy_info.signal_quality != 0) {
 		/*  */
 		/* 1. Record the general EVM to the sliding window. */
@@ -4299,7 +4299,7 @@ static void rx_process_link_qual(_adapter *padapter, union recv_frame *prframe)
 		adapter_to_dvobj(padapter)->recvpriv.signal_qual = (u8)tmpVal;
 
 	}
-#endif /* CONFIG_NEW_SIGNAL_STAT_PROCESS */
+#endif /* CONFIG_SIGNAL_STAT_PROCESS */
 }
 
 void rx_process_phy_info(_adapter *padapter, union recv_frame *rframe)

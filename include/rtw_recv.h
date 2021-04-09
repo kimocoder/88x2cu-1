@@ -534,16 +534,16 @@ struct recv_priv {
 	/* int FalseAlmCnt_all; */
 
 
-#ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS
+#ifdef CONFIG_SIGNAL_STAT_PROCESS
 	_timer signal_stat_timer;
 	u32 signal_stat_sampling_interval;
 	/* u32 signal_stat_converging_constant; */
 	struct signal_stat signal_qual_data;
 	struct signal_stat signal_strength_data;
-#else /* CONFIG_NEW_SIGNAL_STAT_PROCESS */
+#else /* CONFIG_SIGNAL_STAT_PROCESS */
 	struct smooth_rssi_data signal_qual_data;
 	struct smooth_rssi_data signal_strength_data;
-#endif /* CONFIG_NEW_SIGNAL_STAT_PROCESS */
+#endif /* CONFIG_SIGNAL_STAT_PROCESS */
 	u16 sink_udpport, pre_rtp_rxseq, cur_rtp_rxseq;
 
 	BOOLEAN store_law_data_flag;
@@ -582,9 +582,9 @@ void dump_rx_bh_tk(void *sel, struct recv_priv *recv);
 #define dump_rx_bh_tk(sel, recv) do {} while (0)
 #endif
 
-#ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS
+#ifdef CONFIG_SIGNAL_STAT_PROCESS
 #define rtw_set_signal_stat_timer(recvpriv) _set_timer(&(recvpriv)->signal_stat_timer, (recvpriv)->signal_stat_sampling_interval)
-#endif /* CONFIG_NEW_SIGNAL_STAT_PROCESS */
+#endif /* CONFIG_SIGNAL_STAT_PROCESS */
 
 struct sta_recv_priv {
 

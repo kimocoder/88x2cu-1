@@ -693,7 +693,7 @@ void rtw_surveydone_event_callback(_adapter	*adapter, u8 *pbuf)
 
 	_rtw_spinlock_bh(&pmlmepriv->lock);
 
-#ifdef CONFIG_NEW_SIGNAL_STAT_PROCESS
+#ifdef CONFIG_SIGNAL_STAT_PROCESS
 	rtw_set_signal_stat_timer(&adapter_to_dvobj(adapter)->recvpriv);
 #endif
 
