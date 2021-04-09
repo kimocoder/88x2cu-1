@@ -38,7 +38,7 @@ u8 init_channel_set(_adapter *adapter);
 bool rtw_chset_is_dfs_range(struct _RT_CHANNEL_INFO *chset, u32 hi, u32 lo);
 bool rtw_chset_is_dfs_ch(struct _RT_CHANNEL_INFO *chset, u8 ch);
 bool rtw_chset_is_dfs_chbw(struct _RT_CHANNEL_INFO *chset, u8 ch, u8 bw, u8 offset);
-u8 rtw_process_beacon_hint(_adapter *adapter, WLAN_BSSID_EX *bss);
+void rtw_process_beacon_hint(_adapter *adapter, WLAN_BSSID_EX *bss);
 
 #define IS_ALPHA2_NO_SPECIFIED(_alpha2) ((*((u16 *)(_alpha2))) == 0xFFFF)
 #define IS_ALPHA2_WORLDWIDE(_alpha2) (strncmp(_alpha2, "00", 2) == 0)

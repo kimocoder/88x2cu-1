@@ -394,11 +394,6 @@ struct recv_info {
 	s8 rssi;	/* rtw_phl_rssi_to_dbm(ptarget_wlan->network.PhyInfo.SignalStrength); */
 
 
-	#ifdef CONFIG_SIGNAL_STAT_PROCESS
-	_timer signal_stat_timer;
-	u32 signal_stat_sampling_interval;
-	#endif
-
 	/* u32 signal_stat_converging_constant; */
 	struct signal_stat signal_qual_data;
 	struct signal_stat signal_strength_data;

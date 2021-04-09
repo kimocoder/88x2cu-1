@@ -568,7 +568,7 @@ bool rtw_chset_is_dfs_chbw(struct _RT_CHANNEL_INFO *chset, u8 ch, u8 bw, u8 offs
 	return rtw_chset_is_dfs_range(chset, hi, lo);
 }
 
-u8 rtw_process_beacon_hint(_adapter *adapter, WLAN_BSSID_EX *bss)
+void rtw_process_beacon_hint(_adapter *adapter, WLAN_BSSID_EX *bss)
 {
 #ifndef RTW_CHPLAN_BEACON_HINT_NON_WORLD_WIDE
 #define RTW_CHPLAN_BEACON_HINT_NON_WORLD_WIDE 0
@@ -586,23 +586,18 @@ u8 rtw_process_beacon_hint(_adapter *adapter, WLAN_BSSID_EX *bss)
 	RT_CHANNEL_INFO *chset = rfctl->channel_set;
 	u8 ch = bss->Configuration.DSConfig;
 	int chset_idx = rtw_chset_search_ch(chset, ch);
-	u8 act_cnt = 0;
 
 	if (chset_idx < 0)
-		goto exit;
+		return;
 
-	if ((chset[chset_idx].flags & RTW_CHF_NO_IR)
-		&& (RTW_CHPLAN_BEACON_HINT_NON_WORLD_WIDE || !rfctl->country_ent || IS_ALPHA2_WORLDWIDE(rfctl->country_ent->alpha2))
+	if ((chset[chset_idx].ScanType == RTW_PHL_SCAN_PASSIVE)
+		&& (RTW_CHPLAN_BEACON_HINT_NON_WORLD_WIDE || !rfctl->country_ent)
 		&& (RTW_CHPLAN_BEACON_HINT_ON_2G_CH_1_11 || !(ch <= 11))
-		&& (RTW_CHPLAN_BEACON_HINT_ON_DFS_CH || !(chset[chset_idx].flags & RTW_CHF_DFS))
+		&& (RTW_CHPLAN_BEACON_HINT_ON_DFS_CH || !(chset[chset_idx].dfs))
 	) {
 		RTW_INFO("%s: change ch:%d to active\n", __func__, ch);
-		chset[chset_idx].flags &= ~RTW_CHF_NO_IR;
-		act_cnt++;
+		chset[chset_idx].ScanType = RTW_PHL_SCAN_ACTIVE;
 	}
-
-exit:
-	return act_cnt;
 }
 
 const char *const _regd_str[] = {

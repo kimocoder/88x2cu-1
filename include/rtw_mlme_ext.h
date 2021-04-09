@@ -294,6 +294,7 @@ typedef struct _RT_CHANNEL_INFO {
 	* RTW_CHF_NON_OCP: is only used to record if event is reported, status check is still done using non_ocp_end_time
 	*/
 	u8 flags;
+
 	/* u16				ScanPeriod;		 */ /* Listen time in millisecond in this channel. */
 	/* s32				MaxTxPwrDbm;	 */ /* Max allowed tx power. */
 	/* u32				ExInfo;			 */ /* Extended Information for this channel. */

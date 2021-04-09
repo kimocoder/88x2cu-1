@@ -280,11 +280,15 @@ u32 rtw_scan_abort(_adapter *adapter, u32 timeout_ms)
 
 void rtw_scan_abort_no_wait(_adapter *adapter)
 {
-	struct mlme_priv *pmlmepriv = &(adapter->mlmepriv);
 	struct mlme_ext_priv *pmlmeext = &(adapter->mlmeextpriv);
 
-	if (check_fwstate(pmlmepriv, WIFI_UNDER_SURVEY))
-		pmlmeext->scan_abort = _TRUE;
+	#ifdef CONFIG_CMD_SCAN
+	if (pmlmeext->sitesurvey_res.scan_param)
+		rtw_phl_cmd_scan_cancel(adapter_to_dvobj(adapter)->phl,
+					pmlmeext->sitesurvey_res.scan_param);
+	#else
+	rtw_phl_scan_cancel(adapter_to_dvobj(adapter)->phl);
+	#endif
 }
 
 /*
@@ -297,6 +301,8 @@ void rtw_scan_timeout_handler(void *ctx)
 	struct mlme_priv *pmlmepriv = &adapter->mlmepriv;
 	RTW_INFO(FUNC_ADPT_FMT" fw_state=%x\n", FUNC_ADPT_ARG(adapter), get_fwstate(pmlmepriv));
 
+	rtw_scan_abort_no_wait(adapter);
+#if 0
 	_rtw_spinlock_bh(&pmlmepriv->lock);
 
 	_clr_fwstate_(pmlmepriv, WIFI_UNDER_SURVEY);
@@ -311,6 +317,7 @@ void rtw_scan_timeout_handler(void *ctx)
 
 #if defined(CONFIG_CONCURRENT_MODE) && defined(CONFIG_IOCTL_CFG80211)
 	rtw_cfg80211_indicate_scan_done_for_buddy(adapter, _TRUE);
+#endif
 #endif
 }
 
@@ -387,7 +394,7 @@ static bool update_scanned_network(_adapter *adapter, WLAN_BSSID_EX *target)
 #endif
 
 #ifdef CONFIG_P2P
-	if (!rtw_p2p_chk_state(pwdinfo, P2P_STATE_NONE))
+	if (!rtw_p2p_chk_role(pwdinfo, P2P_ROLE_DISABLE))
 		feature = 1; /* p2p enable */
 #endif
 
@@ -398,7 +405,7 @@ static bool update_scanned_network(_adapter *adapter, WLAN_BSSID_EX *target)
 		pnetwork = LIST_CONTAINOR(plist, struct wlan_network, list);
 
 #ifdef CONFIG_P2P
-		if (!rtw_p2p_chk_state(pwdinfo, P2P_STATE_NONE) &&
+		if (!rtw_p2p_chk_role(pwdinfo, P2P_ROLE_DISABLE) &&
 		    (_rtw_memcmp(pnetwork->network.MacAddress, target->MacAddress, ETH_ALEN) == _TRUE)) {
 			target_find = 1;
 			break;
@@ -621,10 +628,7 @@ void rtw_survey_event_callback(_adapter	*adapter, u8 *pbuf)
 		#ifdef CONFIG_80211D
 		process_80211d(adapter, pnetwork);
 		#endif
-		if (MLME_IS_SCAN(adapter)) {
-			adapter->mlmeextpriv.sitesurvey_res.activate_ch_cnt
-				+= rtw_process_beacon_hint(adapter, pnetwork);
-		}
+		rtw_process_beacon_hint(adapter, pnetwork);
 	}
 
 	_rtw_spinlock_bh(&pmlmepriv->lock);
@@ -736,8 +740,10 @@ void rtw_surveydone_event_callback(_adapter	*adapter, u8 *pbuf)
 			set_fwstate(pmlmepriv, WIFI_UNDER_LINKING);
 			pmlmepriv->to_join = _FALSE;
 			s_ret = rtw_select_and_join_from_scanned_queue(pmlmepriv);
-			if (_SUCCESS == s_ret)
-				_set_timer(&pmlmepriv->assoc_timer, MAX_JOIN_TIMEOUT);
+			if (_SUCCESS == s_ret) {
+				/*_set_timer(&pmlmepriv->assoc_timer, MAX_JOIN_TIMEOUT);*/
+				set_assoc_timer(pmlmepriv, MAX_JOIN_TIMEOUT);
+			}
 			else if (s_ret == 2) { /* there is no need to wait for join */
 				_clr_fwstate_(pmlmepriv, WIFI_UNDER_LINKING);
 				rtw_indicate_connect(adapter);
@@ -757,7 +763,8 @@ void rtw_surveydone_event_callback(_adapter	*adapter, u8 *pbuf)
 						|| _SUCCESS != rtw_sitesurvey_cmd(adapter, &scan_parm)
 					   ) {
 						rtw_set_to_roam(adapter, 0);
-						rtw_free_assoc_resources(adapter, _TRUE);
+						if (MLME_IS_ASOC(adapter) == _TRUE)
+							rtw_free_assoc_resources(adapter, _TRUE);
 						rtw_indicate_disconnect(adapter, 0, _FALSE);
 					} else
 						pmlmepriv->to_join = _TRUE;
@@ -772,7 +779,7 @@ void rtw_surveydone_event_callback(_adapter	*adapter, u8 *pbuf)
 			|| rtw_wnm_btm_roam_triggered(adapter)
 		#endif
 		) {
-			if (check_fwstate(pmlmepriv, WIFI_STATION_STATE)
+			if (MLME_IS_STA(adapter)
 			    && check_fwstate(pmlmepriv, WIFI_ASOC_STATE)) {
 				if (rtw_select_roaming_candidate(pmlmepriv) == _SUCCESS) {
 			#ifdef CONFIG_RTW_80211R
@@ -815,16 +822,11 @@ void rtw_surveydone_event_callback(_adapter	*adapter, u8 *pbuf)
 	rtw_cfg80211_surveydone_event_callback(adapter);
 #endif /* CONFIG_IOCTL_CFG80211 */
 
-	rtw_indicate_scan_done(adapter, _FALSE);
+	rtw_indicate_scan_done(adapter, pmlmeext->scan_abort);
 
 #if defined(CONFIG_CONCURRENT_MODE) && defined(CONFIG_IOCTL_CFG80211)
 	rtw_cfg80211_indicate_scan_done_for_buddy(adapter, _FALSE);
 #endif
-
-	if (parm->activate_ch_cnt) {
-		op_class_pref_apply_regulatory(adapter, REG_BEACON_HINT);
-		rtw_nlrtw_reg_beacon_hint_event(adapter);
-	}
 
 #ifdef CONFIG_RTW_MESH
 	#if CONFIG_RTW_MESH_OFFCH_CAND
@@ -1272,6 +1274,7 @@ void survey_timer_hdl(void *ctx)
 			rtw_warn_on(1);
 			goto exit;
 		}
+		cmd->padapter = padapter;
 
 		psurveyPara = (struct sitesurvey_parm *)rtw_zmalloc(sizeof(struct sitesurvey_parm));
 		if (psurveyPara == NULL) {
@@ -1443,9 +1446,9 @@ static u8 sitesurvey_pick_ch_behavior(_adapter *padapter, u8 *ch,
 		scan_ch = pwdinfo->social_chan[ss->channel_idx];
 		ch_set_idx = rtw_chset_search_ch(rfctl->channel_set, scan_ch);
 		if (ch_set_idx >= 0)
-			stype = rfctl->channel_set[ch_set_idx].flags & RTW_CHF_NO_IR ? RTW_PHL_SCAN_PASSIVE : RTW_PHL_SCAN_ACTIVE;
+			stype = rfctl->channel_set[ch_set_idx].ScanType;
 		else
-			stype = SCAN_ACTIVE;
+			stype = RTW_PHL_SCAN_ACTIVE;
 	} else
 #endif /* CONFIG_P2P */
 	{
@@ -1643,15 +1646,6 @@ void survey_done_set_ch_bw(_adapter *padapter)
 	u8 cur_bwmode;
 	u8 cur_ch_offset;
 
-#ifdef CONFIG_MCC_MODE
-	if (!rtw_hal_mcc_change_scan_flag(padapter, &cur_channel, &cur_bwmode, &cur_ch_offset)) {
-		if (0)
-			RTW_INFO(FUNC_ADPT_FMT" back to AP channel - ch:%u, bw:%u, offset:%u\n",
-				FUNC_ADPT_ARG(padapter), cur_channel, cur_bwmode, cur_ch_offset);
-		goto exit;
-	}
-#endif
-
 	if (rtw_mi_get_ch_setting_union(padapter, &cur_channel, &cur_bwmode, &cur_ch_offset) != 0) {
 		if (0)
 			RTW_INFO(FUNC_ADPT_FMT" back to linked/linking union - ch:%u, bw:%u, offset:%u\n",
@@ -1675,7 +1669,7 @@ void survey_done_set_ch_bw(_adapter *padapter)
 			if (rtw_p2p_chk_state(&iface->wdinfo, P2P_STATE_LISTEN)) {
 				cur_channel = iface->wdinfo.listen_channel;
 				cur_bwmode = CHANNEL_WIDTH_20;
-				cur_ch_offset = HAL_PRIME_CHNL_OFFSET_DONT_CARE;
+				cur_ch_offset = CHAN_OFFSET_NO_EXT;
 				if (0)
 					RTW_INFO(FUNC_ADPT_FMT" back to "ADPT_FMT"'s listen ch - ch:%u, bw:%u, offset:%u\n",
 						FUNC_ADPT_ARG(padapter), ADPT_ARG(iface), cur_channel, cur_bwmode, cur_ch_offset);
@@ -1693,9 +1687,6 @@ void survey_done_set_ch_bw(_adapter *padapter)
 					FUNC_ADPT_ARG(padapter), cur_channel, cur_bwmode, cur_ch_offset);
 		}
 	}
-#ifdef CONFIG_MCC_MODE
-exit:
-#endif
 	set_channel_bwmode(padapter, cur_channel, cur_ch_offset, cur_bwmode);
 }
 
@@ -1799,9 +1790,6 @@ u8 sitesurvey_cmd_hdl(_adapter *padapter, u8 *pbuf)
 
 #ifdef CONFIG_P2P
 	struct wifidirect_info *pwdinfo = &padapter->wdinfo;
-#ifdef CONFIG_CONCURRENT_MODE
-	struct roch_info *prochinfo = &padapter->rochinfo;
-#endif
 #endif
 
 #ifdef DBG_CHECK_FW_PS_STATE
@@ -1834,7 +1822,7 @@ operation_by_state:
 	case SCAN_START:
 #if defined(CONFIG_RTW_CFGVENDOR_RANDOM_MAC_OUI) || defined(CONFIG_RTW_SCAN_RAND)
 		if ((pwdev_priv->pno_mac_addr[0] != 0xFF)
-			    && (check_fwstate(&padapter->mlmepriv, WIFI_STATION_STATE) == _TRUE)
+			    && (MLME_IS_STA(padapter))
 	    	    && (check_fwstate(&padapter->mlmepriv, WIFI_ASOC_STATE) == _FALSE)) {
 			u16 seq_num;
 
@@ -1852,11 +1840,6 @@ operation_by_state:
 		/*
 		* prepare to leave operating channel
 		*/
-
-#ifdef CONFIG_MCC_MODE
-		rtw_hal_set_mcc_setting_scan_start(padapter);
-#endif /* CONFIG_MCC_MODE */
-
 		/* apply rx ampdu setting */
 		if (ss->rx_ampdu_accept != RX_AMPDU_ACCEPT_INVALID
 			|| ss->rx_ampdu_size != RX_AMPDU_SIZE_INVALID)
@@ -1901,7 +1884,7 @@ operation_by_state:
 
 	case SCAN_PROCESS: {
 		u8 scan_ch;
-		enum rtw_phl_scan_type scan_type;
+		enum rtw_phl_scan_type stype;
 		u8 next_state;
 		u32 scan_ms;
 
@@ -1910,7 +1893,7 @@ operation_by_state:
 			rtw_acs_get_rst(padapter);
 #endif
 
-		next_state = sitesurvey_pick_ch_behavior(padapter, &scan_ch, &scan_type);
+		next_state = sitesurvey_pick_ch_behavior(padapter, &scan_ch, &stype);
 
 		if (next_state != SCAN_PROCESS) {
 			mlmeext_set_scan_state(pmlmeext, next_state);
@@ -1926,7 +1909,7 @@ operation_by_state:
 				, scan_ch
 				, pwdinfo->find_phase_state_exchange_cnt, ss->channel_idx
 				, rtw_get_passing_time_ms(padapter->mlmepriv.scan_start_time)
-				, scan_type ? 'A' : 'P', ss->scan_mode ? 'A' : 'P'
+				, stype ? 'A' : 'P', ss->scan_mode ? 'A' : 'P'
 				, ss->ssid[0].SsidLength ? 'S' : ' '
 				, ss->force_ssid_scan ? 'F' : ' '
 			);
@@ -1937,7 +1920,7 @@ operation_by_state:
 				, scan_ch
 				, ss->channel_idx
 				, rtw_get_passing_time_ms(padapter->mlmepriv.scan_start_time)
-				, scan_type ? 'A' : 'P', ss->scan_mode ? 'A' : 'P'
+				, stype ? 'A' : 'P', ss->scan_mode ? 'A' : 'P'
 				, ss->ssid[0].SsidLength ? 'S' : ' '
 				, ss->force_ssid_scan ? 'F' : ' '
 			);
@@ -1948,7 +1931,7 @@ operation_by_state:
 			RTW_INFO(FUNC_ADPT_FMT" fixed_chan:%u\n", pmlmeext->fixed_chan);
 #endif
 
-		site_survey(padapter, scan_ch, scan_type);
+		site_survey(padapter, scan_ch, stype);
 
 #if defined(CONFIG_ATMEL_RC_PATCH)
 		if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE)
@@ -1978,10 +1961,6 @@ operation_by_state:
 		}
 #endif
 
-#ifdef CONFIG_BACKGROUND_NOISE_MONITOR
-		if (IS_NM_ENABLE(padapter))
-			rtw_noise_measure(padapter, scan_ch, _FALSE, 0, scan_ms / 2);
-#endif
 		set_survey_timer(pmlmeext, scan_ms);
 		break;
 	}
@@ -1990,11 +1969,6 @@ operation_by_state:
 	case SCAN_BACKING_OP: {
 		u8 back_ch, back_bw, back_ch_offset;
 		u8 need_ch_setting_union = _TRUE;
-
-#ifdef CONFIG_MCC_MODE
-		need_ch_setting_union = rtw_hal_mcc_change_scan_flag(padapter,
-				&back_ch, &back_bw, &back_ch_offset);
-#endif /* CONFIG_MCC_MODE */
 
 		if (need_ch_setting_union) {
 			if (rtw_mi_get_ch_setting_union(padapter, &back_ch, &back_bw, &back_ch_offset) == 0) {
@@ -2108,7 +2082,10 @@ operation_by_state:
 		* Set the P2P State to the listen state of find phase
 		* and set the current channel to the listen channel
 		*/
-		set_channel_bwmode(padapter, pwdinfo->listen_channel, HAL_PRIME_CHNL_OFFSET_DONT_CARE, CHANNEL_WIDTH_20);
+		set_channel_bwmode(padapter,
+			pwdinfo->listen_channel,
+			CHAN_OFFSET_NO_EXT,
+			CHANNEL_WIDTH_20);
 		rtw_p2p_set_state(pwdinfo, P2P_STATE_FIND_PHASE_LISTEN);
 
 		/* turn on phy-dynamic functions */
@@ -2137,7 +2114,7 @@ operation_by_state:
 #ifdef CONFIG_CONCURRENT_MODE
 			if (pwdinfo->driver_interface == DRIVER_WEXT) {
 				if (rtw_mi_check_status(padapter, MI_LINKED))
-					_set_timer(&prochinfo->ap_roch_ch_switch_timer, 500);
+					_set_timer(&pwdinfo->ap_p2p_switch_timer, 500);
 			}
 #endif
 
@@ -2159,14 +2136,8 @@ operation_by_state:
 
 		sitesurvey_set_igi(padapter);
 
-#ifdef CONFIG_MCC_MODE
-		/* start MCC fail, then tx null data */
-		if (!rtw_hal_set_mcc_setting_scan_complete(padapter))
-#endif
-		{
-			rtw_hal_macid_wakeup_all_used(padapter);
-			rtw_ps_annc(padapter, 0);
-		}
+		rtw_hal_macid_wakeup_all_used(padapter);
+		rtw_ps_annc(padapter, 0);
 
 		/* apply rx ampdu setting */
 		rtw_rx_ampdu_apply(padapter);
@@ -2179,10 +2150,6 @@ operation_by_state:
 			rtw_acs_select_best_chan(padapter);
 #endif
 
-#if defined(CONFIG_BACKGROUND_NOISE_MONITOR) && defined(DBG_NOISE_MONITOR)
-		if (IS_NM_ENABLE(padapter))
-			rtw_noise_info_dump(RTW_DBGDUMP, padapter);
-#endif
 		issue_action_BSSCoexistPacket(padapter);
 		issue_action_BSSCoexistPacket(padapter);
 		issue_action_BSSCoexistPacket(padapter);
@@ -2191,10 +2158,6 @@ operation_by_state:
 		if (ss->token)
 			rm_post_event(padapter, ss->token, RM_EV_survey_done);
 #endif /* CONFIG_RTW_80211K */
-#ifdef CONFIG_RTW_ROAM_QUICKSCAN
-		if (padapter->mlmepriv.need_to_roam == _TRUE)
-			generate_quickss(padapter);
-#endif
 		break;
 	}
 
@@ -2334,14 +2297,6 @@ static int scan_issue_pbreq_cb(void *priv, struct rtw_phl_scan_param *param)
 		issue_probereq(padapter, &ssid, NULL);
 	}
 	return 0;
-}
-
-static u8 scan_p2p_find_check(_adapter *padapter)
-{
-	u8 is_p2p_find = false;
-
-	RTW_INFO("%s, is_p2p_find=%d", __func__, is_p2p_find);
-	return is_p2p_find;
 }
 
 static int scan_complete_cb(void *priv, struct rtw_phl_scan_param *param)
