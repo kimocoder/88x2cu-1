@@ -315,9 +315,9 @@ release_lock:
 }
 #endif /* CONFIG_TXPWR_LIMIT */
 
-int rtw_rfctl_init(_adapter *adapter)
+void rtw_rfctl_init(struct dvobj_priv *dvobj)
 {
-	struct registry_priv *regsty = adapter_to_regsty(adapter);
+	_adapter *adapter = dvobj_get_primary_adapter(dvobj);
 	struct rf_ctl_t *rfctl = adapter_to_rfctl(adapter);
 	int ret;
 
@@ -332,7 +332,6 @@ int rtw_rfctl_init(_adapter *adapter)
 	rfctl->ch_sel_within_same_band = 1;
 
 #ifdef CONFIG_DFS_MASTER
-	rfctl->dfs_region_domain = regsty->dfs_region_domain;
 	rfctl->cac_start_time = rfctl->cac_end_time = RTW_CAC_STOPPED;
 	rtw_init_timer(&(rfctl->radar_detect_timer), rtw_dfs_rd_timer_hdl, rfctl);
 #endif
@@ -340,18 +339,14 @@ int rtw_rfctl_init(_adapter *adapter)
 	rfctl->dfs_slave_with_rd = 1;
 #endif
 
-	if (regsty->antenna_gain != UNSPECIFIED_MBM)
-		rfctl->antenna_gain = regsty->antenna_gain;
-
 	ret = op_class_pref_init(adapter);
 	if (ret != _SUCCESS)
 		op_class_pref_deinit(adapter);
-
-	return ret;
 }
 
-void rtw_rfctl_deinit(_adapter *adapter)
+void rtw_rfctl_deinit(struct dvobj_priv *dvobj)
 {
+	_adapter *adapter = dvobj_get_primary_adapter(dvobj);
 	struct rf_ctl_t *rfctl = adapter_to_rfctl(adapter);
 
 	_rtw_mutex_free(&rfctl->offch_mutex);
@@ -370,8 +365,9 @@ void rtw_rfctl_deinit(_adapter *adapter)
 	op_class_pref_deinit(adapter);
 }
 
-void rtw_rfctl_chplan_init(_adapter *adapter)
+void rtw_rfctl_chplan_init(struct dvobj_priv *dvobj)
 {
+	_adapter *adapter = dvobj_get_primary_adapter(dvobj);
 	struct rf_ctl_t *rfctl = adapter_to_rfctl(adapter);
 
 	rfctl->max_chan_nums = init_channel_set(adapter);
@@ -1017,7 +1013,6 @@ bool rtw_choose_shortest_waiting_ch(struct rf_ctl_t *rfctl, u8 sel_ch, u8 max_bw
 	return _FALSE;
 }
 
-#ifdef CONFIG_PROC_DEBUG
 #define RTW_CHF_FMT "%s%s%s%s%s%s"
 
 #define RTW_CHF_ARG_NO_IR(flags)		(flags & RTW_CHF_NO_IR) ? " NO_IR" : ""
@@ -1061,27 +1056,40 @@ void dump_chset(void *sel, RT_CHANNEL_INFO *ch_set, u8 chset_num)
 
 void dump_cur_chset(void *sel, struct rf_ctl_t *rfctl)
 {
+#ifdef CONFIG_RTW_MULTI_AP
+	u32 i = 0;
+
+	RTW_PRINT_SEL(sel, "regd_src:%s(%d)\n", "RTK_PRIV", 0);
+	RTW_PRINT_SEL(sel, "chplan:0x%02X\n", 0x7f);
+	RTW_PRINT_SEL(sel, "txpwr_lmt:(%s)\n", "null");
+	RTW_PRINT_SEL(sel, "dfs_domain:%s(%u)\n", "NONE", 0);
+	RTW_PRINT_SEL(sel, "%-3s %-4s %-4s flags\n", "ch", "freq", "nocp");
+	for (i = 0; i < 24; ++i) {
+		RTW_PRINT_SEL(sel, "%3u %4u %4s %s\n",
+			      chan_test_str[i].ch,
+			      chan_test_str[i].freq,
+			      "0",
+			      chan_test_str[i].flags);
+	}
+
+	RTW_PRINT_SEL(sel, "total ch number:%d\n", 24);
+#else
 	struct dvobj_priv *dvobj = rfctl_to_dvobj(rfctl);
 	struct registry_priv *regsty = dvobj_to_regsty(dvobj);
-	struct get_chplan_resp *chplan;
 	int i;
 
-	if (rtw_get_chplan_cmd(dvobj_get_primary_adapter(dvobj), RTW_CMDF_WAIT_ACK, &chplan) == _FAIL)
-		return;
-
-	RTW_PRINT_SEL(sel, "regd_src:%s(%d)\n", regd_src_str(chplan->regd_src), chplan->regd_src);
-
-	if (chplan->has_country)
-		dump_country_chplan(sel, &chplan->country_ent, 0);
+#if 0 // NEO change to G6's
+	if (rfctl->country_ent)
+		dump_country_chplan(sel, rfctl->country_ent);
 	else
-		RTW_PRINT_SEL(sel, "chplan:0x%02X\n", chplan->channel_plan);
+		RTW_PRINT_SEL(sel, "chplan:0x%02X\n", rfctl->ChannelPlan);
 
 #if CONFIG_TXPWR_LIMIT
-	RTW_PRINT_SEL(sel, "txpwr_lmt:%s\n", chplan->txpwr_lmt_name);
+	RTW_PRINT_SEL(sel, "PLS regd:%s\n", rfctl->regd_name);
 #endif
 
 #ifdef CONFIG_DFS_MASTER
-	RTW_PRINT_SEL(sel, "dfs_domain:%s(%u)\n", rtw_dfs_regd_str(chplan->dfs_domain), chplan->dfs_domain);
+	RTW_PRINT_SEL(sel, "dfs_domain:%u\n", rtw_odm_get_dfs_domain(dvobj));
 #endif
 
 	for (i = 0; i < MAX_CHANNEL_NUM; i++)
@@ -1098,11 +1106,10 @@ void dump_cur_chset(void *sel, struct rf_ctl_t *rfctl)
 		_RTW_PRINT_SEL(sel, "\n");
 	}
 
-	dump_chset(sel, chplan->chset, chplan->chset_num);
-
-	rtw_vmfree(chplan, sizeof(struct get_chplan_resp) + sizeof(RT_CHANNEL_INFO) * chplan->chset_num);
-}
+	dump_chset(sel, rfctl->channel_set);
+#endif // NEO
 #endif
+}
 
 /*
  * Search the @param ch in given @param ch_set
@@ -15618,7 +15625,9 @@ u8 rtw_set_chplan_hdl(_adapter *padapter, unsigned char *pbuf)
 	rtw_txpwr_init_regd(rfctl);
 #endif
 
+#if 0 // NEO change to G6's
 	rtw_rfctl_chplan_init(padapter);
+#endif // NEO
 
 	rtw_hal_set_odm_var(padapter, HAL_ODM_REGULATION, NULL, _TRUE);
 

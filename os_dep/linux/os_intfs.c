@@ -1221,11 +1221,13 @@ u8 devobj_data_init(struct dvobj_priv *dvobj)
 {
 	u8 ret = _SUCCESS;
 
-	dev_set_drv_stopped(dvobj); /*init*/
+// NEO
+//	dev_set_drv_stopped(dvobj); /*init*/
 
-#if 0 // NEO TODO
 	/*init data of dvobj*/
 	rtw_rfctl_init(dvobj);
+	rtw_rfctl_chplan_init(dvobj);
+#if 0 // NEO TODO
 	rtw_hw_cap_init(dvobj);
 
 	RTW_ENABLE_FUNC(dvobj, DF_RX_BIT);
@@ -1361,10 +1363,12 @@ u8 rtw_init_drv_sw(_adapter *padapter)
 			ret8 = _FAIL;
 			goto exit;
 		}
+#if 0 // NEO move to devobj_data_init
 		if (rtw_rfctl_init(padapter) == _FAIL) {
 			ret8 = _FAIL;
 			goto exit;
 		}
+#endif // if 0
 	}
 
 	if (rtw_init_mlme_priv(padapter) == _FAIL) {
@@ -1454,8 +1458,10 @@ u8 rtw_init_drv_sw(_adapter *padapter)
 
 	rtw_hal_dm_init(padapter);
 
+#if 0 //NEO - change to G6's
 	if (is_primary_adapter(padapter))
 		rtw_rfctl_chplan_init(padapter);
+#endif //NEO
 
 #ifdef CONFIG_RTW_SW_LED
 	rtw_hal_sw_led_init(padapter);
@@ -1620,7 +1626,7 @@ u8 rtw_free_drv_sw(_adapter *padapter)
 #endif /* CONFIG_STA_CMD_DISPR */
 
 	if (is_primary_adapter(padapter))
-		rtw_rfctl_deinit(padapter);
+		rtw_rfctl_deinit(adapter_to_dvobj(padapter));
 
 	/* free_io_queue(padapter); */
 

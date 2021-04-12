@@ -61,7 +61,8 @@ struct intf_priv {
 
 struct dvobj_priv *devobj_init(void);
 void devobj_deinit(struct dvobj_priv *pdvobj);
-
+u8 devobj_data_init(struct dvobj_priv *dvobj);
+void devobj_data_deinit(struct dvobj_priv *dvobj);
 u8 devobj_trx_resource_init(struct dvobj_priv *dvobj);
 void devobj_trx_resource_deinit(struct dvobj_priv *dvobj);
 

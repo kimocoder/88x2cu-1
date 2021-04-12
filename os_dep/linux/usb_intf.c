@@ -1351,13 +1351,11 @@ static int rtw_dev_probe(struct usb_interface *pusb_intf, const struct usb_devic
 		goto free_if_vir;
 #endif
 
-#if 0 // NEO : G6 TOOD
 	/*init data of dvobj from registary and ic spec*/
 	if (devobj_data_init(dvobj) == _FAIL) {
 		RTW_ERR("devobj_data_init Failed!\n");
 		goto free_devobj_data;
 	}
-#endif // if 0 NEO
 
 #ifdef CONFIG_GLOBAL_UI_PID
 	if (ui_pid[1] != 0) {
@@ -1380,9 +1378,7 @@ static int rtw_dev_probe(struct usb_interface *pusb_intf, const struct usb_devic
 	return 0;
 
 free_devobj_data:
-#if 0 // NEO : G6 TOOD
 	devobj_data_deinit(dvobj);
-#endif // if 0 NEO
 
 #ifdef CONFIG_CONCURRENT_MODE
 free_if_vir:

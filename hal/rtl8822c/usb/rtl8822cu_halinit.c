@@ -213,7 +213,7 @@ u32 rtl8822cu_init(PADAPTER padapter)
 #ifdef CONFIG_FWLPS_IN_IPS
 exit:
 #endif
-	RTW_INFO("%s in %dms\n", __func__, rtw_get_passing_time_ms(init_start_time));
+	RTW_INFO("%s in %dms, status=%d\n", __func__, rtw_get_passing_time_ms(init_start_time), status);
 	return status;
 }
 

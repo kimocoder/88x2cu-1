@@ -532,6 +532,8 @@ uint rtk_hal_init(_adapter *padapter)
 	uint status = _SUCCESS;
 	PHAL_DATA_TYPE pHalData = GET_HAL_DATA(padapter);
 
+	RTW_INFO("%s\n", __func__);
+
 	halrf_set_rfsupportability(adapter_to_phydm(padapter));
 
 	status = padapter->hal_func.hal_init(padapter);
@@ -545,6 +547,7 @@ uint rtk_hal_init(_adapter *padapter)
 	}
 
 	if (status == _SUCCESS) {
+		RTW_INFO("%s set hw init completed\n", __func__);
 		rtw_set_hw_init_completed(padapter, _TRUE);
 		if (padapter->registrypriv.notch_filter == 1)
 			rtw_hal_notch_filter(padapter, 1);
@@ -582,6 +585,8 @@ uint rtk_hal_init(_adapter *padapter)
 uint rtk_hal_deinit(_adapter *padapter)
 {
 	uint	status = _SUCCESS;
+
+	RTW_INFO("%s\n", __func__);
 
 	status = padapter->hal_func.hal_deinit(padapter);
 

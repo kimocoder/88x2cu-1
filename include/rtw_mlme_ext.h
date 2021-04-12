@@ -320,9 +320,9 @@ typedef struct _RT_CHANNEL_INFO {
 #if CONFIG_TXPWR_LIMIT
 void rtw_txpwr_init_regd(struct rf_ctl_t *rfctl);
 #endif
-int rtw_rfctl_init(_adapter *adapter);
-void rtw_rfctl_deinit(_adapter *adapter);
-void rtw_rfctl_chplan_init(_adapter *adapter);
+void rtw_rfctl_init(struct dvobj_priv *dvobj);
+void rtw_rfctl_deinit(struct dvobj_priv *dvobj);
+void rtw_rfctl_chplan_init(struct dvobj_priv *dvobj);
 void rtw_rfctl_update_op_mode(struct rf_ctl_t *rfctl, u8 ifbmp_mod, u8 if_op);
 
 u8 rtw_rfctl_get_dfs_domain(struct rf_ctl_t *rfctl);
