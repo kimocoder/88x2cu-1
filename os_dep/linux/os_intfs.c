@@ -1217,6 +1217,29 @@ u8 rtw_reset_drv_sw(_adapter *padapter)
 	return ret8;
 }
 
+u8 devobj_data_init(struct dvobj_priv *dvobj)
+{
+	u8 ret = _SUCCESS;
+
+	dev_set_drv_stopped(dvobj); /*init*/
+
+#if 0 // NEO TODO
+	/*init data of dvobj*/
+	rtw_rfctl_init(dvobj);
+	rtw_hw_cap_init(dvobj);
+
+	RTW_ENABLE_FUNC(dvobj, DF_RX_BIT);
+	RTW_ENABLE_FUNC(dvobj, DF_TX_BIT);
+#endif // NEO
+
+exit:
+	return ret;
+}
+
+void devobj_data_deinit(struct dvobj_priv *dvobj)
+{
+}
+
 u8 devobj_trx_resource_init(struct dvobj_priv *dvobj)
 {
 	u8 ret = _SUCCESS;
