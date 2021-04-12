@@ -410,7 +410,8 @@ void rtw_hw_deinit(struct dvobj_priv *dvobj)
 	if (dvobj->phl) {
 		rtw_phl_trx_free(dvobj->phl);
 		rtw_core_deregister_phl_msg(dvobj);
-		rtw_phl_watchdog_deinit(dvobj->phl);
+		// NEO take off first
+		//rtw_phl_watchdog_deinit(dvobj->phl);
 		rtw_phl_deinit(dvobj->phl);
 	}
 

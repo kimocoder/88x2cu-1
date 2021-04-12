@@ -1389,9 +1389,8 @@ free_if_vir:
 free_if_prim:
 	if (padapter)
 		rtw_usb_primary_adapter_deinit(padapter);
-
 free_hw:
-//	rtw_hw_deinit();
+	rtw_hw_deinit(dvobj);
 
 free_trx_reso:
 	devobj_trx_resource_deinit(dvobj);
