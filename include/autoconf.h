@@ -73,7 +73,7 @@
 #endif
 /* #define CONFIG_FILE_FWIMG */
 
-#define CONFIG_XMIT_ACK
+/* #define CONFIG_XMIT_ACK */
 #ifdef CONFIG_XMIT_ACK
 	#define CONFIG_ACTIVE_KEEP_ALIVE_CHECK
 #endif

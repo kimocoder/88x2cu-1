@@ -35,7 +35,6 @@ int ui_pid[3] = {0, 0, 0};
 #endif
 
 
-extern int pm_netdev_open(struct net_device *pnetdev, u8 bnormal);
 static int rtw_dev_suspend(struct usb_interface *intf, pm_message_t message);
 static int rtw_dev_resume(struct usb_interface *intf);
 
@@ -1314,9 +1313,6 @@ static int rtw_dev_probe(struct usb_interface *pusb_intf, const struct usb_devic
 {
 	_adapter *padapter = NULL;
 	struct dvobj_priv *dvobj;
-#ifdef CONFIG_CONCURRENT_MODE
-	int i;
-#endif
 
 	RTW_INFO("+%s\n", __func__);
 
@@ -1342,10 +1338,8 @@ static int rtw_dev_probe(struct usb_interface *pusb_intf, const struct usb_devic
 	padapter = rtw_usb_primary_adapter_init(dvobj, pusb_intf);
 	if (padapter == NULL) {
 		RTW_ERR("rtw_usb_primary_adapter_init Failed!\n");
-		goto free_dvobj;
+		goto free_hw;
 	}
-
-	RTW_INFO("%s: NEO padapter=%p\n", __func__, padapter);
 
 	if (usb_reprobe_switch_usb_mode(padapter) == _TRUE) {
 		RTW_ERR("usb_reprobe_switch_usb_mode Failed!\n");
@@ -1354,8 +1348,16 @@ static int rtw_dev_probe(struct usb_interface *pusb_intf, const struct usb_devic
 
 #ifdef CONFIG_CONCURRENT_MODE
 	if (rtw_drv_add_vir_ifaces(dvobj) == _FAIL)
-		goto free_if_vir
+		goto free_if_vir;
 #endif
+
+#if 0 // NEO : G6 TOOD
+	/*init data of dvobj from registary and ic spec*/
+	if (devobj_data_init(dvobj) == _FAIL) {
+		RTW_ERR("devobj_data_init Failed!\n");
+		goto free_devobj_data;
+	}
+#endif // if 0 NEO
 
 #ifdef CONFIG_GLOBAL_UI_PID
 	if (ui_pid[1] != 0) {
@@ -1367,30 +1369,33 @@ static int rtw_dev_probe(struct usb_interface *pusb_intf, const struct usb_devic
 	/* dev_alloc_name && register_netdev */
 	if (rtw_os_ndevs_init(dvobj) != _SUCCESS) {
 		RTW_ERR("rtw_os_ndevs_init Failed!\n");
-		goto free_if_vir;
+		goto free_devobj_data;
 	}
 
 #ifdef CONFIG_HOSTAPD_MLME
 	hostapd_mode_init(padapter);
 #endif
 
-#ifdef CONFIG_PLATFORM_RTD2880B
-	RTW_INFO("wlan link up\n");
-	rtd2885_wlan_netlink_sendMsg("linkup", "8712");
-#endif
-
 	RTW_INFO("-%s success\n", __func__);
 	return 0;
 
+free_devobj_data:
+#if 0 // NEO : G6 TOOD
+	devobj_data_deinit(dvobj);
+#endif // if 0 NEO
+
+#ifdef CONFIG_CONCURRENT_MODE
 free_if_vir:
-	#ifdef CONFIG_CONCURRENT_MODE
 	rtw_drv_stop_vir_ifaces(dvobj);
 	rtw_drv_free_vir_ifaces(dvobj);
-	#endif
+#endif
 
 free_if_prim:
 	if (padapter)
 		rtw_usb_primary_adapter_deinit(padapter);
+
+free_hw:
+//	rtw_hw_deinit();
 
 free_trx_reso:
 	devobj_trx_resource_deinit(dvobj);
