@@ -7807,7 +7807,7 @@ static int _cfg80211_rtw_mgmt_tx(_adapter *padapter, u8 tx_ch, u8 no_cck, const 
 	if (no_cck && IS_CCK_RATE(pattrib->rate)) {
 		/* force OFDM 6M rate*/
 		pattrib->rate = MGN_6M;
-		//pattrib->raid = rtw_get_mgntframe_raid(padapter, WIRELESS_11G);
+		pattrib->raid = rtw_get_mgntframe_raid(padapter, WIRELESS_11G);
 	}
 
 	pattrib->retry_ctrl = _FALSE;

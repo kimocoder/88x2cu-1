@@ -1461,27 +1461,6 @@ struct dvobj_priv {
 	/*-------- below is for USB INTERFACE --------*/
 
 #ifdef CONFIG_USB_HCI
-
-	//u8	usb_speed; /* 1.1, 2.0 or 3.0 */
-	//u8	nr_endpoint;
-	//u8	RtNumInPipes;
-	//u8	RtNumOutPipes;
-	//int	ep_num[MAX_ENDPOINT_NUM]; /* endpoint number */
-
-	int	RegUsbSS;
-
-	_sema	usb_suspend_sema;
-
-//#ifdef CONFIG_USB_VENDOR_REQ_MUTEX
-//	_mutex  usb_vendor_req_mutex;
-//#endif
-
-//#ifdef CONFIG_USB_VENDOR_REQ_BUFFER_PREALLOC
-//	u8 *usb_alloc_vendor_req_buf;
-//	u8 *usb_vendor_req_buf;
-//#endif
-
-	/*-------- below is merged from G6 --------*/
 	u8	Queue2Pipe[HW_QUEUE_ENTRY];/* for out pipe mapping */
 	struct trx_urb_buf_q xmit_urb_q;
 	struct trx_urb_buf_q recv_urb_q;

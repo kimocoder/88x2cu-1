@@ -722,7 +722,6 @@ static struct dvobj_priv *usb_dvobj_init(struct usb_interface *usb_intf,
 	dvobj->intf_ops = &usb_ops;
 
 	/* .3 misc */
-	_rtw_init_sema(&(dvobj->usb_suspend_sema), 0);
 	rtw_reset_continual_io_error(dvobj);
 
 	usb_get_dev(pusbd);
