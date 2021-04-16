@@ -7748,48 +7748,50 @@ static int _cfg80211_rtw_mgmt_tx(_adapter *padapter, u8 tx_ch, u8 no_cck, const 
 	struct mlme_ext_priv	*pmlmeext = &(padapter->mlmeextpriv);
 	u8 u_ch = rtw_mi_get_union_chan(padapter);
 	u8 leave_op = 0;
-	struct roch_info *prochinfo = &padapter->rochinfo;
-#if defined(CONFIG_P2P) && defined(CONFIG_CONCURRENT_MODE)
+#ifdef CONFIG_P2P
+	struct cfg80211_roch_info *pcfg80211_rochinfo = &padapter->cfg80211_rochinfo;
+	#ifdef CONFIG_CONCURRENT_MODE
 	struct wifidirect_info *pwdinfo = &padapter->wdinfo;
+	#endif
 #endif
 
 	rtw_cfg80211_set_is_mgmt_tx(padapter, 1);
 
-#ifdef CONFIG_BT_COEXIST
-	rtw_btcoex_ScanNotify(padapter, _TRUE);
-#endif
-
+#if 0
+/* phl_scan
+ * Enable ext period when WIFI_ASOC_STATE
+ * cancel roch when ext_listen_period is up
+ * remove it, because phl_sacn will do extend
+ */
 #ifdef CONFIG_P2P
 	if (rtw_cfg80211_get_is_roch(padapter) == _TRUE) {
 		#ifdef CONFIG_CONCURRENT_MODE
 		if (!check_fwstate(&padapter->mlmepriv, WIFI_ASOC_STATE)) {
 			RTW_INFO("%s, extend ro ch time\n", __func__);
-			_set_timer(&padapter->rochinfo.remain_on_ch_timer, pwdinfo->ext_listen_period);
+			_set_timer(&padapter->cfg80211_wdinfo.remain_on_ch_timer, pwdinfo->ext_listen_period);
 		}
 		#endif /* CONFIG_CONCURRENT_MODE */
 	}
 #endif /* CONFIG_P2P */
-
-#ifdef CONFIG_MCC_MODE
-	if (MCC_EN(padapter)) {
-		if (rtw_hal_check_mcc_status(padapter, MCC_STATUS_DOING_MCC))
-			/* don't set channel, issue frame directly */
-			goto issue_mgmt_frame;
-	}
-#endif /* CONFIG_MCC_MODE */
+#endif
 
 	if (rtw_mi_check_status(padapter, MI_LINKED)
 		&& tx_ch != u_ch
 	) {
-		rtw_leave_opch(padapter);
-		leave_op = 1;
+
+		/* phl scan will self leave opch */
+		if (!rtw_cfg80211_get_is_roch(padapter)) {
+			rtw_leave_opch(padapter);
+			leave_op = 1;
+		}
 	}
 
-	if (tx_ch != rtw_get_oper_ch(padapter))
-		set_channel_bwmode(padapter, tx_ch, HAL_PRIME_CHNL_OFFSET_DONT_CARE, CHANNEL_WIDTH_20);
-#ifdef CONFIG_MCC_MODE
-issue_mgmt_frame:
-#endif
+	/* phl_scan will self remain on ch */
+	if (!rtw_cfg80211_get_is_roch(padapter)) {
+		if (tx_ch != rtw_get_oper_ch(padapter))
+			set_channel_bwmode(padapter, tx_ch, HAL_PRIME_CHNL_OFFSET_DONT_CARE, CHANNEL_WIDTH_20);
+	}
+
 	/* starting alloc mgmt frame to dump it */
 	pmgntframe = alloc_mgtxmitframe(pxmitpriv);
 	if (pmgntframe == NULL) {
@@ -7805,7 +7807,7 @@ issue_mgmt_frame:
 	if (no_cck && IS_CCK_RATE(pattrib->rate)) {
 		/* force OFDM 6M rate*/
 		pattrib->rate = MGN_6M;
-		pattrib->raid = rtw_get_mgntframe_raid(padapter, WIRELESS_11G);
+		//pattrib->raid = rtw_get_mgntframe_raid(padapter, WIRELESS_11G);
 	}
 
 	pattrib->retry_ctrl = _FALSE;
@@ -7854,15 +7856,25 @@ issue_mgmt_frame:
 	}
 
 exit:
+
+/* phl_scan will self return opch */
+#if 0
+	#ifdef CONFIG_P2P
 	if (rtw_cfg80211_get_is_roch(padapter)
-		&& !rtw_roch_stay_in_cur_chan(padapter)
-		&& prochinfo->remain_on_ch_channel.hw_value != u_ch
+		&& !roch_stay_in_cur_chan(padapter)
+		&& pcfg80211_wdinfo->remain_on_ch_channel.hw_value != u_ch
 	) {
 		/* roch is ongoing, switch back to rch */
-		if (prochinfo->remain_on_ch_channel.hw_value != tx_ch)
-			set_channel_bwmode(padapter, prochinfo->remain_on_ch_channel.hw_value
-				, HAL_PRIME_CHNL_OFFSET_DONT_CARE, CHANNEL_WIDTH_20);
-	} else if (leave_op) {
+		if (pcfg80211_wdinfo->remain_on_ch_channel.hw_value != tx_ch)
+			set_channel_bwmode(padapter,
+				pcfg80211_wdinfo->remain_on_ch_channel.hw_value,
+				CHAN_OFFSET_NO_EXT,
+				CHANNEL_WIDTH_20,
+				_FALSE);
+	} else
+	#endif
+#endif
+	if (leave_op) {
 		if (rtw_mi_check_status(padapter, MI_LINKED)) {
 			u8 u_bw = rtw_mi_get_union_bw(padapter);
 			u8 u_offset = rtw_mi_get_union_offset(padapter);
@@ -7873,10 +7885,6 @@ exit:
 	}
 
 	rtw_cfg80211_set_is_mgmt_tx(padapter, 0);
-
-#ifdef CONFIG_BT_COEXIST
-	rtw_btcoex_ScanNotify(padapter, _FALSE);
-#endif
 
 #ifdef CONFIG_DEBUG_CFG80211
 	RTW_INFO("%s, ret=%d\n", __func__, ret);
