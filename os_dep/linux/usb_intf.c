@@ -564,15 +564,13 @@ static struct dvobj_priv *usb_dvobj_init(struct usb_interface *usb_intf,
 		goto exit;
 
 	pusb_data = dvobj_to_usb(dvobj);
+
 	pusb_data->pusbintf = usb_intf ;
 	pusbd = pusb_data->pusbdev = interface_to_usbdev(usb_intf);
 	usb_set_intfdata(usb_intf, dvobj);
 
 	pusb_data->RtNumInPipes = 0;
 	pusb_data->RtNumOutPipes = 0;
-
-	/* padapter->EepromAddressSize = 6; */
-	/* dvobj->nr_endpoint = 6; */
 
 	pdev_desc = &pusbd->descriptor;
 
@@ -597,11 +595,32 @@ static struct dvobj_priv *usb_dvobj_init(struct usb_interface *usb_intf,
 	phost_conf = pusbd->actconfig;
 	pconf_desc = &phost_conf->desc;
 
-
-	/* RTW_INFO("\n***** num of altsetting = (%d) *****\n", pusb_interface->num_altsetting); */
+#if 0
+	RTW_INFO("\n[USB] configuration_descriptor:\n");
+	RTW_INFO("bNumInterfaces=%x\n", pconf_desc->bNumInterfaces);
+	RTW_INFO("bLength=%x\n", pconf_desc->bLength);
+	RTW_INFO("bDescriptorType=%x\n", pconf_desc->bDescriptorType);
+	RTW_INFO("wTotalLength=%x\n", pconf_desc->wTotalLength);
+	RTW_INFO("bConfigurationValue=%x\n", pconf_desc->bConfigurationValue);
+	RTW_INFO("iConfiguration=%x\n", pconf_desc->iConfiguration);
+	RTW_INFO("bmAttributes=%x\n", pconf_desc->bmAttributes);
+	RTW_INFO("bMaxPower=%x\n", pconf_desc->bMaxPower);
+#endif
 
 	phost_iface = &usb_intf->altsetting[0];
 	piface_desc = &phost_iface->desc;
+#if 0
+	RTW_INFO("\n[USB] usb_interface_descriptor:\n");
+	RTW_INFO("bInterfaceNumber=%x\n", piface_desc->bInterfaceNumber);
+	RTW_INFO("bAlternateSetting=%x\n", piface_desc->bAlternateSetting);
+	RTW_INFO("bLength=%x\n", piface_desc->bLength);
+	RTW_INFO("bDescriptorType=%x\n", piface_desc->bDescriptorType);
+	RTW_INFO("bNumEndpoints=%x\n", piface_desc->bNumEndpoints);
+	RTW_INFO("bInterfaceClass=%x\n", piface_desc->bInterfaceClass);
+	RTW_INFO("bInterfaceSubClass=%x\n", piface_desc->bInterfaceSubClass);
+	RTW_INFO("bInterfaceProtocol=%x\n", piface_desc->bInterfaceProtocol);
+	RTW_INFO("iInterface=%x\n", piface_desc->iInterface);
+#endif
 
 	pusb_data->nr_endpoint = piface_desc->bNumEndpoints;
 	if (pusb_data->nr_endpoint > MAX_ENDPOINT_NUM) {
@@ -631,7 +650,7 @@ static struct dvobj_priv *usb_dvobj_init(struct usb_interface *usb_intf,
 			if (RT_usb_endpoint_is_bulk_in(pendp_desc)) {
 				RTW_INFO("RT_usb_endpoint_is_bulk_in = %x\n", RT_usb_endpoint_num(pendp_desc));
 				pusb_data->RtInPipe[pusb_data->RtNumInPipes] = RT_usb_endpoint_num(pendp_desc);
-				pusb_data->inpipe_type[pusb_data->RtNumInPipes] = REALTEK_USB_BULK_IN_EP_IDX;
+				pusb_data->inpipe_type[pusb_data->RtNumOutPipes] = REALTEK_USB_BULK_IN_EP_IDX;
 				pusb_data->RtNumInPipes++;
 				RTW_INFO("USB#%d bulkin size:%d", pusb_data->RtNumInPipes,
 					rtw_endpoint_max_bpi(pusbd, phost_endp));
@@ -702,7 +721,6 @@ static struct dvobj_priv *usb_dvobj_init(struct usb_interface *usb_intf,
 	rtw_decide_chip_type_by_usb_info(dvobj, pdid);
 	dvobj->ic_id = pdid->driver_info;
 	dvobj->intf_ops = &usb_ops;
-	
 
 	/* .3 misc */
 	_rtw_init_sema(&(dvobj->usb_suspend_sema), 0);
