@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright(c) 2007 - 2017 Realtek Corporation.
+ * Copyright(c) 2007 - 2019 Realtek Corporation.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -16,11 +16,12 @@
 #define __RECV_OSDEP_H_
 
 u8 rtw_init_recv_info(_adapter *adapter);
-extern sint rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter);
-extern void _rtw_free_recv_priv(struct recv_priv *precvpriv);
+sint rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter);
+void _rtw_free_recv_priv(struct recv_priv *precvpriv);
 
-
+#if 0
 extern s32  rtw_recv_entry(union recv_frame *precv_frame);
+#endif
 void rtw_rframe_set_os_pkt(union recv_frame *rframe);
 extern int rtw_recv_indicatepkt(_adapter *adapter, union recv_frame *precv_frame);
 extern void rtw_recv_returnpacket(_nic_hdl cnxt, struct sk_buff *preturnedpkt);
@@ -42,8 +43,10 @@ int rtw_os_recv_resource_alloc(union recv_frame *precvframe);
 void rtw_os_recv_resource_free(struct recv_priv *precvpriv);
 
 
-int rtw_os_alloc_recvframe(_adapter *padapter, union recv_frame *precvframe, u8 *pdata, struct sk_buff *pskb);
-int rtw_os_recvframe_duplicate_skb(_adapter *padapter, union recv_frame *pcloneframe, struct sk_buff *pskb);
+int rtw_os_alloc_recvframe(_adapter *padapter, union recv_frame *precvframe,
+				u8 *pdata, struct sk_buff *pskb);
+int rtw_os_recvframe_duplicate_skb(_adapter *padapter,
+				union recv_frame *pcloneframe, struct sk_buff *pskb);
 void rtw_os_free_recvframe(union recv_frame *precvframe);
 
 
@@ -52,9 +55,8 @@ int rtw_os_recvbuf_resource_free(_adapter *padapter, struct recv_buf *precvbuf);
 
 struct sk_buff *rtw_os_alloc_msdu_pkt(union recv_frame *prframe, const u8 *da, const u8 *sa
 	, u8 *msdu ,u16 msdu_len, enum rtw_rx_llc_hdl llc_hdl);
-void rtw_os_recv_indicate_pkt(_adapter *padapter, struct sk_buff *pkt, union recv_frame *rframe);
-
-void rtw_os_read_port(_adapter *padapter, struct recv_buf *precvbuf);
+void rtw_os_recv_indicate_pkt(_adapter *padapter, struct sk_buff *pkt,
+				union recv_frame *rframe);
 
 #ifdef PLATFORM_LINUX
 #ifdef CONFIG_RTW_NAPI
@@ -66,7 +68,5 @@ void dynamic_napi_th_chk (_adapter *adapter);
 #endif /* CONFIG_RTW_NAPI_DYNAMIC */
 #endif /* CONFIG_RTW_NAPI */
 #endif /* PLATFORM_LINUX */
-
-void rtw_rx_dbg_monitor_ip_statistic(_adapter *padapter, struct sk_buff *pkt);
 
 #endif /*  */

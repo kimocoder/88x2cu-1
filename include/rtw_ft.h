@@ -93,7 +93,7 @@ enum rtw_ft_capability {
 
 #define rtw_ft_roam(a)	\
 	((rtw_to_roam(a) > 0) && rtw_ft_chk_flags(a, RTW_FT_PEER_EN))
-	
+
 #define rtw_ft_valid_akm(a, t)	\
 	((rtw_ft_chk_flags(a, RTW_FT_EN)) && \
 	(((t) == 3) || ((t) == 4)))
@@ -106,7 +106,7 @@ enum rtw_ft_capability {
 	((rtw_ft_chk_flags(a, RTW_FT_OTD_EN))	\
 	&& ((a)->mlmepriv.ft_roam.ft_roam_on_expired == _FALSE)	\
 	&& ((a)->mlmepriv.ft_roam.ft_cap & 0x01))
-	
+
 #define rtw_ft_otd_roam(a) \
 	rtw_ft_chk_flags(a, RTW_FT_PEER_OTD_EN)
 
@@ -119,7 +119,7 @@ enum rtw_ft_capability {
 
 struct ft_roam_info {
 	u16	mdid;
-	u8	ft_cap;	
+	u8	ft_cap;
 	/*b0: FT over DS, b1: Resource Req Protocol Cap, b2~b7: Reserved*/
 	u8	updated_ft_ies[RTW_FT_MAX_IE_SZ];
 	u16	updated_ft_ies_len;
@@ -130,7 +130,7 @@ struct ft_roam_info {
 	u8	ft_flags;
 	u32 ft_status;
 	u32 ft_req_retry_cnt;
-	bool ft_updated_bcn;	
+	bool ft_updated_bcn;
 };
 
 void rtw_ft_info_init(struct ft_roam_info *pft);
@@ -155,13 +155,13 @@ void rtw_ft_update_bcn(_adapter *padapter, union recv_frame *precv_frame);
 void rtw_ft_start_clnt_join(_adapter *padapter);
 
 u8 rtw_ft_update_rsnie(
-	_adapter *padapter, u8 bwrite, 
+	_adapter *padapter, u8 bwrite,
 	struct pkt_attrib *pattrib, u8 **pframe);
 
-void rtw_ft_build_auth_req_ies(_adapter *padapter, 
+void rtw_ft_build_auth_req_ies(_adapter *padapter,
 	struct pkt_attrib *pattrib, u8 **pframe);
 
-void rtw_ft_build_assoc_req_ies(_adapter *padapter, 
+void rtw_ft_build_assoc_req_ies(_adapter *padapter,
 	u8 is_reassoc, struct pkt_attrib *pattrib, u8 **pframe);
 
 u8 rtw_ft_update_auth_rsp_ies(_adapter *padapter, u8 *pframe, u32 len);

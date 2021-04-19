@@ -73,7 +73,7 @@ enum rtw_ieee80211_wnm_actioncode {
 	RTW_WLAN_ACTION_WNM_BTM_REQ = 7,
 	RTW_WLAN_ACTION_WNM_BTM_RSP = 8,
 	RTW_WLAN_ACTION_WNM_NOTIF_REQ = 26,
-	RTW_WLAN_ACTION_WNM_NOTIF_RSP = 27,	
+	RTW_WLAN_ACTION_WNM_NOTIF_RSP = 27,
 };
 
 /*IEEE Std 80211k Figure 7-95b Neighbor Report element format*/
@@ -84,7 +84,7 @@ struct nb_rpt_hdr {
 	u32 bss_info;
 	u8 reg_class;
 	u8 ch_num;
-	u8 phy_type;	
+	u8 phy_type;
 };
 
 /*IEEE Std 80211v, Figure 7-9 BSS Termination Duration subelement field format */
@@ -163,7 +163,7 @@ struct roam_nb_info {
 	u8 nb_rpt_is_same;
 	s8 disassoc_waiting;
 	_timer roam_scan_timer;
-	_timer disassoc_chk_timer;	
+	_timer disassoc_chk_timer;
 
 	u32 features;
 };
@@ -203,7 +203,7 @@ void rtw_roam_nb_info_init(_adapter *padapter);
 u8 rtw_roam_nb_scan_list_set(_adapter *padapter,
 	struct sitesurvey_parm *pparm);
 
-u32 rtw_wnm_btm_candidates_survey(_adapter *padapter, 
+u32 rtw_wnm_btm_candidates_survey(_adapter *padapter,
 	u8* pframe, u32 elem_len, u8 is_preference);
 #endif /* __RTW_WNM_H_ */
 

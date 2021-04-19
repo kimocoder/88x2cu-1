@@ -428,7 +428,8 @@ void rtw_os_recv_indicate_pkt(_adapter *padapter, struct sk_buff *pkt,
 		DBG_COUNTER(padapter->rx_logs.os_indicate);
 
 #ifdef CONFIG_BR_EXT
-		if (!adapter_use_wds(padapter) && check_fwstate(pmlmepriv, WIFI_STATION_STATE | WIFI_ADHOC_STATE) == _TRUE) {
+		if (!adapter_use_wds(padapter) &&
+		    (MLME_IS_STA(padapter) || MLME_IS_ADHOC(padapter))) {
 			/* Insert NAT2.5 RX here! */
 			#if (LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 35))
 			br_port = padapter->pnetdev->br_port;
@@ -461,9 +462,6 @@ void rtw_os_recv_indicate_pkt(_adapter *padapter, struct sk_buff *pkt,
 		pkt->protocol = eth_type_trans(pkt, padapter->pnetdev);
 		pkt->dev = padapter->pnetdev;
 		pkt->ip_summed = CHECKSUM_NONE; /* CONFIG_TCP_CSUM_OFFLOAD_RX */
-
-		if (adapter_to_dvobj(padapter)->recvpriv.ip_statistic.enabled)
-			rtw_rx_dbg_monitor_ip_statistic(padapter, pkt);
 
 #ifdef CONFIG_TCP_CSUM_OFFLOAD_RX
 		if ((rframe->u.hdr.attrib.csum_valid == 1)

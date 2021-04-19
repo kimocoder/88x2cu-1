@@ -66,6 +66,7 @@ s32 rtw_mgnt_xmit(_adapter *adapter, struct xmit_frame *pmgntframe)
 	return ret;
 }
 
+
 struct lite_data_buf *rtw_alloc_litedatabuf(struct trx_data_buf_q *data_buf_q)
 {
 	struct lite_data_buf *litedatabuf =  NULL;

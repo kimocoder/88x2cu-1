@@ -1287,7 +1287,8 @@ void rtw_dbg_skb_process(_adapter *padapter, union recv_frame *precvframe, union
 }
 #endif
 
-static s32 _rtw_mi_buddy_clone_bcmc_packet(_adapter *adapter, union recv_frame *precvframe, u8 *pphy_status, union recv_frame *pcloneframe)
+static s32 _rtw_mi_buddy_clone_bcmc_packet(_adapter *adapter,
+	union recv_frame *precvframe, u8 *pphy_status, union recv_frame *pcloneframe)
 {
 	s32 ret = _SUCCESS;
 #ifdef CONFIG_SKB_ALLOCATED
@@ -1319,28 +1320,26 @@ static s32 _rtw_mi_buddy_clone_bcmc_packet(_adapter *adapter, union recv_frame *
 			rtw_dbg_skb_process(adapter, precvframe, pcloneframe);
 #endif
 
-			if (pphy_status)
-				rx_query_phy_status(pcloneframe, pphy_status);
-
-			ret = rtw_recv_entry(pcloneframe);
+			validate_recv_frame(adapter, pcloneframe);
 		} else {
-			ret = -1;
-			RTW_INFO("%s()-%d: rtw_os_alloc_recvframe() failed!\n", __func__, __LINE__);
+			ret = _FAIL;
+			RTW_ERR("%s()-%d: rtw_os_alloc_recvframe() failed!\n", __func__, __LINE__);
 		}
 
 	}
 	return ret;
 }
 
-void rtw_mi_buddy_clone_bcmc_packet(_adapter *padapter, union recv_frame *precvframe, u8 *pphy_status)
+void rtw_mi_buddy_clone_bcmc_packet(_adapter *padapter,
+		union recv_frame *precvframe, u8 *pphy_status)
 {
 	int i;
 	s32 ret = _SUCCESS;
 	_adapter *iface = NULL;
 	union recv_frame *pcloneframe = NULL;
+	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
 	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;/*primary_padapter*/
 	_queue *pfree_recv_queue = &precvpriv->free_recv_queue;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
 	u8 *fhead = get_recvframe_data(precvframe);
 	u8 type = GetFrameType(fhead);
 
@@ -1356,11 +1355,12 @@ void rtw_mi_buddy_clone_bcmc_packet(_adapter *padapter, union recv_frame *precvf
 		pcloneframe = rtw_alloc_recvframe(pfree_recv_queue);
 		if (pcloneframe) {
 			ret = _rtw_mi_buddy_clone_bcmc_packet(iface, precvframe, pphy_status, pcloneframe);
-			if (_SUCCESS != ret) {
-				if (ret == -1)
-					rtw_free_recvframe(pcloneframe);
-				/*RTW_INFO(ADPT_FMT"-clone BC/MC frame failed\n", ADPT_ARG(iface));*/
-			}
+			if (ret == _FAIL)
+				RTW_ERR("_rtw_mi_buddy_clone_bcmc_packet failed!\n");
+			rtw_free_recvframe(pcloneframe);
+		} else {
+			RTW_ERR("%s rtw_alloc_recvframe failed\n", __func__);
+			rtw_warn_on(1);
 		}
 	}
 
