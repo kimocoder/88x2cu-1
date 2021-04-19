@@ -4111,10 +4111,6 @@ void rtl8822c_set_hal_ops(PADAPTER adapter)
 	 */
 	/*** initialize section ***/
 	ops->read_chip_version = read_chip_version;
-/*
-	ops->init_default_value = NULL;
-	ops->intf_chip_configure = NULL;
-*/
 	ops->read_adapter_info = rtl8822c_read_efuse;
 	ops->hal_power_on = rtl8822c_power_on;
 	ops->hal_power_off = rtl8822c_power_off;
@@ -4127,33 +4123,7 @@ void rtl8822c_set_hal_ops(PADAPTER adapter)
 	ops->run_thread = rtl8822c_run_thread;
 	ops->cancel_thread = rtl8822c_cancel_thread;
 
-	/*** recv section ***/
-/*
-	ops->init_recv_priv = NULL;
-	ops->free_recv_priv = NULL;
-#if defined(CONFIG_USB_HCI) || defined(CONFIG_PCI_HCI)
-	ops->inirp_init = NULL;
-	ops->inirp_deinit = NULL;
-#endif
-*/
-	/*** interrupt hdl section ***/
-/*
-	ops->enable_interrupt = NULL;
-	ops->disable_interrupt = NULL;
-*/
 	ops->check_ips_status = check_ips_status;
-/*
-#if defined(CONFIG_PCI_HCI)
-	ops->interrupt_handler = NULL;
-#endif
-#if defined(CONFIG_USB_HCI) && defined(CONFIG_SUPPORT_USB_INT)
-	ops->interrupt_handler = NULL;
-#endif
-#if defined(CONFIG_PCI_HCI)
-	ops->irp_reset = NULL;
-#endif
-*/
-
 	/*** DM section ***/
 	ops->set_chnl_bw_handler = rtl8822c_set_channel_bw;
 
@@ -4174,31 +4144,12 @@ void rtl8822c_set_hal_ops(PADAPTER adapter)
 
 	ops->SetBeaconRelatedRegistersHandler = set_beacon_related_registers;
 
-/*
-	ops->interface_ps_func = NULL;
-*/
 	ops->read_bbreg = rtl8822c_read_bb_reg;
 	ops->write_bbreg = rtl8822c_write_bb_reg;
 	ops->read_rfreg = rtl8822c_read_rf_reg;
 	ops->write_rfreg = rtl8822c_write_rf_reg;
 	ops->read_wmmedca_reg = rtl8822c_read_wmmedca_reg;
 
-#ifdef CONFIG_HOSTAPD_MLME
-/*
-	ops->hostap_mgnt_xmit_entry = NULL;
-*/
-#endif
-/*
-	ops->EfusePowerSwitch = NULL;
-	ops->BTEfusePowerSwitch = NULL;
-	ops->ReadEFuse = NULL;
-	ops->EFUSEGetEfuseDefinition = NULL;
-	ops->EfuseGetCurrentSize = NULL;
-	ops->Efuse_PgPacketRead = NULL;
-	ops->Efuse_PgPacketWrite = NULL;
-	ops->Efuse_WordEnableDataWrite = NULL;
-	ops->Efuse_PgPacketWrite_BT = NULL;
-*/
 #ifdef DBG_CONFIG_ERROR_DETECT
 	ops->sreset_init_value = sreset_init_value;
 	ops->sreset_reset_value = sreset_reset_value;
@@ -4208,12 +4159,6 @@ void rtl8822c_set_hal_ops(PADAPTER adapter)
 	ops->sreset_get_wifi_status = sreset_get_wifi_status;
 	ops->sreset_inprogress = sreset_inprogress;
 #endif /* DBG_CONFIG_ERROR_DETECT */
-
-#ifdef CONFIG_IOL
-/*
-	ops->IOL_exec_cmds_sync = NULL;
-*/
-#endif
 
 	ops->hal_notch_filter = rtl8822c_notch_filter_switch;
 	ops->hal_mac_c2h_handler = rtl8822c_c2h_handler;

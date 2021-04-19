@@ -1967,17 +1967,6 @@ u8 rtw_hal_ops_check(_adapter *padapter)
 		ret = _FAIL;
 	}
 
-#if 0 //NEO
-	/*** recv section ***/
-	if (NULL == padapter->hal_func.init_recv_priv) {
-		rtw_hal_error_msg("init_recv_priv");
-		ret = _FAIL;
-	}
-	if (NULL == padapter->hal_func.free_recv_priv) {
-		rtw_hal_error_msg("free_recv_priv");
-		ret = _FAIL;
-	}
-#endif // NEO
 #ifdef CONFIG_RECV_THREAD_MODE
 	if (NULL == padapter->hal_func.recv_hdl) {
 		rtw_hal_error_msg("recv_hdl");

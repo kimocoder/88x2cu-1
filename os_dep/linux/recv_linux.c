@@ -191,16 +191,16 @@ void rtw_os_recv_resource_free(struct recv_priv *precvpriv)
 	}
 }
 
+#if 0
 /* alloc os related resource in struct recv_buf */
-int rtw_os_recvbuf_resource_alloc(_adapter *padapter, struct recv_buf *precvbuf, u32 size)
+int rtw_os_recvbuf_resource_alloc(_adapter *padapter, struct recv_buf *precvbuf)
 {
 	int res = _SUCCESS;
 
 #ifdef CONFIG_USB_HCI
 #ifdef CONFIG_USE_USB_BUFFER_ALLOC_RX
 	struct dvobj_priv	*pdvobjpriv = adapter_to_dvobj(padapter);
-	PUSB_DATA pusb_data = dvobj_to_usb(pdvobjpriv);
-	struct usb_device *pusbd = pusb_data->pusbdev;
+	struct usb_device	*pusbd = dvobj_to_usb(pdvobjpriv)->pusbdev;
 #endif
 
 	precvbuf->irp_pending = _FALSE;
@@ -219,26 +219,19 @@ int rtw_os_recvbuf_resource_alloc(_adapter *padapter, struct recv_buf *precvbuf,
 	precvbuf->len = 0;
 
 #ifdef CONFIG_USE_USB_BUFFER_ALLOC_RX
-	precvbuf->pallocated_buf = rtw_usb_buffer_alloc(pusbd, (size_t)size, &precvbuf->dma_transfer_addr);
+	precvbuf->pallocated_buf = rtw_usb_buffer_alloc(pusbd, (size_t)precvbuf->alloc_sz, &precvbuf->dma_transfer_addr);
 	precvbuf->pbuf = precvbuf->pallocated_buf;
 	if (precvbuf->pallocated_buf == NULL)
 		return _FAIL;
 #endif /* CONFIG_USE_USB_BUFFER_ALLOC_RX */
 
-#elif defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
-	#if !defined(CONFIG_RTL8822B) && !defined(CONFIG_RTL8822C)
-	#ifdef CONFIG_SDIO_RX_COPY
-	res = sdio_init_recvbuf_with_skb(&padapter->recvpriv, precvbuf, size);
-	#endif
-	#endif
-
-#endif /* CONFIG_XXX_HCI */
+#endif /* CONFIG_USB_HCI */
 
 	return res;
 }
 
 /* free os related resource in struct recv_buf */
-int rtw_os_recvbuf_resource_free(_adapter *padapter, struct recv_buf *precvbuf)
+int rtw_os_recvbuf_resource_free(_adapter *adapter, struct recv_buf *precvbuf)
 {
 	int ret = _SUCCESS;
 
@@ -246,9 +239,9 @@ int rtw_os_recvbuf_resource_free(_adapter *padapter, struct recv_buf *precvbuf)
 
 #ifdef CONFIG_USE_USB_BUFFER_ALLOC_RX
 
-	struct dvobj_priv	*pdvobjpriv = adapter_to_dvobj(padapter);
-	PUSB_DATA pusb_data = dvobj_to_usb(pdvobjpriv);
-	struct usb_device *pusbd = pusb_data->pusbdev;
+	struct dvobj_priv	*dvobj = adapter_to_dvobj(adapter);
+	struct usb_device	*pusbd = dvobj_to_usb(dvobj)->pusbdev;
+
 	rtw_usb_buffer_free(pusbd, (size_t)precvbuf->alloc_sz, precvbuf->pallocated_buf, precvbuf->dma_transfer_addr);
 	precvbuf->pallocated_buf =  NULL;
 	precvbuf->dma_transfer_addr = 0;
@@ -272,6 +265,7 @@ int rtw_os_recvbuf_resource_free(_adapter *padapter, struct recv_buf *precvbuf)
 	return ret;
 
 }
+#endif
 
 struct sk_buff *rtw_os_alloc_msdu_pkt(union recv_frame *prframe,
 	const u8 *da, const u8 *sa, u8 *msdu ,u16 msdu_len,

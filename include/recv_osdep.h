@@ -50,8 +50,10 @@ int rtw_os_recvframe_duplicate_skb(_adapter *padapter,
 void rtw_os_free_recvframe(union recv_frame *precvframe);
 
 
-int rtw_os_recvbuf_resource_alloc(_adapter *padapter, struct recv_buf *precvbuf, u32 size);
+#if 0
+int rtw_os_recvbuf_resource_alloc(_adapter *padapter, struct recv_buf *precvbuf);
 int rtw_os_recvbuf_resource_free(_adapter *padapter, struct recv_buf *precvbuf);
+#endif
 
 struct sk_buff *rtw_os_alloc_msdu_pkt(union recv_frame *prframe, const u8 *da, const u8 *sa
 	, u8 *msdu ,u16 msdu_len, enum rtw_rx_llc_hdl llc_hdl);
