@@ -842,17 +842,6 @@ void	rtw_hal_free_xmit_priv(_adapter *padapter)
 	padapter->hal_func.free_xmit_priv(padapter);
 }
 
-#if 0 // move to rtw_trx_ops.h
-s32	rtw_hal_init_recv_priv(_adapter *padapter)
-{
-	return padapter->hal_func.init_recv_priv(padapter);
-}
-void	rtw_hal_free_recv_priv(_adapter *padapter)
-{
-	padapter->hal_func.free_recv_priv(padapter);
-}
-#endif
-
 void rtw_sta_ra_registed(_adapter *padapter, struct sta_info *psta)
 {
 	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(padapter);
@@ -1978,6 +1967,7 @@ u8 rtw_hal_ops_check(_adapter *padapter)
 		ret = _FAIL;
 	}
 
+#if 0 //NEO
 	/*** recv section ***/
 	if (NULL == padapter->hal_func.init_recv_priv) {
 		rtw_hal_error_msg("init_recv_priv");
@@ -1987,6 +1977,7 @@ u8 rtw_hal_ops_check(_adapter *padapter)
 		rtw_hal_error_msg("free_recv_priv");
 		ret = _FAIL;
 	}
+#endif // NEO
 #ifdef CONFIG_RECV_THREAD_MODE
 	if (NULL == padapter->hal_func.recv_hdl) {
 		rtw_hal_error_msg("recv_hdl");

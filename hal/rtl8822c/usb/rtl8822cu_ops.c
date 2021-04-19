@@ -303,8 +303,11 @@ void rtl8822cu_set_hal_ops(PADAPTER padapter)
 	ops->init_xmit_priv = rtl8822cu_init_xmit_priv;
 	ops->free_xmit_priv = rtl8822cu_free_xmit_priv;
 
+#if 0 // NEO
 	ops->init_recv_priv = rtl8822cu_init_recv_priv;
 	ops->free_recv_priv = rtl8822cu_free_recv_priv;
+#endif // NEO
+
 #ifdef CONFIG_RTW_SW_LED
 	ops->InitSwLeds = rtl8822cu_initswleds;
 	ops->DeInitSwLeds = rtl8822cu_deinitswleds;

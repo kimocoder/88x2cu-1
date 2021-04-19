@@ -19,6 +19,7 @@
 #include "../../hal_halmac.h"		/* RX desc */
 #include "../rtl8822c.h"		/* rtl8822c_query_rx_desc, rtl8822c_c2h_handler_no_io() */
 
+#if 0 //NEO
 int rtl8822cu_init_recv_priv(PADAPTER padapter)
 {
 	return usb_init_recv_priv(padapter, INTERRUPT_MSG_FORMAT_LEN);
@@ -28,6 +29,7 @@ void rtl8822cu_free_recv_priv(PADAPTER padapter)
 {
 	usb_free_recv_priv(padapter, INTERRUPT_MSG_FORMAT_LEN);
 }
+#endif // NEO
 
 static u8 recvbuf2recvframe_proccess_c2h(PADAPTER padapter, u8 *pbuf, s32 transfer_len)
 {

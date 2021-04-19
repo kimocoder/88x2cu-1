@@ -81,24 +81,27 @@ s32 usb_xmitframe_enqueue(_adapter *adapter, struct xmit_frame *pxmitframe)
 }
 
 /******************************** recv section*******************************/
-int rtl8822cu_init_recv_priv(PADAPTER);
-void rtl8822cu_free_recv_priv(PADAPTER);
+//int rtl8822cu_init_recv_priv(PADAPTER);
+//void rtl8822cu_free_recv_priv(PADAPTER);
 
 int g6_usb_init_recv_priv(struct dvobj_priv *dvobj)
 {
 	int res = _SUCCESS;
+#if 0
 	PADAPTER padapter = dvobj_get_primary_adapter(dvobj);
 
 	rtl8822cu_init_recv_priv(padapter);
-
+#endif
 	return res;
 }
 
 void g6_usb_free_recv_priv(struct dvobj_priv *dvobj)
 {
+#if 0
 	PADAPTER padapter = dvobj_get_primary_adapter(dvobj);
 
 	rtl8822cu_free_recv_priv(padapter);
+#endif
 }
 
 struct rtw_intf_ops usb_ops = {
