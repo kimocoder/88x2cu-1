@@ -1211,7 +1211,7 @@ u8 rtw_reset_drv_sw(_adapter *padapter)
 	mlmeext_set_scan_state(&padapter->mlmeextpriv, SCAN_DISABLE);
 
 #ifdef CONFIG_SIGNAL_STAT_PROCESS
-	rtw_set_signal_stat_timer(&adapter_to_dvobj(padapter)->recvpriv);
+	rtw_set_signal_stat_timer(&padapter->recvinfo);
 #endif
 
 	return ret8;
@@ -1559,7 +1559,7 @@ void rtw_cancel_all_timer(_adapter *padapter)
 #endif
 
 #ifdef CONFIG_SIGNAL_STAT_PROCESS
-	_cancel_timer_ex(&adapter_to_dvobj(padapter)->recvpriv.signal_stat_timer);
+	_cancel_timer_ex(&padapter->recvinfo.signal_stat_timer);
 #endif
 
 #ifdef CONFIG_LPS_RPWM_TIMER

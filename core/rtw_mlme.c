@@ -2360,7 +2360,7 @@ static void rtw_joinbss_update_network(_adapter *padapter, struct wlan_network *
 
 
 #ifdef CONFIG_SIGNAL_STAT_PROCESS
-	rtw_set_signal_stat_timer(&adapter_to_dvobj(padapter)->recvpriv);
+	rtw_set_signal_stat_timer(&padapter->recvinfo);
 #endif
 	padapter->recvinfo.signal_strength = ptarget_wlan->network.PhyInfo.SignalStrength;
 	adapter_to_dvobj(padapter)->recvpriv.signal_qual = ptarget_wlan->network.PhyInfo.SignalQuality;
@@ -2376,7 +2376,7 @@ static void rtw_joinbss_update_network(_adapter *padapter, struct wlan_network *
 		);
 #endif
 #ifdef CONFIG_SIGNAL_STAT_PROCESS
-	rtw_set_signal_stat_timer(&adapter_to_dvobj(padapter)->recvpriv);
+	rtw_set_signal_stat_timer(&padapter->recvinfo);
 #endif
 
 	/* update fw_state */ /* will clr WIFI_UNDER_LINKING here indirectly */

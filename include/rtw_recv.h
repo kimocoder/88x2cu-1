@@ -426,7 +426,7 @@ void dump_rx_bh_tk(void *sel, struct recv_priv *recv);
 #endif
 
 #ifdef CONFIG_SIGNAL_STAT_PROCESS
-#define rtw_set_signal_stat_timer(recvpriv) _set_timer(&(recvpriv)->signal_stat_timer, (recvpriv)->signal_stat_sampling_interval)
+#define rtw_set_signal_stat_timer(recvinfo) _set_timer(&(recvinfo)->signal_stat_timer, (recvinfo)->signal_stat_sampling_interval)
 #endif /* CONFIG_SIGNAL_STAT_PROCESS */
 
 struct sta_recv_priv {
@@ -687,11 +687,6 @@ struct recv_priv {
 	u8 signal_qual;
 	s8 rssi;	/* translate_percentage_to_dbm(ptarget_wlan->network.PhyInfo.SignalStrength); */
 	struct rx_raw_rssi raw_rssi_info;
-
-	#ifdef CONFIG_SIGNAL_STAT_PROCESS
-	_timer signal_stat_timer;
-	u32 signal_stat_sampling_interval;
-	#endif /* CONFIG_SIGNAL_STAT_PROCESS */
 
 	/* u32 signal_stat_converging_constant; */
 	struct signal_stat signal_qual_data;

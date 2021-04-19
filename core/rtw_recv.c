@@ -4209,7 +4209,7 @@ static void rtw_signal_stat_timer_hdl(void *ctx)
 	}
 
 set_timer:
-	rtw_set_signal_stat_timer(recvpriv);
+	rtw_set_signal_stat_timer(&adapter->recvinfo);
 
 }
 #endif /* CONFIG_SIGNAL_STAT_PROCESS */
