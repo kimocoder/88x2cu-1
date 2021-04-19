@@ -2316,16 +2316,16 @@ static int proc_get_udpport(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
-	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
+	struct recv_info *precvinfo = &(padapter->recvinfo);
 
-	RTW_PRINT_SEL(m, "%d\n", precvpriv->sink_udpport);
+	RTW_PRINT_SEL(m, "%d\n", precvinfo->sink_udpport);
 	return 0;
 }
 static ssize_t proc_set_udpport(struct file *file, const char __user *buffer, size_t count, loff_t *pos, void *data)
 {
 	struct net_device *dev = data;
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
-	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
+	struct recv_info *precvinfo = &(padapter->recvinfo);
 	int sink_udpport = 0;
 	char tmp[32];
 
@@ -2353,12 +2353,13 @@ static ssize_t proc_set_udpport(struct file *file, const char __user *buffer, si
 		}
 
 	}
-	precvpriv->sink_udpport = sink_udpport;
+	precvinfo->sink_udpport = sink_udpport;
 
 	return count;
 
 }
 
+#if 0
 static int proc_get_mi_ap_bc_info(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -2372,6 +2373,8 @@ static int proc_get_mi_ap_bc_info(struct seq_file *m, void *v)
 
 	return 0;
 }
+#endif
+#if 0
 static int proc_get_macid_info(struct seq_file *m, void *v)
 {
 	struct net_device *dev = m->private;
@@ -2392,7 +2395,7 @@ static int proc_get_macid_info(struct seq_file *m, void *v)
 	RTW_PRINT_SEL(m, "%-3s %-3s %-5s %-4s %-17s %-6s %-3s"
 		, "id", "bmc", "ifbmp", "ch_g", "macaddr", "bw", "vht");
 
-	if (GET_HAL_TX_NSS(adapter) > 2)
+	if (GET_HAL_TX_NSS(dvobj) > 2)
 		_RTW_PRINT_SEL(m, " %-10s", "rate_bmp1");
 
 	_RTW_PRINT_SEL(m, " %-10s %s\n", "rate_bmp0", "status");
@@ -2402,7 +2405,7 @@ static int proc_get_macid_info(struct seq_file *m, void *v)
 			|| macid_ctl->h2c_msr[i]
 		) {
 			if (macid_ctl->sta[i])
-				macaddr = macid_ctl->sta[i]->cmn.mac_addr;
+				macaddr = macid_ctl->sta[i]->phl_sta->mac_addr;
 			else
 				macaddr = null_addr;
 
@@ -2416,14 +2419,16 @@ static int proc_get_macid_info(struct seq_file *m, void *v)
 				, macid_ctl->vht_en[i]
 			);
 
-			if (GET_HAL_TX_NSS(adapter) > 2)
+			if (GET_HAL_TX_NSS(dvobj) > 2)
 				_RTW_PRINT_SEL(m, " 0x%08X", macid_ctl->rate_bmp1[i]);
 
+#ifdef DBG_MACID_MSR_INFO
 			_RTW_PRINT_SEL(m, " 0x%08X "H2C_MSR_FMT" %s\n"
 				, macid_ctl->rate_bmp0[i]
 				, H2C_MSR_ARG(&macid_ctl->h2c_msr[i])
 				, rtw_macid_is_used(macid_ctl, i) ? "" : "[unused]"
 			);
+#endif
 		}
 	}
 	RTW_PRINT_SEL(m, "\n");
@@ -2437,6 +2442,7 @@ static int proc_get_macid_info(struct seq_file *m, void *v)
 
 	return 0;
 }
+#endif
 
 static int proc_get_sec_cam(struct seq_file *m, void *v)
 {
@@ -5287,8 +5293,8 @@ const struct rtw_proc_hdl adapter_proc_hdls[] = {
 	RTW_PROC_HDL_SSEQ("rate_ctl", proc_get_rate_ctl, proc_set_rate_ctl),
 	RTW_PROC_HDL_SSEQ("bw_ctl", proc_get_bw_ctl, proc_set_bw_ctl),
 	RTW_PROC_HDL_SSEQ("mac_qinfo", proc_get_mac_qinfo, NULL),
-	RTW_PROC_HDL_SSEQ("macid_info", proc_get_macid_info, NULL),
-	RTW_PROC_HDL_SSEQ("bcmc_info", proc_get_mi_ap_bc_info, NULL),
+	/*RTW_PROC_HDL_SSEQ("macid_info", proc_get_macid_info, NULL), */
+	/* RTW_PROC_HDL_SSEQ("bcmc_info", proc_get_mi_ap_bc_info, NULL), */
 	RTW_PROC_HDL_SSEQ("sec_cam", proc_get_sec_cam, proc_set_sec_cam),
 	RTW_PROC_HDL_SSEQ("sec_cam_cache", proc_get_sec_cam_cache, NULL),
 	RTW_PROC_HDL_SSEQ("ps_dbg_info", proc_get_ps_dbg_info, proc_set_ps_dbg_info),

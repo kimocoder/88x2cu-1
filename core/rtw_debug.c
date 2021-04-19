@@ -508,18 +508,18 @@ void rf_reg_dump(void *sel, _adapter *adapter)
 
 void rtw_sink_rtp_seq_dbg(_adapter *adapter, u8 *ehdr_pos)
 {
-	struct recv_priv *precvpriv = &adapter_to_dvobj(adapter)->recvpriv;
-	if (precvpriv->sink_udpport > 0) {
-		if (*((u16 *)(ehdr_pos + 0x24)) == cpu_to_be16(precvpriv->sink_udpport)) {
-			precvpriv->pre_rtp_rxseq = precvpriv->cur_rtp_rxseq;
-			precvpriv->cur_rtp_rxseq = be16_to_cpu(*((u16 *)(ehdr_pos + 0x2C)));
-			if (precvpriv->pre_rtp_rxseq + 1 != precvpriv->cur_rtp_rxseq) {
-				if(precvpriv->pre_rtp_rxseq == 65535 ) {
-					if( precvpriv->cur_rtp_rxseq != 0) {
-						RTW_INFO("%s : RTP Seq num from %d to %d\n", __FUNCTION__, precvpriv->pre_rtp_rxseq, precvpriv->cur_rtp_rxseq);
+	struct recv_info *precvinfo = &(adapter->recvinfo);
+	if (precvinfo->sink_udpport > 0) {
+		if (*((u16 *)(ehdr_pos + 0x24)) == cpu_to_be16(precvinfo->sink_udpport)) {
+			precvinfo->pre_rtp_rxseq = precvinfo->cur_rtp_rxseq;
+			precvinfo->cur_rtp_rxseq = be16_to_cpu(*((u16 *)(ehdr_pos + 0x2C)));
+			if (precvinfo->pre_rtp_rxseq + 1 != precvinfo->cur_rtp_rxseq) {
+				if(precvinfo->pre_rtp_rxseq == 65535 ) {
+					if( precvinfo->cur_rtp_rxseq != 0) {
+						RTW_INFO("%s : RTP Seq num from %d to %d\n", __FUNCTION__, precvinfo->pre_rtp_rxseq, precvinfo->cur_rtp_rxseq);
 					}
 				} else {
-					RTW_INFO("%s : RTP Seq num from %d to %d\n", __FUNCTION__, precvpriv->pre_rtp_rxseq, precvpriv->cur_rtp_rxseq);
+					RTW_INFO("%s : RTP Seq num from %d to %d\n", __FUNCTION__, precvinfo->pre_rtp_rxseq, precvinfo->cur_rtp_rxseq);
 				}
 			}	
 		}

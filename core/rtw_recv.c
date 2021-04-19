@@ -64,6 +64,25 @@ void _rtw_init_sta_recv_priv(struct sta_recv_priv *psta_recvpriv)
 
 }
 
+u8 rtw_init_recv_info(_adapter *adapter)
+{
+	u8 ret = _SUCCESS;
+	struct recv_info *recvinfo = &adapter->recvinfo;
+
+	recvinfo->sink_udpport = 0;
+	recvinfo->pre_rtp_rxseq = 0;
+	recvinfo->cur_rtp_rxseq = 0;
+	#ifdef CONFIG_SIGNAL_STAT_PROCESS
+	rtw_init_timer(&recvinfo->signal_stat_timer, rtw_signal_stat_timer_hdl, adapter);
+
+	recvinfo->signal_stat_sampling_interval = 2000; /* ms */
+	/* recvinfo->signal_stat_converging_constant = 5000; */ /* ms */
+
+	rtw_set_signal_stat_timer(recvinfo);
+	#endif
+	return ret;
+}
+
 /*#define DBG_RECV_FRAME*/
 #ifdef DBG_RECV_FRAME
 void _dump_recv_priv(struct dvobj_priv *dvobj, _queue *pfree_recv_queue)
@@ -100,7 +119,6 @@ sint rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter)
 	precvpriv->free_recvframe_cnt = NR_RECVFRAME;
 
 #if 1 //NEO: plan to move to recv_info
-	precvpriv->sink_udpport = 0;
 	precvpriv->pre_rtp_rxseq = 0;
 	precvpriv->cur_rtp_rxseq = 0;
 
@@ -151,15 +169,6 @@ sint rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter)
 	#ifdef DBG_RECV_FRAME
 	_dump_recv_priv(dvobj, &dvobj->recvpriv.free_recv_queue);
 	#endif
-
-#ifdef CONFIG_SIGNAL_STAT_PROCESS
-	rtw_init_timer(&precvpriv->signal_stat_timer, rtw_signal_stat_timer_hdl, padapter);
-
-	precvpriv->signal_stat_sampling_interval = 2000; /* ms */
-	/* precvpriv->signal_stat_converging_constant = 5000; */ /* ms */
-
-	rtw_set_signal_stat_timer(precvpriv);
-#endif /* CONFIG_SIGNAL_STAT_PROCESS */
 
 	_rtw_memset(&precvpriv->ip_statistic, 0,
 			sizeof(struct rtw_ip_dbg_cnt_statistic));
@@ -2679,7 +2688,7 @@ union recv_frame *recvframe_chk_defrag(_adapter *padapter, union recv_frame *pre
 static int rtw_recv_indicatepkt_check(union recv_frame *rframe, u8 *ehdr_pos, u32 pkt_len)
 {
 	_adapter *adapter = rframe->u.hdr.adapter;
-	struct recv_priv *recvpriv = &adapter_to_dvobj(adapter)->recvpriv;
+	struct recv_info *recvinfo = &adapter->recvinfo;
 	struct ethhdr *ehdr = (struct ethhdr *)ehdr_pos;
 	struct rx_pkt_attrib *pattrib = &rframe->u.hdr.attrib;
 #ifdef DBG_IP_R_MONITOR
@@ -2716,7 +2725,7 @@ static int rtw_recv_indicatepkt_check(union recv_frame *rframe, u8 *ehdr_pos, u3
 		dump_arp_pkt(RTW_DBGDUMP, ehdr->h_dest, ehdr->h_source, ehdr_pos + ETH_HLEN, 0);
 #endif
 
-	if (recvpriv->sink_udpport > 0)
+	if (recvinfo->sink_udpport > 0)
 		rtw_sink_rtp_seq_dbg(adapter, ehdr_pos);
 
 #ifdef DBG_UDP_PKT_LOSE_11AC

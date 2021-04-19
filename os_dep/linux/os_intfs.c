@@ -1418,6 +1418,13 @@ u8 rtw_init_drv_sw(_adapter *padapter)
 		ret8 = _FAIL;
 		goto exit;
 	}
+
+	if (rtw_init_recv_info(padapter) == _FAIL) {
+		RTW_INFO("Can't rtw_init_recv_info\n");
+		ret8 = _FAIL;
+		goto exit;
+	}
+
 	/* add for CONFIG_IEEE80211W, none 11w also can use */
 	_rtw_spinlock_init(&padapter->security_key_mutex);
 
