@@ -630,7 +630,6 @@ struct recv_priv {
 
 #ifdef CONFIG_USB_HCI
 	/* u8 *pallocated_urb_buf; */
-	_sema allrxreturnevt;
 	uint	ff_hwaddr;
 	ATOMIC_T	rx_pending_cnt;
 

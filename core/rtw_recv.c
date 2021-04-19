@@ -64,31 +64,42 @@ void _rtw_init_sta_recv_priv(struct sta_recv_priv *psta_recvpriv)
 
 }
 
-sint rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter)
+/*#define DBG_RECV_FRAME*/
+#ifdef DBG_RECV_FRAME
+void _dump_recv_priv(struct dvobj_priv *dvobj, _queue *pfree_recv_queue)
 {
-	sint i;
+	struct recv_priv *precvpriv = &dvobj->recvpriv;
 
-	union recv_frame *precvframe;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
-	sint	res = _SUCCESS;
-
-
-	/* We don't need to memset padapter->XXX to zero, because adapter is allocated by rtw_zvmalloc(). */
-	/* _rtw_memset((unsigned char *)precvpriv, 0, sizeof (struct  recv_priv)); */
-
-#ifdef CONFIG_RECV_THREAD_MODE
-	_rtw_init_sema(&precvpriv->recv_sema, 0);
+	RTW_INFO("%s free_recvframe_cnt:%d\n", __func__, precvpriv->free_recvframe_cnt);
+	RTW_INFO("%s dvobj:%p pfree_recv_queue:%p : %p\n",
+		__func__, dvobj, &(precvpriv->free_recv_queue), pfree_recv_queue);
+}
 
 #endif
 
+sint rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter)
+{
+	sint i;
+	union recv_frame *precvframe;
+	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
+	sint	res = _SUCCESS;
+	//struct recv_priv *precvpriv = &dvobj->recvpriv;
+
+#ifdef CONFIG_RECV_THREAD_MODE
+	_rtw_init_sema(&precvpriv->recv_sema, 0);
+#endif
+
 	_rtw_init_queue(&precvpriv->free_recv_queue);
-	//_rtw_init_queue(&precvpriv->uc_swdec_pending_queue);
+	#if 0
+	_rtw_init_queue(&precvpriv->uc_swdec_pending_queue);
+	#endif
 
 	precvpriv->adapter = padapter;
 	precvpriv->dvobj = dvobj;
 
 	precvpriv->free_recvframe_cnt = NR_RECVFRAME;
 
+#if 1 //NEO: plan to move to recv_info
 	precvpriv->sink_udpport = 0;
 	precvpriv->pre_rtp_rxseq = 0;
 	precvpriv->cur_rtp_rxseq = 0;
@@ -98,6 +109,7 @@ sint rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter)
 #else
 	precvpriv->store_law_data_flag = 0;
 #endif
+#endif // NEO
 
 	rtw_os_recv_resource_init(precvpriv);
 
@@ -131,16 +143,14 @@ sint rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter)
 		precvframe++;
 
 	}
+	#ifdef DBG_RECV_FRAME
+	RTW_INFO("%s =>precvpriv->free_recvframe_cnt:%d\n", __func__, precvpriv->free_recvframe_cnt);
+	#endif
 
-#ifdef CONFIG_USB_HCI
-
-	ATOMIC_SET(&(precvpriv->rx_pending_cnt), 1);
-
-	_rtw_init_sema(&precvpriv->allrxreturnevt, 0);
-
-#endif
-
-	res = rtw_intf_init_recv_priv(adapter_to_dvobj(padapter));
+	res = rtw_intf_init_recv_priv(dvobj);
+	#ifdef DBG_RECV_FRAME
+	_dump_recv_priv(dvobj, &dvobj->recvpriv.free_recv_queue);
+	#endif
 
 #ifdef CONFIG_SIGNAL_STAT_PROCESS
 	rtw_init_timer(&precvpriv->signal_stat_timer, rtw_signal_stat_timer_hdl, padapter);
@@ -155,7 +165,6 @@ sint rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter)
 			sizeof(struct rtw_ip_dbg_cnt_statistic));
 
 exit:
-
 
 	return res;
 
