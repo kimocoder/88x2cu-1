@@ -1666,7 +1666,7 @@ void mgt_dispatcher(_adapter *padapter, union recv_frame *precv_frame)
 		if (GetRetry(pframe)) {
 			if (precv_frame->u.hdr.attrib.seq_num == psta->RxMgmtFrameSeqNum) {
 				/* drop the duplicate management frame */
-				precvpriv->dbg_rx_dup_mgt_frame_drop_count++;
+				padapter->recvinfo.dbg_rx_dup_mgt_frame_drop_count++;
 				RTW_INFO("Drop duplicate management frame with seq_num = %d.\n", precv_frame->u.hdr.attrib.seq_num);
 				return;
 			}

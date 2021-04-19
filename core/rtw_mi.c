@@ -955,9 +955,9 @@ static u8 _rtw_mi_traffic_statistics(_adapter *padapter , void *data)
 	pdvobjpriv->traffic_stat.tx_drop += padapter->xmitpriv.tx_drop;
 
 	/* Rx */
-	pdvobjpriv->traffic_stat.rx_bytes += adapter_to_dvobj(padapter)->recvpriv.rx_bytes;
-	pdvobjpriv->traffic_stat.rx_pkts += adapter_to_dvobj(padapter)->recvpriv.rx_pkts;
-	pdvobjpriv->traffic_stat.rx_drop += adapter_to_dvobj(padapter)->recvpriv.rx_drop;
+	pdvobjpriv->traffic_stat.rx_bytes += padapter->recvinfo.rx_bytes;
+	pdvobjpriv->traffic_stat.rx_pkts += padapter->recvinfo.rx_pkts;
+	pdvobjpriv->traffic_stat.rx_drop += padapter->recvinfo.rx_drop;
 	return _TRUE;
 }
 u8 rtw_mi_traffic_statistics(_adapter *padapter)

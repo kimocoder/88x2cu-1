@@ -1926,15 +1926,15 @@ static void free_scanqueue(struct	mlme_priv *pmlmepriv)
 
 void rtw_reset_rx_info(_adapter *adapter)
 {
-	struct recv_priv  *precvpriv = &adapter_to_dvobj(adapter)->recvpriv;
+	struct recv_info  *precvinfo = &adapter->recvinfo;
 
-	precvpriv->dbg_rx_ampdu_drop_count = 0;
-	precvpriv->dbg_rx_ampdu_forced_indicate_count = 0;
-	precvpriv->dbg_rx_ampdu_loss_count = 0;
-	precvpriv->dbg_rx_dup_mgt_frame_drop_count = 0;
-	precvpriv->dbg_rx_ampdu_window_shift_cnt = 0;
-	precvpriv->dbg_rx_drop_count = 0;
-	precvpriv->dbg_rx_conflic_mac_addr_cnt = 0;
+	precvinfo->dbg_rx_ampdu_drop_count = 0;
+	precvinfo->dbg_rx_ampdu_forced_indicate_count = 0;
+	precvinfo->dbg_rx_ampdu_loss_count = 0;
+	precvinfo->dbg_rx_dup_mgt_frame_drop_count = 0;
+	precvinfo->dbg_rx_ampdu_window_shift_cnt = 0;
+	precvinfo->dbg_rx_drop_count = 0;
+	precvinfo->dbg_rx_conflic_mac_addr_cnt = 0;
 }
 
 /*

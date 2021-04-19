@@ -609,18 +609,6 @@ struct recv_priv {
 
 	u32 is_any_non_be_pkts;
 
-	u64	rx_bytes;
-	u64	rx_pkts;
-	u64	rx_drop;
-
-	u64 dbg_rx_drop_count;
-	u64 dbg_rx_ampdu_drop_count;
-	u64 dbg_rx_ampdu_forced_indicate_count;
-	u64 dbg_rx_ampdu_loss_count;
-	u64 dbg_rx_dup_mgt_frame_drop_count;
-	u64 dbg_rx_ampdu_window_shift_cnt;
-	u64 dbg_rx_conflic_mac_addr_cnt;
-
 	uint  rx_icv_err;
 	uint  rx_largepacket_crcerr;
 	uint  rx_smallpacket_crcerr;

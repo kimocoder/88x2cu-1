@@ -1155,10 +1155,10 @@ void count_rx_stats(_adapter *padapter, union recv_frame *prframe, struct sta_in
 	struct sta_info		*psta = NULL;
 	struct stainfo_stats	*pstats = NULL;
 	struct rx_pkt_attrib	*pattrib = &prframe->u.hdr.attrib;
-	struct recv_priv		*precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
+	struct recv_info	*precvinfo = &padapter->recvinfo;
 
 	sz = get_recvframe_len(prframe);
-	precvpriv->rx_bytes += sz;
+	precvinfo->rx_bytes += sz;
 
 	padapter->mlmepriv.LinkDetectInfo.NumRxOkInPeriod++;
 
@@ -1191,9 +1191,6 @@ void count_rx_stats(_adapter *padapter, union recv_frame *prframe, struct sta_in
 			/*record rx packets for every tid*/
 			pstats->rx_data_qos_pkts[pattrib->priority]++;
 		}
-#ifdef CONFIG_DYNAMIC_SOML
-		rtw_dyn_soml_byte_update(padapter, pattrib->data_rate, sz);
-#endif
 #if defined(CONFIG_CHECK_LEAVE_LPS) && defined(CONFIG_LPS_CHK_BY_TP)
 		if (adapter_to_pwrctl(padapter)->lps_chk_by_tp)
 			traffic_check_for_leave_lps_by_tp(padapter, _FALSE, psta);
@@ -2185,7 +2182,7 @@ sint validate_recv_frame(_adapter *adapter, union recv_frame *precv_frame)
 	sint retval = _SUCCESS;
 
 	struct rx_pkt_attrib *pattrib = &precv_frame->u.hdr.attrib;
-	struct recv_priv  *precvpriv = &adapter_to_dvobj(adapter)->recvpriv;
+	struct recv_info  *precvinfo = &adapter->recvinfo;
 
 	u8 *ptr = precv_frame->u.hdr.rx_data;
 	u8  ver = (unsigned char)(*ptr) & 0x3 ;
@@ -2204,7 +2201,6 @@ sint validate_recv_frame(_adapter *adapter, union recv_frame *precv_frame)
 	u16 sc;
 	u8	external_len = 0;
 #endif
-
 
 
 #ifdef CONFIG_FIND_BEST_CHANNEL
@@ -2324,7 +2320,7 @@ sint validate_recv_frame(_adapter *adapter, union recv_frame *precv_frame)
 		pattrib->qos = (subtype & BIT(7)) ? 1 : 0;
 		retval = validate_recv_data_frame(adapter, precv_frame);
 		if (retval == _FAIL) {
-			precvpriv->dbg_rx_drop_count++;
+			precvinfo->dbg_rx_drop_count++;
 			DBG_COUNTER(adapter->rx_logs.core_rx_pre_data_err);
 		} else if (retval == _SUCCESS) {
 			#ifdef DBG_RX_DUMP_EAP
@@ -3120,7 +3116,7 @@ exit:
 static int check_indicate_seq(struct recv_reorder_ctrl *preorder_ctrl, u16 seq_num)
 {
 	_adapter *padapter = preorder_ctrl->padapter;
-	struct recv_priv  *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
+	struct recv_info  *precvinfo = &padapter->recvinfo;
 	u8	wsize = preorder_ctrl->wsize_b;
 	u16	wend;
 
@@ -3162,7 +3158,7 @@ static int check_indicate_seq(struct recv_reorder_ctrl *preorder_ctrl, u16 seq_n
 		else
 			preorder_ctrl->indicate_seq = 0xFFF - (wsize - (seq_num + 1)) + 1;
 
-		precvpriv->dbg_rx_ampdu_window_shift_cnt++;
+		precvinfo->dbg_rx_ampdu_window_shift_cnt++;
 		#ifdef DBG_RX_SEQ
 		RTW_INFO("DBG_RX_SEQ "FUNC_ADPT_FMT" tid:%u SN_LESS(wend, seq_num) indicate_seq:%d, seq_num:%d\n"
 			, FUNC_ADPT_ARG(padapter), preorder_ctrl->tid, preorder_ctrl->indicate_seq, seq_num);
@@ -3226,14 +3222,14 @@ static int enqueue_reorder_recvframe(struct recv_reorder_ctrl *preorder_ctrl, un
 
 static void recv_indicatepkts_pkt_loss_cnt(_adapter *padapter, u64 prev_seq, u64 current_seq)
 {
-	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
+	struct recv_info *precvinfo = &padapter->recvinfo;
 
 	if (current_seq < prev_seq) {
-		precvpriv->dbg_rx_ampdu_loss_count += (4096 + current_seq - prev_seq);
-		precvpriv->rx_drop += (4096 + current_seq - prev_seq);
+		precvinfo->dbg_rx_ampdu_loss_count += (4096 + current_seq - prev_seq);
+		precvinfo->rx_drop += (4096 + current_seq - prev_seq);
 	} else {
-		precvpriv->dbg_rx_ampdu_loss_count += (current_seq - prev_seq);
-		precvpriv->rx_drop += (current_seq - prev_seq);
+		precvinfo->dbg_rx_ampdu_loss_count += (current_seq - prev_seq);
+		precvinfo->rx_drop += (current_seq - prev_seq);
 	}
 }
 
@@ -3244,7 +3240,7 @@ static int recv_indicatepkts_in_order(_adapter *padapter, struct recv_reorder_ct
 	struct rx_pkt_attrib *pattrib;
 	/* u8 index = 0; */
 	int bPktInBuf = _FALSE;
-	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
+	struct recv_info *precvinfo = &padapter->recvinfo;
 	_queue *ppending_recvframe_queue = &preorder_ctrl->pending_recvframe_queue;
 
 	DBG_COUNTER(padapter->rx_logs.core_rx_post_indicate_in_oder);
@@ -3265,7 +3261,7 @@ static int recv_indicatepkts_in_order(_adapter *padapter, struct recv_reorder_ct
 
 	/* Handling some condition for forced indicate case. */
 	if (bforced == _TRUE) {
-		precvpriv->dbg_rx_ampdu_forced_indicate_count++;
+		precvinfo->dbg_rx_ampdu_forced_indicate_count++;
 		if (rtw_is_list_empty(phead)) {
 			/* _exit_critical_ex(&ppending_recvframe_queue->lock, &irql); */
 			/* _rtw_spinunlock_ex(&ppending_recvframe_queue->lock); */
@@ -3334,7 +3330,7 @@ static int recv_indicatepkts_in_order(_adapter *padapter, struct recv_reorder_ct
 			/* indicate this recv_frame */
 			/* DbgPrint("recv_indicatepkts_in_order, indicate_seq=%d, seq_num=%d\n", precvpriv->indicate_seq, pattrib->seq_num); */
 			if (recv_process_mpdu(padapter, prframe) != _SUCCESS)
-				precvpriv->dbg_rx_drop_count++;
+				precvinfo->dbg_rx_drop_count++;
 
 			/* Update local variables. */
 			bPktInBuf = _FALSE;
@@ -3375,7 +3371,7 @@ static int recv_indicatepkt_reorder(_adapter *padapter, union recv_frame *prfram
 	struct rx_pkt_attrib *pattrib = &prframe->u.hdr.attrib;
 	struct recv_reorder_ctrl *preorder_ctrl = prframe->u.hdr.preorder_ctrl;
 	_queue *ppending_recvframe_queue = preorder_ctrl ? &preorder_ctrl->pending_recvframe_queue : NULL;
-	struct recv_priv  *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
+	struct recv_info  *precvinfo = &padapter->recvinfo;
 
 	if (!pattrib->qos || !preorder_ctrl || preorder_ctrl->enable == _FALSE)
 		goto _success_exit;
@@ -3397,7 +3393,7 @@ static int recv_indicatepkt_reorder(_adapter *padapter, union recv_frame *prfram
 
 	/* s2. check if winstart_b(indicate_seq) needs to been updated */
 	if (!check_indicate_seq(preorder_ctrl, pattrib->seq_num)) {
-		precvpriv->dbg_rx_ampdu_drop_count++;
+		precvinfo->dbg_rx_ampdu_drop_count++;
 		/* pHTInfo->RxReorderDropCounter++; */
 		/* ReturnRFDList(Adapter, pRfd); */
 		/* _exit_critical_ex(&ppending_recvframe_queue->lock, &irql); */
@@ -3407,7 +3403,15 @@ static int recv_indicatepkt_reorder(_adapter *padapter, union recv_frame *prfram
 		RTW_INFO("DBG_RX_DROP_FRAME "FUNC_ADPT_FMT" check_indicate_seq fail\n"
 			, FUNC_ADPT_ARG(padapter));
 		#endif
+#if 0
+		rtw_recv_indicatepkt(padapter, prframe);
+
+		_rtw_spinunlock_bh(&ppending_recvframe_queue->lock);
+
+		goto _success_exit;
+#else
 		goto _err_exit;
+#endif
 	}
 
 
@@ -3877,7 +3881,7 @@ int recv_func_posthandle(_adapter *padapter, union recv_frame *prframe)
 	int ret = _SUCCESS;
 	union recv_frame *orig_prframe = prframe;
 	struct rx_pkt_attrib *pattrib = &prframe->u.hdr.attrib;
-	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
+	struct recv_info *precvinfo = &padapter->recvinfo;
 	_queue *pfree_recv_queue = &adapter_to_dvobj(padapter)->recvpriv.free_recv_queue;
 #ifdef CONFIG_TDLS
 	u8 *psnap_type, *pcategory;
@@ -3976,7 +3980,7 @@ _exit_recv_func:
 	return ret;
 
 _recv_data_drop:
-	precvpriv->dbg_rx_drop_count++;
+	precvinfo->dbg_rx_drop_count++;
 	return ret;
 }
 
@@ -4070,14 +4074,14 @@ exit:
 s32 rtw_recv_entry(union recv_frame *precvframe)
 {
 	_adapter *padapter;
-	struct recv_priv *precvpriv;
+	struct recv_info *precvinfo;
 	s32 ret = _SUCCESS;
 
 
 
 	padapter = precvframe->u.hdr.adapter;
 
-	precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
+	precvinfo = &padapter->recvinfo;
 
 
 	ret = recv_func(padapter, precvframe);
@@ -4086,7 +4090,7 @@ s32 rtw_recv_entry(union recv_frame *precvframe)
 	}
 
 
-	precvpriv->rx_pkts++;
+	precvinfo->rx_pkts++;
 
 
 	return ret;
@@ -4095,7 +4099,7 @@ _recv_entry_drop:
 
 #ifdef CONFIG_MP_INCLUDED
 	if (padapter->registrypriv.mp_mode == 1)
-		padapter->mppriv.rx_pktloss = precvpriv->rx_drop;
+		padapter->mppriv.rx_pktloss = precvinfo->rx_drop;
 #endif
 
 
@@ -4339,7 +4343,7 @@ void rx_query_phy_status(
 	u8 is_ra_bmc;
 	struct sta_priv *pstapriv;
 	struct sta_info *psta = NULL;
-	struct recv_priv  *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
+	struct recv_info  *precvinfo = &padapter->recvinfo;
 
 	pkt_info.is_packet_match_bssid = _FALSE;
 	pkt_info.is_packet_to_self = _FALSE;
@@ -4376,7 +4380,7 @@ void rx_query_phy_status(
 			RTW_PRINT("Warning!!! %s: Confilc mac addr!!\n", __func__);
 			start_time = rtw_get_current_time();
 		}
-		precvpriv->dbg_rx_conflic_mac_addr_cnt++;
+		precvinfo->dbg_rx_conflic_mac_addr_cnt++;
 	} else {
 		pstapriv = &padapter->stapriv;
 		psta = rtw_get_stainfo(pstapriv, ta);
@@ -4494,6 +4498,7 @@ u8 adapter_allow_bmc_data_rx(_adapter *adapter)
 	return 1;
 }
 
+#if 0
 s32 pre_recv_entry(union recv_frame *precvframe, u8 *pphy_status)
 {
 	s32 ret = _SUCCESS;
@@ -4591,6 +4596,7 @@ query_phy_status:
 exit:
 	return ret;
 }
+#endif
 
 #ifdef CONFIG_RECV_THREAD_MODE
 thread_return rtw_recv_thread(thread_context context)

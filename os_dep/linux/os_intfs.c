@@ -91,14 +91,14 @@ static struct net_device_stats *rtw_net_get_stats(struct net_device *pnetdev)
 {
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(pnetdev);
 	struct xmit_priv *pxmitpriv = &(padapter->xmitpriv);
-	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
+	struct recv_info *precvinfo = &padapter->recvinfo;
 
 	padapter->stats.tx_packets = pxmitpriv->tx_pkts;/* pxmitpriv->tx_pkts++; */
-	padapter->stats.rx_packets = precvpriv->rx_pkts;/* precvpriv->rx_pkts++; */
+	padapter->stats.rx_packets = precvinfo->rx_pkts;/* precvpriv->rx_pkts++; */
 	padapter->stats.tx_dropped = pxmitpriv->tx_drop;
-	padapter->stats.rx_dropped = precvpriv->rx_drop;
+	padapter->stats.rx_dropped = precvinfo->rx_drop;
 	padapter->stats.tx_bytes = pxmitpriv->tx_bytes;
-	padapter->stats.rx_bytes = precvpriv->rx_bytes;
+	padapter->stats.rx_bytes = precvinfo->rx_bytes;
 
 	return &padapter->stats;
 }
@@ -524,18 +524,18 @@ static void rtw_ethtool_get_stats(struct net_device *dev,
 	int i = 0;
 	_adapter *padapter = NULL;
 	struct xmit_priv *pxmitpriv = NULL;
-	struct recv_priv *precvpriv = NULL;
+	struct recv_info *precvinfo = NULL;
 
 	memset(data, 0, sizeof(u64) * RTW_ETHTOOL_STATS_LEN);
 	
 	padapter = (_adapter *)rtw_netdev_priv(dev);
 	if (padapter) {
 		pxmitpriv = &(padapter->xmitpriv);
-		precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
+		precvinfo = &(padapter->recvinfo);
 
-		data[i++] = precvpriv->rx_pkts;
-		data[i++] = precvpriv->rx_bytes;
-		data[i++] = precvpriv->rx_drop;
+		data[i++] = precvinfo->rx_pkts;
+		data[i++] = precvinfo->rx_bytes;
+		data[i++] = precvinfo->rx_drop;
 
 		data[i++] = pxmitpriv->tx_pkts;
 		data[i++] = pxmitpriv->tx_bytes;
@@ -1191,7 +1191,7 @@ u8 rtw_reset_drv_sw(_adapter *padapter)
 	padapter->bLinkInfoDump = 0;
 
 	padapter->xmitpriv.tx_pkts = 0;
-	adapter_to_dvobj(padapter)->recvpriv.rx_pkts = 0;
+	padapter->recvinfo.rx_pkts = 0;
 
 	pmlmepriv->LinkDetectInfo.bBusyTraffic = _FALSE;
 

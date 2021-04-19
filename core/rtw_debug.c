@@ -2590,7 +2590,7 @@ ssize_t proc_reset_trx_info(struct file *file, const char __user *buffer, size_t
 {
 	struct net_device *dev = data;
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
-	struct recv_priv  *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
+	struct recv_info  *precvinfo = &padapter->recvinfo;
 	char cmd[32] = {0};
 	u8 cnt = 0;
 
@@ -2600,25 +2600,16 @@ ssize_t proc_reset_trx_info(struct file *file, const char __user *buffer, size_t
 	}
 
 	if (buffer && !copy_from_user(cmd, buffer, count)) {
-		int num = 0;
-		if (count > 12)
-			rtw_rx_dbg_ip_statistic_init(cmd, &(precvpriv->ip_statistic));
-		else
-			num = sscanf(cmd, "%hhx", &cnt);
+		int num = sscanf(cmd, "%hhx", &cnt);
 
 		if (num == 1 && cnt == 0) {
-			precvpriv->dbg_rx_ampdu_drop_count = 0;
-			precvpriv->dbg_rx_ampdu_forced_indicate_count = 0;
-			precvpriv->dbg_rx_ampdu_loss_count = 0;
-			precvpriv->dbg_rx_dup_mgt_frame_drop_count = 0;
-			precvpriv->dbg_rx_ampdu_window_shift_cnt = 0;
-			precvpriv->dbg_rx_conflic_mac_addr_cnt = 0;
-			precvpriv->dbg_rx_drop_count = 0;
-			/* Reset ip packet statistic */
-			rtw_rx_dbg_ip_statistic_rest(&(precvpriv->ip_statistic), 0);
-		} else if ((num == 1) && (cnt == 2)) {
-			/* Disable ip packet statistic */
-			rtw_rx_dbg_ip_statistic_rest(&(precvpriv->ip_statistic), 1);
+			precvinfo->dbg_rx_ampdu_drop_count = 0;
+			precvinfo->dbg_rx_ampdu_forced_indicate_count = 0;
+			precvinfo->dbg_rx_ampdu_loss_count = 0;
+			precvinfo->dbg_rx_dup_mgt_frame_drop_count = 0;
+			precvinfo->dbg_rx_ampdu_window_shift_cnt = 0;
+			precvinfo->dbg_rx_conflic_mac_addr_cnt = 0;
+			precvinfo->dbg_rx_drop_count = 0;
 		}
 	}
 
@@ -2630,7 +2621,9 @@ int proc_get_trx_info(struct seq_file *m, void *v)
 	struct net_device *dev = m->private;
 	int i;
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
+	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
 	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
+	struct recv_info *precvinfo = &padapter->recvinfo;
 	struct recv_priv  *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	struct hw_xmit *phwxmit;
 	u16 vo_params[4], vi_params[4], be_params[4], bk_params[4];
@@ -2670,32 +2663,18 @@ int proc_get_trx_info(struct seq_file *m, void *v)
 	dump_rx_bh_tk(m, &adapter_to_dvobj(GET_PRIMARY_ADAPTER(padapter))->recvpriv);
 
 	/* Folowing are RX info */
-	RTW_PRINT_SEL(m, "RX: Count of Packets dropped by Driver: %llu\n", (unsigned long long)precvpriv->dbg_rx_drop_count);
+	RTW_PRINT_SEL(m, "RX: Count of Packets dropped by Driver: %llu\n", (unsigned long long)precvinfo->dbg_rx_drop_count);
 	/* Counts of packets whose seq_num is less than preorder_ctrl->indicate_seq, Ex delay, retransmission, redundant packets and so on */
-	RTW_PRINT_SEL(m, "Rx: Counts of Packets Whose Seq_Num Less Than Reorder Control Seq_Num: %llu\n", (unsigned long long)precvpriv->dbg_rx_ampdu_drop_count);
+	RTW_PRINT_SEL(m, "Rx: Counts of Packets Whose Seq_Num Less Than Reorder Control Seq_Num: %llu\n", (unsigned long long)precvinfo->dbg_rx_ampdu_drop_count);
 	/* How many times the Rx Reorder Timer is triggered. */
-	RTW_PRINT_SEL(m, "Rx: Reorder Time-out Trigger Counts: %llu\n", (unsigned long long)precvpriv->dbg_rx_ampdu_forced_indicate_count);
+	RTW_PRINT_SEL(m, "Rx: Reorder Time-out Trigger Counts: %llu\n", (unsigned long long)precvinfo->dbg_rx_ampdu_forced_indicate_count);
 	/* Total counts of packets loss */
-	RTW_PRINT_SEL(m, "Rx: Packet Loss Counts: %llu\n", (unsigned long long)precvpriv->dbg_rx_ampdu_loss_count);
-	RTW_PRINT_SEL(m, "Rx: Duplicate Management Frame Drop Count: %llu\n", (unsigned long long)precvpriv->dbg_rx_dup_mgt_frame_drop_count);
-	RTW_PRINT_SEL(m, "Rx: AMPDU BA window shift Count: %llu\n", (unsigned long long)precvpriv->dbg_rx_ampdu_window_shift_cnt);
+	RTW_PRINT_SEL(m, "Rx: Packet Loss Counts: %llu\n", (unsigned long long)precvinfo->dbg_rx_ampdu_loss_count);
+	RTW_PRINT_SEL(m, "Rx: Duplicate Management Frame Drop Count: %llu\n", (unsigned long long)precvinfo->dbg_rx_dup_mgt_frame_drop_count);
+	RTW_PRINT_SEL(m, "Rx: AMPDU BA window shift Count: %llu\n", (unsigned long long)precvinfo->dbg_rx_ampdu_window_shift_cnt);
 	/*The same mac addr counts*/
-	RTW_PRINT_SEL(m, "Rx: Conflict MAC Address Frames Count: %llu\n", (unsigned long long)precvpriv->dbg_rx_conflic_mac_addr_cnt);
+	RTW_PRINT_SEL(m, "Rx: Conflict MAC Address Frames Count: %llu\n", (unsigned long long)precvinfo->dbg_rx_conflic_mac_addr_cnt);
 
-	if (precvpriv->ip_statistic.enabled) {
-		RTW_PRINT_SEL(m,"Rx : %u IP Packets, Frag %u at "IP_FMT":%u\n",
-				precvpriv->ip_statistic.ip_cnt, precvpriv->ip_statistic.frag_cnt,
-				IP_ARG(precvpriv->ip_statistic.ip), precvpriv->ip_statistic.dst_port);
-		RTW_PRINT_SEL(m, "Rx: TCP Count: %u, UDP Count : %u\n",
-				precvpriv->ip_statistic.tcp_cnt, precvpriv->ip_statistic.udp_cnt);
-
-		if (precvpriv->ip_statistic.iperf_ver > 0)
-			RTW_PRINT_SEL(m, "Rx: Iperf Packet: %u, Error : %u, Out-of-Order: %u,\n",
-				precvpriv->ip_statistic.iperf_seq, precvpriv->ip_statistic.iperf_err_cnt,
-				precvpriv->ip_statistic.iperf_out_of_order_cnt);
-		/* Reset ip packet statistic */
-		rtw_rx_dbg_ip_statistic_rest(&(precvpriv->ip_statistic), 0);
-	}
 	return 0;
 }
 
