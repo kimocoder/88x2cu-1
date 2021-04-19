@@ -1226,10 +1226,6 @@ static ssize_t proc_set_rx_info_msg(struct file *file, const char __user *buffer
 	if (buffer && !copy_from_user(tmp, buffer, count)) {
 		int num = sscanf(tmp, "%d", &phy_info_flag);
 
-		if (num == 1)
-			precvpriv->store_law_data_flag = (BOOLEAN) phy_info_flag;
-
-		/*RTW_INFO("precvpriv->store_law_data_flag = %d\n",( BOOLEAN )(precvpriv->store_law_data_flag));*/
 	}
 	return count;
 }

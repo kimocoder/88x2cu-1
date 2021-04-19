@@ -288,9 +288,11 @@
 		#define CONFIG_RTW_MAC_HIDDEN_RPT
 	#endif /* CONFIG_RTW_MAC_HIDDEN_RPT */
 
+#if 0 //NEO
 	#ifndef DBG_RX_DFRAME_RAW_DATA
 		#define DBG_RX_DFRAME_RAW_DATA
 	#endif /* DBG_RX_DFRAME_RAW_DATA */
+#endif //NEO
 
 	#ifndef RTW_IQK_FW_OFFLOAD
 		#define RTW_IQK_FW_OFFLOAD
@@ -384,9 +386,11 @@
 		#endif
 	#endif
 
+#if 0 //NEO
 	#ifndef DBG_RX_DFRAME_RAW_DATA
 		#define DBG_RX_DFRAME_RAW_DATA
 	#endif /* DBG_RX_DFRAME_RAW_DATA */
+#endif //NEO
 
 	#ifndef RTW_IQK_FW_OFFLOAD
 		/* #define RTW_IQK_FW_OFFLOAD */
@@ -543,9 +547,11 @@
 		#define RTW_BEAMFORMING_VERSION_2
 	#endif /* CONFIG_BEAMFORMING */
 
+#if 0 //NEO
 	#ifndef DBG_RX_DFRAME_RAW_DATA
 		#define DBG_RX_DFRAME_RAW_DATA
 	#endif /* DBG_RX_DFRAME_RAW_DATA */
+#endif //NEO
 
 	#ifndef RTW_IQK_FW_OFFLOAD
 		#define RTW_IQK_FW_OFFLOAD
@@ -650,9 +656,11 @@
 		#endif
 	#endif
 
+#if 0 //NEO
 	#ifndef DBG_RX_DFRAME_RAW_DATA
 		#define DBG_RX_DFRAME_RAW_DATA
 	#endif /* DBG_RX_DFRAME_RAW_DATA */
+#endif //NEO
 
 	/*#define RTW_IQK_FW_OFFLOAD*/
 	#define CONFIG_ADVANCE_OTA

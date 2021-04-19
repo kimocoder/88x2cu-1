@@ -13727,7 +13727,6 @@ void rtw_dump_rx_dframe_info(_adapter *padapter, void *sel)
 		_rtw_spinunlock_bh(&pstapriv->sta_hash_lock);
 	}
 }
-#endif
 void rtw_store_phy_info(_adapter *padapter, union recv_frame *prframe)
 {
 	u8 isCCKrate, rf_path , dframe_type;
@@ -13793,6 +13792,7 @@ void rtw_store_phy_info(_adapter *padapter, union recv_frame *prframe)
 	}
 
 }
+#endif
 
 int hal_efuse_macaddr_offset(_adapter *adapter)
 {

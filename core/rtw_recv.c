@@ -118,17 +118,6 @@ sint rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter)
 
 	precvpriv->free_recvframe_cnt = NR_RECVFRAME;
 
-#if 1 //NEO: plan to move to recv_info
-	precvpriv->pre_rtp_rxseq = 0;
-	precvpriv->cur_rtp_rxseq = 0;
-
-#ifdef DBG_RX_SIGNAL_DISPLAY_RAW_DATA
-	precvpriv->store_law_data_flag = 1;
-#else
-	precvpriv->store_law_data_flag = 0;
-#endif
-#endif // NEO
-
 	rtw_os_recv_resource_init(precvpriv);
 
 	precvpriv->pallocated_frame_buf = rtw_zvmalloc(NR_RECVFRAME * sizeof(union recv_frame) + RXFRAME_ALIGN_SZ);
@@ -4332,7 +4321,8 @@ void rx_process_phy_info(_adapter *padapter, union recv_frame *rframe)
 
 	/* Check EVM */
 	rx_process_link_qual(padapter, rframe);
-	rtw_store_phy_info(padapter, rframe);
+	//NEO
+	//rtw_store_phy_info(padapter, rframe);
 }
 
 void rx_query_phy_status(

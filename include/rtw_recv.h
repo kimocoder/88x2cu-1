@@ -691,10 +691,6 @@ struct recv_priv {
 	/* u32 signal_stat_converging_constant; */
 	struct signal_stat signal_qual_data;
 	struct signal_stat signal_strength_data;
-
-	u16 sink_udpport, pre_rtp_rxseq, cur_rtp_rxseq;
-
-	BOOLEAN store_law_data_flag;
 };
 
 bool rtw_rframe_del_wfd_ie(union recv_frame *rframe, u8 ies_offset);
