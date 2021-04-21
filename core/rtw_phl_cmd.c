@@ -129,7 +129,7 @@ static enum rtw_phl_status _send_tsf_sync_done_msg(struct _ADAPTER *a)
 	msg.band_idx = role->hw_band;
 	msg.inbuf = (u8 *)role;
 
-	status = rtw_phl_send_msg_to_dispr(GET_HAL_INFO(d),
+	status = rtw_phl_send_msg_to_dispr(GET_PHL_INFO(d),
 					   &msg, &attr, NULL);
 	if (status != RTW_PHL_STATUS_SUCCESS) {
 		RTW_ERR(FUNC_ADPT_FMT ": Send tsf sync done event fail(0x%02x)!\n",

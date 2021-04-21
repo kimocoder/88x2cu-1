@@ -5281,7 +5281,7 @@ static void _connect_disconnect_hw(struct _ADAPTER *a)
 
 
 	d = adapter_to_dvobj(a);
-	phl = GET_HAL_INFO(d);
+	phl = GET_PHL_INFO(d);
 	/* ref: rtw_set_hw_after_join(a, -1) */
 	mac = (u8*)a->mlmeextpriv.mlmext_info.network.MacAddress;
 	sta = rtw_get_stainfo(&a->stapriv, mac);
@@ -5346,7 +5346,7 @@ static enum rtw_phl_status _connect_abort_notify(struct _ADAPTER *a)
 	attr.completion.completion = _connect_abort_notify_cb;
 	attr.completion.priv = a;
 
-	status = rtw_phl_send_msg_to_dispr(GET_HAL_INFO(d), &msg, &attr, NULL);
+	status = rtw_phl_send_msg_to_dispr(GET_PHL_INFO(d), &msg, &attr, NULL);
 	if (status != RTW_PHL_STATUS_SUCCESS)
 		RTW_ERR(FUNC_ADPT_FMT ": send_msg_to_dispr fail(0x%x)!\n",
 			FUNC_ADPT_ARG(a), status);
@@ -5395,7 +5395,7 @@ static enum rtw_phl_status _connect_swch_done_notify(struct _ADAPTER *a,
 	attr.completion.completion = _connect_swch_done_notify_cb;
 	attr.completion.priv = a;
 
-	status = rtw_phl_send_msg_to_dispr(GET_HAL_INFO(d),
+	status = rtw_phl_send_msg_to_dispr(GET_PHL_INFO(d),
 					       &msg, &attr, NULL);
 	if (status != RTW_PHL_STATUS_SUCCESS) {
 		rtw_vmfree(info, sizeof(struct rtw_chan_def));
@@ -5421,7 +5421,7 @@ static void _connect_cmd_done(struct _ADAPTER *a)
 	}
 
 	_rtw_spinlock(&a->connect_st_lock);
-	status = rtw_phl_free_cmd_token(GET_HAL_INFO(d),
+	status = rtw_phl_free_cmd_token(GET_PHL_INFO(d),
 					role->hw_band, &a->connect_token);
 	a->connect_token = 0;
 	if (status != RTW_PHL_STATUS_SUCCESS)
@@ -5453,7 +5453,7 @@ static enum phl_mdl_ret_code _connect_acquired(void* dispr, void *priv)
 	/*rtw_hw_prepare_connect(a, NULL, network->MacAddress);*/
 	// NEO
 	RTW_ERR("%s NEO TODO - rtw_phl_connect_prepare\n", __func__);
-	//rtw_phl_connect_prepare(GET_HAL_INFO(d), a->phl_role,
+	//rtw_phl_connect_prepare(GET_PHL_INFO(d), a->phl_role,
 	//			network->MacAddress);
 
 	RTW_DBG(FUNC_ADPT_FMT ": -\n", FUNC_ADPT_ARG(a));
@@ -5583,7 +5583,7 @@ static enum phl_mdl_ret_code _connect_msg_hdlr(void* dispr, void* priv,
 #endif
 
 		SET_MSG_EVT_ID_FIELD(nextmsg.msg_id, MSG_EVT_SWCH_START);
-		status = rtw_phl_send_msg_to_dispr(GET_HAL_INFO(d),
+		status = rtw_phl_send_msg_to_dispr(GET_PHL_INFO(d),
 						   &nextmsg, &attr, NULL);
 		break;
 
@@ -5699,7 +5699,7 @@ send_disconnect:
 			RTW_ERR("%s NEO TODO - rtw_hw_del_all_key()\n", __func__);
 			//rtw_hw_del_all_key(a, sta, PHL_CMD_DIRECTLY, 0);
 			status = rtw_phl_cmd_update_media_status(
-						GET_HAL_INFO(d),
+						GET_PHL_INFO(d),
 						sta->phl_sta, NULL, false,
 						PHL_CMD_DIRECTLY, 0);
 			if (status != RTW_PHL_STATUS_SUCCESS) {
@@ -5804,7 +5804,7 @@ enum rtw_phl_status rtw_connect_cmd(struct _ADAPTER *a,
 
 	cmd_req = &a->connect_req;
 	cmd_req->role = role;
-	status = rtw_phl_add_cmd_token_req(GET_HAL_INFO(d),
+	status = rtw_phl_add_cmd_token_req(GET_PHL_INFO(d),
 					   role->hw_band,
 					   cmd_req, &a->connect_token);
 	if ((status != RTW_PHL_STATUS_SUCCESS)
@@ -5847,7 +5847,7 @@ void rtw_connect_abort(struct _ADAPTER *a)
 
 	cmd_req = &a->connect_req;
 	cmd_req->role = role;
-	status = rtw_phl_cancel_cmd_token(GET_HAL_INFO(d),
+	status = rtw_phl_cancel_cmd_token(GET_PHL_INFO(d),
 					  role->hw_band,
 					  &a->connect_token);
 	a->connect_token = 0;
@@ -5944,7 +5944,7 @@ enum rtw_phl_status rtw_connect_disconnect_prepare(struct _ADAPTER *a)
 	msg.band_idx = a->phl_role->hw_band;
 	msg.rsvd[0] = (u8*)a->phl_role;
 
-	status = rtw_phl_send_msg_to_dispr(GET_HAL_INFO(d), &msg, &attr, NULL);
+	status = rtw_phl_send_msg_to_dispr(GET_PHL_INFO(d), &msg, &attr, NULL);
 	if (status != RTW_PHL_STATUS_SUCCESS)
 		RTW_ERR(FUNC_ADPT_FMT ": send_msg_to_dispr fail(0x%x)!\n",
 			FUNC_ADPT_ARG(a), status);
@@ -5966,7 +5966,7 @@ static enum rtw_phl_status _disconnect_done_notify(struct _ADAPTER *a)
 	msg.band_idx = wrole->hw_band;
 	msg.rsvd[0] = (u8*)wrole;
 
-	status = rtw_phl_send_msg_to_dispr(GET_HAL_INFO(d), &msg, &attr, NULL);
+	status = rtw_phl_send_msg_to_dispr(GET_PHL_INFO(d), &msg, &attr, NULL);
 	if (status != RTW_PHL_STATUS_SUCCESS)
 		RTW_ERR(FUNC_ADPT_FMT ": send_msg_to_dispr fail(0x%x)!\n",
 			FUNC_ADPT_ARG(a), status);
@@ -6011,7 +6011,7 @@ static void _disconnect_cmd_done(struct _ADAPTER *a)
 	if (!a->disconnect_token)
 		return;
 
-	status = rtw_phl_free_cmd_token(GET_HAL_INFO(d),
+	status = rtw_phl_free_cmd_token(GET_PHL_INFO(d),
 					role->hw_band, &a->disconnect_token);
 	a->disconnect_token = 0;
 	if (status != RTW_PHL_STATUS_SUCCESS)
@@ -6031,7 +6031,7 @@ static enum phl_mdl_ret_code _disconnect_acquired(void* dispr, void *priv)
 
 	// NEO
 	RTW_ERR("%s NEO TODO rtw_phl_disconnect\n", __func__);
-	//rtw_phl_disconnect(GET_HAL_INFO(d), a->phl_role, true);
+	//rtw_phl_disconnect(GET_PHL_INFO(d), a->phl_role, true);
 
 	RTW_DBG(FUNC_ADPT_FMT ": -\n", FUNC_ADPT_ARG(a));
 
@@ -6218,7 +6218,7 @@ enum rtw_phl_status rtw_disconnect_cmd(struct _ADAPTER *a, struct cmd_obj *pcmd)
 	cmd_req = &a->disconnect_req;
 	cmd_req->role = role;
 
-	phl_status = rtw_phl_add_cmd_token_req(GET_HAL_INFO(d),
+	phl_status = rtw_phl_add_cmd_token_req(GET_PHL_INFO(d),
 					       role->hw_band,
 					       cmd_req, &a->disconnect_token);
 	if ((phl_status != RTW_PHL_STATUS_SUCCESS)

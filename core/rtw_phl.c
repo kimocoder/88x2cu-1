@@ -707,7 +707,7 @@ _free_hal :
 u8 rtw_hw_start(struct dvobj_priv *dvobj)
 {
 
-	if (rtw_phl_start(GET_HAL_INFO(dvobj)) != RTW_PHL_STATUS_SUCCESS)
+	if (rtw_phl_start(GET_PHL_INFO(dvobj)) != RTW_PHL_STATUS_SUCCESS)
 		return _FAIL;
 
 	#ifdef CONFIG_PCI_HCI
@@ -720,7 +720,7 @@ u8 rtw_hw_start(struct dvobj_priv *dvobj)
 }
 void rtw_hw_stop(struct dvobj_priv *dvobj)
 {
-	rtw_phl_stop(GET_HAL_INFO(dvobj));
+	rtw_phl_stop(GET_PHL_INFO(dvobj));
 
 	#ifdef CONFIG_PCI_HCI
 	//intr init flag
@@ -731,12 +731,12 @@ void rtw_hw_stop(struct dvobj_priv *dvobj)
 
 bool rtw_hw_get_init_completed(struct dvobj_priv *dvobj)
 {
-	return rtw_phl_is_init_completed(GET_HAL_INFO(dvobj));
+	return rtw_phl_is_init_completed(GET_PHL_INFO(dvobj));
 }
 
 bool rtw_hw_is_init_completed(struct dvobj_priv *dvobj)
 {
-	return (rtw_phl_is_init_completed(GET_HAL_INFO(dvobj))) ? _TRUE : _FALSE;
+	return (rtw_phl_is_init_completed(GET_PHL_INFO(dvobj))) ? _TRUE : _FALSE;
 }
 
 #if 0 // NEO
@@ -869,7 +869,7 @@ u8 rtw_hw_iface_init(_adapter *adapter)
 	RTW_INFO("%s NEO iface_id=0x%x\n", __func__, adapter->iface_id);
 
 	/* will allocate phl self sta info */
-	phl_role_idx = rtw_phl_wifi_role_alloc(GET_HAL_INFO(dvobj),
+	phl_role_idx = rtw_phl_wifi_role_alloc(GET_PHL_INFO(dvobj),
 			adapter_mac_addr(adapter), PHL_RTYPE_STATION,
 			adapter->iface_id, &(adapter->phl_role));
 
@@ -888,7 +888,7 @@ u8 rtw_hw_iface_init(_adapter *adapter)
 	RTW_INFO("%s NEO TODO - update chan def and chanctx \n", __func__);
 #if 0 // NEO
 	rtw_hw_update_chan_def(adapter);
-	chctx_num = rtw_phl_mr_get_chanctx_num(GET_HAL_INFO(dvobj), adapter->phl_role);
+	chctx_num = rtw_phl_mr_get_chanctx_num(GET_PHL_INFO(dvobj), adapter->phl_role);
 
 	if (chctx_num == 0) {
 		rtw_phl_set_ch_bw(adapter->phl_role,
@@ -913,7 +913,7 @@ _error:
 
 u8 rtw_hw_iface_type_change(_adapter *adapter, u8 iface_type)
 {
-	void *phl = GET_HAL_INFO(adapter_to_dvobj(adapter));
+	void *phl = GET_PHL_INFO(adapter_to_dvobj(adapter));
 	struct rtw_wifi_role_t *wrole = adapter->phl_role;
 	enum role_type rtype = PHL_RTYPE_NONE;
 	enum rtw_phl_status status;
@@ -979,7 +979,7 @@ void rtw_hw_iface_deinit(_adapter *adapter)
 
 	if (adapter->phl_role) {
 		rtw_free_self_stainfo(adapter);
-		rtw_phl_wifi_role_free(GET_HAL_INFO(dvobj), adapter->phl_role->id);
+		rtw_phl_wifi_role_free(GET_PHL_INFO(dvobj), adapter->phl_role->id);
 		adapter->phl_role = NULL;
 	}
 }
@@ -1100,7 +1100,7 @@ static int rtw_hw_chk_sec_mode(struct _ADAPTER *a, struct sta_info *sta)
 	struct security_priv *psecuritypriv = &a->securitypriv;
 
 	d = adapter_to_dvobj(a);
-	phl = GET_HAL_INFO(d);
+	phl = GET_PHL_INFO(d);
 
 	if (!phl)
 		return _FAIL;
@@ -1145,7 +1145,7 @@ int rtw_hw_add_key(struct _ADAPTER *a, struct sta_info *sta,
 
 
 	d = adapter_to_dvobj(a);
-	phl = GET_HAL_INFO(d);
+	phl = GET_PHL_INFO(d);
 	if (!phl)
 		return -1;
 
@@ -1186,7 +1186,7 @@ int rtw_hw_del_key(struct _ADAPTER *a, struct sta_info *sta,
 
 
 	d = adapter_to_dvobj(a);
-	phl = GET_HAL_INFO(d);
+	phl = GET_PHL_INFO(d);
 	if (!phl)
 		return -1;
 
@@ -1220,7 +1220,7 @@ int rtw_hw_del_all_key(struct _ADAPTER *a, struct sta_info *sta)
 
 
 	d = adapter_to_dvobj(a);
-	phl = GET_HAL_INFO(d);
+	phl = GET_PHL_INFO(d);
 	if (!phl)
 		return -1;
 
@@ -1263,7 +1263,7 @@ int rtw_hw_prepare_connect(struct _ADAPTER *a, struct sta_info *sta, u8 *target_
 
 
 	d = adapter_to_dvobj(a);
-	phl = GET_HAL_INFO(d);
+	phl = GET_PHL_INFO(d);
 
 	status = rtw_phl_connect_prepare(phl, a->phl_role, target_addr);
 	if (status != RTW_PHL_STATUS_SUCCESS) {
@@ -1287,7 +1287,7 @@ int rtw_hw_connect_abort(struct _ADAPTER *a, struct sta_info *sta)
 
 
 	d = adapter_to_dvobj(a);
-	phl = GET_HAL_INFO(d);
+	phl = GET_PHL_INFO(d);
 	if (!phl)
 		return -1;
 
@@ -1499,7 +1499,7 @@ int rtw_hw_set_edca(struct _ADAPTER *a, u8 ac, u32 param)
 
 
 	d = adapter_to_dvobj(a);
-	phl = GET_HAL_INFO(d);
+	phl = GET_PHL_INFO(d);
 	if (!phl)
 		return -1;
 
@@ -1526,7 +1526,7 @@ int rtw_hw_connected(struct _ADAPTER *a, struct sta_info *sta)
 	struct security_priv *psecuritypriv = &a->securitypriv;
 
 	d = adapter_to_dvobj(a);
-	phl = GET_HAL_INFO(d);
+	phl = GET_PHL_INFO(d);
 	if (!phl)
 		return -1;
 
@@ -1612,7 +1612,7 @@ int rtw_hw_disconnect(struct _ADAPTER *a, struct sta_info *sta)
 	u8 is_ap_self = _FALSE;
 
 	d = adapter_to_dvobj(a);
-	phl = GET_HAL_INFO(d);
+	phl = GET_PHL_INFO(d);
 	if (!phl)
 		return -1;
 
@@ -1659,7 +1659,7 @@ int rtw_hw_connected_apmode(struct _ADAPTER *a, struct sta_info *sta)
 	void *phl;
 
 	d = adapter_to_dvobj(a);
-	phl = GET_HAL_INFO(d);
+	phl = GET_PHL_INFO(d);
 	if (!phl)
 		return -1;
 
@@ -1719,7 +1719,7 @@ u8 rtw_hal_get_def_var(struct _ADAPTER *a,
 u16 rtw_acs_get_channel_by_idx(struct _ADAPTER *a, u8 idx)
 {
 	struct dvobj_priv *d = adapter_to_dvobj(a);
-	void *phl = GET_HAL_INFO(d);
+	void *phl = GET_PHL_INFO(d);
 
 	if (phl)
 		return rtw_phl_acs_get_channel_by_idx(phl, idx);
@@ -1730,7 +1730,7 @@ u16 rtw_acs_get_channel_by_idx(struct _ADAPTER *a, u8 idx)
 u8 rtw_acs_get_clm_ratio_by_idx(struct _ADAPTER *a, u8 idx)
 {
 	struct dvobj_priv *d = adapter_to_dvobj(a);
-	void *phl = GET_HAL_INFO(d);
+	void *phl = GET_PHL_INFO(d);
 
 	if (phl)
 		return rtw_phl_acs_get_clm_ratio_by_idx(phl, idx);
@@ -1741,7 +1741,7 @@ u8 rtw_acs_get_clm_ratio_by_idx(struct _ADAPTER *a, u8 idx)
 s8 rtw_noise_query_by_idx(struct _ADAPTER *a, u8 idx)
 {
 	struct dvobj_priv *d = adapter_to_dvobj(a);
-	void *phl = GET_HAL_INFO(d);
+	void *phl = GET_PHL_INFO(d);
 
 	if (phl)
 		return rtw_phl_noise_query_by_idx(phl, idx);

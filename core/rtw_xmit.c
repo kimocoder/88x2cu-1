@@ -6377,7 +6377,7 @@ static u8 get_security_cam_id(struct _ADAPTER *padapter, struct xmit_frame *pxfr
 	}
 
 	d = adapter_to_dvobj(padapter);
-	phl = GET_HAL_INFO(d);
+	phl = GET_PHL_INFO(d);
 
 	if (keyid >= 4)
 		sec_cam_id = rtw_phl_get_sec_cam_idx(phl, sta->phl_sta, keyid,

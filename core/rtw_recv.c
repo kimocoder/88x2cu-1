@@ -297,7 +297,7 @@ int rtw_free_recvframe(union recv_frame *precvframe)
 
 #ifdef RTW_PHL_RX
 	if(precvframe->u.hdr.rx_req)
-		rtw_phl_return_rxbuf(GET_HAL_INFO(dvobj), (u8*)precvframe->u.hdr.rx_req);
+		rtw_phl_return_rxbuf(GET_PHL_INFO(dvobj), (u8*)precvframe->u.hdr.rx_req);
 #endif
 
 	rtw_os_free_recvframe(precvframe);
@@ -5494,7 +5494,7 @@ u32 rtw_core_rx_process(void *drv_priv)
 	struct rx_pkt_attrib *pattrib = NULL;
 	u8 *pbuf;
 
-	rx_pkt_num = rtw_phl_query_new_rx_num(GET_HAL_INFO(dvobj));
+	rx_pkt_num = rtw_phl_query_new_rx_num(GET_PHL_INFO(dvobj));
 
 #ifdef DBG_RECV_FRAME
 	RTW_INFO("%s dvobj:%p, phl:%p rx_pkt_num:%d, free_recv_queue:%p\n",
@@ -5510,7 +5510,7 @@ u32 rtw_core_rx_process(void *drv_priv)
 
 		//_rtw_init_listhead
 
-		rx_req = rtw_phl_query_rx_pkt(GET_HAL_INFO(dvobj));
+		rx_req = rtw_phl_query_rx_pkt(GET_PHL_INFO(dvobj));
 		if(rx_req == NULL)
 			goto rx_stop;
 
