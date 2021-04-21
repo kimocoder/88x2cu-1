@@ -18,8 +18,8 @@
 //typedef struct rtw_phl_com_t HAL_DATA_TYPE; /*, *PHAL_DATA_TYPE;*/
 
 #define GET_PHL_INFO(_dvobj)	(_dvobj->phl)
-#define GET_PHL_DATA(_dvobj)	(_dvobj->phl_com)
-#define GET_G6_HAL_SPEC(_dvobj)	(&(GET_PHL_DATA(_dvobj)->hal_spec))
+#define GET_PHL_COM(_dvobj)	(_dvobj->phl_com)
+#define GET_G6_HAL_SPEC(_dvobj)	(&(GET_PHL_COM(_dvobj)->hal_spec))
 
 
 /* refer to (registrypriv-> tx_nss,rx_nss / hal_spec->tx_nss_num,rx_nss_num)*/

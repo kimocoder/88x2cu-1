@@ -1567,7 +1567,7 @@ uint rtw_load_registry(_adapter *padapter)
 
 void rtw_core_update_default_setting (struct dvobj_priv *dvobj)
 {
-	struct rtw_phl_com_t *phl_com = GET_PHL_DATA(dvobj);
+	struct rtw_phl_com_t *phl_com = GET_PHL_COM(dvobj);
 
 	#ifdef CONFIG_LOAD_PHY_PARA_FROM_FILE
 	rtw_load_phy_file_path(dvobj);
