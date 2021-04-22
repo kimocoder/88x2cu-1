@@ -74,6 +74,7 @@
 #include "phl_ps_fsm.h"
 #endif /*CONFIG_FSM*/
 
+#include "phl_cmd_ps.h"
 #include "phl_sound_cmd.h"
 #include "phl_cmd_ser.h"
 
@@ -87,6 +88,7 @@
 #include "phl_mcc_def.h"
 #include "phl_notify.h"
 #include "phl_cmd_general.h"
+#include "phl_p2pps.h"
 #include "phl_cmd_btc.h"
 #include "phl_twt.h"
 #include "phl_ecsa_export.h"

@@ -1068,14 +1068,15 @@ phl_snd_cal_mu_grp_bitmap(struct phl_info_t *phl_info, struct phl_snd_grp *grp)
 enum rtw_phl_status
 phl_snd_proc_precfg(struct phl_info_t *phl_info, struct phl_snd_grp *grp)
 {
-	RTW_ERR("%s NEO TODO\n", __func__);
-	pstatus = RTW_PHL_STATUS_FAILURE;
-#if 0 // NEO TODO
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_SUCCESS;
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_SUCCESS;
 	struct phl_snd_sta *sta = NULL;
 	u8 idx = 0;
 	struct rtw_phl_stainfo_t *psta_info = NULL;
+	
+	RTW_ERR("%s NEO TODO\n", __func__);
+	pstatus = RTW_PHL_STATUS_FAILURE;
+#if 0 // NEO TODO
 	FUNCIN_WSTS(pstatus);
 	do {
 		if (grp == NULL) {
@@ -1554,6 +1555,9 @@ _phl_snd_proc_postcfg_sta(struct phl_info_t *phl_info,
 	u8 idx = 0;
 	bool mu = false;
 
+	RTW_ERR("%s TODO NEO\n", __func__);
+	return RTW_PHL_STATUS_FAILURE;
+#if 0 // NEO
 	/*post config for a single sta*/
 	for (idx = 0; idx < MAX_NUM_STA_SND_GRP; idx++) {
 		sta = &grp->sta[idx];
@@ -1588,11 +1592,16 @@ _phl_snd_proc_postcfg_sta(struct phl_info_t *phl_info,
 	}
 
 	return pstatus;
+#endif // if 0 NEO
 }
+
 /* SND PROC Post Config API for FSM */
 enum rtw_phl_status
 phl_snd_proc_postcfg(struct phl_info_t *phl_info, struct phl_snd_grp *grp)
 {
+	RTW_ERR("%s TODO NEO\n", __func__);
+	return RTW_PHL_STATUS_FAILURE;
+#if 0 // NEO
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_SUCCESS;
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_SUCCESS;
 	bool mu = false, he = true;
@@ -1643,12 +1652,16 @@ phl_snd_proc_postcfg(struct phl_info_t *phl_info, struct phl_snd_grp *grp)
 
 	FUNCOUT();
 	return pstatus;
+#endif // if 0 NEO
 }
 
 /* SND_PROC_DOWN --> Next Sounding : Check sounding module status */
 enum rtw_phl_status
 phl_snd_proc_chk_condition(struct phl_info_t *phl_info, struct phl_snd_grp *grp)
 {
+	RTW_ERR("%s TODO NEO\n", __func__);
+	return RTW_PHL_STATUS_FAILURE;
+#if 0 // NEO
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_FAILURE;
 	struct phl_sound_obj *snd = (struct phl_sound_obj *)phl_info->snd_obj;
 	struct rtw_wifi_role_t *role =
@@ -1711,6 +1724,7 @@ phl_snd_proc_chk_condition(struct phl_info_t *phl_info, struct phl_snd_grp *grp)
 	} while (0);
 
 	return pstatus;
+#endif // if 0 NEO
 }
 
 

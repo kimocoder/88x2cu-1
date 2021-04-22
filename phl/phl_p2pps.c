@@ -74,6 +74,7 @@ _phl_p2pps_dump_noa_table(struct rtw_phl_p2pps_info *psinfo,
 	struct rtw_phl_noa_info *info)
 {
 	void *drvpriv = phlcom_to_drvpriv(psinfo->phl_info->phl_com);
+	struct rtw_phl_noa_desc *desc = NULL;
 	u8 i = 0;
 
 	PHL_TRACE(COMP_PHL_P2PPS, _PHL_INFO_, "[NOA]_phl_p2pps_dump_noa_table():====>\n");
@@ -81,6 +82,7 @@ _phl_p2pps_dump_noa_table(struct rtw_phl_p2pps_info *psinfo,
 	PHL_TRACE(COMP_PHL_P2PPS, _PHL_INFO_, "[NOA] info.en_desc_num = %d, pause = %d\n",
 		info->en_desc_num, info->paused);
 	for (i = 0; i < MAX_NOA_DESC; i++) {
+		desc = &info->noa_desc[i];
 		PHL_TRACE(COMP_PHL_P2PPS, _PHL_INFO_, "[NOA]================DESC[%d]==================\n",
 			i);
 		PHL_TRACE(COMP_PHL_P2PPS, _PHL_INFO_, "[NOA]_phl_p2pps_dump_noa_table():enable = %d\n",

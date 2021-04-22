@@ -231,9 +231,11 @@ phl_register_background_module_entry(struct phl_info_t *phl_info)
 		return phl_status;
 #endif
 
+#if 0 //NEO
 	phl_status = phl_register_ps_module(phl_info);
 	if (phl_status != RTW_PHL_STATUS_SUCCESS)
 		return phl_status;
+#endif // if 0
 
 	/* 70 ~ 127 optional background module section*/
 #ifdef CONFIG_PHL_CMD_BTC
@@ -260,9 +262,11 @@ phl_register_background_module_entry(struct phl_info_t *phl_info)
 	if (phl_status != RTW_PHL_STATUS_SUCCESS)
 		return phl_status;
 
+#if 0 //NEO
 	phl_status = phl_snd_cmd_register_module(phl_info);
 	if (phl_status != RTW_PHL_STATUS_SUCCESS)
 		return phl_status;
+#endif // if 0
 #else
 	phl_status = RTW_PHL_STATUS_SUCCESS;
 #endif
@@ -1041,7 +1045,8 @@ enum rtw_phl_status rtw_phl_init(void *drv_priv, void **phl,
 	rtw_hal_hci_cfg(phl_info->phl_com, phl_info->hal, ic_info);
 
 	/*get hw capability from mac/bb/rf/btc/efuse/fw-defeature-rpt*/
-	hal_status = rtw_hal_read_chip_info(phl_info->phl_com, phl_info->hal);
+	// NEO
+	hal_status = rtw_hal_g6_read_chip_info(phl_info->phl_com, phl_info->hal);
 	if (hal_status != RTW_HAL_STATUS_SUCCESS) {
 		phl_status = RTW_PHL_STATUS_HAL_INIT_FAILURE;
 		PHL_ERR("rtw_hal_read_chip_info failed\n");
@@ -1542,13 +1547,15 @@ error_phl_fsm_module_start:
 	phl_fsm_stop(phl_info);
 error_phl_fsm_start:
 #endif
-	rtw_hal_stop(phl_info->phl_com, phl_info->hal);
+	// NEO
+	rtw_hal_g6_stop(phl_info->phl_com, phl_info->hal);
 error_hal_start:
 	return phl_status;
 }
 
 static void _phl_interrupt_stop(struct phl_info_t *phl_info)
 {
+#if 0 //NEO
 #ifdef CONFIG_SYNC_INTERRUPT
 	struct rtw_phl_evt_ops *evt_ops = &phl_info->phl_com->evt_ops;
 
@@ -1564,6 +1571,7 @@ static void _phl_interrupt_stop(struct phl_info_t *phl_info)
 			rtw_hal_disable_interrupt(phl_info->phl_com, phl_info->hal);
 	} while (false);
 #endif /* CONFIG_SYNC_INTERRUPT */
+#endif // if 0
 }
 
 static enum rtw_phl_status _phl_cmd_send_msg_phy_on(struct phl_info_t *phl_info)
@@ -1589,7 +1597,8 @@ void rtw_phl_stop(void *phl)
 	phl_fsm_stop(phl_info);
 #endif
 
-	rtw_hal_stop(phl_info->phl_com, phl_info->hal);
+	// NEO
+	rtw_hal_g6_stop(phl_info->phl_com, phl_info->hal);
 	phl_datapath_stop(phl_info);
 
 	phl_info->phl_com->dev_state = 0;
@@ -2040,7 +2049,6 @@ void rtw_phl_write_rfreg(void *phl,
 void rtw_phl_restore_interrupt(void *phl)
 {
 	RTW_ERR("%s TODO NEO\n", __func__);
-	return RTW_PHL_STATUS_FAILURE;
 #if 0
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	rtw_hal_restore_interrupt(phl_info->phl_com, phl_info->hal);
@@ -2116,7 +2124,6 @@ end:
 void rtw_phl_enable_interrupt(void *phl)
 {
 	RTW_ERR("%s TODO NEO\n", __func__);
-	return RTW_PHL_STATUS_FAILURE;
 #if 0
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	rtw_hal_enable_interrupt(phl_info->phl_com, phl_info->hal);
@@ -2126,7 +2133,6 @@ void rtw_phl_enable_interrupt(void *phl)
 void rtw_phl_disable_interrupt(void *phl)
 {
 	RTW_ERR("%s TODO NEO\n", __func__);
-	return RTW_PHL_STATUS_FAILURE;
 #if 0
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	rtw_hal_disable_interrupt(phl_info->phl_com, phl_info->hal);
