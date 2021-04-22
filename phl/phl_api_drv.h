@@ -52,8 +52,6 @@ void rtw_phl_pkt_ofld_reset_all_entry(struct rtw_phl_com_t *phl_com);
 
 
 bool rtw_phl_query_regulation_info(void *phl, struct rtw_regulation_info *info);
-bool rtw_phl_regulation_query_ch(void *phl, u8 channel,
-				struct rtw_regulation_channel *ch);
 
 enum band_type rtw_phl_get_band_type(u8 chan);
 u8 rtw_phl_get_center_ch(u8 ch,
@@ -85,6 +83,8 @@ rtw_phl_cmd_notify(struct rtw_phl_com_t *phl_com,
                    enum phl_msg_evt_id event,
                    u8 hw_idx);
 #endif /* CONFIG_CMD_DISP */
+
+enum rtw_phl_status phl_ps_hal_pwr_req(struct rtw_phl_com_t *phl_com, u8 src, bool pwr_req);
 
 #endif /* _PHL_API_DRV_H_ */
 

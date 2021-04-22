@@ -106,7 +106,7 @@ enum rtw_phl_status phl_snd_new_obj(
 	FUNCOUT();
 	return status;
 }
-#endif /* CONFIG_FSM */
+#endif
 
 /* PHL SOUND EXTERNAL APIs */
 /* get sounding in progress */
@@ -162,9 +162,8 @@ enum rtw_phl_status
 rtw_phl_sound_down_ev(void *phl)
 {
 	enum rtw_phl_status status = RTW_PHL_STATUS_SUCCESS;
-	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct phl_sound_obj *snd = (struct phl_sound_obj *)phl_info->snd_obj;
-#ifdef CONFIG_FSM	
+
+#ifdef CONFIG_FSM
 	status = phl_snd_fsm_ev_c2h_snd_down(phl);
 #else
 	return RTW_PHL_STATUS_FAILURE;
@@ -187,8 +186,10 @@ rtw_phl_sound_abort(void *phl)
 void rtw_phl_snd_dump_fix_para(struct phl_info_t *phl_info)
 {
 	struct phl_sound_obj *snd = (struct phl_sound_obj *)phl_info->snd_obj;
-	struct phl_snd_fix_param *para = &snd->snd_param.fix_param;
+	struct phl_snd_fix_param *para = NULL;
 	u8 i = 0;
+
+	para = &snd->snd_param.fix_param;
 	PHL_TRACE(COMP_PHL_SOUND, _PHL_INFO_, "===> rtw_phl_snd_fix_dump_para \n");
 
 	PHL_TRACE(COMP_PHL_SOUND, _PHL_INFO_, "test_flag = 0x%x \n", snd->snd_param.test_flag);
@@ -273,7 +274,6 @@ void rtw_phl_snd_fix_set_bw(struct phl_info_t *phl_info,
 /* set forced fw tx mu-mimo (forced fw tx decision) */
 void rtw_phl_snd_fix_tx_he_mu(struct phl_info_t *phl_info, u8 gid, bool en)
 {
-	struct phl_sound_obj *snd = (struct phl_sound_obj *)phl_info->snd_obj;
 	PHL_TRACE(COMP_PHL_SOUND, _PHL_INFO_, "rtw_phl_snd_fix_tx_mu_para()\n");
 
 	rtw_hal_bf_set_txmu_para(phl_info->hal, gid, en,
@@ -363,7 +363,6 @@ phl_snd_get_grp_byidx(struct phl_info_t *phl_info, u8 gidx)
 	struct phl_sound_obj *snd = (struct phl_sound_obj *)phl_info->snd_obj;
 	struct phl_sound_param *snd_param = &snd->snd_param;
 	struct phl_snd_grp *grp = NULL;
-	void *d = phl_to_drvpriv(phl_info);
 
 	do {
 		if (gidx >= MAX_SND_GRP_NUM)
@@ -431,8 +430,6 @@ void
 phl_snd_func_remove_grp_all(struct phl_info_t *phl_info)
 {
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_SUCCESS;
-	struct phl_sound_obj *snd = (struct phl_sound_obj *)phl_info->snd_obj;
-	struct phl_sound_param *snd_param = &snd->snd_param;
 	struct phl_snd_grp *grp = NULL;
 	u8 idx = 0;
 
@@ -456,7 +453,6 @@ phl_snd_func_remove_grp_all(struct phl_info_t *phl_info)
 u8 _phl_snd_get_available_gidx(struct phl_sound_obj *snd)
 {
 	struct phl_sound_param *param = &snd->snd_param;
-	void *d = phl_to_drvpriv(snd->phl_info);
 	u8 gidx = MAX_SND_GRP_NUM;
 
 	for (gidx = 0; gidx < MAX_SND_GRP_NUM; gidx++) {
@@ -548,7 +544,6 @@ phl_snd_func_add_snd_grp(
 	struct phl_sound_obj *snd = (struct phl_sound_obj *)phl_info->snd_obj;
 	struct phl_sound_param *snd_param = &snd->snd_param;
 	struct phl_snd_grp *grp = NULL;
-	void *d = phl_to_drvpriv(phl_info);
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_FAILURE;
 
 	do {
@@ -624,7 +619,6 @@ phl_snd_func_grouping(struct phl_info_t *phl_info, u8 wroleidx)
 	struct phl_snd_grp *grp = NULL;
 	void *drv = phl_to_drvpriv(phl_info);
 	struct phl_queue *sta_queue;
-	_os_spinlockfg sp_flags;
 	u8 gidx = 0;
 	u8 cnt = 0;
 
@@ -660,7 +654,7 @@ phl_snd_func_grouping(struct phl_info_t *phl_info, u8 wroleidx)
 		/* Test Code: Group-1 :Forced MU Sounding with first 1~4 STAs */
 		/* the mu sounding list shall get from mu grouping module */
 		cnt = 0;
-		_os_spinlock(drv, &sta_queue->lock, _irq, &sp_flags);
+		_os_spinlock(drv, &sta_queue->lock, _bh, NULL);
 		phl_list_for_loop(sta, struct rtw_phl_stainfo_t,
 				  &wrole->assoc_sta_queue.queue, list) {
 			if (is_broadcast_mac_addr(sta->mac_addr))
@@ -684,7 +678,7 @@ phl_snd_func_grouping(struct phl_info_t *phl_info, u8 wroleidx)
 			if (cnt >= 4)
 				break;
 		}
-		_os_spinunlock(drv, &sta_queue->lock, _irq, &sp_flags);
+		_os_spinunlock(drv, &sta_queue->lock, _bh, NULL);
 		if(pstatus != RTW_PHL_STATUS_SUCCESS)
 			return RTW_PHL_STATUS_FAILURE;
 		grp = &snd_param->snd_grp[gidx];
@@ -748,8 +742,6 @@ enum rtw_phl_status
 _phl_snd_proc_release_res_bf(
 	struct phl_info_t *phl_info, struct phl_snd_grp *grp)
 {
-	struct phl_sound_obj *snd = (struct phl_sound_obj *)phl_info->snd_obj;
-	struct phl_sound_param *snd_param = &snd->snd_param;
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_SUCCESS;
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_SUCCESS;
 	struct phl_snd_sta *snd_sta;
@@ -759,7 +751,6 @@ _phl_snd_proc_release_res_bf(
 	RTW_ERR("%s NEO TODO\n", __func__);
 	return RTW_PHL_STATUS_FAILURE;
 #if 0 // NEO TODO
-
 	for (idx = 0; idx < grp->num_sta; idx++) {
 		snd_sta = &grp->sta[idx];
 		if(0 == snd_sta->valid)
@@ -796,7 +787,6 @@ _phl_snd_proc_release_res_bf(
 enum rtw_phl_status
 phl_snd_proc_release_res(struct phl_info_t *phl_info, struct phl_snd_grp *grp)
 {
-	struct phl_sound_obj *snd = (struct phl_sound_obj *)phl_info->snd_obj;
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_SUCCESS;
 	struct phl_snd_sta *snd_sta;
 	snd_sta = &grp->sta[0];
@@ -819,8 +809,6 @@ enum rtw_phl_status
 _phl_snd_proc_get_res_cqi_fb(
 	struct phl_info_t *phl_info, struct phl_snd_grp *grp, u8 *nsta)
 {
-	struct phl_sound_obj *snd = (struct phl_sound_obj *)phl_info->snd_obj;
-	struct phl_sound_param *snd_param = &snd->snd_param;
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_SUCCESS;
 	struct phl_snd_sta *snd_sta;
 	u8 idx = 0;
@@ -870,11 +858,6 @@ enum rtw_phl_status
 _phl_snd_proc_get_res_bf(
 	struct phl_info_t *phl_info, struct phl_snd_grp *grp, u8 *nsta)
 {
-	RTW_ERR("%s TODO NEO\n", __func__);
-	return RTW_PHL_STATUS_FAILURE;
-#if 0 
-	struct phl_sound_obj *snd = (struct phl_sound_obj *)phl_info->snd_obj;
-	struct phl_sound_param *snd_param = &snd->snd_param;
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_SUCCESS;
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_SUCCESS;
 	struct phl_snd_sta *snd_sta;
@@ -882,6 +865,9 @@ _phl_snd_proc_get_res_bf(
 	struct rtw_phl_stainfo_t *sta = NULL;
 	bool mu, qry_bf;
 
+	RTW_ERR("%s NEO TODO\n", __func__);
+	pstatus = RTW_PHL_STATUS_FAILURE;
+#if 0 // NEO TODO
 	*nsta = 0;
 
 	for (idx = 0; idx < grp->num_sta; idx++) {
@@ -952,17 +938,15 @@ _phl_snd_proc_get_res_bf(
 		PHL_TRACE(COMP_PHL_SOUND, _PHL_INFO_, "FAIL : Sounding STAs is fewer than group sta because of resource!\n");
 		pstatus = RTW_PHL_STATUS_FAILURE;
 	}
-
-	return pstatus;
 #endif
+	return pstatus;
 }
+
 /* snd proc get BF/CSI resource */
 enum rtw_phl_status
 phl_snd_proc_get_res(
 	struct phl_info_t *phl_info, struct phl_snd_grp *grp, u8 *nsta)
 {
-	struct phl_sound_obj *snd = (struct phl_sound_obj *)phl_info->snd_obj;
-	struct phl_sound_param *snd_param = &snd->snd_param;
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_SUCCESS;
 	struct phl_snd_sta *snd_sta;
 	FUNCIN_WSTS(pstatus);
@@ -1085,8 +1069,8 @@ enum rtw_phl_status
 phl_snd_proc_precfg(struct phl_info_t *phl_info, struct phl_snd_grp *grp)
 {
 	RTW_ERR("%s NEO TODO\n", __func__);
-	return RTW_PHL_STATUS_FAILURE;
-#if 0 // NEO
+	pstatus = RTW_PHL_STATUS_FAILURE;
+#if 0 // NEO TODO
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_SUCCESS;
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_SUCCESS;
 	struct phl_snd_sta *sta = NULL;
@@ -1131,8 +1115,8 @@ phl_snd_proc_precfg(struct phl_info_t *phl_info, struct phl_snd_grp *grp)
 	if(pstatus != RTW_PHL_STATUS_SUCCESS)
 		grp->snd_sts = PHL_SND_STS_FAILURE;
 	FUNCOUT_WSTS(pstatus);
-	return pstatus;
 #endif // if 0 NEO
+	return pstatus;
 }
 /* 3. Send Sounding Command to HAL/FW */
 /*TODO: RU Allocation is now hard code value */
@@ -1143,7 +1127,6 @@ _phl_snd_proc_fw_cmd_he_tb_2sta(struct phl_info_t *phl_info,
 				u8 *cmd, u8 bfrp_num)
 {
 	struct phl_sound_obj *snd = (struct phl_sound_obj *)phl_info->snd_obj;
-	struct phl_sound_param *snd_param = &snd->snd_param;
 	struct rtw_phl_stainfo_t *sta_info = NULL;
 	u8 *f_ru_tbl = NULL;
 
@@ -1190,7 +1173,7 @@ _phl_snd_proc_fw_cmd_he_tb_2sta(struct phl_info_t *phl_info,
 			1,
 			(bfrp_num == 1) ? 0 : 1,
 			(bfrp_num == 1) ? 1 : 0);
-#endif
+#endif // if 0 NEO
 }
 
 /* HE TB Sounding : 3 sta in a grp */
@@ -1200,14 +1183,11 @@ _phl_snd_proc_fw_cmd_he_tb_3sta(struct phl_info_t *phl_info,
 				u8 *cmd, u8 bfrp_num)
 {
 	struct phl_sound_obj *snd = (struct phl_sound_obj *)phl_info->snd_obj;
-	struct phl_sound_param *snd_param = &snd->snd_param;
 	struct rtw_phl_stainfo_t *sta_info = NULL;
 	u8 *f_ru_tbl = NULL;
 
-	RTW_ERR("%s TODO NEO\n", __func__);
-
+	RTW_ERR("%s NEO TODO\n", __func__);
 #if 0 // NEO TODO
-
 	if(grp->num_sta != 3)
 		return;
 	/* get first sta */
@@ -1260,12 +1240,10 @@ _phl_snd_proc_fw_cmd_he_tb_3sta(struct phl_info_t *phl_info,
 			2,
 			(bfrp_num == 1) ? 0 : 1,
 			(bfrp_num == 1) ? 2 : 0);
-
 #endif // if 0 NEO
-
 }
 
-#if 0 // NEO TODO 
+#if 0 // NEO TODO
 /* HE TB Sounding : 4 sta in a grp */
 void
 _phl_snd_proc_fw_cmd_he_tb_4sta(struct phl_info_t *phl_info,
@@ -1273,7 +1251,6 @@ _phl_snd_proc_fw_cmd_he_tb_4sta(struct phl_info_t *phl_info,
 				u8 *cmd, u8 bfrp_num)
 {
 	struct phl_sound_obj *snd = (struct phl_sound_obj *)phl_info->snd_obj;
-	struct phl_sound_param *snd_param = &snd->snd_param;
 	struct rtw_phl_stainfo_t *sta_info = NULL;
 	u8 *f_ru_tbl = NULL;
 
@@ -1345,13 +1322,14 @@ _phl_snd_proc_fw_cmd_he_tb_4sta(struct phl_info_t *phl_info,
 }
 #endif
 
+
 enum rtw_phl_status
 phl_snd_proc_start_sounding_fw(struct phl_info_t *phl_info,
 			       struct phl_snd_grp *grp)
 {
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_FAILURE;
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_FAILURE;
-
+	
 	RTW_ERR("%s NEO TODO\n", __func__);
 #if 0 // NEO TODO
 	struct phl_sound_obj *snd = (struct phl_sound_obj *)phl_info->snd_obj;
@@ -1500,8 +1478,8 @@ phl_snd_proc_start_sounding_fw(struct phl_info_t *phl_info,
 		}
 		pstatus = RTW_PHL_STATUS_SUCCESS;
 	} while (0);
-#endif // if 0
 	PHL_TRACE(COMP_PHL_SOUND, _PHL_INFO_, "<== phl_snd_proc_start_sounding_fw \n");
+#endif // if 0 NEO
 	return pstatus;
 }
 
@@ -1568,9 +1546,6 @@ enum rtw_phl_status
 _phl_snd_proc_postcfg_sta(struct phl_info_t *phl_info,
 				struct phl_snd_grp *grp)
 {
-	RTW_ERR("%s NEO TODO\n", __func__);
-	return PHL_SND_STS_FAILURE;
-#if 0 // NEO
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_SUCCESS;
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_SUCCESS;
 	struct phl_sound_obj *snd = (struct phl_sound_obj *)phl_info->snd_obj;
@@ -1613,7 +1588,6 @@ _phl_snd_proc_postcfg_sta(struct phl_info_t *phl_info,
 	}
 
 	return pstatus;
-#endif // if 0 NEO
 }
 /* SND PROC Post Config API for FSM */
 enum rtw_phl_status
@@ -1621,10 +1595,6 @@ phl_snd_proc_postcfg(struct phl_info_t *phl_info, struct phl_snd_grp *grp)
 {
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_SUCCESS;
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_SUCCESS;
-	struct phl_sound_obj *snd = (struct phl_sound_obj *)phl_info->snd_obj;
-	struct rtw_phl_stainfo_t *psta_info = NULL;
-	struct phl_snd_sta *sta = NULL;
-	u8 idx = 0;
 	bool mu = false, he = true;
 
 	FUNCIN();
@@ -1777,10 +1747,8 @@ phl_snd_polling_pri_sta_sts(struct phl_info_t *phl_info,
 			    struct phl_snd_grp *grp)
 {
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_SUCCESS;
-	struct phl_sound_obj *snd = (struct phl_sound_obj *)phl_info->snd_obj;
-	struct rtw_wifi_role_t *role =
-		(struct rtw_wifi_role_t *)snd->snd_param.m_wrole;
 	struct rtw_phl_stainfo_t *sta = NULL;
+
 	PHL_TRACE(COMP_PHL_SOUND, _PHL_INFO_,
 		  "phl_snd_polling_stutus : polling primay sta sounding status\n");
 	sta = rtw_phl_get_stainfo_by_macid(phl_info, grp->sta[0].macid);
@@ -1805,7 +1773,12 @@ phl_snd_mac_ctrl(struct phl_info_t *phl_info,
 }
 
 enum rtw_phl_status
-rtw_phl_snd_init_ops_send_ndpa(void *phl, void *snd_send_ndpa)
+rtw_phl_snd_init_ops_send_ndpa(void *phl,
+                               enum rtw_phl_status (*snd_send_ndpa)(void *,
+                                                                  struct rtw_wifi_role_t *,
+                                                                  u8 *,
+                                                                  u32 *,
+                                                                  enum channel_width))
 {
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_FAILURE;
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
@@ -1819,4 +1792,3 @@ rtw_phl_snd_init_ops_send_ndpa(void *phl, void *snd_send_ndpa)
 	}
 	return pstatus;
 }
-
