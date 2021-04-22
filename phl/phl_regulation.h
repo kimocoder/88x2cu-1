@@ -86,4 +86,7 @@ struct rtw_regulation {
 	u8 regulation_6g;
 };
 
+bool rtw_phl_regulation_query_ch(void *phl, enum band_type band, u8 channel,
+					struct rtw_regulation_channel *ch);
+
 #endif /* _PHL_REGULATION_H_ */

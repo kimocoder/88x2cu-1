@@ -29,7 +29,6 @@ phl_get_wrole_by_addr(struct phl_info_t *phl_info, u8 *mac_addr);
 enum rtw_phl_status
 phl_role_notify(struct phl_info_t *phl_info, struct rtw_wifi_role_t *wrole);
 
-#ifdef RTW_WKARD_RADIO_IPS_FLOW
 enum rtw_phl_status
 phl_role_recover(struct phl_info_t *phl_info);
 enum rtw_phl_status
@@ -38,10 +37,6 @@ enum rtw_phl_status
 phl_role_suspend(struct phl_info_t *phl_info);
 enum rtw_phl_status
 phl_cmd_role_suspend(struct phl_info_t *phl_info);
-#else
-#define phl_cmd_role_recover(_phl_info) (RTW_PHL_STATUS_SUCCESS)
-#define phl_cmd_role_suspend(_phl_info) (RTW_PHL_STATUS_SUCCESS)
-#endif
 
 #ifdef RTW_WKARD_LPS_ROLE_CONFIG
 void phl_role_recover_unused_role(struct phl_info_t *phl_info,

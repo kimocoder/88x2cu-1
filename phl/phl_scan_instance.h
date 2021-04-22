@@ -42,6 +42,7 @@ struct instance_strategy {
 };
 
 struct instance_channel {
+	enum band_type band;
 	u8 channel;
 	u8 property;
 	u8 active;
@@ -54,9 +55,6 @@ struct instance {
 	u32 cnt; /* channel cnt */
 	struct instance_channel ch[MAX_SCAN_INSTANCE];
 };
-
-bool rtw_phl_regulation_query_ch(void *phl, u8 channel,
-				struct rtw_regulation_channel *ch);
 
 
 #endif /* _PHL_SCAN_INSTANCE_H_ */

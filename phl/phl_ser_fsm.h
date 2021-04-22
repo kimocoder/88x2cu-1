@@ -22,7 +22,6 @@ struct ser_obj *phl_ser_new_obj(struct fsm_main *fsm,
 	struct phl_info_t *phl_info);
 void phl_ser_destory_obj(struct ser_obj *pser);
 enum rtw_phl_status phl_ser_cancel(void *phl);
-enum rtw_phl_status phl_ser_event_notify(void *phl, u8* p_ntfy);
 enum rtw_phl_status phl_ser_event_to_fw(void *phl, u32 err);
 enum rtw_phl_status rtw_phl_ser_dump_ple_buffer(void *phl);
 enum rtw_phl_status phl_fw_watchdog_timeout_notify(void *phl);

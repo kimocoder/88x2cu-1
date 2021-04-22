@@ -49,7 +49,6 @@
 #include "phl_btc.h"
 #include "phl_cmd_job.h"
 #include "phl_connect.h"
-#include "phl_ps_api.h"
 #include "phl_ecsa_export.h"
 
 #endif /*_PHL_HEADERS_CORE_H_*/

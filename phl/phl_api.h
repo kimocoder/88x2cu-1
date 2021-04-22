@@ -70,6 +70,9 @@ enum rtw_phl_status rtw_phl_start(void *phl);
 void rtw_phl_stop(void *phl);
 bool rtw_phl_is_init_completed(void *phl);
 
+void rtw_phl_ps_set_rt_cap(void *phl, u8 band_idx, bool ps_allow);
+enum rtw_phl_status rtw_phl_ps_set_rf_state(void *phl, u8 band_idx, enum rtw_rf_state rf_state);
+
 enum rtw_phl_status rtw_phl_suspend(void *phl, struct rtw_phl_stainfo_t *sta, u8 wow_en);
 enum rtw_phl_status rtw_phl_resume(void *phl, struct rtw_phl_stainfo_t *sta, u8 *hw_reinit);
 
@@ -334,7 +337,7 @@ rtw_phl_dbcc_test(void *phl, enum dbcc_test_id id, void *param);
 #ifdef CONFIG_PHL_CHANNEL_INFO
 enum rtw_phl_status
 rtw_phl_cmd_cfg_chinfo(void *phl, struct rtw_phl_stainfo_t *sta,
-		       enum phl_cmd_type cmd_type, u32 cmd_timeout);
+		      u8 enable, enum phl_cmd_type cmd_type, u32 cmd_timeout);
 enum rtw_phl_status rtw_phl_query_chan_info(void *phl, u32 buf_len,
 	u8* chan_info_buffer, u32 *length, struct csi_header_t *csi_header);
 #endif /* CONFIG_PHL_CHANNEL_INFO */
@@ -362,12 +365,15 @@ bool rtw_phl_generate_scan_instance(struct instance_strategy *strategy,
 				struct rtw_regulation_chplan *chplan,
 				struct instance *inst);
 bool rtw_phl_scan_instance_insert_ch(void *phl, struct instance *inst,
-					u8 channel, u8 strategy_period);
-bool rtw_phl_regulation_valid_channel(void *phl, u16 channel, u8 reject);
-bool rtw_phl_regulation_dfs_channel(void *phl, u16 channel, bool *dfs);
+					enum band_type band, u8 channel,
+						u8 strategy_period);
+bool rtw_phl_regulation_valid_channel(void *phl, enum band_type band,
+					u16 channel, u8 reject);
+bool rtw_phl_regulation_dfs_channel(void *phl, enum band_type band,
+					u16 channel, bool *dfs);
 bool rtw_phl_query_regulation_info(void *phl, struct rtw_regulation_info *info);
-bool rtw_phl_regulation_query_ch(void *phl, u8 channel,
-				struct rtw_regulation_channel *ch);
+bool rtw_phl_regulation_query_ch(void *phl, enum band_type band, u8 channel,
+					struct rtw_regulation_channel *ch);
 
 enum rtw_phl_status rtw_phl_get_mac_addr_efuse(void* phl, u8 *addr);
 
@@ -402,6 +408,10 @@ enum rtw_phl_status rtw_phl_chanctx_del_no_self(void *phl, struct rtw_wifi_role_
 int rtw_phl_mr_get_chanctx_num(void *phl, struct rtw_wifi_role_t *wifi_role);
 enum rtw_phl_status rtw_phl_mr_get_chandef(void *phl, struct rtw_wifi_role_t *wifi_role,
 							struct rtw_chan_def *chandef);
+#ifdef CONFIG_MCC_SUPPORT
+u8 rtw_phl_mr_query_mcc_inprogress (void *phl, struct rtw_wifi_role_t *wrole,
+							enum rtw_phl_mcc_chk_inprocess_type check_type);
+#endif
 
 u8 rtw_phl_mr_dump_mac_addr(void *phl,
 					struct rtw_wifi_role_t *wifi_role);
@@ -465,7 +475,12 @@ rtw_phl_bfee_ctrl(void *phl, struct rtw_wifi_role_t *wrole, bool ctrl);
 #endif
 
 enum rtw_phl_status
-rtw_phl_snd_init_ops_send_ndpa(void *phl, void *snd_send_ndpa);
+rtw_phl_snd_init_ops_send_ndpa(void *phl,
+                               enum rtw_phl_status (*snd_send_ndpa)(void *,
+                                                                  struct rtw_wifi_role_t *,
+                                                                  u8 *,
+                                                                  u32 *,
+                                                                  enum channel_width));
 
 u8 rtw_phl_snd_chk_in_progress(void *phl);
 
@@ -480,8 +495,8 @@ void rtw_phl_init_ppdu_sts_para(struct rtw_phl_com_t *phl_com,
 				bool en_psts_per_pkt, bool psts_ampdu,
 				u8 rx_fltr);
 
-enum rtw_phl_status rtw_phl_radio_on(void *phl);
-enum rtw_phl_status rtw_phl_radio_off(void *phl);
+enum rtw_phl_status rtw_phl_rf_on(void *phl);
+enum rtw_phl_status rtw_phl_rf_off(void *phl);
 
 
 #ifdef CONFIG_PHL_TWT
@@ -603,6 +618,25 @@ rtw_phl_cmd_get_usb_support_ability(void *phl, u32* ability,
 				enum phl_band_idx band_idx,
 				enum phl_cmd_type cmd_type, u32 cmd_timeout);
 u8 rtw_phl_get_sta_mgnt_rssi(struct rtw_phl_stainfo_t *psta);
+
+enum rtw_phl_status
+rtw_phl_txsts_rpt_config(void *phl, struct rtw_phl_stainfo_t *phl_sta);
+
+#ifdef CONFIG_USB_HCI
+/* tx_ok/tx_fail are from release report*/
+enum rtw_phl_status
+rtw_phl_get_tx_ok_rpt(void *phl, struct rtw_phl_stainfo_t *phl_sta, u32 *tx_ok_cnt,
+ enum phl_ac_queue qsel);
+
+enum rtw_phl_status
+rtw_phl_get_tx_fail_rpt(void *phl, struct rtw_phl_stainfo_t *phl_sta, u32 *tx_fail_cnt,
+ enum phl_ac_queue qsel);
+
+/* tx retry is from ra sts report.*/
+enum rtw_phl_status
+rtw_phl_get_tx_retry_rpt(void *phl, struct rtw_phl_stainfo_t *phl_sta, u32 *tx_retry_cnt,
+ enum phl_ac_queue qsel);
+#endif /* CONFIG_USB_HCI */
 
 #endif /*_PHL_API_H_*/
 

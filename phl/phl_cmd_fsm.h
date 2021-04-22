@@ -33,7 +33,6 @@ struct _cmd_obj {
 
 	u8 wdog_pwr_level;
 	u32 wdog_pause_num;
-	u32 pm_token;
 	bool has_power;
 
 	struct	list_head wd_q;

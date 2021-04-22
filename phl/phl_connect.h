@@ -65,12 +65,18 @@ enum rtw_phl_status rtw_phl_disconnect(void *phl,
 				       struct rtw_wifi_role_t *wrole,
 				       bool is_disconnect);
 #else
+enum rtw_phl_status rtw_phl_disconnect_prepare(void *phl,
+					struct rtw_wifi_role_t *wrole);
 enum rtw_phl_status rtw_phl_disconnect(void *phl,
 				       struct rtw_wifi_role_t *wrole);
 #endif
 
+enum rtw_phl_status rtw_phl_ap_start_prepare(void *phl,
+				      struct rtw_wifi_role_t *wrole);
 enum rtw_phl_status rtw_phl_ap_started(void *phl,
 				      struct rtw_wifi_role_t *wrole);
+enum rtw_phl_status rtw_phl_ap_stop_prepare(void *phl,
+					struct rtw_wifi_role_t *wrole);
 enum rtw_phl_status rtw_phl_ap_stop(void *phl,
 				      struct rtw_wifi_role_t *wrole);
 
