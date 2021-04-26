@@ -985,12 +985,15 @@ extern void rtw_clt_port_deinit(struct clt_port_t  *cltp);
 struct dvobj_priv *devobj_init(void)
 {
 	struct dvobj_priv *pdvobj = NULL;
+	struct rf_ctl_t *rfctl;
 
 	rtw_dbg_mem_init();
 
 	pdvobj = (struct dvobj_priv *)rtw_zmalloc(sizeof(*pdvobj));
 	if (pdvobj == NULL)
 		return NULL;
+
+	rfctl = dvobj_to_rfctl(pdvobj);
 
 	_rtw_mutex_init(&pdvobj->hw_init_mutex);
 	_rtw_mutex_init(&pdvobj->h2c_fwcmd_mutex);
@@ -1061,6 +1064,7 @@ struct dvobj_priv *devobj_init(void)
 	pdvobj->en_napi_dynamic = 0;
 #endif /* CONFIG_RTW_NAPI_DYNAMIC */
 
+	_rtw_mutex_init(&rfctl->offch_mutex);
 
 #ifdef CONFIG_RTW_TPT_MODE
 	pdvobj->tpt_mode = 0;

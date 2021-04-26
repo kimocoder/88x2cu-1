@@ -321,8 +321,6 @@ void rtw_rfctl_init(struct dvobj_priv *dvobj)
 	struct rf_ctl_t *rfctl = adapter_to_rfctl(adapter);
 	int ret;
 
-	_rtw_mutex_init(&rfctl->offch_mutex);
-
 #if CONFIG_TXPWR_LIMIT
 	_rtw_mutex_init(&rfctl->txpwr_lmt_mutex);
 	_rtw_init_listhead(&rfctl->reg_exc_list);
