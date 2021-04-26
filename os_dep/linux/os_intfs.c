@@ -1001,26 +1001,10 @@ struct dvobj_priv *devobj_init(void)
 	_rtw_mutex_init(&pdvobj->setbw_mutex);
 	_rtw_mutex_init(&pdvobj->rf_read_reg_mutex);
 	_rtw_mutex_init(&pdvobj->ioctrl_mutex);
-#ifdef CONFIG_SDIO_INDIRECT_ACCESS
-	_rtw_mutex_init(&pdvobj->sd_indirect_access_mutex);
-#endif
-#ifdef CONFIG_SYSON_INDIRECT_ACCESS
-	_rtw_mutex_init(&pdvobj->syson_indirect_access_mutex);
-#endif
 #ifdef CONFIG_RTW_CUSTOMER_STR
 	_rtw_mutex_init(&pdvobj->customer_str_mutex);
 	_rtw_memset(pdvobj->customer_str, 0xFF, RTW_CUSTOMER_STR_LEN);
 #endif
-#ifdef CONFIG_PROTSEL_PORT
-	_rtw_mutex_init(&pdvobj->protsel_port.mutex);
-#endif
-#ifdef CONFIG_PROTSEL_ATIMDTIM
-	_rtw_mutex_init(&pdvobj->protsel_atimdtim.mutex);
-#endif
-#ifdef CONFIG_PROTSEL_MACSLEEP
-	_rtw_mutex_init(&pdvobj->protsel_macsleep.mutex);
-#endif
-
 	pdvobj->processing_dev_remove = _FALSE;
 
 	ATOMIC_SET(&pdvobj->disable_func, 0);
@@ -1031,34 +1015,19 @@ struct dvobj_priv *devobj_init(void)
 #endif
 	_rtw_spinlock_init(&pdvobj->cam_ctl.lock);
 	_rtw_mutex_init(&pdvobj->cam_ctl.sec_cam_access_mutex);
-#if defined(CONFIG_PLATFORM_RTK129X) && defined(CONFIG_PCI_HCI)
+#if defined(RTK_129X_PLATFORM) && defined(CONFIG_PCI_HCI)
 	_rtw_spinlock_init(&pdvobj->io_reg_lock);
 #endif
 #ifdef CONFIG_MBSSID_CAM
 	rtw_mbid_cam_init(pdvobj);
 #endif
 
-#ifdef CONFIG_AP_MODE
-	#ifdef CONFIG_SUPPORT_MULTI_BCN
-	pdvobj->nr_ap_if = 0;
-	pdvobj->inter_bcn_space = DEFAULT_BCN_INTERVAL; /* default value is equal to the default beacon_interval (100ms) */
-	_rtw_init_queue(&pdvobj->ap_if_q);
-	pdvobj->vap_map = 0;
-	#endif /*CONFIG_SUPPORT_MULTI_BCN*/
-	#ifdef CONFIG_SWTIMER_BASED_TXBCN
+	#if 0 /*#ifdef CONFIG_CORE_DM_CHK_TIMER*/
 	rtw_init_timer(&(pdvobj->txbcn_timer), tx_beacon_timer_handlder, pdvobj);
 	#endif
-#endif
 
 	rtw_init_timer(&(pdvobj->dynamic_chk_timer), rtw_dynamic_check_timer_handlder, pdvobj);
 	rtw_init_timer(&(pdvobj->periodic_tsf_update_end_timer), rtw_hal_periodic_tsf_update_end_timer_hdl, pdvobj);
-
-#ifdef CONFIG_MCC_MODE
-	_rtw_mutex_init(&(pdvobj->mcc_objpriv.mcc_mutex));
-	_rtw_mutex_init(&(pdvobj->mcc_objpriv.mcc_tsf_req_mutex));
-	_rtw_mutex_init(&(pdvobj->mcc_objpriv.mcc_dbg_reg_mutex));
-	_rtw_spinlock_init(&pdvobj->mcc_objpriv.mcc_lock);
-#endif /* CONFIG_MCC_MODE */
 
 #ifdef CONFIG_RTW_NAPI_DYNAMIC
 	pdvobj->en_napi_dynamic = 0;
