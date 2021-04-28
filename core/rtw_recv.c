@@ -3993,16 +3993,12 @@ int recv_func(_adapter *padapter, union recv_frame *rframe)
 	struct recv_priv *recvpriv = &adapter_to_dvobj(padapter)->recvpriv;
 	struct security_priv *psecuritypriv = &padapter->securitypriv;
 	struct mlme_priv *mlmepriv = &padapter->mlmepriv;
-	u8 *ptr = rframe->u.hdr.rx_data;
 #ifdef CONFIG_CUSTOMER_ALIBABA_GENERAL
 	u8 type;
+	u8 *ptr = rframe->u.hdr.rx_data;
 #endif
 
-	if (check_fwstate(mlmepriv, WIFI_MONITOR_STATE) 
-#ifdef RTW_SIMPLE_CONFIG
-		|| (check_fwstate(mlmepriv, WIFI_AP_STATE) && padapter->rtw_simple_config == _TRUE && IS_MCAST(get_ra(ptr)))
-#endif
-		) {
+	if (check_fwstate(mlmepriv, WIFI_MONITOR_STATE)) {
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 24))
 		recv_frame_monitor(padapter, rframe);
 #endif
@@ -4012,7 +4008,7 @@ int recv_func(_adapter *padapter, union recv_frame *rframe)
 
 #ifdef CONFIG_CUSTOMER_ALIBABA_GENERAL
 	type = GetFrameType(ptr);
-	if ((type == WIFI_DATA_TYPE)&& check_fwstate(mlmepriv, WIFI_STATION_STATE)) {
+	if ((type == WIFI_DATA_TYPE)&& MLME_IS_STA(padapter)) {
 		struct wlan_network *cur_network = &(mlmepriv->cur_network);
 		if ( _rtw_memcmp(get_addr2_ptr(ptr), cur_network->network.MacAddress, ETH_ALEN)==0) {
 			recv_frame_monitor(padapter, rframe);
@@ -4023,7 +4019,7 @@ int recv_func(_adapter *padapter, union recv_frame *rframe)
 #endif
 	#if 0 // G6 doesn't have sw dec yet
 		/* check if need to handle uc_swdec_pending_queue*/
-		if (check_fwstate(mlmepriv, WIFI_STATION_STATE) && psecuritypriv->busetkipkey) {
+		if (MLME_IS_STA(padapter) && psecuritypriv->busetkipkey) {
 			union recv_frame *pending_frame;
 			int cnt = 0;
 
@@ -4045,7 +4041,7 @@ int recv_func(_adapter *padapter, union recv_frame *rframe)
 	if (ret == _SUCCESS) {
 	#if 0 // G6 doesn't have sw dec yet
 		/* check if need to enqueue into uc_swdec_pending_queue*/
-		if (check_fwstate(mlmepriv, WIFI_STATION_STATE) &&
+		if (MLME_IS_STA(padapter) &&
 		    !IS_MCAST(prxattrib->ra) && prxattrib->encrypt > 0 &&
 		    (prxattrib->bdecrypted == 0 || psecuritypriv->sw_decrypt == _TRUE) &&
 		    psecuritypriv->ndisauthtype == Ndis802_11AuthModeWPAPSK &&
@@ -4072,7 +4068,7 @@ exit:
 	return ret;
 }
 
-
+#if 0 //NEO
 s32 rtw_recv_entry(union recv_frame *precvframe)
 {
 	_adapter *padapter;
@@ -4108,6 +4104,7 @@ _recv_entry_drop:
 
 	return ret;
 }
+#endif // NEO
 
 #ifdef CONFIG_SIGNAL_STAT_PROCESS
 static void rtw_signal_stat_timer_hdl(void *ctx)
@@ -4835,56 +4832,6 @@ void rtw_free_lite_recv_resource(struct dvobj_priv *dvobj)
 #endif
 
 }
-
-#if DBG_RX_BH_TRACKING
-void rx_bh_tk_set_stage(struct recv_priv *recv, u32 s)
-{
-	recv->rx_bh_stage = s;
-}
-
-void rx_bh_tk_set_buf(struct recv_priv *recv, void *buf, void *data, u32 dlen)
-{
-	if (recv->rx_bh_cbuf)
-		recv->rx_bh_lbuf = recv->rx_bh_cbuf;
-	recv->rx_bh_cbuf = buf;
-	if (buf) {
-		recv->rx_bh_cbuf_data = data;
-		recv->rx_bh_cbuf_dlen = dlen;
-		recv->rx_bh_buf_dq_cnt++;
-	} else {
-		recv->rx_bh_cbuf_data = NULL;
-		recv->rx_bh_cbuf_dlen = 0;
-	}
-}
-
-void rx_bh_tk_set_buf_pos(struct recv_priv *recv, void *pos)
-{
-	if (recv->rx_bh_cbuf) {
-		recv->rx_bh_cbuf_pos = pos - recv->rx_bh_cbuf_data;
-	} else {
-		rtw_warn_on(1);
-		recv->rx_bh_cbuf_pos = 0;
-	}
-}
-
-void rx_bh_tk_set_frame(struct recv_priv *recv, void *frame)
-{
-	recv->rx_bh_cframe = frame;
-}
-
-void dump_rx_bh_tk(void *sel, struct recv_priv *recv)
-{
-	RTW_PRINT_SEL(sel, "[RXBHTK]s:%u, buf_dqc:%u, lbuf:%p, cbuf:%p, dlen:%u, pos:%u, cframe:%p\n"
-		, recv->rx_bh_stage
-		, recv->rx_bh_buf_dq_cnt
-		, recv->rx_bh_lbuf
-		, recv->rx_bh_cbuf
-		, recv->rx_bh_cbuf_dlen
-		, recv->rx_bh_cbuf_pos
-		, recv->rx_bh_cframe
-	);
-}
-#endif /* DBG_RX_BH_TRACKING */
 
 
 #ifdef RTW_PHL_RX
