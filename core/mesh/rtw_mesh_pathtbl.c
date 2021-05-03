@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright(c) 2007 - 2017 Realtek Corporation.
+ * Copyright(c) 2007 - 2019 Realtek Corporation.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -117,7 +117,7 @@ void rtw_mesh_path_assign_nexthop(struct rtw_mesh_path *mpath, struct sta_info *
 	while (rtw_end_of_queue_search(head, list) == _FALSE) {
 		xframe = LIST_CONTAINOR(list, struct xmit_frame, list);
 		list = get_next(list);
-		_rtw_memcpy(xframe->attrib.ra, sta->cmn.mac_addr, ETH_ALEN);
+		_rtw_memcpy(xframe->attrib.ra, sta->phl_sta->mac_addr, ETH_ALEN);
 	}
 
 	_rtw_spinunlock_bh(&mpath->frame_queue.lock);
@@ -134,7 +134,7 @@ static void rtw_prepare_for_gate(struct xmit_frame *xframe, char *dst_addr,
 
 	/* update next hop */
 	rtw_rcu_read_lock();
-	next_hop = rtw_rcu_dereference(gate_mpath->next_hop)->cmn.mac_addr;
+	next_hop = rtw_rcu_dereference(gate_mpath->next_hop)->phl_sta->mac_addr;
 	_rtw_memcpy(attrib->ra, next_hop, ETH_ALEN);
 	rtw_rcu_read_unlock();
 	_rtw_memcpy(attrib->mda, dst_addr, ETH_ALEN);
@@ -166,7 +166,6 @@ static void rtw_mesh_path_move_to_queue(struct rtw_mesh_path *gate_mpath,
 	_list *list, *head;
 	_list failq;
 	u32 failq_len;
-	_irqL flags;
 
 	if (rtw_warn_on(gate_mpath == from_mpath))
 		return;
@@ -175,11 +174,11 @@ static void rtw_mesh_path_move_to_queue(struct rtw_mesh_path *gate_mpath,
 
 	_rtw_init_listhead(&failq);
 
-	__rtw_spinlock_bh(&from_mpath->frame_queue.lock, &flags);
+	_rtw_spinlock_bh(&from_mpath->frame_queue.lock);
 	rtw_list_splice_init(&from_mpath->frame_queue.queue, &failq);
 	failq_len = from_mpath->frame_queue_len;
 	from_mpath->frame_queue_len = 0;
-	__rtw_spinunlock_bh(&from_mpath->frame_queue.lock, &flags);
+	_rtw_spinunlock_bh(&from_mpath->frame_queue.lock);
 
 	head = &failq;
 	list = get_next(head);
@@ -196,10 +195,10 @@ static void rtw_mesh_path_move_to_queue(struct rtw_mesh_path *gate_mpath,
 		rtw_list_delete(&fskb->list);
 		failq_len--;
 		rtw_prepare_for_gate(fskb, gate_mpath->dst, gate_mpath);
-		__rtw_spinlock_bh(&gate_mpath->frame_queue.lock, &flags);
+		_rtw_spinlock_bh(&gate_mpath->frame_queue.lock);
 		rtw_list_insert_tail(&fskb->list, get_list_head(&gate_mpath->frame_queue));
 		gate_mpath->frame_queue_len++;
-		__rtw_spinunlock_bh(&gate_mpath->frame_queue.lock, &flags);
+		_rtw_spinunlock_bh(&gate_mpath->frame_queue.lock);
 
 		#if 0 /* TODO: copy */
 		skb = rtw_skb_copy(fskb);
@@ -223,10 +222,10 @@ static void rtw_mesh_path_move_to_queue(struct rtw_mesh_path *gate_mpath,
 	if (!copy)
 		return;
 
-	__rtw_spinlock_bh(&from_mpath->frame_queue.lock, &flags);
+	_rtw_spinlock_bh(&from_mpath->frame_queue.lock);
 	rtw_list_splice(&failq, &from_mpath->frame_queue.queue);
 	from_mpath->frame_queue_len += failq_len;
-	__rtw_spinunlock_bh(&from_mpath->frame_queue.lock, &flags);
+	_rtw_spinunlock_bh(&from_mpath->frame_queue.lock);
 }
 
 
@@ -345,7 +344,7 @@ void dump_mpath(void *sel, _adapter *adapter)
 		mpath = rtw_mesh_path_lookup_by_idx(adapter, idx);
 		if (mpath) {
 			_rtw_memcpy(dst, mpath->dst, ETH_ALEN);
-			_rtw_memcpy(next_hop, mpath->next_hop->cmn.mac_addr, ETH_ALEN);
+			_rtw_memcpy(next_hop, mpath->next_hop->phl_sta->mac_addr, ETH_ALEN);
 			sn = mpath->sn;
 			metric = mpath->metric;
 			qlen = mpath->frame_queue_len;
