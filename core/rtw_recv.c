@@ -206,19 +206,6 @@ void rtw_mfree_recv_priv_lock(struct recv_priv *precvpriv)
 #endif /* CONFIG_USE_USB_BUFFER_ALLOC_RX */
 }
 
-bool rtw_rframe_del_wfd_ie(union recv_frame *rframe, u8 ies_offset)
-{
-#define DBG_RFRAME_DEL_WFD_IE 0
-	u8 *ies = rframe->u.hdr.rx_data + sizeof(struct rtw_ieee80211_hdr_3addr) + ies_offset;
-	uint ies_len_ori = rframe->u.hdr.len - (ies - rframe->u.hdr.rx_data);
-	uint ies_len;
-
-	ies_len = rtw_del_wfd_ie(ies, ies_len_ori, DBG_RFRAME_DEL_WFD_IE ? __func__ : NULL);
-	rframe->u.hdr.len -= ies_len_ori - ies_len;
-
-	return ies_len_ori != ies_len;
-}
-
 union recv_frame *_rtw_alloc_recvframe(_queue *pfree_recv_queue)
 {
 
@@ -322,9 +309,21 @@ int rtw_free_recvframe(union recv_frame *precvframe)
 
 }
 
+bool rtw_rframe_del_wfd_ie(union recv_frame *rframe, u8 ies_offset)
+{
+#define DBG_RFRAME_DEL_WFD_IE 0
+	u8 *ies = rframe->u.hdr.rx_data + sizeof(struct rtw_ieee80211_hdr_3addr) + ies_offset;
+	uint ies_len_ori = rframe->u.hdr.len - (ies - rframe->u.hdr.rx_data);
+	uint ies_len;
+
+	ies_len = rtw_del_wfd_ie(ies, ies_len_ori, DBG_RFRAME_DEL_WFD_IE ? __func__ : NULL);
+	rframe->u.hdr.len -= ies_len_ori - ies_len;
+
+	return ies_len_ori != ies_len;
+}
 
 
-
+#if 0
 sint _rtw_enqueue_recvframe(union recv_frame *precvframe, _queue *queue)
 {
 
@@ -347,7 +346,6 @@ sint _rtw_enqueue_recvframe(union recv_frame *precvframe, _queue *queue)
 	return _SUCCESS;
 }
 
-#if 0
 sint rtw_enqueue_recvframe(union recv_frame *precvframe, _queue *queue)
 {
 	sint ret;

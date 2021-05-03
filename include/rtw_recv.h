@@ -711,7 +711,6 @@ extern void rtw_init_recvframe(union recv_frame *precvframe , struct recv_priv *
 extern int	 rtw_free_recvframe(union recv_frame *precvframe);
 
 #define rtw_dequeue_recvframe(queue) rtw_alloc_recvframe(queue)
-extern int _rtw_enqueue_recvframe(union recv_frame *precvframe, _queue *queue);
 
 void process_pwrbit_data(_adapter *padapter, union recv_frame *precv_frame, struct sta_info *psta);
 void process_wmmps_data(_adapter *padapter, union recv_frame *precv_frame, struct sta_info *psta);
