@@ -11246,7 +11246,7 @@ static int rtw_tdls(struct net_device *dev,
 
 	RTW_INFO("[%s] extra = %s\n", __FUNCTION__, extra);
 
-	if (hal_chk_wl_func(padapter, WL_FUNC_TDLS) == _FALSE) {
+	if (rtw_hw_chk_wl_func(adapter_to_dvobj(padapter), WL_FUNC_TDLS) == _FALSE) {
 		RTW_INFO("Discard tdls oper since hal doesn't support tdls\n");
 		return 0;
 	}
@@ -11258,7 +11258,7 @@ static int rtw_tdls(struct net_device *dev,
 
 	/* WFD Sigma will use the tdls enable command to let the driver know we want to test the tdls now! */
 
-	if (hal_chk_wl_func(padapter, WL_FUNC_MIRACAST)) {
+	if (rtw_hw_chk_wl_func(adapter_to_dvobj(padapter), WL_FUNC_MIRACAST)) {
 		if (_rtw_memcmp(extra, "wfdenable=", 10)) {
 			wrqu->data.length -= 10;
 			rtw_wx_tdls_wfd_enable(dev, info, wrqu, &extra[10]);
@@ -11309,7 +11309,7 @@ static int rtw_tdls(struct net_device *dev,
 	}
 
 #ifdef CONFIG_WFD
-	if (hal_chk_wl_func(padapter, WL_FUNC_MIRACAST)) {
+	if (rtw_hw_chk_wl_func(adapter_to_dvobj(padapter), WL_FUNC_MIRACAST)) {
 		if (_rtw_memcmp(extra, "setip=", 6)) {
 			wrqu->data.length -= 6;
 			rtw_tdls_setip(dev, info, wrqu, &extra[6]);
@@ -11352,93 +11352,12 @@ static int rtw_tdls_get(struct net_device *dev,
 	return ret;
 }
 
-#ifdef CONFIG_MAC_LOOPBACK_DRIVER
 
-#if defined(CONFIG_RTL8188E)
-#include <rtl8188e_hal.h>
-extern void rtl8188e_cal_txdesc_chksum(struct tx_desc *ptxdesc);
-#define cal_txdesc_chksum(padapter, desc) rtl8188e_cal_txdesc_chksum(desc)
-#ifdef CONFIG_SDIO_HCI || defined(CONFIG_GSPI_HCI)
-extern void rtl8188es_fill_default_txdesc(struct xmit_frame *pxmitframe, u8 *pbuf);
-#define fill_default_txdesc rtl8188es_fill_default_txdesc
-#endif /* CONFIG_SDIO_HCI */
-#endif /* CONFIG_RTL8188E */
-#if defined(CONFIG_RTL8723B)
-extern void rtl8723b_cal_txdesc_chksum(struct tx_desc *ptxdesc);
-#define cal_txdesc_chksum(padapter, desc) rtl8723b_cal_txdesc_chksum(desc)
-extern void rtl8723b_fill_default_txdesc(struct xmit_frame *pxmitframe, u8 *pbuf);
-#define fill_default_txdesc rtl8723b_fill_default_txdesc
-#endif /* CONFIG_RTL8723B */
-
-#if defined(CONFIG_RTL8703B)
-/* extern void rtl8703b_cal_txdesc_chksum(struct tx_desc *ptxdesc); */
-#define cal_txdesc_chksum(padapter, desc) rtl8703b_cal_txdesc_chksum(desc)
-/* extern void rtl8703b_fill_default_txdesc(struct xmit_frame *pxmitframe, u8 *pbuf); */
-#define fill_default_txdesc rtl8703b_fill_default_txdesc
-#endif /* CONFIG_RTL8703B */
-
-#if defined(CONFIG_RTL8723D)
-/* extern void rtl8723d_cal_txdesc_chksum(struct tx_desc *ptxdesc); */
-#define cal_txdesc_chksum(padapter, desc) rtl8723d_cal_txdesc_chksum(desc)
-/* extern void rtl8723d_fill_default_txdesc(struct xmit_frame *pxmitframe, u8 *pbuf); */
-#define fill_default_txdesc rtl8723d_fill_default_txdesc
-#endif /* CONFIG_RTL8723D */
-
-#if defined(CONFIG_RTL8710B)
-#define cal_txdesc_chksum(padapter, desc) rtl8710b_cal_txdesc_chksum(desc)
-#define fill_default_txdesc rtl8710b_fill_default_txdesc
-#endif /* CONFIG_RTL8710B */
-
-#if defined(CONFIG_RTL8192E)
-extern void rtl8192e_cal_txdesc_chksum(struct tx_desc *ptxdesc);
-#define cal_txdesc_chksum(padapter, desc) rtl8192e_cal_txdesc_chksum(desc)
-#ifdef CONFIG_SDIO_HCI || defined(CONFIG_GSPI_HCI)
-extern void rtl8192es_fill_default_txdesc(struct xmit_frame *pxmitframe, u8 *pbuf);
-#define fill_default_txdesc rtl8192es_fill_default_txdesc
-#endif /* CONFIG_SDIO_HCI */
-#endif /* CONFIG_RTL8192E */
-
-#if defined(CONFIG_RTL8192F)
-/* extern void rtl8192f_cal_txdesc_chksum(struct tx_desc *ptxdesc); */
-#define cal_txdesc_chksum(padapter, desc) rtl8192f_cal_txdesc_chksum(desc)
-/* extern void rtl8192f_fill_default_txdesc(struct xmit_frame *pxmitframe, u8 *pbuf); */
-#define fill_default_txdesc rtl8192f_fill_default_txdesc
-#endif /* CONFIG_RTL8192F */
-
-#ifdef CONFIG_RTL8723F
-#include <../../hal/rtl8723f/rtl8723f.h>
-
-#define REG_LOOPBACK_ENABLE 0x0103
-#define LOOKBACK_ENABLE_VALUE 0x0b
-#define cal_txdesc_chksum(padapter, desc) rtl8723f_cal_txdesc_chksum(padapter, desc)
-#define dump_txdesc_data(padapter, desc) rtl8723f_dbg_dump_tx_desc(padapter, DATA_FRAMETAG, desc);
-#define get_rx_desc(rx_desc, rxbuf) rtl8723f_rxdesc2attribute(rx_desc, rxbuf)
-#define hal_init rtl8723f_hal_init
-#endif /* CONFIG_RTL8723F */
-
-void dbg_dump_pkt(char *s, u8 *buf, u8 len)
-{
-	u8 i, j = 1;
-
-	RTW_INFO("%s size = %u\n", s, len);
-
-	for (i = 0; (i + 4) < len; i += 4) {
-		if (j % 4 == 1)
-			RTW_PRINT("idx:%u:", i);
-		_RTW_PRINT(" 0x%02x 0x%02x 0x%02x 0x%02x", buf[i], buf[i+1], buf[i+2], buf[i+3]);
-		if ((j++) % 4 == 0)
-			_RTW_PRINT("\n");
-	}
-
-	for (; i < len ; i++) {
-		_RTW_PRINT(" 0x%02x", buf[i]);
-	}
-	_RTW_PRINT("\n ================================\n");
-}
-
-static s32 initLoopback(PADAPTER padapter)
+#if 0 /*#ifdef CONFIG_MAC_LOOPBACK_DRIVER*/
+static s32 initLoopback(_adapter *padapter)
 {
 	PLOOPBACKDATA ploopback;
+
 
 	if (padapter->ploopback == NULL) {
 		ploopback = (PLOOPBACKDATA)rtw_zmalloc(sizeof(LOOPBACKDATA));
@@ -11457,9 +11376,10 @@ static s32 initLoopback(PADAPTER padapter)
 	return 0;
 }
 
-static void freeLoopback(PADAPTER padapter)
+static void freeLoopback(_adapter *padapter)
 {
 	PLOOPBACKDATA ploopback;
+
 
 	ploopback = padapter->ploopback;
 	if (ploopback) {
@@ -11468,7 +11388,7 @@ static void freeLoopback(PADAPTER padapter)
 	}
 }
 
-static s32 initpseudoadhoc(PADAPTER padapter)
+static s32 initpseudoadhoc(_adapter *padapter)
 {
 	NDIS_802_11_NETWORK_INFRASTRUCTURE networkType;
 	s32 err;
@@ -11485,7 +11405,7 @@ static s32 initpseudoadhoc(PADAPTER padapter)
 	return _SUCCESS;
 }
 
-static s32 createpseudoadhoc(PADAPTER padapter)
+static s32 createpseudoadhoc(_adapter *padapter)
 {
 	NDIS_802_11_AUTHENTICATION_MODE authmode;
 	struct mlme_priv *pmlmepriv;
@@ -11494,6 +11414,7 @@ static s32 createpseudoadhoc(PADAPTER padapter)
 	u8 *pibss;
 	u8 ssid[] = "pseduo_ad-hoc";
 	s32 err;
+
 
 	pmlmepriv = &padapter->mlmepriv;
 
@@ -11515,6 +11436,7 @@ static s32 createpseudoadhoc(PADAPTER padapter)
 	rtw_generate_random_ibss(pibss);
 
 	_rtw_spinlock_bh(&pmlmepriv->lock);
+	/*pmlmepriv->fw_state = WIFI_ADHOC_MASTER_STATE;*/
 	init_fwstate(pmlmepriv, WIFI_ADHOC_MASTER_STATE);
 
 	_rtw_spinunlock_bh(&pmlmepriv->lock);
@@ -11542,20 +11464,16 @@ static s32 createpseudoadhoc(PADAPTER padapter)
 
 		/* 3  join psudo AdHoc */
 		pcur_network->join_res = 1;
-		pcur_network->aid = psta->cmn.aid = 1;
+		pcur_network->aid = psta->phl_sta->aid = 1;
 		_rtw_memcpy(&pcur_network->network, pdev_network, get_WLAN_BSSID_EX_sz(pdev_network));
-
-		/* set msr to WIFI_FW_ADHOC_STATE */
-		padapter->hw_port = HW_PORT0;
-		Set_MSR(padapter, WIFI_FW_ADHOC_STATE);
 
 	}
 #endif
 
 	return _SUCCESS;
 }
-
-static struct xmit_frame *createloopbackpkt(PADAPTER padapter, u32 size)
+/*GEORGIA_TODO_FIXIT_MOVE_TO_HAL*/
+static struct xmit_frame *createloopbackpkt(_adapter *padapter, u32 size)
 {
 	struct xmit_priv *pxmitpriv;
 	struct xmit_frame *pframe;
@@ -11565,15 +11483,17 @@ static struct xmit_frame *createloopbackpkt(PADAPTER padapter, u32 size)
 	u8 *pkt_start, *pkt_end, *ptr;
 	struct rtw_ieee80211_hdr *hdr;
 	s32 bmcast;
+	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
+	u16 xmitbuf_sz = GET_HAL_XMITBUF_SZ(dvobj);
 
-	if ((TXDESC_SIZE + WLANHDR_OFFSET + size) > MAX_XMITBUF_SZ)
+	if ((TXDESC_SIZE + WLANHDR_OFFSET + size) > xmitbuf_sz)
 		return NULL;
 
 	pxmitpriv = &padapter->xmitpriv;
 	pframe = NULL;
 
 	/* 2 1. allocate xmit frame */
-	pframe = rtw_alloc_xmitframe(pxmitpriv, 0);
+	pframe = rtw_alloc_xmitframe(pxmitpriv);
 	if (pframe == NULL)
 		return NULL;
 	pframe->padapter = padapter;
@@ -11623,7 +11543,7 @@ static struct xmit_frame *createloopbackpkt(PADAPTER padapter, u32 size)
 	else
 		pattrib->psta = rtw_get_stainfo(&padapter->stapriv, get_bssid(&padapter->mlmepriv));
 
-	pattrib->mac_id = pattrib->psta->cmn.mac_id;
+	pattrib->mac_id = pattrib->psta->phl_sta->macid;
 	pattrib->pktlen = size;
 	pattrib->last_txcmdsz = pattrib->hdrlen + pattrib->pktlen;
 
@@ -11633,7 +11553,6 @@ static struct xmit_frame *createloopbackpkt(PADAPTER padapter, u32 size)
 
 	fill_default_txdesc(pframe, (u8 *)desc);
 
-#if 0
 	/* Hw set sequence number */
 	((PTXDESC)desc)->hwseq_en = 0; /* HWSEQ_EN, 0:disable, 1:enable
  * ((PTXDESC)desc)->hwseq_sel = 0;  */ /* HWSEQ_SEL */
@@ -11659,10 +11578,8 @@ static struct xmit_frame *createloopbackpkt(PADAPTER padapter, u32 size)
 	desc->txdw14 = cpu_to_le32(desc->txdw14);
 	desc->txdw15 = cpu_to_le32(desc->txdw15);
 #endif
-#endif
 
-	cal_txdesc_chksum(padapter, (u8*)desc);
-	/* dump_txdesc_data(padapter, (u8*)desc); */
+	cal_txdesc_chksum(desc);
 
 	/* 2 5. coalesce */
 	pkt_start = pframe->buf_addr + TXDESC_SIZE;
@@ -11680,19 +11597,16 @@ static struct xmit_frame *createloopbackpkt(PADAPTER padapter, u32 size)
 	get_random_bytes(ptr, pkt_end - ptr);
 
 	pxmitbuf->len = TXDESC_SIZE + pattrib->last_txcmdsz;
-#if defined(CONFIG_SDIO_HCI) || defined(CONFIG_GSPI_HCI)
 	pxmitbuf->ptail += pxmitbuf->len;
-#endif
-
-	dbg_dump_pkt("TX packet", pxmitbuf->pbuf, pxmitbuf->len);
 
 	return pframe;
 }
 
-static void freeloopbackpkt(PADAPTER padapter, struct xmit_frame *pframe)
+static void freeloopbackpkt(_adapter *padapter, struct xmit_frame *pframe)
 {
 	struct xmit_priv *pxmitpriv;
 	struct xmit_buf *pxmitbuf;
+
 
 	pxmitpriv = &padapter->xmitpriv;
 	pxmitbuf = pframe->pxmitbuf;
@@ -11704,6 +11618,7 @@ static void freeloopbackpkt(PADAPTER padapter, struct xmit_frame *pframe)
 static void printdata(u8 *pbuf, u32 len)
 {
 	u32 i, val;
+
 
 	for (i = 0; (i + 4) <= len; i += 4) {
 		printk("%08X", *(u32 *)(pbuf + i));
@@ -11737,25 +11652,16 @@ static void printdata(u8 *pbuf, u32 len)
 	printk("\n");
 }
 
-static u8 pktcmp(PADAPTER padapter, u8 *txbuf, u32 txsz, u8 *rxbuf, u32 rxsz)
+static u8 pktcmp(_adapter *padapter, u8 *txbuf, u32 txsz, u8 *rxbuf, u32 rxsz)
 {
-	struct rx_pkt_attrib rx_desc;
-#if 0
 	struct recv_stat *prxstat;
 	struct recv_stat report;
 	PRXREPORT prxreport;
-#endif
+	u32 drvinfosize;
 	u32 rxpktsize;
-	u8 drvinfosize;
-	u8 shiftsize;
+	u8 fcssize;
 	u8 ret = _FALSE;
-	u8 skip_len = 4; /* Don't compare the frame control and duration field */
-	get_rx_desc(&rx_desc, rxbuf);
-	rxpktsize = rx_desc.pkt_len;
-	drvinfosize = rx_desc.drvinfo_sz;
-	shiftsize = rx_desc.shift_sz;
 
-#if 0
 	prxstat = (struct recv_stat *)rxbuf;
 	report.rxdw0 = le32_to_cpu(prxstat->rxdw0);
 	report.rxdw1 = le32_to_cpu(prxstat->rxdw1);
@@ -11767,19 +11673,20 @@ static u8 pktcmp(PADAPTER padapter, u8 *txbuf, u32 txsz, u8 *rxbuf, u32 rxsz)
 	prxreport = (PRXREPORT)&report;
 	drvinfosize = prxreport->drvinfosize << 3;
 	rxpktsize = prxreport->pktlen;
-#endif
 
 	if (rtw_hal_rcr_check(padapter, RCR_APPFCS))
-		rxpktsize -= IEEE80211_FCS_LEN;
+		fcssize = IEEE80211_FCS_LEN;
+	else
+		fcssize = 0;
 
-	if ((txsz - TXDESC_SIZE) != rxpktsize) {
+	if ((txsz - TXDESC_SIZE) != (rxpktsize - fcssize)) {
 		RTW_INFO("%s: ERROR! size not match tx/rx=%d/%d !\n",
-			 __func__, txsz - TXDESC_SIZE, rxpktsize);
+			 __func__, txsz - TXDESC_SIZE, rxpktsize - fcssize);
 		ret = _FALSE;
 	} else {
-		ret = _rtw_memcmp(txbuf + TXDESC_SIZE + skip_len, \
-				  rxbuf + RXDESC_SIZE + skip_len + drvinfosize, \
-				  txsz - TXDESC_SIZE - skip_len);
+		ret = _rtw_memcmp(txbuf + TXDESC_SIZE, \
+				  rxbuf + RXDESC_SIZE + drvinfosize, \
+				  txsz - TXDESC_SIZE);
 		if (ret == _FALSE)
 			RTW_INFO("%s: ERROR! pkt content mismatch!\n", __func__);
 	}
@@ -11787,29 +11694,118 @@ static u8 pktcmp(PADAPTER padapter, u8 *txbuf, u32 txsz, u8 *rxbuf, u32 rxsz)
 	if (ret == _FALSE) {
 		RTW_INFO("\n%s: TX PKT total=%d, desc=%d, content=%d\n",
 			 __func__, txsz, TXDESC_SIZE, txsz - TXDESC_SIZE);
-		dbg_dump_pkt("TX DESC", txbuf, TXDESC_SIZE);
-		dbg_dump_pkt("TX content", txbuf + TXDESC_SIZE, txsz - TXDESC_SIZE);
+		RTW_INFO("%s: TX DESC size=%d\n", __func__, TXDESC_SIZE);
+		printdata(txbuf, TXDESC_SIZE);
+		RTW_INFO("%s: TX content size=%d\n", __func__, txsz - TXDESC_SIZE);
+		printdata(txbuf + TXDESC_SIZE, txsz - TXDESC_SIZE);
 
 		RTW_INFO("\n%s: RX PKT read=%d offset=%d(%d,%d) content=%d\n",
 			__func__, rxsz, RXDESC_SIZE + drvinfosize, RXDESC_SIZE, drvinfosize, rxpktsize);
 		if (rxpktsize != 0) {
-			dbg_dump_pkt("RX DESC", rxbuf, RXDESC_SIZE);
-			dbg_dump_pkt("RX drvinfo", rxbuf + RXDESC_SIZE, drvinfosize);
-			dbg_dump_pkt("RX packet content", rxbuf + RXDESC_SIZE + drvinfosize, rxpktsize);
+			RTW_INFO("%s: RX DESC size=%d\n", __func__, RXDESC_SIZE);
+			printdata(rxbuf, RXDESC_SIZE);
+			RTW_INFO("%s: RX drvinfo size=%d\n", __func__, drvinfosize);
+			printdata(rxbuf + RXDESC_SIZE, drvinfosize);
+			RTW_INFO("%s: RX content size=%d\n", __func__, rxpktsize);
+			printdata(rxbuf + RXDESC_SIZE + drvinfosize, rxpktsize);
 		} else {
 			RTW_INFO("%s: RX data size=%d\n", __func__, rxsz);
+			printdata(rxbuf, rxsz);
 		}
 	}
 
 	return ret;
 }
 
+thread_return lbk_thread(thread_context context)
+{
+#if 0
+	s32 err;
+	_adapter *padapter;
+	PLOOPBACKDATA ploopback;
+	struct xmit_frame *pxmitframe;
+	u32 cnt, ok, fail, headerlen;
+	u32 pktsize;
+	u32 ff_hwaddr;
 
-static void loopbackTest(PADAPTER padapter, u32 cnt, u32 size, u8 *pmsg)
+
+	padapter = (_adapter *)context;
+	ploopback = padapter->ploopback;
+	if (ploopback == NULL)
+		return -1;
+	cnt = 0;
+	ok = 0;
+	fail = 0;
+
+	daemonize("%s", "RTW_LBK_THREAD");
+	allow_signal(SIGTERM);
+
+	do {
+		if (ploopback->size == 0) {
+			get_random_bytes(&pktsize, 4);
+			pktsize = (pktsize % 1535) + 1; /* 1~1535 */
+		} else
+			pktsize = ploopback->size;
+
+		pxmitframe = createloopbackpkt(padapter, pktsize);
+		if (pxmitframe == NULL) {
+			sprintf(ploopback->msg, "loopback FAIL! 3. create Packet FAIL!");
+			break;
+		}
+
+		ploopback->txsize = TXDESC_SIZE + pxmitframe->attrib.last_txcmdsz;
+		_rtw_memcpy(ploopback->txbuf, pxmitframe->buf_addr, ploopback->txsize);
+		ff_hwaddr = rtw_get_ff_hwaddr(pxmitframe);
+		cnt++;
+		RTW_INFO("%s: wirte port cnt=%d size=%d\n", __func__, cnt, ploopback->txsize);
+		pxmitframe->pxmitbuf->pdata = ploopback->txbuf;
+		rtw_write_port(padapter, ff_hwaddr, ploopback->txsize, (u8 *)pxmitframe->pxmitbuf);
+
+		/* wait for rx pkt */
+		_rtw_down_sema(&ploopback->sema);
+
+		err = pktcmp(padapter, ploopback->txbuf, ploopback->txsize, ploopback->rxbuf, ploopback->rxsize);
+		if (err == _TRUE)
+			ok++;
+		else
+			fail++;
+
+		ploopback->txsize = 0;
+		_rtw_memset(ploopback->txbuf, 0, 0x8000);
+		ploopback->rxsize = 0;
+		_rtw_memset(ploopback->rxbuf, 0, 0x8000);
+
+		freeloopbackpkt(padapter, pxmitframe);
+		pxmitframe = NULL;
+
+		flush_signals_thread();
+
+		if ((ploopback->bstop == _TRUE) ||
+		    ((ploopback->cnt != 0) && (ploopback->cnt == cnt))) {
+			u32 ok_rate, fail_rate, all;
+			all = cnt;
+			ok_rate = (ok * 100) / all;
+			fail_rate = (fail * 100) / all;
+			sprintf(ploopback->msg, \
+				"loopback result: ok=%d%%(%d/%d),error=%d%%(%d/%d)", \
+				ok_rate, ok, all, fail_rate, fail, all);
+			break;
+		}
+	} while (1);
+
+	ploopback->bstop = _TRUE;
+
+	thread_exit(NULL);
+#endif
+	return 0;
+}
+
+static void loopbackTest(_adapter *padapter, u32 cnt, u32 size, u8 *pmsg)
 {
 	PLOOPBACKDATA ploopback;
 	u32 len;
 	s32 err;
+
 
 	ploopback = padapter->ploopback;
 
@@ -11825,7 +11821,6 @@ static void loopbackTest(PADAPTER padapter, u32 cnt, u32 size, u8 *pmsg)
 				break;
 			rtw_msleep_os(1);
 		} while (1);
-		RTW_INFO("Free loopback, end the test.\n");
 		_rtw_memcpy(pmsg, ploopback->msg, len + 1);
 		freeLoopback(padapter);
 
@@ -11833,10 +11828,8 @@ static void loopbackTest(PADAPTER padapter, u32 cnt, u32 size, u8 *pmsg)
 	}
 
 	/* disable dynamic algorithm	 */
-#ifndef CONFIG_NO_PHYDM
 	rtw_phydm_ability_backup(padapter);
 	rtw_phydm_func_disable_all(padapter);
-#endif
 
 	/* create pseudo ad-hoc connection */
 	err = initpseudoadhoc(padapter);
@@ -11862,10 +11855,9 @@ static void loopbackTest(PADAPTER padapter, u32 cnt, u32 size, u8 *pmsg)
 	ploopback->bstop = _FALSE;
 	ploopback->cnt = cnt;
 	ploopback->size = size;
-	ploopback->lbkthread = kthread_run(lbk_thread, padapter, "RTW_LBK_THREAD");
-	if (IS_ERR(ploopback->lbkthread)) {
+	ploopback->lbkthread = rtw_thread_start(lbk_thread, padapter, "RTW_LBK_THREAD");
+	if (ploopback->lbkthread == NULL)) {
 		freeLoopback(padapter);
-		ploopback->lbkthread = NULL;
 		sprintf(pmsg, "loopback start FAIL! cnt=%d", cnt);
 		return;
 	}

@@ -8297,12 +8297,13 @@ static int cfg80211_rtw_tdls_mgmt(struct wiphy *wiphy,
 	size_t len)
 {
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(ndev);
+	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
 	struct mlme_ext_priv	*pmlmeext = &padapter->mlmeextpriv;
 	struct mlme_ext_info	*pmlmeinfo = &pmlmeext->mlmext_info;
 	int ret = 0;
 	struct tdls_txmgmt txmgmt;
 
-	if (hal_chk_wl_func(padapter, WL_FUNC_TDLS) == _FALSE) {
+	if (rtw_hw_chk_wl_func(dvobj, WL_FUNC_TDLS) == _FALSE) {
 		RTW_INFO("Discard tdls action:%d, since hal doesn't support tdls\n", action_code);
 		goto discard;
 	}
@@ -8383,13 +8384,14 @@ static int cfg80211_rtw_tdls_oper(struct wiphy *wiphy,
 	enum nl80211_tdls_operation oper)
 {
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(ndev);
+	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
 	struct tdls_info *ptdlsinfo = &padapter->tdlsinfo;
 	struct tdls_txmgmt	txmgmt;
 	struct sta_info *ptdls_sta = NULL;
 
 	RTW_INFO(FUNC_NDEV_FMT", nl80211_tdls_operation:%d\n", FUNC_NDEV_ARG(ndev), oper);
 
-	if (hal_chk_wl_func(padapter, WL_FUNC_TDLS) == _FALSE) {
+	if (rtw_hw_chk_wl_func(dvobj, WL_FUNC_TDLS) == _FALSE) {
 		RTW_INFO("Discard tdls oper:%d, since hal doesn't support tdls\n", oper);
 		return 0;
 	}
