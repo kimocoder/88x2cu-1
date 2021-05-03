@@ -2468,25 +2468,17 @@ static int netdev_close(struct net_device *pnetdev)
 	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
 
 	RTW_INFO(FUNC_NDEV_FMT" , netif_up=%d\n", FUNC_NDEV_ARG(pnetdev), padapter->netif_up);
-#ifndef CONFIG_PLATFORM_INTEL_BYT
 	padapter->net_closed = _TRUE;
-	padapter->netif_up = _FALSE;
 	pmlmepriv->LinkDetectInfo.bBusyTraffic = _FALSE;
 
 #ifdef CONFIG_CLIENT_PORT_CFG
 	if (MLME_IS_STA(padapter))
 		rtw_hw_client_port_release(padapter);
 #endif
-	/*	if (!rtw_is_hw_init_completed(padapter)) {
-			RTW_INFO("(1)871x_drv - drv_close, netif_up=%d, hw_init_completed=%s\n", padapter->netif_up, rtw_is_hw_init_completed(padapter)?"_TRUE":"_FALSE");
-
-			rtw_set_drv_stopped(padapter);
-
-			rtw_dev_unload(padapter);
-		}
-		else*/
 	if (pwrctl->rf_pwrstate == rf_on) {
-		RTW_INFO("(2)871x_drv - drv_close, netif_up=%d, hw_init_completed=%s\n", padapter->netif_up, rtw_is_hw_init_completed(padapter) ? "_TRUE" : "_FALSE");
+		RTW_INFO("netif_up=%d, hw_init_completed=%s\n",
+			 padapter->netif_up,
+			 rtw_is_hw_init_completed(padapter) ? "_TRUE" : "_FALSE");
 
 		/* s1. */
 		if (pnetdev)
@@ -2495,13 +2487,20 @@ static int netdev_close(struct net_device *pnetdev)
 #ifndef CONFIG_RTW_ANDROID
 		/* s2. */
 		LeaveAllPowerSaveMode(padapter);
-		rtw_disassoc_cmd(padapter, 500, RTW_CMDF_WAIT_ACK);
-		/* s2-2.  indicate disconnect to os */
-		rtw_indicate_disconnect(padapter, 0, _FALSE);
-		/* s2-3. */
-		rtw_free_assoc_resources_cmd(padapter, _TRUE, RTW_CMDF_WAIT_ACK);
-		/* s2-4. */
-		rtw_free_network_queue(padapter, _TRUE);
+		if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE)) {
+			rtw_disassoc_cmd(padapter, 500, RTW_CMDF_WAIT_ACK);
+			/* s2-2.  indicate disconnect to os */
+			if (1
+#ifdef CONFIG_STA_CMD_DISPR
+			    && (MLME_IS_STA(padapter) == _FALSE)
+#endif /* CONFIG_STA_CMD_DISPR */
+			)
+				rtw_free_assoc_resources_cmd(padapter, _TRUE, RTW_CMDF_WAIT_ACK);
+			/* s2-3. */
+			rtw_indicate_disconnect(padapter, 0, _FALSE);
+			/* s2-4. */
+			rtw_free_network_queue(padapter, _TRUE);
+		}
 #endif
 	}
 
@@ -2528,32 +2527,6 @@ static int netdev_close(struct net_device *pnetdev)
 #ifdef CONFIG_WAPI_SUPPORT
 	rtw_wapi_disable_tx(padapter);
 #endif
-#ifdef CONFIG_BT_COEXIST_SOCKET_TRX
-	if (is_primary_adapter(padapter) && (_TRUE == pHalData->EEPROMBluetoothCoexist))
-		rtw_btcoex_close_socket(padapter);
-	else
-		RTW_INFO("CONFIG_BT_COEXIST: VIRTUAL_ADAPTER\n");
-#endif /* CONFIG_BT_COEXIST_SOCKET_TRX */
-#else /* !CONFIG_PLATFORM_INTEL_BYT */
-
-	if (pwrctl->bInSuspend == _TRUE) {
-		RTW_INFO("+871x_drv - drv_close, bInSuspend=%d\n", pwrctl->bInSuspend);
-		return 0;
-	}
-
-	rtw_scan_abort(padapter, 0); /* stop scanning process before wifi is going to down */
-#ifdef CONFIG_IOCTL_CFG80211
-	rtw_cfg80211_wait_scan_req_empty(padapter, 200);
-#endif
-
-	RTW_INFO("netdev_close, bips_processing=%d\n", pwrctl->bips_processing);
-	while (pwrctl->bips_processing == _TRUE) /* waiting for ips_processing done before call rtw_dev_unload() */
-		rtw_msleep_os(1);
-
-	rtw_dev_unload(padapter);
-	rtw_sdio_set_power(0);
-
-#endif /* !CONFIG_PLATFORM_INTEL_BYT */
 	rtw_hw_iface_deinit(padapter);
 	padapter->netif_up = _FALSE;
 
