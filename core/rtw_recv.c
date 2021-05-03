@@ -2842,8 +2842,6 @@ int amsdu_to_msdu(_adapter *padapter, union recv_frame *prframe)
 	u8	nr_subframes, i;
 	u8	*pdata;
 	struct sk_buff *sub_pkt, *subframes[MAX_SUBFRAME_COUNT];
-	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
-	_queue *pfree_recv_queue = &(precvpriv->free_recv_queue);
 	const u8 *da, *sa;
 	int act;
 #if defined(CONFIG_AP_MODE) || defined(CONFIG_RTW_MESH)
@@ -2860,6 +2858,7 @@ int amsdu_to_msdu(_adapter *padapter, union recv_frame *prframe)
 
 	if (rattrib->iv_len > 0)
 		recvframe_pull(prframe, rattrib->iv_len);
+
 	if (rattrib->encrypt)
 		recvframe_pull_tail(prframe, rattrib->icv_len);
 
@@ -2875,6 +2874,7 @@ int amsdu_to_msdu(_adapter *padapter, union recv_frame *prframe)
 		}
 
 		act = RTW_RX_MSDU_ACT_INDICATE;
+
 		#if defined(CONFIG_AP_MODE) || defined(CONFIG_RTW_MESH)
 		fwd_frame = NULL;
 		#endif
@@ -2943,7 +2943,7 @@ int amsdu_to_msdu(_adapter *padapter, union recv_frame *prframe)
 		}
 		#endif
 
-		if (rtw_recv_indicatepkt_check(prframe, sub_pkt->data, sub_pkt->len) == _SUCCESS)
+		if (rtw_recv_indicatepkt_check(prframe, rtw_skb_data(sub_pkt), rtw_skb_len(sub_pkt)) == _SUCCESS)
 			subframes[nr_subframes++] = sub_pkt;
 		else
 			rtw_skb_free(sub_pkt);
