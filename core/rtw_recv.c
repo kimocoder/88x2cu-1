@@ -347,6 +347,7 @@ sint _rtw_enqueue_recvframe(union recv_frame *precvframe, _queue *queue)
 	return _SUCCESS;
 }
 
+#if 0
 sint rtw_enqueue_recvframe(union recv_frame *precvframe, _queue *queue)
 {
 	sint ret;
@@ -359,7 +360,7 @@ sint rtw_enqueue_recvframe(union recv_frame *precvframe, _queue *queue)
 
 	return ret;
 }
-
+#endif 
 
 /*
 caller : defrag ; recvframe_chk_defrag in recv_thread  (passive)
