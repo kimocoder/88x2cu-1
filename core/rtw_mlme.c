@@ -3213,11 +3213,49 @@ static u8 is_drv_in_lps(_adapter *adapter)
 	#endif /* CONFIG_LPS_LCLK_WD_TIMER*/
 	return is_in_lps;
 }
+
+void rtw_iface_dynamic_check_handlder(struct _ADAPTER *a)
+{
+	if (!a->netif_up)
+		return;
+
+	/* auto site survey */
+	rtw_auto_scan_handler(a);
+
+#ifdef CONFIG_BR_EXT
+if (!adapter_use_wds(a)) {
+	#if (LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 35))
+		rcu_read_lock();
+	#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 35)) */
+
+	#if (LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 35))
+		if (a->pnetdev->br_port
+	#else	/* (LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 35)) */
+		if (rcu_dereference(a->pnetdev->rx_handler_data)
+	#endif /* (LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 35)) */
+			&& (MLME_IS_STA(a) || MLME_IS_ADHOC(a))) {
+			/* expire NAT2.5 entry */
+			void nat25_db_expire(_adapter *priv);
+			nat25_db_expire(a);
+
+			if (a->pppoe_connection_in_progress > 0)
+				a->pppoe_connection_in_progress--;
+			if (a->pppoe_connection_in_progress > 0)
+				a->pppoe_connection_in_progress--;
+		}
+
+	#if (LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 35))
+		rcu_read_unlock();
+	#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 35)) */
+}
+#endif /* CONFIG_BR_EXT */
+}
+
 void rtw_iface_dynamic_check_timer_handlder(_adapter *adapter)
 {
 	struct mlme_priv *pmlmepriv = &adapter->mlmepriv;
 
-	if (adapter->net_closed == _TRUE)
+	if (!adapter->netif_up)
 		return;
 	#ifdef CONFIG_LPS_LCLK_WD_TIMER /* to avoid leaving lps 32k frequently*/
 	if (is_drv_in_lps(adapter)) {
@@ -3226,17 +3264,16 @@ void rtw_iface_dynamic_check_timer_handlder(_adapter *adapter)
 		linked_status_chk(adapter, 1);
 
 		bEnterPS = traffic_status_watchdog(adapter, 1);
+		#if 0 /*PS TODO ...*/
 		if (bEnterPS) {
 			/* rtw_lps_ctrl_wk_cmd(adapter, LPS_CTRL_ENTER, 0); */
 			rtw_hal_dm_watchdog_in_lps(adapter);
 		} else {
 			/* call rtw_lps_ctrl_wk_cmd(padapter, LPS_CTRL_LEAVE, 0) in traffic_status_watchdog() */
 		}
+		#endif
 	}
 	#endif /* CONFIG_LPS_LCLK_WD_TIMER	*/
-
-	/* auto site survey */
-	rtw_auto_scan_handler(adapter);
 
 #ifdef CONFIG_AP_MODE
 	if (MLME_IS_AP(adapter)|| MLME_IS_MESH(adapter)) {
@@ -3250,35 +3287,7 @@ void rtw_iface_dynamic_check_timer_handlder(_adapter *adapter)
 	}
 #endif /*CONFIG_AP_MODE*/
 
-
-#ifdef CONFIG_BR_EXT
-if (!adapter_use_wds(adapter)) {
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 35))
-	rcu_read_lock();
-#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 35)) */
-
-#if (LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 35))
-	if (adapter->pnetdev->br_port
-#else	/* (LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 35)) */
-	if (rcu_dereference(adapter->pnetdev->rx_handler_data)
-#endif /* (LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 35)) */
-		&& (check_fwstate(pmlmepriv, WIFI_STATION_STATE | WIFI_ADHOC_STATE) == _TRUE)) {
-		/* expire NAT2.5 entry */
-		void nat25_db_expire(_adapter *priv);
-		nat25_db_expire(adapter);
-
-		if (adapter->pppoe_connection_in_progress > 0)
-			adapter->pppoe_connection_in_progress--;
-		/* due to rtw_dynamic_check_timer_handlder() is called every 2 seconds */
-		if (adapter->pppoe_connection_in_progress > 0)
-			adapter->pppoe_connection_in_progress--;
-	}
-
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 35))
-	rcu_read_unlock();
-#endif /* (LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 35)) */
-}
-#endif /* CONFIG_BR_EXT */
+	rtw_iface_dynamic_check_handlder(adapter);
 
 }
 
