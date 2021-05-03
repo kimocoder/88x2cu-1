@@ -1267,45 +1267,22 @@ exit:
 
 static void rtw_usb_primary_adapter_deinit(_adapter *padapter)
 {
-#if defined(CONFIG_WOWLAN) || defined(CONFIG_BT_COEXIST)
-	struct pwrctrl_priv *pwrctl = adapter_to_pwrctl(padapter);
-#endif
-	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
-
 	RTW_INFO(FUNC_ADPT_FMT"\n", FUNC_ADPT_ARG(padapter));
 
-	if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE))
-		rtw_disassoc_cmd(padapter, 0, RTW_CMDF_DIRECTLY);
+#ifdef CONFIG_BTC
+	if (1 == adapter_to_pwrctl(padapter)->autopm_cnt) {
+		struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
+		struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
+		PUSB_DATA usb_data = dvobj_to_usb(dvobj);
 
-#ifdef CONFIG_AP_MODE
-	if (MLME_IS_AP(padapter) || MLME_IS_MESH(padapter)) {
-		free_mlme_ap_info(padapter);
-		#ifdef CONFIG_HOSTAPD_MLME
-		hostapd_mode_unload(padapter);
-		#endif
-	}
-#endif
-
-	/*rtw_cancel_all_timer(if1);*/
-
-#ifdef CONFIG_WOWLAN
-	pwrctl->wowlan_mode = _FALSE;
-#endif /* CONFIG_WOWLAN */
-
-	rtw_dev_unload(padapter);
-
-	RTW_INFO("+r871xu_dev_remove, hw_init_completed=%d\n", rtw_get_hw_init_completed(padapter));
-
-#ifdef CONFIG_BT_COEXIST
-	if (1 == pwrctl->autopm_cnt) {
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 33))
-		usb_autopm_put_interface(adapter_to_dvobj(padapter)->usb_data.pusbintf);
+		usb_autopm_put_interface(usb_data->pusbintf);
 #elif (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 20))
-		usb_autopm_enable(adapter_to_dvobj(padapter)->usb_data.pusbintf);
+		usb_autopm_enable(usb_data->pusbintf);
 #else
-		usb_autosuspend_device(adapter_to_dvobj(padapter)->pusbdev, 1);
+		usb_autosuspend_device(usb_data->pusbdev, 1);
 #endif
-		pwrctl->autopm_cnt--;
+		adapter_to_pwrctl(padapter)->autopm_cnt--;
 	}
 #endif
 
@@ -1317,12 +1294,6 @@ static void rtw_usb_primary_adapter_deinit(_adapter *padapter)
 	rtw_halmac_deinit_adapter(adapter_to_dvobj(padapter));
 
 	rtw_vmfree((u8 *)padapter, sizeof(_adapter));
-
-#ifdef CONFIG_PLATFORM_RTD2880B
-	RTW_INFO("wlan link down\n");
-	rtd2885_wlan_netlink_sendMsg("linkdown", "8712");
-#endif
-
 }
 
 static int rtw_dev_probe(struct usb_interface *pusb_intf, const struct usb_device_id *pdid)
