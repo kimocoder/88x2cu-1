@@ -960,7 +960,7 @@ sint OnTDLS(_adapter *adapter, union recv_frame *precv_frame)
 
 	RTW_INFO("[TDLS] Recv %s from "MAC_FMT" with SeqNum = %d\n", rtw_tdls_action_txt(*paction), MAC_ARG(pattrib->src), GetSequence(get_recvframe_data(precv_frame)));
 
-	if (hal_chk_wl_func(adapter, WL_FUNC_TDLS) == _FALSE) {
+	if (rtw_hw_chk_wl_func(adapter_to_dvobj(adapter), WL_FUNC_TDLS) == _FALSE) {
 		RTW_INFO("Ignore tdls frame since hal doesn't support tdls\n");
 		ret = _FAIL;
 		return ret;
