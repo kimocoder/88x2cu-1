@@ -3693,7 +3693,7 @@ int rtw_resume_process_normal(_adapter *padapter)
 {
 	struct net_device *pnetdev;
 	struct pwrctrl_priv *pwrpriv;
-	struct dvobj_priv *psdpriv;
+	struct dvobj_priv *dvobj;
 	struct debug_priv *pdbgpriv;
 
 	int ret = _SUCCESS;
@@ -3705,25 +3705,26 @@ int rtw_resume_process_normal(_adapter *padapter)
 
 	pnetdev = padapter->pnetdev;
 	pwrpriv = adapter_to_pwrctl(padapter);
-	psdpriv = padapter->dvobj;
-	pdbgpriv = &psdpriv->drv_dbg;
+	dvobj = padapter->dvobj;
+	pdbgpriv = &dvobj->drv_dbg;
 
 	RTW_INFO("==> "FUNC_ADPT_FMT" entry....\n", FUNC_ADPT_ARG(padapter));
 
 	#ifdef CONFIG_SDIO_HCI
 	/* interface init */
-	if (sdio_init(adapter_to_dvobj(padapter)) != _SUCCESS) {
+	if (rtw_sdio_init(dvobj) != _SUCCESS) {
 		ret = -1;
 		goto exit;
 	}
 	#endif/*CONFIG_SDIO_HCI*/
 
-	rtw_clr_surprise_removed(padapter);
-	rtw_hal_disable_interrupt(padapter);
-
+	dev_clr_surprise_removed(dvobj);
+#if 0 /*GEORGIA_TODO_REMOVE_IT_FOR_PHL_ARCH*/
+	rtw_hal_disable_interrupt(GET_PHL_COM(dvobj));
+#endif
 	#ifdef CONFIG_SDIO_HCI
 	#if !(CONFIG_RTW_SDIO_KEEP_IRQ)
-	if (sdio_alloc_irq(adapter_to_dvobj(padapter)) != _SUCCESS) {
+	if (rtw_sdio_alloc_irq(dvobj) != _SUCCESS) {
 		ret = -1;
 		goto exit;
 	}
@@ -3747,10 +3748,6 @@ int rtw_resume_process_normal(_adapter *padapter)
 		RTW_INFO("pid[1]:%d\n", padapter->pid[1]);
 		rtw_signal_process(padapter->pid[1], SIGUSR2);
 	}
-
-#ifdef CONFIG_BT_COEXIST
-	rtw_btcoex_SuspendNotify(padapter, BTCOEX_SUSPEND_STATE_RESUME);
-#endif /* CONFIG_BT_COEXIST */
 
 	rtw_mi_resume_process_normal(padapter);
 
