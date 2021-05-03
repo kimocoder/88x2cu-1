@@ -2100,15 +2100,11 @@ static inline void dev_clr_hw_start(struct dvobj_priv *dvobj)
 
 #define dev_is_surprise_removed(dvobj)	(ATOMIC_READ(&dvobj->bSurpriseRemoved) == _TRUE)
 #define dev_is_drv_stopped(dvobj)		(ATOMIC_READ(&dvobj->bDriverStopped) == _TRUE)
-#define dev_is_hw_start(dvobj)		(ATOMIC_READ(&dvobj->hw_start) == _TURE)
+#define dev_is_hw_start(dvobj)		(ATOMIC_READ(&dvobj->hw_start) == _TRUE)
 
 static inline void rtw_set_surprise_removed(_adapter *padapter)
 {
 	dev_set_surprise_removed(adapter_to_dvobj(padapter));
-}
-static inline void rtw_clr_surprise_removed(_adapter *padapter)
-{
-	dev_clr_surprise_removed(adapter_to_dvobj(padapter));
 }
 static inline void rtw_clr_drv_stopped(_adapter *padapter)
 {

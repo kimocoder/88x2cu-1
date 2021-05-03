@@ -2424,35 +2424,32 @@ void rtw_ips_dev_unload(_adapter *padapter)
 int _pm_netdev_open(_adapter *padapter)
 {
 	uint status;
+	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
 	struct pwrctrl_priv *pwrctrlpriv = adapter_to_pwrctl(padapter);
 	struct net_device *pnetdev = padapter->pnetdev;
 
 	RTW_INFO(FUNC_NDEV_FMT" start\n", FUNC_NDEV_ARG(pnetdev));
 
-	if (!rtw_is_hw_init_completed(padapter)) { // ips 
-		rtw_clr_surprise_removed(padapter);
-		rtw_clr_drv_stopped(padapter);
+	if (!rtw_hw_is_init_completed(dvobj)) { // ips 
+		dev_clr_surprise_removed(dvobj);
+		dev_clr_drv_stopped(dvobj);
 		status = rtk_hal_init(padapter);
 		if (status == _FAIL)
 			goto netdev_open_error;
 		rtw_led_control(padapter, LED_CTL_NO_LINK);
-
-		{
+		#if 0 /*ifdef CONFIG_CORE_DM_CHK_TIMER*/
 			_set_timer(&adapter_to_dvobj(padapter)->dynamic_chk_timer, 2000);
+		#endif
 
-	#ifndef CONFIG_IPS_CHECK_IN_WD
+	#if 0 /*ndef CONFIG_IPS_CHECK_IN_WD*/
 			rtw_set_pwr_state_check_timer(pwrctrlpriv);
 	#endif /*CONFIG_IPS_CHECK_IN_WD*/
-		}
-
 	}
 
 	{
-		rtw_hal_iface_init(padapter);
+		rtw_hw_iface_init(padapter);
 
-		padapter->net_closed = _FALSE;
 		padapter->netif_up = _TRUE;
-		pwrctrlpriv->bips_processing = _FALSE;
 	}
 
 	RTW_INFO(FUNC_NDEV_FMT" Success (netif_up=%d)\n", FUNC_NDEV_ARG(pnetdev), padapter->netif_up);
@@ -2490,6 +2487,7 @@ int _mi_pm_netdev_open(struct net_device *pnetdev)
 
 	return status;
 }
+
 int pm_netdev_open(struct net_device *pnetdev, u8 bnormal)
 {
 	int status = 0;
@@ -2499,6 +2497,7 @@ int pm_netdev_open(struct net_device *pnetdev, u8 bnormal)
 	if (_TRUE == bnormal) {
 		_rtw_mutex_lock_interruptible(&(adapter_to_dvobj(padapter)->hw_init_mutex));
 		status = _mi_pm_netdev_open(pnetdev);
+
 		_rtw_mutex_unlock(&(adapter_to_dvobj(padapter)->hw_init_mutex));
 	}
 #ifdef CONFIG_IPS
@@ -2508,9 +2507,11 @@ int pm_netdev_open(struct net_device *pnetdev, u8 bnormal)
 
 	return status;
 }
+
 #ifdef CONFIG_CLIENT_PORT_CFG
 extern void rtw_hw_client_port_release(_adapter *adapter);
 #endif
+
 static int netdev_close(struct net_device *pnetdev)
 {
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(pnetdev);
@@ -2529,7 +2530,7 @@ static int netdev_close(struct net_device *pnetdev)
 	if (pwrctl->rf_pwrstate == rf_on) {
 		RTW_INFO("netif_up=%d, hw_init_completed=%s\n",
 			 padapter->netif_up,
-			 rtw_is_hw_init_completed(padapter) ? "_TRUE" : "_FALSE");
+			 rtw_hw_is_init_completed(dvobj) ? "_TRUE" : "_FALSE");
 
 		/* s1. */
 		if (pnetdev)
