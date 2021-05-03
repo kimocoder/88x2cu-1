@@ -2903,69 +2903,6 @@ int	rtw_gw_addr_query(_adapter *padapter)
 }
 #endif
 
-void rtw_dev_unload(PADAPTER padapter)
-{
-	struct pwrctrl_priv *pwrctl = adapter_to_pwrctl(padapter);
-	struct dvobj_priv *pobjpriv = padapter->dvobj;
-	struct debug_priv *pdbgpriv = &pobjpriv->drv_dbg;
-	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
-
-	if (padapter->netif_up == _TRUE) {
-		RTW_INFO("==> "FUNC_ADPT_FMT"\n", FUNC_ADPT_ARG(padapter));
-
-#ifdef CONFIG_WOWLAN
-#ifdef CONFIG_GPIO_WAKEUP
-		/*default wake up pin change to BT*/
-		RTW_INFO("%s:default wake up pin change to BT\n", __FUNCTION__);
-		rtw_hal_switch_gpio_wl_ctrl(padapter, pwrctl->wowlan_gpio_index, _FALSE);
-#endif /* CONFIG_GPIO_WAKEUP */
-#endif /* CONFIG_WOWLAN */
-
-		dev_set_drv_stopped(pobjpriv);
-#ifdef CONFIG_XMIT_ACK
-		if (padapter->xmitpriv.ack_tx)
-			rtw_ack_tx_done(&padapter->xmitpriv, RTW_SCTX_DONE_DRV_STOP);
-#endif
-		rtw_stop_drv_threads(padapter);
-
-		if (ATOMIC_READ(&(pcmdpriv->cmdthd_running)) == _TRUE) {
-			RTW_ERR("cmd_thread not stop !!\n");
-			rtw_warn_on(1);
-		}
-		
-		/* check the status of IPS */
-		if (rtw_hal_check_ips_status(padapter) == _TRUE || pwrctl->rf_pwrstate == rf_off) { /* check HW status and SW state */
-			RTW_PRINT("%s: driver in IPS-FWLPS\n", __func__);
-			pdbgpriv->dbg_dev_unload_inIPS_cnt++;
-		} else
-			RTW_PRINT("%s: driver not in IPS\n", __func__);
-
-		if (!rtw_is_surprise_removed(padapter)) {
-#ifdef CONFIG_BT_COEXIST
-			rtw_btcoex_IpsNotify(padapter, pwrctl->ips_mode_req);
-#endif
-#ifdef CONFIG_WOWLAN
-			if (pwrctl->bSupportRemoteWakeup == _TRUE &&
-			    pwrctl->wowlan_mode == _TRUE)
-				RTW_PRINT("%s bSupportRemoteWakeup==_TRUE  do not run rtk_hal_deinit()\n", __FUNCTION__);
-			else
-#endif
-			{
-				/* amy modify 20120221 for power seq is different between driver open and ips */
-				rtk_hal_deinit(padapter);
-			}
-			rtw_set_surprise_removed(padapter);
-		}
-
-		padapter->netif_up = _FALSE;
-
-		RTW_INFO("<== "FUNC_ADPT_FMT"\n", FUNC_ADPT_ARG(padapter));
-	} else {
-		RTW_INFO("%s: netif_up==_FALSE\n", __FUNCTION__);
-	}
-	rtw_cancel_all_timer(padapter);
-}
-
 int rtw_suspend_free_assoc_resource(_adapter *padapter)
 {
 	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
