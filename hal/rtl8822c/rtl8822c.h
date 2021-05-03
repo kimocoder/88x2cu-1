@@ -112,9 +112,9 @@ void rtl8822c_set_usb_suspend_mode(PADAPTER padapter);
 
 void rtl8822c_c2h_handler_no_io(PADAPTER, u8 *pbuf, u16 length);
 
-#ifdef CONFIG_BT_COEXIST
+#ifdef CONFIG_BTC
 void rtl8822c_download_BTCoex_AP_mode_rsvd_page(PADAPTER);
-#endif /* CONFIG_BT_COEXIST */
+#endif /* CONFIG_BTC */
 
 /* rtl8822c_phy.c */
 u8 rtl8822c_phy_init_mac_register(PADAPTER);

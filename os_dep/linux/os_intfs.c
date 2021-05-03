@@ -3079,10 +3079,6 @@ int rtw_suspend_wow(_adapter *padapter)
 	rtw_mi_buddy_suspend_free_assoc_resource(padapter);
 #endif
 
-#ifdef CONFIG_BT_COEXIST
-	rtw_btcoex_SuspendNotify(padapter, BTCOEX_SUSPEND_STATE_SUSPEND_KEEP_ANT);
-#endif
-
 	if (pwrpriv->wowlan_pno_enable) {
 		RTW_PRINT("%s: pno: %d\n", __func__, pwrpriv->wowlan_pno_enable);
 		/* ICs with HALMAC that use NLO PS 32K no need to do anything */
@@ -3168,10 +3164,6 @@ int rtw_suspend_ap_wow(_adapter *padapter)
 		}
 
 	}
-
-#ifdef CONFIG_BT_COEXIST
-	rtw_btcoex_SuspendNotify(padapter, BTCOEX_SUSPEND_STATE_SUSPEND_KEEP_ANT);
-#endif
 
 #ifdef CONFIG_LPS
 	if(pwrpriv->wowlan_power_mgmt != PM_PS_MODE_ACTIVE) {
@@ -3470,10 +3462,6 @@ int rtw_resume_process_wow(_adapter *padapter)
 	pwrpriv->wowlan_last_wake_reason = pwrpriv->wowlan_wake_reason;
 	pwrpriv->wowlan_wake_reason = 0;
 
-#ifdef CONFIG_BT_COEXIST
-	rtw_btcoex_SuspendNotify(padapter, BTCOEX_SUSPEND_STATE_RESUME);
-#endif /* CONFIG_BT_COEXIST */
-
 exit:
 	RTW_INFO("<== "FUNC_ADPT_FMT" exit....\n", FUNC_ADPT_ARG(padapter));
 	return ret;
@@ -3578,10 +3566,6 @@ int rtw_resume_process_ap_wow(_adapter *padapter)
 #endif
 	/* clean driver side wake up reason. */
 	pwrpriv->wowlan_wake_reason = 0;
-
-#ifdef CONFIG_BT_COEXIST
-	rtw_btcoex_SuspendNotify(padapter, BTCOEX_SUSPEND_STATE_RESUME);
-#endif /* CONFIG_BT_COEXIST */
 
 	/* Power On LED */
 #ifdef CONFIG_RTW_SW_LED

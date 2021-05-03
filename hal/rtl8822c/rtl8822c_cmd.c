@@ -191,11 +191,11 @@ void _rtl8822c_set_FwPwrMode_cmd(PADAPTER adapter, u8 psmode, u8 rfon_ctrl)
 	}
 
 	if (psmode > 0) {
-#ifdef CONFIG_BT_COEXIST
+#ifdef CONFIG_BTC
 		if (rtw_btcoex_IsBtControlLps(adapter) == _TRUE)
 			PowerState = rtw_btcoex_RpwmVal(adapter);
 		else
-#endif /* CONFIG_BT_COEXIST */
+#endif /* CONFIG_BTC */
 		{
 			if (rfon_ctrl == rf_on)
 				PowerState = 0x04; /* AllON(0x0C), RFON(0x04), RFOFF(0x00) */
@@ -275,9 +275,9 @@ void _rtl8822c_set_FwPwrMode_cmd(PADAPTER adapter, u8 psmode, u8 rfon_ctrl)
 	}
 #endif
 
-#ifdef CONFIG_BT_COEXIST
+#ifdef CONFIG_BTC
 	rtw_btcoex_RecordPwrMode(adapter, h2c + 1, RTW_HALMAC_H2C_MAX_SIZE - 1);
-#endif /* CONFIG_BT_COEXIST */
+#endif /* CONFIG_BTC */
 
 	RTW_DBG_DUMP("H2C-PwrMode Parm:", h2c, RTW_HALMAC_H2C_MAX_SIZE);
 	rtw_halmac_send_h2c(adapter_to_dvobj(adapter), h2c);
@@ -355,12 +355,12 @@ void rtl8822c_set_usb_suspend_mode(PADAPTER padapter)
 
 
 
-#ifdef CONFIG_BT_COEXIST
+#ifdef CONFIG_BTC
 void rtl8822c_download_BTCoex_AP_mode_rsvd_page(PADAPTER adapter)
 {
 	hw_var_set_dl_rsvd_page(adapter, RT_MEDIA_CONNECT);
 }
-#endif /* CONFIG_BT_COEXIST */
+#endif /* CONFIG_BTC */
 
 
 /*
