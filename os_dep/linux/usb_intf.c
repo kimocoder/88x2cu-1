@@ -1172,7 +1172,7 @@ _adapter *rtw_usb_primary_adapter_init(struct dvobj_priv *dvobj,
 	padapter->dvobj = dvobj;
 
 
-	rtw_set_drv_stopped(padapter);/*init*/
+	dev_set_drv_stopped(dvobj);/*init*/
 
 	dvobj->padapters[dvobj->iface_nums++] = padapter;
 	padapter->iface_id = IFACE_ID0;
@@ -1457,7 +1457,7 @@ static void rtw_dev_remove(struct usb_interface *pusb_intf)
 
 		LeaveAllPowerSaveMode(padapter);
 	}
-	rtw_set_drv_stopped(padapter);	/*for stop thread*/
+	dev_set_drv_stopped(dvobj);	/*for stop thread*/
 	rtw_stop_cmd_thread(padapter);
 #ifdef CONFIG_CONCURRENT_MODE
 	rtw_drv_stop_vir_ifaces(dvobj);

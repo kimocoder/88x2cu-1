@@ -1279,6 +1279,7 @@ struct dvobj_priv {
 
 	ATOMIC_T	bSurpriseRemoved;
 	ATOMIC_T	bDriverStopped;
+	ATOMIC_T	hw_start;
 
 	s32	processing_dev_remove;
 
@@ -1620,26 +1621,6 @@ static inline GSPI_DATA *dvobj_to_gspi(struct dvobj_priv *dvobj)
 	return &dvobj->gspi_data;
 }
 #endif
-
-static inline void dev_set_surprise_removed(struct dvobj_priv *dvobj)
-{
-	ATOMIC_SET(&dvobj->bSurpriseRemoved, _TRUE);
-}
-static inline void dev_clr_surprise_removed(struct dvobj_priv *dvobj)
-{
-	ATOMIC_SET(&dvobj->bSurpriseRemoved, _FALSE);
-}
-static inline void dev_set_drv_stopped(struct dvobj_priv *dvobj)
-{
-	ATOMIC_SET(&dvobj->bDriverStopped, _TRUE);
-}
-static inline void dev_clr_drv_stopped(struct dvobj_priv *dvobj)
-{
-	ATOMIC_SET(&dvobj->bDriverStopped, _FALSE);
-}
-#define dev_is_surprise_removed(dvobj)	(ATOMIC_READ(&dvobj->bSurpriseRemoved) == _TRUE)
-#define dev_is_drv_stopped(dvobj)		(ATOMIC_READ(&dvobj->bDriverStopped) == _TRUE)
-
 
 #ifdef PLATFORM_LINUX
 static inline struct device *dvobj_to_dev(struct dvobj_priv *dvobj)
@@ -2088,6 +2069,39 @@ struct cfg80211_wifidirect_info cfg80211_wdinfo;
 
 #define rtw_get_mi_nums(adapter) (((PADAPTER)adapter)->dvobj->iface_nums)
 
+static inline void dev_set_surprise_removed(struct dvobj_priv *dvobj)
+{
+	ATOMIC_SET(&dvobj->bSurpriseRemoved, _TRUE);
+	if (dvobj->phl_com)
+		SET_STATUS_FLAG(dvobj->phl_com->dev_state, RTW_DEV_SURPRISE_REMOVAL);
+}
+static inline void dev_clr_surprise_removed(struct dvobj_priv *dvobj)
+{
+	ATOMIC_SET(&dvobj->bSurpriseRemoved, _FALSE);
+	if (dvobj->phl_com)
+		CLEAR_STATUS_FLAG(dvobj->phl_com->dev_state, RTW_DEV_SURPRISE_REMOVAL);
+}
+static inline void dev_set_drv_stopped(struct dvobj_priv *dvobj)
+{
+	ATOMIC_SET(&dvobj->bDriverStopped, _TRUE);
+}
+static inline void dev_clr_drv_stopped(struct dvobj_priv *dvobj)
+{
+	ATOMIC_SET(&dvobj->bDriverStopped, _FALSE);
+}
+static inline void dev_set_hw_start(struct dvobj_priv *dvobj)
+{
+	ATOMIC_SET(&dvobj->hw_start, _TRUE);
+}
+static inline void dev_clr_hw_start(struct dvobj_priv *dvobj)
+{
+	ATOMIC_SET(&dvobj->hw_start, _FALSE);
+}
+
+#define dev_is_surprise_removed(dvobj)	(ATOMIC_READ(&dvobj->bSurpriseRemoved) == _TRUE)
+#define dev_is_drv_stopped(dvobj)		(ATOMIC_READ(&dvobj->bDriverStopped) == _TRUE)
+#define dev_is_hw_start(dvobj)		(ATOMIC_READ(&dvobj->hw_start) == _TURE)
+
 static inline void rtw_set_surprise_removed(_adapter *padapter)
 {
 	dev_set_surprise_removed(adapter_to_dvobj(padapter));
@@ -2095,10 +2109,6 @@ static inline void rtw_set_surprise_removed(_adapter *padapter)
 static inline void rtw_clr_surprise_removed(_adapter *padapter)
 {
 	dev_clr_surprise_removed(adapter_to_dvobj(padapter));
-}
-static inline void rtw_set_drv_stopped(_adapter *padapter)
-{
-	dev_set_drv_stopped(adapter_to_dvobj(padapter));
 }
 static inline void rtw_clr_drv_stopped(_adapter *padapter)
 {

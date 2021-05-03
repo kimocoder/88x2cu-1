@@ -2869,7 +2869,7 @@ void rtw_dev_unload(PADAPTER padapter)
 #endif /* CONFIG_GPIO_WAKEUP */
 #endif /* CONFIG_WOWLAN */
 
-		rtw_set_drv_stopped(padapter);
+		dev_set_drv_stopped(pobjpriv);
 #ifdef CONFIG_XMIT_ACK
 		if (padapter->xmitpriv.ack_tx)
 			rtw_ack_tx_done(&padapter->xmitpriv, RTW_SCTX_DONE_DRV_STOP);
@@ -3027,7 +3027,7 @@ int rtw_suspend_wow(_adapter *padapter)
 	rtw_msleep_os(200);
 
 	/* 1. stop thread */
-	rtw_set_drv_stopped(padapter);	/*for stop thread*/
+	dev_set_drv_stopped(dvobj);	/*for stop thread*/
 	rtw_mi_stop_drv_threads(padapter);
 
 	rtw_clr_drv_stopped(padapter);	/*for 32k command*/
@@ -3132,7 +3132,7 @@ int rtw_suspend_ap_wow(_adapter *padapter)
 	rtw_led_control(padapter, LED_CTL_POWER_OFF);
 
 	/* 1. stop thread */
-	rtw_set_drv_stopped(padapter);	/*for stop thread*/
+	dev_set_drv_stopped(adapter_to_dvobj(padapter));	/*for stop thread*/
 	rtw_mi_stop_drv_threads(padapter);
 	rtw_clr_drv_stopped(padapter);	/*for 32k command*/
 
@@ -3217,7 +3217,7 @@ int rtw_suspend_normal(_adapter *padapter)
 
 
 #ifdef CONFIG_CONCURRENT_MODE
-	rtw_set_drv_stopped(padapter);	/*for stop thread*/
+	dev_set_drv_stopped(adapter_to_dvobj(padapter));	/*for stop thread*/
 	rtw_stop_cmd_thread(padapter);
 	rtw_drv_stop_vir_ifaces(adapter_to_dvobj(padapter));
 #endif
