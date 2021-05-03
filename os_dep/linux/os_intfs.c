@@ -1633,6 +1633,57 @@ u8 rtw_free_drv_sw(_adapter *padapter)
 
 }
 
+void rtw_drv_stop_prim_iface(_adapter *adapter)
+{
+	struct mlme_priv *pmlmepriv = &adapter->mlmepriv;
+	struct pwrctrl_priv *pwrctl = adapter_to_pwrctl(adapter);
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
+	struct debug_priv *pdbgpriv = &dvobj->drv_dbg;
+
+	if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE)
+		rtw_disassoc_cmd(adapter, 0, RTW_CMDF_DIRECTLY|RTW_CMDF_WAIT_ACK);
+
+#ifdef CONFIG_AP_MODE
+	if (MLME_IS_AP(adapter) || MLME_IS_MESH(adapter)) {
+		free_mlme_ap_info(adapter);
+		#ifdef CONFIG_HOSTAPD_MLME
+		hostapd_mode_unload(adapter);
+		#endif
+	}
+#endif
+
+	RTW_INFO("==> "FUNC_ADPT_FMT"\n", FUNC_ADPT_ARG(adapter));
+
+	if (adapter->netif_up == _TRUE) {
+		#ifdef CONFIG_XMIT_ACK
+		if (adapter->xmitpriv.ack_tx)
+			rtw_ack_tx_done(&adapter->xmitpriv, RTW_SCTX_DONE_DRV_STOP);
+		#endif
+		rtw_hw_iface_deinit(adapter);
+		if (!pwrctl->bInSuspend)
+			adapter->netif_up = _FALSE;
+	}
+	#if 0 /*#ifdef CONFIG_CORE_CMD_THREAD*/
+	rtw_stop_drv_threads(adapter);
+
+	if (ATOMIC_READ(&(pcmdpriv->cmdthd_running)) == _TRUE) {
+		RTW_ERR("cmd_thread not stop !!\n");
+		rtw_warn_on(1);
+	}
+	#endif
+
+	/* check the status of IPS */
+	if (rtw_hal_check_ips_status(adapter) == _TRUE || pwrctl->rf_pwrstate == rf_off) { /* check HW status and SW state */
+		RTW_PRINT("%s: driver in IPS-FWLPS\n", __func__);
+		pdbgpriv->dbg_dev_unload_inIPS_cnt++;
+	} else
+		RTW_PRINT("%s: driver not in IPS\n", __func__);
+
+	rtw_cancel_all_timer(adapter);
+	RTW_INFO("<== "FUNC_ADPT_FMT"\n", FUNC_ADPT_ARG(adapter));
+
+}
+
 #ifdef CONFIG_CONCURRENT_MODE
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 29))
@@ -3202,9 +3253,6 @@ int rtw_suspend_normal(_adapter *padapter)
 
 	RTW_INFO("==> "FUNC_ADPT_FMT" entry....\n", FUNC_ADPT_ARG(padapter));
 
-#ifdef CONFIG_BT_COEXIST
-	rtw_btcoex_SuspendNotify(padapter, BTCOEX_SUSPEND_STATE_SUSPEND);
-#endif
 	rtw_mi_netif_caroff_qstop(padapter);
 
 	rtw_mi_suspend_free_assoc_resource(padapter);
@@ -3215,19 +3263,20 @@ int rtw_suspend_normal(_adapter *padapter)
 	    || (adapter_to_pwrctl(padapter)->rf_pwrstate == rf_off))
 		RTW_PRINT("%s: ### ERROR #### driver in IPS ####ERROR###!!!\n", __FUNCTION__);
 
-
-#ifdef CONFIG_CONCURRENT_MODE
 	dev_set_drv_stopped(adapter_to_dvobj(padapter));	/*for stop thread*/
+#if 0 /*#ifdef CONFIG_CORE_CMD_THREAD*/
 	rtw_stop_cmd_thread(padapter);
+#endif
+#ifdef CONFIG_CONCURRENT_MODE
 	rtw_drv_stop_vir_ifaces(adapter_to_dvobj(padapter));
 #endif
 	rtw_dev_unload(padapter);
 
 	#ifdef CONFIG_SDIO_HCI
-	sdio_deinit(adapter_to_dvobj(padapter));
+	rtw_sdio_deinit(adapter_to_dvobj(padapter));
 
 	#if !(CONFIG_RTW_SDIO_KEEP_IRQ)
-	sdio_free_irq(adapter_to_dvobj(padapter));
+	rtw_sdio_free_irq(adapter_to_dvobj(padapter));
 	#endif
 	#endif /*CONFIG_SDIO_HCI*/
 
