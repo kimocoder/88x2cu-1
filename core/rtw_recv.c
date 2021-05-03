@@ -394,7 +394,7 @@ void rtw_free_recvframe_queue(_queue *pframequeue)
 
 }
 
-/*
+#if 0
 u32 rtw_free_uc_swdec_pending_queue(_adapter *adapter)
 {
 	u32 cnt = 0;
@@ -409,7 +409,7 @@ u32 rtw_free_uc_swdec_pending_queue(_adapter *adapter)
 
 	return cnt;
 }
-*/
+#endif
 
 #ifndef CONFIG_RECVBUF_QUEUE_LOCK_BH
 #ifdef CONFIG_SDIO_HCI
@@ -419,7 +419,6 @@ u32 rtw_free_uc_swdec_pending_queue(_adapter *adapter)
 #endif
 #endif /* CONFIG_RECVBUF_QUEUE_LOCK_BH */
 
-sint recvframe_chkmic(_adapter *adapter,  union recv_frame *precvframe);
 sint recvframe_chkmic(_adapter *adapter,  union recv_frame *precvframe)
 {
 
@@ -522,7 +521,6 @@ exit:
 /*#define DBG_RX_SW_DECRYPTOR*/
 
 /* decrypt and set the ivlen,icvlen of the recv_frame */
-union recv_frame *decryptor(_adapter *padapter, union recv_frame *precv_frame);
 union recv_frame *decryptor(_adapter *padapter, union recv_frame *precv_frame)
 {
 
@@ -659,7 +657,6 @@ union recv_frame *decryptor(_adapter *padapter, union recv_frame *precv_frame)
 
 }
 /* ###set the security information in the recv_frame */
-union recv_frame *portctrl(_adapter *adapter, union recv_frame *precv_frame);
 union recv_frame *portctrl(_adapter *adapter, union recv_frame *precv_frame)
 {
 	u8 *psta_addr = NULL;
@@ -736,7 +733,6 @@ union recv_frame *portctrl(_adapter *adapter, union recv_frame *precv_frame)
 #define PN_LESS_CHK(a, b)	(((a-b) & 0x800000000000) != 0)
 #define VALID_PN_CHK(new, old)	(((old) == 0) || PN_LESS_CHK(old, new))
 #define CCMPH_2_KEYID(ch)	(((ch) & 0x00000000c0000000) >> 30)
-sint recv_ucast_pn_decache(union recv_frame *precv_frame);
 sint recv_ucast_pn_decache(union recv_frame *precv_frame)
 {
 	struct rx_pkt_attrib *pattrib = &precv_frame->u.hdr.attrib;
@@ -769,7 +765,6 @@ sint recv_ucast_pn_decache(union recv_frame *precv_frame)
 	return _SUCCESS;
 }
 
-sint recv_bcast_pn_decache(union recv_frame *precv_frame);
 sint recv_bcast_pn_decache(union recv_frame *precv_frame)
 {
 	_adapter *padapter = precv_frame->u.hdr.adapter;
@@ -781,8 +776,7 @@ sint recv_bcast_pn_decache(union recv_frame *precv_frame)
 	u64 curr_pn = 0, pkt_pn = 0;
 	u8 key_id;
 
-	if ((pattrib->encrypt == _AES_) &&
-		(check_fwstate(pmlmepriv, WIFI_STATION_STATE) == _TRUE)) {
+	if ((pattrib->encrypt == _AES_) && (MLME_IS_STA(padapter))) {
 
 		tmp_iv_hdr = le64_to_cpu(*(u64*)(pdata + pattrib->hdrlen));
 		key_id = CCMPH_2_KEYID(tmp_iv_hdr);
