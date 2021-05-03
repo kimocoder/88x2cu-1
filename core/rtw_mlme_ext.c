@@ -6731,6 +6731,8 @@ unsigned int on_action_public_vendor(union recv_frame *precv_frame)
 	u8 *pframe = precv_frame->u.hdr.rx_data;
 	u8 *frame_body = pframe + sizeof(struct rtw_ieee80211_hdr_3addr);
 	_adapter *adapter = precv_frame->u.hdr.adapter;
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
+
 	int cnt = 0;
 	char msg[64];
 
@@ -6738,7 +6740,7 @@ unsigned int on_action_public_vendor(union recv_frame *precv_frame)
 		if (rtw_action_public_decache(precv_frame, 7) == _FAIL)
 			goto exit;
 
-		if (!hal_chk_wl_func(precv_frame->u.hdr.adapter, WL_FUNC_MIRACAST))
+		if (!rtw_hw_chk_wl_func(dvobj, WL_FUNC_MIRACAST))
 			rtw_rframe_del_wfd_ie(precv_frame, 8);
 
 		ret = on_action_public_p2p(precv_frame);
