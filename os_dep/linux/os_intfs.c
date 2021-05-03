@@ -3270,7 +3270,11 @@ int rtw_suspend_normal(_adapter *padapter)
 #ifdef CONFIG_CONCURRENT_MODE
 	rtw_drv_stop_vir_ifaces(adapter_to_dvobj(padapter));
 #endif
-	rtw_dev_unload(padapter);
+	rtw_drv_stop_prim_iface(padapter);
+
+	if (rtw_hw_is_init_completed(adapter_to_dvobj(padapter)))
+		rtw_hw_stop(adapter_to_dvobj(padapter));
+	dev_set_surprise_removed(adapter_to_dvobj(padapter));
 
 	#ifdef CONFIG_SDIO_HCI
 	rtw_sdio_deinit(adapter_to_dvobj(padapter));
