@@ -5587,12 +5587,21 @@ aa
 u8 dump_cmd_id = 0;
 #endif
 
+#if 1
 static int rtw_dbg_port(struct net_device *dev,
 			struct iw_request_info *info,
 			union iwreq_data *wrqu, char *extra)
 {
 	int ret = 0;
-#ifdef CONFIG_RTW_DEBUG
+
+	return ret;
+}
+#else
+static int rtw_dbg_port(struct net_device *dev,
+			struct iw_request_info *info,
+			union iwreq_data *wrqu, char *extra)
+{
+	int ret = 0;
 	u8 major_cmd, minor_cmd;
 	u16 arg;
 	u32 extra_arg, *pdata, val32;
@@ -5646,17 +5655,17 @@ static int rtw_dbg_port(struct net_device *dev,
 		}
 		break;
 	case 0x72: /* read_bb */
-		RTW_INFO("read_bbreg(0x%x)=0x%x\n", arg, rtw_hal_read_bbreg(padapter, arg, 0xffffffff));
+		RTW_INFO("read_bbreg(0x%x)=0x%x\n", arg, rtw_phl_read_bbreg(padapter, arg, 0xffffffff));
 		break;
 	case 0x73: /* write_bb */
-		rtw_hal_write_bbreg(padapter, arg, 0xffffffff, extra_arg);
-		RTW_INFO("write_bbreg(0x%x)=0x%x\n", arg, rtw_hal_read_bbreg(padapter, arg, 0xffffffff));
+		rtw_phl_write_bbreg(padapter, arg, 0xffffffff, extra_arg);
+		RTW_INFO("write_bbreg(0x%x)=0x%x\n", arg, rtw_phl_read_bbreg(padapter, arg, 0xffffffff));
 		break;
 	case 0x74: /* read_rf */
 		RTW_INFO("read RF_reg path(0x%02x),offset(0x%x),value(0x%08x)\n", minor_cmd, arg, rtw_hal_read_rfreg(padapter, minor_cmd, arg, 0xffffffff));
 		break;
 	case 0x75: /* write_rf */
-		rtw_hal_write_rfreg(padapter, minor_cmd, arg, 0xffffffff, extra_arg);
+		rtw_phl_write_rfreg(GET_PHL_INFO(dvobj), minor_cmd, arg, 0xffffffff, extra_arg);
 		RTW_INFO("write RF_reg path(0x%02x),offset(0x%x),value(0x%08x)\n", minor_cmd, arg, rtw_hal_read_rfreg(padapter, minor_cmd, arg, 0xffffffff));
 		break;
 
@@ -5672,171 +5681,7 @@ static int rtw_dbg_port(struct net_device *dev,
 			break;
 		}
 		break;
-	case 0x78: /* IOL test */
-		switch (minor_cmd) {
-		#ifdef CONFIG_IOL
-		case 0x04: { /* LLT table initialization test */
-			u8 page_boundary = 0xf9;
-			{
-				struct xmit_frame	*xmit_frame;
-
-				xmit_frame = rtw_IOL_accquire_xmit_frame(padapter);
-				if (xmit_frame == NULL) {
-					ret = -ENOMEM;
-					break;
-				}
-
-				rtw_IOL_append_LLT_cmd(xmit_frame, page_boundary);
-
-
-				if (_SUCCESS != rtw_IOL_exec_cmds_sync(padapter, xmit_frame, 500, 0))
-					ret = -EPERM;
-			}
-		}
-			break;
-		case 0x05: { /* blink LED test */
-			u16 reg = 0x4c;
-			u32 blink_num = 50;
-			u32 blink_delay_ms = 200;
-			int i;
-
-			{
-				struct xmit_frame	*xmit_frame;
-
-				xmit_frame = rtw_IOL_accquire_xmit_frame(padapter);
-				if (xmit_frame == NULL) {
-					ret = -ENOMEM;
-					break;
-				}
-
-				for (i = 0; i < blink_num; i++) {
-					#ifdef CONFIG_IOL_NEW_GENERATION
-					rtw_IOL_append_WB_cmd(xmit_frame, reg, 0x00, 0xff);
-					rtw_IOL_append_DELAY_MS_cmd(xmit_frame, blink_delay_ms);
-					rtw_IOL_append_WB_cmd(xmit_frame, reg, 0x08, 0xff);
-					rtw_IOL_append_DELAY_MS_cmd(xmit_frame, blink_delay_ms);
-					#else
-					rtw_IOL_append_WB_cmd(xmit_frame, reg, 0x00);
-					rtw_IOL_append_DELAY_MS_cmd(xmit_frame, blink_delay_ms);
-					rtw_IOL_append_WB_cmd(xmit_frame, reg, 0x08);
-					rtw_IOL_append_DELAY_MS_cmd(xmit_frame, blink_delay_ms);
-					#endif
-				}
-				if (_SUCCESS != rtw_IOL_exec_cmds_sync(padapter, xmit_frame, (blink_delay_ms * blink_num * 2) + 200, 0))
-					ret = -EPERM;
-			}
-		}
-			break;
-
-		case 0x06: { /* continuous wirte byte test */
-			u16 reg = arg;
-			u16 start_value = 0;
-			u32 write_num = extra_arg;
-			int i;
-			u8 final;
-
-			{
-				struct xmit_frame	*xmit_frame;
-
-				xmit_frame = rtw_IOL_accquire_xmit_frame(padapter);
-				if (xmit_frame == NULL) {
-					ret = -ENOMEM;
-					break;
-				}
-
-				for (i = 0; i < write_num; i++) {
-					#ifdef CONFIG_IOL_NEW_GENERATION
-					rtw_IOL_append_WB_cmd(xmit_frame, reg, i + start_value, 0xFF);
-					#else
-					rtw_IOL_append_WB_cmd(xmit_frame, reg, i + start_value);
-					#endif
-				}
-				if (_SUCCESS != rtw_IOL_exec_cmds_sync(padapter, xmit_frame, 5000, 0))
-					ret = -EPERM;
-			}
-
-			final = rtw_read8(padapter, reg);
-			if (start_value + write_num - 1 == final)
-				RTW_INFO("continuous IOL_CMD_WB_REG to 0x%x %u times Success, start:%u, final:%u\n", reg, write_num, start_value, final);
-			else
-				RTW_INFO("continuous IOL_CMD_WB_REG to 0x%x %u times Fail, start:%u, final:%u\n", reg, write_num, start_value, final);
-		}
-			break;
-
-		case 0x07: { /* continuous wirte word test */
-			u16 reg = arg;
-			u16 start_value = 200;
-			u32 write_num = extra_arg;
-
-			int i;
-			u16 final;
-
-			{
-				struct xmit_frame	*xmit_frame;
-
-				xmit_frame = rtw_IOL_accquire_xmit_frame(padapter);
-				if (xmit_frame == NULL) {
-					ret = -ENOMEM;
-					break;
-				}
-
-				for (i = 0; i < write_num; i++) {
-					#ifdef CONFIG_IOL_NEW_GENERATION
-					rtw_IOL_append_WW_cmd(xmit_frame, reg, i + start_value, 0xFFFF);
-					#else
-					rtw_IOL_append_WW_cmd(xmit_frame, reg, i + start_value);
-					#endif
-				}
-				if (_SUCCESS != rtw_IOL_exec_cmds_sync(padapter, xmit_frame, 5000, 0))
-					ret = -EPERM;
-			}
-
-			final = rtw_read16(padapter, reg);
-			if (start_value + write_num - 1 == final)
-				RTW_INFO("continuous IOL_CMD_WW_REG to 0x%x %u times Success, start:%u, final:%u\n", reg, write_num, start_value, final);
-			else
-				RTW_INFO("continuous IOL_CMD_WW_REG to 0x%x %u times Fail, start:%u, final:%u\n", reg, write_num, start_value, final);
-		}
-			break;
-
-		case 0x08: { /* continuous wirte dword test */
-			u16 reg = arg;
-			u32 start_value = 0x110000c7;
-			u32 write_num = extra_arg;
-
-			int i;
-			u32 final;
-
-			{
-				struct xmit_frame	*xmit_frame;
-
-				xmit_frame = rtw_IOL_accquire_xmit_frame(padapter);
-				if (xmit_frame == NULL) {
-					ret = -ENOMEM;
-					break;
-				}
-
-				for (i = 0; i < write_num; i++) {
-					#ifdef CONFIG_IOL_NEW_GENERATION
-					rtw_IOL_append_WD_cmd(xmit_frame, reg, i + start_value, 0xFFFFFFFF);
-					#else
-					rtw_IOL_append_WD_cmd(xmit_frame, reg, i + start_value);
-					#endif
-				}
-				if (_SUCCESS != rtw_IOL_exec_cmds_sync(padapter, xmit_frame, 5000, 0))
-					ret = -EPERM;
-
-			}
-
-			final = rtw_read32(padapter, reg);
-			if (start_value + write_num - 1 == final)
-				RTW_INFO("continuous IOL_CMD_WD_REG to 0x%x %u times Success, start:%u, final:%u\n", reg, write_num, start_value, final);
-			else
-				RTW_INFO("continuous IOL_CMD_WD_REG to 0x%x %u times Fail, start:%u, final:%u\n", reg, write_num, start_value, final);
-		}
-			break;
-		#endif /* CONFIG_IOL */
-		}
+	case 0x78:
 		break;
 	case 0x79: {
 		/*
@@ -5877,9 +5722,9 @@ static int rtw_dbg_port(struct net_device *dev,
 #endif /* CONFIG_80211N_HT */
 			break;
 		case 0x04:
-			RTW_INFO("cur_ch=%d\n", pmlmeext->cur_channel);
-			RTW_INFO("cur_bw=%d\n", pmlmeext->cur_bwmode);
-			RTW_INFO("cur_ch_off=%d\n", pmlmeext->cur_ch_offset);
+			RTW_INFO("cur_ch=%d\n", pmlmeext->chandef.chan);
+			RTW_INFO("cur_bw=%d\n", pmlmeext->chandef.bw);
+			RTW_INFO("cur_ch_off=%d\n", pmlmeext->chandef.offset);
 
 			RTW_INFO("oper_ch=%d\n", rtw_get_oper_ch(padapter));
 			RTW_INFO("oper_bw=%d\n", rtw_get_oper_bw(padapter));
@@ -5890,15 +5735,16 @@ static int rtw_dbg_port(struct net_device *dev,
 			psta = rtw_get_stainfo(pstapriv, cur_network->network.MacAddress);
 			if (psta) {
 				RTW_INFO("SSID=%s\n", cur_network->network.Ssid.Ssid);
-				RTW_INFO("sta's macaddr:" MAC_FMT "\n", MAC_ARG(psta->cmn.mac_addr));
-				RTW_INFO("cur_channel=%d, cur_bwmode=%d, cur_ch_offset=%d\n", pmlmeext->cur_channel, pmlmeext->cur_bwmode, pmlmeext->cur_ch_offset);
+				RTW_INFO("sta's macaddr:" MAC_FMT "\n", MAC_ARG(psta->phl_sta->mac_addr));
+				RTW_INFO("cur_channel=%d, cur_bwmode=%d, cur_ch_offset=%d\n",
+					pmlmeext->chandef.chan, pmlmeext->chandef.bw, pmlmeext->chandef.offset);
 				RTW_INFO("rtsen=%d, cts2slef=%d\n", psta->rtsen, psta->cts2self);
 				RTW_INFO("state=0x%x, aid=%d, macid=%d, raid=%d\n",
-					psta->state, psta->cmn.aid, psta->cmn.mac_id, psta->cmn.ra_info.rate_id);
+					psta->state, psta->phl_sta->aid, psta->phl_sta->macid, psta->phl_sta->ra_info.rate_id);
 #ifdef CONFIG_80211N_HT
 				RTW_INFO("qos_en=%d, ht_en=%d, init_rate=%d\n", psta->qos_option, psta->htpriv.ht_option, psta->init_rate);
 				RTW_INFO("bwmode=%d, ch_offset=%d, sgi_20m=%d,sgi_40m=%d\n"
-					, psta->cmn.bw_mode, psta->htpriv.ch_offset, psta->htpriv.sgi_20m, psta->htpriv.sgi_40m);
+					, psta->phl_sta->chandef.bw, psta->htpriv.ch_offset, psta->htpriv.sgi_20m, psta->htpriv.sgi_40m);
 				RTW_INFO("ampdu_enable = %d\n", psta->htpriv.ampdu_enable);
 				RTW_INFO("agg_enable_bitmap=%x, candidate_tid_bitmap=%x\n", psta->htpriv.agg_enable_bitmap, psta->htpriv.candidate_tid_bitmap);
 #endif /* CONFIG_80211N_HT */
@@ -5916,8 +5762,8 @@ static int rtw_dbg_port(struct net_device *dev,
 			break;
 		case 0x07:
 			RTW_INFO("bSurpriseRemoved=%s, bDriverStopped=%s\n"
-				, rtw_is_surprise_removed(padapter) ? "True" : "False"
-				, rtw_is_drv_stopped(padapter) ? "True" : "False");
+				, dev_is_surprise_removed(adapter_to_dvobj(padapter)) ? "True" : "False"
+				, dev_is_drv_stopped(adapter_to_dvobj(padapter)) ? "True" : "False");
 			break;
 		case 0x08: {
 			struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
@@ -5929,9 +5775,6 @@ static int rtw_dbg_port(struct net_device *dev,
 				pxmitpriv->free_xmitbuf_cnt, pxmitpriv->free_xmitframe_cnt,
 				pxmitpriv->free_xmit_extbuf_cnt, pxmitpriv->free_xframe_ext_cnt,
 				 precvpriv->free_recvframe_cnt);
-#ifdef CONFIG_USB_HCI
-			RTW_INFO("rx_urb_pending_cn=%d\n", ATOMIC_READ(&(precvpriv->rx_pending_cnt)));
-#endif
 		}
 			break;
 		case 0x09: {
@@ -5953,15 +5796,15 @@ static int rtw_dbg_port(struct net_device *dev,
 
 					plist = get_next(plist);
 
-					if (extra_arg == psta->cmn.aid) {
-						RTW_INFO("sta's macaddr:" MAC_FMT "\n", MAC_ARG(psta->cmn.mac_addr));
+					if (extra_arg == psta->phl_sta->aid) {
+						RTW_INFO("sta's macaddr:" MAC_FMT "\n", MAC_ARG(psta->phl_sta->mac_addr));
 						RTW_INFO("rtsen=%d, cts2slef=%d\n", psta->rtsen, psta->cts2self);
 						RTW_INFO("state=0x%x, aid=%d, macid=%d, raid=%d\n",
-							psta->state, psta->cmn.aid, psta->cmn.mac_id, psta->cmn.ra_info.rate_id);
+							psta->state, psta->phl_sta->aid, psta->phl_sta->macid, psta->phl_sta->ra_info.rate_id);
 #ifdef CONFIG_80211N_HT
 						RTW_INFO("qos_en=%d, ht_en=%d, init_rate=%d\n", psta->qos_option, psta->htpriv.ht_option, psta->init_rate);
 						RTW_INFO("bwmode=%d, ch_offset=%d, sgi_20m=%d,sgi_40m=%d\n",
-							psta->cmn.bw_mode, psta->htpriv.ch_offset, psta->htpriv.sgi_20m,
+							psta->phl_sta->chandef.bw, psta->htpriv.ch_offset, psta->htpriv.sgi_20m,
 							psta->htpriv.sgi_40m);
 						RTW_INFO("ampdu_enable = %d\n", psta->htpriv.ampdu_enable);
 						RTW_INFO("agg_enable_bitmap=%x, candidate_tid_bitmap=%x\n", psta->htpriv.agg_enable_bitmap, psta->htpriv.candidate_tid_bitmap);
@@ -6038,7 +5881,7 @@ static int rtw_dbg_port(struct net_device *dev,
 				RTW_INFO("###### silent reset test.......#####\n");
 				rtw_hal_sreset_reset(padapter);
 			} else {
-				HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(padapter);
+				struct rtw_phl_com_t *phl_com = GET_PHL_COM(padapter);
 				struct sreset_priv *psrtpriv = &pHalData->srestpriv;
 				psrtpriv->dbg_trigger_point = extra_arg;
 			}
@@ -6059,13 +5902,13 @@ static int rtw_dbg_port(struct net_device *dev,
 		case 0x11: { /* dump linked status */
 			int pre_mode;
 			pre_mode = padapter->bLinkInfoDump;
-			/* linked_info_dump(padapter,extra_arg); */
+			/* rtw_hal_linked_info_dump(padapter,extra_arg); */
 			if (extra_arg == 1 || (extra_arg == 0 && pre_mode == 1)) /* not consider pwr_saving 0: */
 				padapter->bLinkInfoDump = extra_arg;
 
 			else if ((extra_arg == 2) || (extra_arg == 0 && pre_mode == 2)) { /* consider power_saving */
-				/* RTW_INFO("linked_info_dump =%s\n", (padapter->bLinkInfoDump)?"enable":"disable") */
-				linked_info_dump(padapter, extra_arg);
+				/* RTW_INFO("rtw_hal_linked_info_dump =%s\n", (padapter->bLinkInfoDump)?"enable":"disable") */
+				rtw_hal_linked_info_dump(padapter, extra_arg);
 			}
 
 
@@ -6077,23 +5920,23 @@ static int rtw_dbg_port(struct net_device *dev,
 			struct registry_priv	*pregpriv = &padapter->registrypriv;
 			/* 0: disable, bit(0):enable 2.4g, bit(1):enable 5g, 0x3: enable both 2.4g and 5g */
 			/* default is set to enable 2.4GHZ for IOT issue with bufflao's AP at 5GHZ */
-			if (pregpriv && (extra_arg == 0 || extra_arg == 1 || extra_arg == 2 || extra_arg == 3)) {
+			if (extra_arg == 0 || extra_arg == 1 || extra_arg == 2 || extra_arg == 3) {
 				pregpriv->rx_stbc = extra_arg;
 				RTW_INFO("set rx_stbc=%d\n", pregpriv->rx_stbc);
-			} else
+			} else {
 				RTW_INFO("get rx_stbc=%d\n", pregpriv->rx_stbc);
-
+			}
 		}
 			break;
 		case 0x13: { /* set ampdu_enable */
 			struct registry_priv	*pregpriv = &padapter->registrypriv;
 			/* 0: disable, 0x1:enable */
-			if (pregpriv && extra_arg < 2) {
+			if (extra_arg < 2) {
 				pregpriv->ampdu_enable = extra_arg;
 				RTW_INFO("set ampdu_enable=%d\n", pregpriv->ampdu_enable);
-			} else
+			} else {
 				RTW_INFO("get ampdu_enable=%d\n", pregpriv->ampdu_enable);
-
+			}
 		}
 			break;
 #endif
@@ -6199,14 +6042,6 @@ static int rtw_dbg_port(struct net_device *dev,
 			}
 		}
 			break;
-#ifdef CONFIG_BACKGROUND_NOISE_MONITOR
-		case 0x1e: {
-			RTW_INFO("===========================================\n");
-			rtw_noise_measure_curchan(padapter);
-			RTW_INFO("===========================================\n");
-		}
-			break;
-#endif
 
 
 #if defined(CONFIG_SDIO_HCI) && defined(CONFIG_SDIO_INDIRECT_ACCESS) && defined(DBG_SDIO_INDIRECT_ACCESS)
@@ -6271,7 +6106,7 @@ static int rtw_dbg_port(struct net_device *dev,
 
 					page_offset = (u8)(extra_arg >> 16);
 					page_num = (u8)(extra_arg & 0xFF);
-					rtw_dump_rsvd_page(RTW_DBGDUMP, padapter, page_offset, page_num);
+					rtw_hal_dump_rsvd_page(RTW_DBGDUMP, padapter, page_offset, page_num);
 				}
 #ifdef CONFIG_SUPPORT_FIFO_DUMP
 				else {
@@ -6412,10 +6247,11 @@ static int rtw_dbg_port(struct net_device *dev,
 		break;
 	}
 
-#endif
+
 	return ret;
 
 }
+#endif
 
 #ifdef CONFIG_IOCTL_WEXT
 static int wpa_set_param(struct net_device *dev, u8 name, u32 value)
