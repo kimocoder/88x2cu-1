@@ -5937,7 +5937,7 @@ s8 phy_get_txpwr_target(_adapter *adapter, u8 rfpath, RATE_SECTION rs, u8 rate, 
 	if (by_rate == hal_spec->txgi_max)
 		by_rate = 0;
 
-#ifdef CONFIG_BT_COEXIST
+#ifdef CONFIG_BTC
 	if (!reg_max) {
 		if (hal_data->EEPROMBluetoothCoexist == _TRUE)
 			btc_diff = -(rtw_btcoex_query_reduced_wl_pwr_lvl(adapter) * hal_spec->txgi_pdbm);

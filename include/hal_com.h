@@ -523,7 +523,7 @@ u64 rtw_hal_get_tsftr_by_port(_adapter *adapter, u8 port);
 		s32 rtw_hal_ch_sw_oper_offload(_adapter *padapter, u8 channel, u8 channel_offset, u16 bwmode);
 	#endif
 #endif
-#if defined(CONFIG_BT_COEXIST) && defined(CONFIG_FW_MULTI_PORT_SUPPORT)
+#if defined(CONFIG_BTC) && defined(CONFIG_FW_MULTI_PORT_SUPPORT)
 s32 rtw_hal_set_wifi_btc_port_id_cmd(_adapter *adapter);
 #endif
 

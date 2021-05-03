@@ -2178,24 +2178,16 @@ static int _netdev_open(struct net_device *pnetdev)
 			goto netdev_open_error;
 
 		rtw_led_control(padapter, LED_CTL_NO_LINK);
-		{
-	#ifdef CONFIG_BT_COEXIST_SOCKET_TRX
-			_adapter *prim_adpt = GET_PRIMARY_ADAPTER(padapter);
-		
-			if (prim_adpt && (_TRUE == prim_adpt->EEPROMBluetoothCoexist)) {
-				rtw_btcoex_init_socket(prim_adpt);
-				prim_adpt->coex_info.BtMgnt.ExtConfig.HCIExtensionVer = 0x04;
-				rtw_btcoex_SetHciVersion(prim_adpt, 0x04);
-			}
-	#endif /* CONFIG_BT_COEXIST_SOCKET_TRX */
 
-			_set_timer(&adapter_to_dvobj(padapter)->dynamic_chk_timer, 2000);
 
-	#ifndef CONFIG_IPS_CHECK_IN_WD
-			rtw_set_pwr_state_check_timer(pwrctrlpriv);
-	#endif /*CONFIG_IPS_CHECK_IN_WD*/
+		#if 0 /*#ifdef CONFIG_CORE_DM_CHK_TIMER*/
+		if (0){
+			_set_timer(&dvobj->dynamic_chk_timer, 2000);
 		}
-
+		#endif
+		#if 0 /*CONFIG_CORE_THREAD*/
+		_drv_enable_trx(dvobj);/*FPGA_test*/
+		#endif
 	}
 
 	if (padapter->netif_up == _FALSE) {

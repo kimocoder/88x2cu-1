@@ -54,7 +54,7 @@
 
 #endif
 
-#if defined(CONFIG_MCC_MODE) && defined(CONFIG_BT_COEXIST)
+#if defined(CONFIG_MCC_MODE) && defined(CONFIG_BTC)
 
 	#error "Disable BT COEXIST before enable MCC MODE\n"
 

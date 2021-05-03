@@ -3890,7 +3890,7 @@ void hw_var_port_switch(_adapter *adapter)
 		rtw_write8(adapter, REG_BSSID1 + i, bssid[i]);
 
 	/* write bcn ctl */
-#ifdef CONFIG_BT_COEXIST
+#ifdef CONFIG_BTC
 	/* always enable port0 beacon function for PSTDMA */
 	if (IS_HARDWARE_TYPE_8723B(adapter) || IS_HARDWARE_TYPE_8703B(adapter)
 	    || IS_HARDWARE_TYPE_8723D(adapter))
@@ -11297,7 +11297,7 @@ static _adapter *_rtw_search_sta_iface(_adapter *adapter)
 	}
 	return sta_iface;
 }
-#if defined(CONFIG_AP_MODE) && defined(CONFIG_BT_COEXIST)
+#if defined(CONFIG_AP_MODE) && defined(CONFIG_BTC)
 static _adapter *_rtw_search_ap_iface(_adapter *adapter)
 {
 	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
@@ -11575,7 +11575,7 @@ static void _rtw_hal_set_fw_rsvd_page(_adapter *adapter, bool finished, u8 *page
 		}
 	}
 
-#ifdef CONFIG_BT_COEXIST
+#ifdef CONFIG_BTC
 	/*======== BT Qos null data * 1 page ======== */
 	if (pwrctl->wowlan_mode == _FALSE ||
 		pwrctl->wowlan_in_resume == _TRUE) {/*Normal mode*/
@@ -11611,7 +11611,7 @@ static void _rtw_hal_set_fw_rsvd_page(_adapter *adapter, bool finished, u8 *page
 			RSVD_PAGE_CFG("BTQosNull", CurtPktPageNum, TotalPageNum, TotalPacketLen);
 		}
 	}
-#endif /* CONFIG_BT_COEXIT */
+#endif /* CONFIG_BTC */
 
 	TotalPacketLen = BufIndex;
 
@@ -11824,7 +11824,7 @@ static void hw_var_set_bcn_func(_adapter *adapter, u8 enable)
 		val8 = rtw_read8(adapter, bcn_ctrl_reg);
 		val8 &= ~(EN_BCN_FUNCTION | EN_TXBCN_RPT);
 
-#ifdef CONFIG_BT_COEXIST
+#ifdef CONFIG_BTC
 		if (GET_HAL_DATA(adapter)->EEPROMBluetoothCoexist == 1) {
 			/* Always enable port0 beacon function for PSTDMA */
 			if (REG_BCN_CTRL == bcn_ctrl_reg)
@@ -11855,7 +11855,7 @@ static void hw_var_set_bcn_func(_adapter *adapter, u8 enable)
 			else
 				val16 &= ~EN_PORT_0_FUNCTION;
 
-			#ifdef CONFIG_BT_COEXIST
+			#ifdef CONFIG_BTC
 			if (GET_HAL_DATA(adapter)->EEPROMBluetoothCoexist == 1)
 				val16 |= EN_PORT_0_FUNCTION;
 			#endif
@@ -12589,7 +12589,7 @@ void rtw_hal_update_uapsd_tid(_adapter *adapter)
 }
 #endif /* CONFIG_WMMPS_STA */
 
-#if defined(CONFIG_BT_COEXIST) && defined(CONFIG_FW_MULTI_PORT_SUPPORT)
+#if defined(CONFIG_BTC) && defined(CONFIG_FW_MULTI_PORT_SUPPORT)
 /* For multi-port support, driver needs to inform the port ID to FW for btc operations */
 s32 rtw_hal_set_wifi_btc_port_id_cmd(_adapter *adapter)
 {
@@ -12890,7 +12890,7 @@ u8 SetHwReg(_adapter *adapter, u8 variable, u8 *val)
 
 	case HW_VAR_MLME_SITESURVEY:
 		hw_var_set_mlme_sitesurvey(adapter, *val);
-		#ifdef CONFIG_BT_COEXIST
+		#ifdef CONFIG_BTC
 		if (hal_data->EEPROMBluetoothCoexist == 1)
 			rtw_btcoex_ScanNotify(adapter, *val ? _TRUE : _FALSE);
 		#endif

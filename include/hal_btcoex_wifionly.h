@@ -27,7 +27,7 @@
 #endif
 
 /* Define the ICs that support hal btc common file structure */
-#if defined(CONFIG_RTL8822C) || (defined(CONFIG_RTL8192F) || defined(CONFIG_RTL8723F)&& defined(CONFIG_BT_COEXIST))
+#if defined(CONFIG_RTL8822C) || (defined(CONFIG_RTL8192F) || defined(CONFIG_RTL8723F)&& defined(CONFIG_BTC))
 #define CONFIG_BTCOEX_SUPPORT_BTC_CMN 1
 #else
 #define CONFIG_BTCOEX_SUPPORT_BTC_CMN 0

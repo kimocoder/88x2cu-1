@@ -341,7 +341,7 @@ struct registry_priv {
 	u8	excl_chs[MAX_CHANNEL_NUM];
 	u8	full_ch_in_p2p_handshake; /* 0: reply only softap channel, 1: reply full channel list*/
 
-#ifdef CONFIG_BT_COEXIST
+#ifdef CONFIG_BTC
 	u8	btcoex;
 	u8	bt_iso;
 	u8	bt_sco;

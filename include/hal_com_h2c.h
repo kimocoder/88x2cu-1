@@ -96,7 +96,7 @@ enum h2c_cmd {
 	H2C_BT_CONTROL = 0x68,
 	H2C_BT_WIFI_CTRL = 0x69,
 	H2C_BT_FW_PATCH = 0x6A,
-#if defined(CONFIG_BT_COEXIST) && defined(CONFIG_FW_MULTI_PORT_SUPPORT)
+#if defined(CONFIG_BTC) && defined(CONFIG_FW_MULTI_PORT_SUPPORT)
 	H2C_BTC_WL_PORT_ID = 0x71,
 #endif
 	/* WOWLAN Class: 100 */
@@ -196,7 +196,7 @@ enum h2c_cmd {
 	#define H2C_LPS_POFF_PARAM_LEN		5
 #endif
 
-#if defined(CONFIG_BT_COEXIST) && defined(CONFIG_FW_MULTI_PORT_SUPPORT)
+#if defined(CONFIG_BTC) && defined(CONFIG_FW_MULTI_PORT_SUPPORT)
 #define H2C_BTC_WL_PORT_ID_LEN	1
 #endif
 
@@ -572,7 +572,7 @@ s32 rtw_hal_customer_str_write(_adapter *adapter, const u8 *cs);
 #define SET_H2CCMD_SINGLE_CH_SWITCH_V2_IQK_UPDATE_EN(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE((__pH2CCmd) + 2, 1, 1, __Value)
 #define SET_H2CCMD_SINGLE_CH_SWITCH_V2_CH_IDX(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE((__pH2CCmd) + 2, 4, 4, __Value)
 
-#if defined(CONFIG_BT_COEXIST) && defined(CONFIG_FW_MULTI_PORT_SUPPORT)
+#if defined(CONFIG_BTC) && defined(CONFIG_FW_MULTI_PORT_SUPPORT)
 #define SET_H2CCMD_BTC_WL_PORT_ID(__pH2CCmd, __Value) SET_BITS_TO_LE_1BYTE(__pH2CCmd, 0, 4, __Value)
 #endif
 

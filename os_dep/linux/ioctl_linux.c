@@ -3577,7 +3577,7 @@ static void rtw_dbg_mode_hdl(_adapter *padapter, u32 id, u8 *pdata, u32 len)
 		RTW_INFO("==> trigger gpio 0\n");
 		rtw_hal_set_hwreg(padapter, HW_VAR_TRIGGER_GPIO_0, 0);
 		break;
-#ifdef CONFIG_BT_COEXIST
+#ifdef CONFIG_BTC
 	case GEN_MP_IOCTL_SUBCODE(SET_DM_BT):
 		RTW_INFO("==> set dm_bt_coexist:%x\n", *(u8 *)pdata);
 		rtw_hal_set_hwreg(padapter, HW_VAR_BT_SET_COEXIST, pdata);
@@ -9955,7 +9955,7 @@ static int rtw_test(
 #endif
 
 
-#ifdef CONFIG_BT_COEXIST
+#ifdef CONFIG_BTC
 	if (strcmp(pch, "bton") == 0) {
 		rtw_btcoex_SetManualControl(padapter, _FALSE);
 		goto free_buf;

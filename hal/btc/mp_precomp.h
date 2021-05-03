@@ -51,7 +51,7 @@ extern u4Byte GLBtcDbgType[];
 #define DBG_LOUD		4
 #define DBG_TRACE		5
 
-#ifdef CONFIG_BT_COEXIST
+#ifdef CONFIG_BTC
 #define BT_SUPPORT		1
 #define COEX_SUPPORT	1
 #define HS_SUPPORT		1
@@ -64,7 +64,7 @@ extern u4Byte GLBtcDbgType[];
 /* for wifi only mode */
 #include "hal_btcoex_wifionly.h"
 
-#ifdef CONFIG_BT_COEXIST
+#ifdef CONFIG_BTC
 #define BTC_BTINFO_LENGTH_MAX 10
 
 struct wifi_only_cfg;
@@ -137,7 +137,7 @@ struct btc_coexist;
 
 #include "halbtcoutsrc.h"
 
-#else /* CONFIG_BT_COEXIST */
+#else /* CONFIG_BTC */
 
 #ifdef CONFIG_RTL8723B
 #include "halbtc8723bwifionly.h"
@@ -163,6 +163,6 @@ struct btc_coexist;
 #include "halbtc8814bwifionly.h"
 #endif
 
-#endif /* CONFIG_BT_COEXIST */
+#endif /* CONFIG_BTC */
 
 #endif /*  __MP_PRECOMP_H__ */

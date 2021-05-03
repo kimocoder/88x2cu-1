@@ -65,7 +65,7 @@ CONFIG_IPS_MODE = default
 CONFIG_LPS_MODE = default
 CONFIG_USB_AUTOSUSPEND = n
 CONFIG_HW_PWRP_DETECTION = n
-CONFIG_BT_COEXIST = y
+CONFIG_BTC = n
 CONFIG_WAPI_SUPPORT = n
 CONFIG_EFUSE_CONFIG_FILE = y
 CONFIG_EXT_CLK = n
@@ -316,7 +316,6 @@ _HAL_INTFS_FILES :=	hal/hal_intf.o \
 			hal/hal_dm.o \
 			hal/hal_dm_acs.o \
 			hal/hal_btcoex_wifionly.o \
-			hal/hal_btcoex.o \
 			hal/hal_mp.o \
 			hal/hal_mcc.o \
 			hal/hal_hci/hal_$(HCI_NAME).o \
@@ -443,10 +442,6 @@ ifeq ($(CONFIG_SDIO_HCI), y)
 _HAL_INTFS_FILES +=hal/efuse/$(RTL871X)/HalEfuseMask8192E_SDIO.o
 endif
 
-ifeq ($(CONFIG_BT_COEXIST), y)
-_BTC_FILES += hal/btc/halbtc8192e1ant.o \
-				hal/btc/halbtc8192e2ant.o
-endif
 
 endif
 
@@ -523,7 +518,7 @@ ifeq ($(CONFIG_RTL8812A), n)
 
 RTL871X = rtl8821a
 ifeq ($(CONFIG_USB_HCI), y)
-ifeq ($(CONFIG_BT_COEXIST), y)
+ifeq ($(CONFIG_BTC), y)
 MODULE_NAME := 8821au
 else
 MODULE_NAME := 8811au
@@ -544,7 +539,7 @@ _HAL_INTFS_FILES +=	hal/rtl8812a/hal8821a_fw.o
 		
 endif
 
-ifeq ($(CONFIG_BT_COEXIST), y)
+ifeq ($(CONFIG_BTC), y)
 ifeq ($(CONFIG_RTL8812A), y)
 _BTC_FILES += hal/btc/halbtc8812a1ant.o \
 				hal/btc/halbtc8812a2ant.o
@@ -608,7 +603,7 @@ _HAL_INTFS_FILES +=hal/efuse/$(RTL871X)/HalEfuseMask8723B_SDIO.o
 endif
 
 _BTC_FILES += hal/btc/halbtc8723bwifionly.o
-ifeq ($(CONFIG_BT_COEXIST), y)
+ifeq ($(CONFIG_BTC), y)
 _BTC_FILES += hal/btc/halbtc8723b1ant.o \
 				hal/btc/halbtc8723b2ant.o
 endif
@@ -671,7 +666,7 @@ ifeq ($(CONFIG_PCI_HCI), y)
 _HAL_INTFS_FILES +=hal/efuse/$(RTL871X)/HalEfuseMask8814A_PCIE.o
 endif
 
-ifeq ($(CONFIG_BT_COEXIST), y)
+ifeq ($(CONFIG_BTC), y)
 _BTC_FILES += hal/btc/halbtc8814a2ant.o
 endif
 endif
@@ -726,7 +721,7 @@ ifeq ($(CONFIG_PCI_HCI), y)
 _HAL_INTFS_FILES +=hal/efuse/$(RTL871X)/HalEfuseMask8703B_PCIE.o
 endif
 
-ifeq ($(CONFIG_BT_COEXIST), y)
+ifeq ($(CONFIG_BTC), y)
 _BTC_FILES += hal/btc/halbtc8703b1ant.o
 endif
 
@@ -784,7 +779,7 @@ ifeq ($(CONFIG_PCI_HCI), y)
 _HAL_INTFS_FILES +=hal/efuse/$(RTL871X)/HalEfuseMask8723D_PCIE.o
 endif
 
-ifeq ($(CONFIG_BT_COEXIST), y)
+ifeq ($(CONFIG_BTC), y)
 _BTC_FILES += hal/btc/halbtc8723d1ant.o \
 				hal/btc/halbtc8723d2ant.o
 endif
@@ -904,7 +899,7 @@ endif
 ifeq ($(CONFIG_RTL8822B), y)
 RTL871X := rtl8822b
 ifeq ($(CONFIG_USB_HCI), y)
-ifeq ($(CONFIG_BT_COEXIST), n)
+ifeq ($(CONFIG_BTC), n)
 MODULE_NAME = 8812bu
 else
 MODULE_NAME = 88x2bu
@@ -1029,7 +1024,7 @@ ifeq ($(CONFIG_PCI_HCI), y)
 _HAL_INTFS_FILES += hal/efuse/$(RTL871X)/HalEfuseMask8192F_PCIE.o
 endif
 
-ifeq ($(CONFIG_BT_COEXIST), y)
+ifeq ($(CONFIG_BTC), y)
 _BTC_FILES += hal/btc/halbtccommon.o \
 				hal/btc/halbtc8192f.o
 endif
@@ -1040,7 +1035,7 @@ endif
 ifeq ($(CONFIG_RTL8822C), y)
 RTL871X := rtl8822c
 ifeq ($(CONFIG_USB_HCI), y)
-ifeq ($(CONFIG_BT_COEXIST), n)
+ifeq ($(CONFIG_BTC), n)
 MODULE_NAME = 8812cu
 else
 MODULE_NAME = 88x2cu
@@ -1132,8 +1127,8 @@ ifeq ($(CONFIG_HW_PWRP_DETECTION), y)
 EXTRA_CFLAGS += -DCONFIG_HW_PWRP_DETECTION
 endif
 
-ifeq ($(CONFIG_BT_COEXIST), y)
-EXTRA_CFLAGS += -DCONFIG_BT_COEXIST
+ifeq ($(CONFIG_BTC), y)
+EXTRA_CFLAGS += -DCONFIG_BTC
 endif
 
 ifeq ($(CONFIG_WAPI_SUPPORT), y)
