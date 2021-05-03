@@ -1847,7 +1847,6 @@ struct cfg80211_wifidirect_info cfg80211_wdinfo;
 	} rereg_nd_name_priv;
 
 	u8 ndev_unregistering;
-	int bup;
 	struct net_device_stats stats;
 	struct iw_statistics iwstats;
 	struct proc_dir_entry *dir_dev;/* for proc directory */
@@ -1875,11 +1874,6 @@ struct cfg80211_wifidirect_info cfg80211_wdinfo;
 
 #endif /* PLATFORM_LINUX */
 
-#ifdef PLATFORM_FREEBSD
-	_nic_hdl pifp;
-	int bup;
-	_lock glock;
-#endif /* PLATFORM_FREEBSD */
 	u8 mac_addr[ETH_ALEN];
 	int net_closed;
 

@@ -1773,7 +1773,7 @@ static int rtw_wx_set_wap(struct net_device *dev,
 		goto cancel_ps_deny;
 	}
 
-	if (!padapter->bup) {
+	if (!padapter->netif_up) {
 		ret = -1;
 		goto cancel_ps_deny;
 	}
@@ -2336,7 +2336,7 @@ static int rtw_wx_set_essid(struct net_device *dev,
 		goto cancel_ps_deny;
 	}
 
-	if (!padapter->bup) {
+	if (!padapter->netif_up) {
 		ret = -1;
 		goto cancel_ps_deny;
 	}
@@ -8362,13 +8362,13 @@ static int rtw_priv_set(struct net_device *dev,
 {
 	struct iw_point *wrqu = (struct iw_point *)wdata;
 	u32 subcmd = wrqu->flags;
-	PADAPTER padapter = rtw_netdev_priv(dev);
+	_adapter *padapter = rtw_netdev_priv(dev);
 
 	if (padapter == NULL)
 		return -ENETDOWN;
 
-	if (padapter->bup == _FALSE) {
-		RTW_INFO(" %s fail =>(padapter->bup == _FALSE )\n", __FUNCTION__);
+	if (padapter->netif_up == _FALSE) {
+		RTW_INFO(" %s fail =>(padapter->netif_up == _FALSE )\n", __FUNCTION__);
 		return -ENETDOWN;
 	}
 
@@ -8440,16 +8440,20 @@ static int rtw_priv_get(struct net_device *dev,
 {
 	struct iw_point *wrqu = (struct iw_point *)wdata;
 	u32 subcmd = wrqu->flags;
-	PADAPTER padapter = rtw_netdev_priv(dev);
+	_adapter *padapter = rtw_netdev_priv(dev);
 	HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(padapter);
 	struct dm_struct	*p_dm = &pHalData->odmpriv;
 	struct dm_rf_calibration_struct	*p_rf_calibrate_info = &(p_dm->rf_calibrate_info);
 	struct dm_iqk_info	*p_iqk_info = &p_dm->IQK_info;
 	u32 i = 100;
+	int status = 0;
+#ifndef CONFIG_MP_INCLUDED
 
+	if (padapter == NULL)
+		return -ENETDOWN;
 
-	if (padapter->bup == _FALSE) {
-		RTW_INFO(" %s fail =>(padapter->bup == _FALSE )\n", __FUNCTION__);
+	if (padapter->netif_up == _FALSE) {
+		RTW_INFO(" %s fail =>(padapter->netif_up == _FALSE )\n", __FUNCTION__);
 		return -ENETDOWN;
 	}
 
@@ -8462,6 +8466,7 @@ static int rtw_priv_get(struct net_device *dev,
 		wrqu->length = 0;
 		return -EIO;
 	}
+#endif
 
 	if (subcmd < MP_NULL) {
 #ifdef CONFIG_MP_INCLUDED

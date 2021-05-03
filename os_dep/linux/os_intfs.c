@@ -1687,7 +1687,7 @@ static _adapter *rtw_drv_add_vir_if(_adapter *primary_padapter)
 	_rtw_memcpy(padapter, primary_padapter, sizeof(_adapter));
 
 	/*  */
-	padapter->bup = _FALSE;
+	padapter->netif_up = _FALSE;
 	padapter->net_closed = _TRUE;
 	padapter->dir_dev = NULL;
 	padapter->dir_odm = NULL;
@@ -1797,7 +1797,7 @@ _exit:
 	return rst;
 }
 
-void rtw_drv_stop_vir_if(_adapter *padapter)
+static void rtw_drv_stop_vir_if(_adapter *padapter)
 {
 	struct net_device *pnetdev = NULL;
 	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
@@ -1808,8 +1808,8 @@ void rtw_drv_stop_vir_if(_adapter *padapter)
 
 	pnetdev = padapter->pnetdev;
 
-	if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE))
-		rtw_disassoc_cmd(padapter, 0, RTW_CMDF_DIRECTLY);
+	if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE)
+		rtw_disassoc_cmd(padapter, 0, RTW_CMDF_DIRECTLY|RTW_CMDF_WAIT_ACK);
 
 #ifdef CONFIG_AP_MODE
 	if (MLME_IS_AP(padapter) || MLME_IS_MESH(padapter)) {
@@ -1820,13 +1820,13 @@ void rtw_drv_stop_vir_if(_adapter *padapter)
 	}
 #endif
 
-	if (padapter->bup == _TRUE) {
+	if (padapter->netif_up == _TRUE) {
 		#ifdef CONFIG_XMIT_ACK
 		if (padapter->xmitpriv.ack_tx)
 			rtw_ack_tx_done(&padapter->xmitpriv, RTW_SCTX_DONE_DRV_STOP);
 		#endif
 
-		padapter->bup = _FALSE;
+		padapter->netif_up = _FALSE;
 	}
 	rtw_stop_drv_threads(padapter);
 	/* cancel timer after thread stop */
@@ -2198,7 +2198,6 @@ static int _netdev_open(struct net_device *pnetdev)
 		}
 	}
 
-	/*if (padapter->bup == _FALSE) */
 	{
 		rtw_hal_iface_init(padapter);
 
@@ -2221,17 +2220,16 @@ static int _netdev_open(struct net_device *pnetdev)
 		#endif /* CONFIG_BR_EXT */
 
 
-		padapter->bup = _TRUE;
 		padapter->net_closed = _FALSE;
 		padapter->netif_up = _TRUE;
 		pwrctrlpriv->bips_processing = _FALSE;
 	}
 
-	RTW_INFO(FUNC_NDEV_FMT" Success (bup=%d)\n", FUNC_NDEV_ARG(pnetdev), padapter->bup);
+	RTW_INFO(FUNC_NDEV_FMT" Success (netif_up=%d)\n", FUNC_NDEV_ARG(pnetdev), padapter->netif_up);
 	return 0;
 
 netdev_open_error:
-	padapter->bup = _FALSE;
+	padapter->netif_up = _FALSE;
 
 	#ifdef CONFIG_RTW_NAPI
 	if(padapter->napi_state == NAPI_ENABLE) {
@@ -2243,7 +2241,7 @@ netdev_open_error:
 	rtw_netif_carrier_off(pnetdev);
 	rtw_netif_stop_queue(pnetdev);
 
-	RTW_ERR(FUNC_NDEV_FMT" Failed!! (bup=%d)\n", FUNC_NDEV_ARG(pnetdev), padapter->bup);
+	RTW_ERR(FUNC_NDEV_FMT" Failed!! (netif_up=%d)\n", FUNC_NDEV_ARG(pnetdev), padapter->netif_up);
 
 	return -1;
 
@@ -2288,7 +2286,6 @@ int  ips_netdrv_open(_adapter *padapter)
 
 
 	rtw_clr_drv_stopped(padapter);
-	/* padapter->bup = _TRUE; */
 	if (!rtw_is_hw_init_completed(padapter)) {
 		status = rtk_hal_init(padapter);
 		if (status == _FAIL) {
@@ -2305,8 +2302,7 @@ int  ips_netdrv_open(_adapter *padapter)
 	return _SUCCESS;
 
 netdev_open_error:
-	/* padapter->bup = _FALSE; */
-	RTW_INFO("-ips_netdrv_open - drv_open failure, bup=%d\n", padapter->bup);
+	RTW_INFO("-ips_netdrv_open - drv_open failure, netif_up=%d\n", padapter->netif_up);
 
 	return _FAIL;
 }
@@ -2400,26 +2396,24 @@ int _pm_netdev_open(_adapter *padapter)
 
 	}
 
-	/*if (padapter->bup == _FALSE) */
 	{
 		rtw_hal_iface_init(padapter);
 
-		padapter->bup = _TRUE;
 		padapter->net_closed = _FALSE;
 		padapter->netif_up = _TRUE;
 		pwrctrlpriv->bips_processing = _FALSE;
 	}
 
-	RTW_INFO(FUNC_NDEV_FMT" Success (bup=%d)\n", FUNC_NDEV_ARG(pnetdev), padapter->bup);
+	RTW_INFO(FUNC_NDEV_FMT" Success (netif_up=%d)\n", FUNC_NDEV_ARG(pnetdev), padapter->netif_up);
 	return 0;
 
 netdev_open_error:
-	padapter->bup = _FALSE;
+	padapter->netif_up = _FALSE;
 
 	rtw_netif_carrier_off(pnetdev);
 	rtw_netif_stop_queue(pnetdev);
 
-	RTW_ERR(FUNC_NDEV_FMT" Failed!! (bup=%d)\n", FUNC_NDEV_ARG(pnetdev), padapter->bup);
+	RTW_ERR(FUNC_NDEV_FMT" Failed!! (netif_up=%d)\n", FUNC_NDEV_ARG(pnetdev), padapter->netif_up);
 
 	return -1;
 
@@ -2471,11 +2465,9 @@ static int netdev_close(struct net_device *pnetdev)
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(pnetdev);
 	struct pwrctrl_priv *pwrctl = adapter_to_pwrctl(padapter);
 	struct mlme_priv	*pmlmepriv = &padapter->mlmepriv;
-#ifdef CONFIG_BT_COEXIST_SOCKET_TRX
-	HAL_DATA_TYPE		*pHalData = GET_HAL_DATA(padapter);
-#endif /* CONFIG_BT_COEXIST_SOCKET_TRX */
+	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
 
-	RTW_INFO(FUNC_NDEV_FMT" , bup=%d\n", FUNC_NDEV_ARG(pnetdev), padapter->bup);
+	RTW_INFO(FUNC_NDEV_FMT" , netif_up=%d\n", FUNC_NDEV_ARG(pnetdev), padapter->netif_up);
 #ifndef CONFIG_PLATFORM_INTEL_BYT
 	padapter->net_closed = _TRUE;
 	padapter->netif_up = _FALSE;
@@ -2486,7 +2478,7 @@ static int netdev_close(struct net_device *pnetdev)
 		rtw_hw_client_port_release(padapter);
 #endif
 	/*	if (!rtw_is_hw_init_completed(padapter)) {
-			RTW_INFO("(1)871x_drv - drv_close, bup=%d, hw_init_completed=%s\n", padapter->bup, rtw_is_hw_init_completed(padapter)?"_TRUE":"_FALSE");
+			RTW_INFO("(1)871x_drv - drv_close, netif_up=%d, hw_init_completed=%s\n", padapter->netif_up, rtw_is_hw_init_completed(padapter)?"_TRUE":"_FALSE");
 
 			rtw_set_drv_stopped(padapter);
 
@@ -2494,7 +2486,7 @@ static int netdev_close(struct net_device *pnetdev)
 		}
 		else*/
 	if (pwrctl->rf_pwrstate == rf_on) {
-		RTW_INFO("(2)871x_drv - drv_close, bup=%d, hw_init_completed=%s\n", padapter->bup, rtw_is_hw_init_completed(padapter) ? "_TRUE" : "_FALSE");
+		RTW_INFO("(2)871x_drv - drv_close, netif_up=%d, hw_init_completed=%s\n", padapter->netif_up, rtw_is_hw_init_completed(padapter) ? "_TRUE" : "_FALSE");
 
 		/* s1. */
 		if (pnetdev)
@@ -2565,7 +2557,7 @@ static int netdev_close(struct net_device *pnetdev)
 	rtw_hw_iface_deinit(padapter);
 	padapter->netif_up = _FALSE;
 
-	RTW_INFO("-871x_drv - drv_close, bup=%d\n", padapter->bup);
+	RTW_INFO("-871x_drv - drv_close, netif_up=%d\n", padapter->netif_up);
 
 	return 0;
 
@@ -2893,7 +2885,7 @@ void rtw_dev_unload(PADAPTER padapter)
 	struct debug_priv *pdbgpriv = &pobjpriv->drv_dbg;
 	struct cmd_priv *pcmdpriv = &adapter_to_dvobj(padapter)->cmdpriv;
 
-	if (padapter->bup == _TRUE) {
+	if (padapter->netif_up == _TRUE) {
 		RTW_INFO("==> "FUNC_ADPT_FMT"\n", FUNC_ADPT_ARG(padapter));
 
 #ifdef CONFIG_WOWLAN
@@ -2940,11 +2932,11 @@ void rtw_dev_unload(PADAPTER padapter)
 			rtw_set_surprise_removed(padapter);
 		}
 
-		padapter->bup = _FALSE;
+		padapter->netif_up = _FALSE;
 
 		RTW_INFO("<== "FUNC_ADPT_FMT"\n", FUNC_ADPT_ARG(padapter));
 	} else {
-		RTW_INFO("%s: bup==_FALSE\n", __FUNCTION__);
+		RTW_INFO("%s: netif_up==_FALSE\n", __FUNCTION__);
 	}
 	rtw_cancel_all_timer(padapter);
 }
@@ -3294,7 +3286,7 @@ int rtw_suspend_common(_adapter *padapter)
 		rtw_msleep_os(1);
 
 #ifdef CONFIG_IOL_READ_EFUSE_MAP
-	if (!padapter->bup) {
+	if (!padapter->netif_up) {
 		u8 bMacPwrCtrlOn = _FALSE;
 		rtw_hal_get_hwreg(padapter, HW_VAR_APFM_ON_MAC, &bMacPwrCtrlOn);
 		if (bMacPwrCtrlOn)
@@ -3302,9 +3294,9 @@ int rtw_suspend_common(_adapter *padapter)
 	}
 #endif
 
-	if ((!padapter->bup) || RTW_CANNOT_RUN(dvobj)) {
-		RTW_INFO("%s bup=%d bDriverStopped=%s bSurpriseRemoved = %s\n", __func__
-			 , padapter->bup
+	if ((!padapter->netif_up) || RTW_CANNOT_RUN(dvobj)) {
+		RTW_INFO("%s netif_up=%d bDriverStopped=%s bSurpriseRemoved = %s\n", __func__
+			 , padapter->netif_up
 			 , dev_is_drv_stopped(dvobj) ? "True" : "False"
 			, dev_is_surprise_removed(dvobj) ? "True" : "False");
 		pdbgpriv->dbg_suspend_error_cnt++;

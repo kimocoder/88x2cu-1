@@ -234,9 +234,9 @@ void rtw_btcoex_HaltNotify(PADAPTER padapter)
 	if (_FALSE == pHalData->EEPROMBluetoothCoexist)
 		do_halt = 0;
 
-	if (_FALSE == padapter->bup) {
-		RTW_INFO(FUNC_ADPT_FMT ": bup=%d Skip!\n",
-			 FUNC_ADPT_ARG(padapter), padapter->bup);
+	if (_FALSE == padapter->netif_up) {
+		RTW_INFO(FUNC_ADPT_FMT ": netif_up=%d Skip!\n",
+			 FUNC_ADPT_ARG(padapter), padapter->netif_up);
 		do_halt = 0;
 	}
 

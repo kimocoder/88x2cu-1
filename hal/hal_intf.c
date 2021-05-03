@@ -556,7 +556,8 @@ uint rtk_hal_init(_adapter *padapter)
 		#ifdef CONFIG_RF_POWER_TRIM
 		rtw_bb_rf_gain_offset(padapter);
 		#endif /*CONFIG_RF_POWER_TRIM*/
-		GET_PRIMARY_ADAPTER(padapter)->bup = _TRUE; /*temporary*/
+		//NEO
+		//GET_PRIMARY_ADAPTER(padapter)->bup = _TRUE; /*temporary*/
 		#ifdef CONFIG_MI_WITH_MBSSID_CAM
 		rtw_mi_set_mbid_cam(padapter);
 		#endif

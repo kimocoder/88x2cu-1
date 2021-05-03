@@ -2684,13 +2684,13 @@ int _rtw_pwr_wakeup(_adapter *padapter, u32 ips_deffer_ms, const char *caller)
 
 	/* TODO: the following checking need to be merged... */
 	if (rtw_is_drv_stopped(padapter)
-	    || !padapter->bup
+	    || !padapter->netif_up
 	    || !rtw_is_hw_init_completed(padapter)
 	   ) {
-		RTW_INFO("%s: bDriverStopped=%s, bup=%d, hw_init_completed=%u\n"
+		RTW_INFO("%s: bDriverStopped=%s, netif_up=%d, hw_init_completed=%u\n"
 			 , caller
 			 , rtw_is_drv_stopped(padapter) ? "True" : "False"
-			 , padapter->bup
+			 , padapter->netif_up
 			 , rtw_get_hw_init_completed(padapter));
 		ret = _FALSE;
 		goto exit;

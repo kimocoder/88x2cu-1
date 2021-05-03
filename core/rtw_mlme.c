@@ -5151,9 +5151,9 @@ u8 rtw_is_adapter_up(_adapter *padapter)
 		return _FALSE;
 	}
 
-	if (padapter->bup == _FALSE) {
+	if (padapter->netif_up == _FALSE) {
 		#ifdef DBG_ADAPTER_STATE_CHK
-		RTW_INFO(FUNC_ADPT_FMT " FALSE -(bup == _FALSE)\n", FUNC_ADPT_ARG(padapter));
+		RTW_INFO(FUNC_ADPT_FMT " FALSE -(netif_up == _FALSE)\n", FUNC_ADPT_ARG(padapter));
 		#endif
 		return _FALSE;
 	}

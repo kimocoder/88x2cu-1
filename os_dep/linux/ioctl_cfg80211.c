@@ -9987,9 +9987,9 @@ static void rtw_cfg80211_set_survey_info_with_clm(PADAPTER padapter, int idx, st
 }
 #endif /* CONFIG_RTW_ACS */
 
-static int rtw_hostapd_acs_dump_survey(struct wiphy *wiphy, struct net_device *netdev, int idx, struct survey_info *info)
+int rtw_hostapd_acs_dump_survey(struct wiphy *wiphy, struct net_device *netdev, int idx, struct survey_info *info)
 {
-	PADAPTER padapter = (_adapter *)rtw_netdev_priv(netdev);
+	_adapter *padapter = (_adapter *)rtw_netdev_priv(netdev);
 	struct rf_ctl_t *rfctl = adapter_to_rfctl(padapter);
 	RT_CHANNEL_INFO *pch_set = rfctl->channel_set;
 	u8 max_chan_nums = rfctl->max_chan_nums;
@@ -10003,7 +10003,7 @@ static int rtw_hostapd_acs_dump_survey(struct wiphy *wiphy, struct net_device *n
 	}
 
 	_rtw_memset(info, 0, sizeof(struct survey_info));
-	if (padapter->bup == _FALSE) {
+	if (padapter->netif_up == _FALSE) {
 		RTW_INFO("%s: net device is down.\n", __func__);
 		return -EIO;
 	}

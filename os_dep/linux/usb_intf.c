@@ -951,9 +951,9 @@ int rtw_hw_suspend(_adapter *padapter)
 	if (NULL == padapter)
 		goto error_exit;
 
-	if ((_FALSE == padapter->bup) || RTW_CANNOT_RUN(adapter_to_dvobj(padapter))) {
-		RTW_INFO("padapter->bup=%d bDriverStopped=%s bSurpriseRemoved = %s\n"
-			 , padapter->bup
+	if ((_FALSE == padapter->netif_up) || RTW_CANNOT_RUN(adapter_to_dvobj(padapter))) {
+		RTW_INFO("padapter->netif_up=%d bDriverStopped=%s bSurpriseRemoved = %s\n"
+			 , padapter->netif_up
 			 , rtw_is_drv_stopped(padapter) ? "True" : "False"
 			, rtw_is_surprise_removed(padapter) ? "True" : "False");
 		goto error_exit;
@@ -1243,10 +1243,10 @@ _adapter *rtw_usb_primary_adapter_init(struct dvobj_priv *dvobj,
 #ifdef CONFIG_P2P
 	rtw_init_wifidirect_addrs(padapter, adapter_mac_addr(padapter), adapter_mac_addr(padapter));
 #endif /* CONFIG_P2P */
-	RTW_INFO("bDriverStopped:%s, bSurpriseRemoved:%s, bup:%d, hw_init_completed:%d\n"
+	RTW_INFO("bDriverStopped:%s, bSurpriseRemoved:%s, netif_up:%d, hw_init_completed:%d\n"
 		 , rtw_is_drv_stopped(padapter) ? "True" : "False"
 		 , rtw_is_surprise_removed(padapter) ? "True" : "False"
-		 , padapter->bup
+		 , padapter->netif_up
 		 , rtw_get_hw_init_completed(padapter)
 		);
 

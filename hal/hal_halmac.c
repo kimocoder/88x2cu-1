@@ -3332,7 +3332,7 @@ static int _drv_enable_trx(struct dvobj_priv *d)
 
 
 	adapter = dvobj_get_primary_adapter(d);
-	if (adapter->bup == _FALSE) {
+	if (adapter->netif_up == _FALSE) {
 		status = rtw_mi_start_drv_threads(adapter);
 		if (status == _FAIL) {
 			RTW_ERR("%s: Start threads Failed!\n", __FUNCTION__);

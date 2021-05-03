@@ -719,7 +719,7 @@ void dump_adapters_status(void *sel, struct dvobj_priv *dvobj)
 				" "MLME_STATE_FMT" " INFO_CNT_FMT"\n"
 				, i, iface->registered ? ADPT_ARG(iface) : NULL
 				, iface->registered ? 'R' : ' '
-				, iface->bup
+				, iface->netif_up
 				, iface->netif_up
 				, iface->net_closed
 				, MAC_ARG(adapter_mac_addr(iface))

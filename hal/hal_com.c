@@ -15879,7 +15879,7 @@ void rtw_enter_protsel_port(_adapter *padapter, u8 port_sel)
 
 bool rtw_assert_protsel_port(_adapter *padapter, u32 addr, u8 len)
 {
-	if (!padapter->bup)	/* don't assert before IF up */
+	if (!padapter->netif_up)	/* don't assert before IF up */
 		return true;
 
 	return rtw_assert_protsel(&padapter->dvobj->protsel_port);
