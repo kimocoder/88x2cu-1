@@ -1296,6 +1296,28 @@ static void rtw_usb_primary_adapter_deinit(_adapter *padapter)
 	rtw_vmfree((u8 *)padapter, sizeof(_adapter));
 }
 
+static void rtw_usb_drop_all_phl_rx_pkt(struct dvobj_priv *dvobj)
+{
+	u16 rx_pkt_num = 0;
+	struct rtw_recv_pkt *rx_req = NULL;
+
+	rx_pkt_num = rtw_phl_query_new_rx_num(GET_PHL_INFO(dvobj));
+
+	if (rx_pkt_num) {
+		RTW_INFO("%s, rx_pkt not empty !!(%d)\n", __func__, rx_pkt_num);
+
+		while (rx_pkt_num--) {
+			rx_req = rtw_phl_query_rx_pkt(GET_PHL_INFO(dvobj));
+			if (rx_req) {
+				struct sk_buff *skb = rx_req->os_priv;
+
+				rtw_phl_return_rxbuf(GET_PHL_INFO(dvobj), (u8 *)rx_req);
+				rtw_skb_free(skb);
+			}
+		}
+	}
+}
+
 static int rtw_dev_probe(struct usb_interface *pusb_intf, const struct usb_device_id *pdid)
 {
 	_adapter *padapter = NULL;
@@ -1409,41 +1431,35 @@ static void rtw_dev_remove(struct usb_interface *pusb_intf)
 
 	if (usb_drv.drv_registered == _TRUE) {
 		/* RTW_INFO("r871xu_dev_remove():padapter->bSurpriseRemoved == _TRUE\n"); */
-		rtw_set_surprise_removed(padapter);
+		dev_set_surprise_removed(dvobj);
 	}
-	/*else
-	{
-
-		rtw_set_hw_init_completed(padapter, _FALSE);
-	}*/
-
 
 #if defined(CONFIG_HAS_EARLYSUSPEND) || defined(CONFIG_ANDROID_POWER)
 	rtw_unregister_early_suspend(pwrctl);
 #endif
-
-	if (GET_HAL_DATA(padapter)->bFWReady == _TRUE) {
+#if 0 /*GEORGIA_TODO_FIXIT*/
+	if (GET_PHL_COM(dvobj)->fw_ready == _TRUE) {
 		rtw_pm_set_ips(padapter, IPS_NONE);
 		rtw_pm_set_lps(padapter, PM_PS_MODE_ACTIVE);
 
 		LeaveAllPowerSaveMode(padapter);
 	}
-	dev_set_drv_stopped(dvobj);	/*for stop thread*/
+#endif
+	dev_set_drv_stopped(adapter_to_dvobj(padapter));	/*for stop thread*/
+#if 0 /*ifdef CONFIG_CORE_CMD_THREAD*/
 	rtw_stop_cmd_thread(padapter);
+#endif
 #ifdef CONFIG_CONCURRENT_MODE
 	rtw_drv_stop_vir_ifaces(dvobj);
 #endif /* CONFIG_CONCURRENT_MODE */
 
-#ifdef CONFIG_BT_COEXIST
-#ifdef CONFIG_BT_COEXIST_SOCKET_TRX
-	if (GET_HAL_DATA(padapter)->EEPROMBluetoothCoexist)
-		rtw_btcoex_close_socket(padapter);
-#endif
-	rtw_btcoex_HaltNotify(padapter);
-#endif
+	rtw_drv_stop_prim_iface(padapter);
 
 	if (rtw_hw_is_init_completed(dvobj))
 		rtw_hw_stop(dvobj);
+	dev_set_surprise_removed(dvobj);
+
+	rtw_usb_drop_all_phl_rx_pkt(dvobj);
 
 	rtw_usb_primary_adapter_deinit(padapter);
 
@@ -1452,6 +1468,7 @@ static void rtw_dev_remove(struct usb_interface *pusb_intf)
 #endif /* CONFIG_CONCURRENT_MODE */
 
 	rtw_hw_deinit(dvobj);
+	devobj_data_deinit(dvobj);
 	devobj_trx_resource_deinit(dvobj);
 	usb_dvobj_deinit(pusb_intf);
 

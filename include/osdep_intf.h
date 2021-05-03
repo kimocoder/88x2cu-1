@@ -69,6 +69,7 @@ void devobj_trx_resource_deinit(struct dvobj_priv *dvobj);
 u8 rtw_init_drv_sw(_adapter *padapter);
 u8 rtw_free_drv_sw(_adapter *padapter);
 u8 rtw_reset_drv_sw(_adapter *padapter);
+void rtw_drv_stop_prim_iface(_adapter *adapter);
 
 u32 rtw_start_drv_threads(_adapter *padapter);
 void rtw_stop_drv_threads(_adapter *padapter);
