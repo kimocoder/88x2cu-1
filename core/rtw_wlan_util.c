@@ -1385,7 +1385,7 @@ void rtw_process_wfd_ie(_adapter *adapter, u8 *wfd_ie, u8 wfd_ielen, const char 
 	u8 *attr_content;
 	u32 attr_contentlen = 0;
 
-	if (!hal_chk_wl_func(adapter, WL_FUNC_MIRACAST))
+	if (!rtw_hw_chk_wl_func(adapter_to_dvobj(adapter), WL_FUNC_MIRACAST))
 		return;
 
 	RTW_INFO("[%s] Found WFD IE\n", tag);
@@ -1401,7 +1401,7 @@ void rtw_process_wfd_ies(_adapter *adapter, u8 *ies, u8 ies_len, const char *tag
 	u8 *wfd_ie;
 	u32	wfd_ielen;
 
-	if (!hal_chk_wl_func(adapter, WL_FUNC_MIRACAST))
+	if (!rtw_hw_chk_wl_func(adapter_to_dvobj(adapter), WL_FUNC_MIRACAST))
 		return;
 
 	wfd_ie = rtw_get_wfd_ie(ies, ies_len, NULL, &wfd_ielen);

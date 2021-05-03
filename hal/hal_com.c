@@ -15275,11 +15275,6 @@ inline bool hal_chk_proto_cap(_adapter *adapter, u8 cap)
 	return GET_HAL_SPEC(adapter)->proto_cap & cap;
 }
 
-inline bool hal_chk_wl_func(_adapter *adapter, u8 func)
-{
-	return GET_HAL_SPEC(adapter)->wl_func & func;
-}
-
 inline bool hal_is_band_support(_adapter *adapter, u8 band)
 {
 	return GET_HAL_SPEC(adapter)->band_cap & band_to_band_cap(band);
