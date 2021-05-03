@@ -243,7 +243,7 @@ int rtw_mlme_update_wfd_ie_data(struct mlme_priv *mlme, u8 type, u8 *ie, u32 ie_
 	u32 *t_ie_len = NULL;
 	int ret = _FAIL;
 
-	if (!hal_chk_wl_func(adapter, WL_FUNC_MIRACAST))
+	if (!rtw_hw_chk_wl_func(adapter_to_dvobj(adapter), WL_FUNC_MIRACAST))
 		goto success;
 
 	if (wfd_info->wfd_enable == _TRUE)
@@ -1123,25 +1123,6 @@ unlock_scan_queue:
 #endif
 
 	return update_ie;
-}
-
-void rtw_add_network(_adapter *adapter, WLAN_BSSID_EX *pnetwork);
-void rtw_add_network(_adapter *adapter, WLAN_BSSID_EX *pnetwork)
-{
-	bool update_ie;
-	/* _queue	*queue	= &(pmlmepriv->scanned_queue); */
-
-#if defined(CONFIG_P2P) && defined(CONFIG_P2P_REMOVE_GROUP_INFO)
-	if (adapter->registrypriv.wifi_spec == 0)
-		rtw_bss_ex_del_p2p_attr(pnetwork, P2P_ATTR_GROUP_INFO);
-#endif
-	if (!hal_chk_wl_func(adapter, WL_FUNC_MIRACAST))
-		rtw_bss_ex_del_wfd_ie(pnetwork);
-	/* Wi-Fi driver will update the current network if the scan result of the connected AP be updated by scan. */
-	update_ie = rtw_update_scanned_network(adapter, pnetwork);
-
-	if (update_ie)
-		update_current_network(adapter, pnetwork);
 }
 
 #ifdef CONFIG_RTW_MULTI_AP
