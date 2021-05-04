@@ -19,9 +19,9 @@
 #include <rtw_sreset.h>
 
 
-int usbctrl_vendorreq(struct dvobj_priv *dvobj, u8 request, u16 value, u16 index, void *pdata, u16 len, u8 requesttype)
+int usbctrl_vendorreq(struct dvobj_priv *pdvobjpriv, u8 request, u16 value, u16 index, void *pdata, u16 len, u8 requesttype)
 {
-	struct usb_device *udev = dvobj_to_usb(dvobj)->pusbdev;
+	struct usb_device *udev = dvobj_to_usb(pdvobjpriv)->pusbdev;
 
 	unsigned int pipe;
 	int status = 0;
@@ -33,23 +33,8 @@ int usbctrl_vendorreq(struct dvobj_priv *dvobj, u8 request, u16 value, u16 index
 	int vendorreq_times = 0;
 
 
-#if (defined(CONFIG_RTL8822B) || defined(CONFIG_RTL8821C)) || defined(CONFIG_RTL8822C)
-#define REG_ON_SEC 0x00
-#define REG_OFF_SEC 0x01
-#define REG_LOCAL_SEC 0x02
-	u8 current_reg_sec = REG_LOCAL_SEC;
-#endif
-
-#ifdef CONFIG_USB_VENDOR_REQ_BUFFER_DYNAMIC_ALLOCATE
-	u8 *tmp_buf;
-#else /* use stack memory */
-	#ifndef CONFIG_USB_VENDOR_REQ_BUFFER_PREALLOC
-	u8 tmp_buf[MAX_USB_IO_CTL_SIZE];
-	#endif
-#endif
-
 	/* RTW_INFO("%s %s:%d\n",__FUNCTION__, current->comm, current->pid); */
-	if (RTW_CANNOT_IO(dvobj)) {
+	if (RTW_CANNOT_IO(pdvobjpriv)) {
 		status = -EPERM;
 		goto exit;
 	}
@@ -61,13 +46,13 @@ int usbctrl_vendorreq(struct dvobj_priv *dvobj, u8 request, u16 value, u16 index
 	}
 
 #ifdef CONFIG_USB_VENDOR_REQ_MUTEX
-	_rtw_mutex_lock(&dvobj_to_usb(dvobj)->usb_vendor_req_mutex);
+	_rtw_mutex_lock(&dvobj_to_usb(pdvobjpriv)->usb_vendor_req_mutex);
 #endif
 
 
 	/* Acquire IO memory for vendorreq */
 #ifdef CONFIG_USB_VENDOR_REQ_BUFFER_PREALLOC
-	pIo_buf = dvobj_to_usb(dvobj)->usb_vendor_req_buf;
+	pIo_buf = dvobj_to_usb(pdvobjpriv)->usb_vendor_req_buf;
 #else
 	#ifdef CONFIG_USB_VENDOR_REQ_BUFFER_DYNAMIC_ALLOCATE
 	tmp_buf = rtw_malloc((u32) len + ALIGNMENT_UNIT);
@@ -103,7 +88,7 @@ int usbctrl_vendorreq(struct dvobj_priv *dvobj, u8 request, u16 value, u16 index
 		status = rtw_usb_control_msg(udev, pipe, request, reqtype, value, index, pIo_buf, len, RTW_USB_CONTROL_MSG_TIMEOUT);
 
 		if (status == len) {  /* Success this control transfer. */
-			rtw_reset_continual_io_error(dvobj);
+			rtw_reset_continual_io_error(pdvobjpriv);
 			if (requesttype == 0x01) {
 				/* For Control read transfer, we have to copy the read data from pIo_buf to pdata. */
 				_rtw_memcpy(pdata, pIo_buf,  len);
@@ -130,7 +115,7 @@ int usbctrl_vendorreq(struct dvobj_priv *dvobj, u8 request, u16 value, u16 index
 
 			if (status < 0) {
 				if (status == (-ESHUTDOWN)	|| status == -ENODEV)
-					dev_set_surprise_removed(dvobj);
+					dev_set_surprise_removed(pdvobjpriv);
 				else {
 
 				}
@@ -143,8 +128,8 @@ int usbctrl_vendorreq(struct dvobj_priv *dvobj, u8 request, u16 value, u16 index
 				}
 			}
 
-			if (rtw_inc_and_chk_continual_io_error(dvobj) == _TRUE) {
-				dev_set_surprise_removed(dvobj);
+			if (rtw_inc_and_chk_continual_io_error(pdvobjpriv) == _TRUE) {
+				dev_set_surprise_removed(pdvobjpriv);
 				break;
 			}
 
@@ -155,38 +140,6 @@ int usbctrl_vendorreq(struct dvobj_priv *dvobj, u8 request, u16 value, u16 index
 
 	}
 
-#if (defined(CONFIG_RTL8822B) || defined(CONFIG_RTL8821C)) || defined(CONFIG_RTL8822C)
-	if (value < 0xFE00) {
-		if (value <= 0xff)
-			current_reg_sec = REG_ON_SEC;
-		else if (0x1000 <= value && value <= 0x10ff)
-			current_reg_sec = REG_ON_SEC;
-		else
-			current_reg_sec = REG_OFF_SEC;
-	} else {
-		current_reg_sec = REG_LOCAL_SEC;
-	}
-
-	if (current_reg_sec == REG_ON_SEC) {
-		unsigned int t_pipe = usb_sndctrlpipe(udev, 0);/* write_out */
-		u8 t_reqtype =  REALTEK_USB_VENQT_WRITE;
-		u8 t_len = 1;
-		u8 t_req = 0x05;
-		u16 t_reg = 0;
-		u16 t_index = 0;
-
-		t_reg = 0x4e0;
-
-		status = rtw_usb_control_msg(udev, t_pipe, t_req, t_reqtype, t_reg, t_index, pIo_buf, t_len, RTW_USB_CONTROL_MSG_TIMEOUT);
-
-		if (status == t_len)
-			rtw_reset_continual_io_error(dvobj);
-		else
-			RTW_INFO("reg 0x%x, usb %s %u fail, status:%d\n", t_reg, "write" , t_len, status);
-
-	}
-#endif
-
 	/* release IO memory used by vendorreq */
 #ifdef CONFIG_USB_VENDOR_REQ_BUFFER_DYNAMIC_ALLOCATE
 	rtw_mfree(tmp_buf, tmp_buflen);
@@ -194,7 +147,7 @@ int usbctrl_vendorreq(struct dvobj_priv *dvobj, u8 request, u16 value, u16 index
 
 release_mutex:
 #ifdef CONFIG_USB_VENDOR_REQ_MUTEX
-	_rtw_mutex_unlock(&dvobj_to_usb(dvobj)->usb_vendor_req_mutex);
+	_rtw_mutex_unlock(&dvobj_to_usb(pdvobjpriv)->usb_vendor_req_mutex);
 #endif
 exit:
 	return status;
