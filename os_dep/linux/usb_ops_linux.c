@@ -32,6 +32,13 @@ int usbctrl_vendorreq(struct dvobj_priv *pdvobjpriv, u8 request, u16 value, u16 
 	u8 *pIo_buf;
 	int vendorreq_times = 0;
 
+#ifdef CONFIG_USB_VENDOR_REQ_BUFFER_DYNAMIC_ALLOCATE
+	u8 *tmp_buf;
+#else /* use stack memory */
+	#ifndef CONFIG_USB_VENDOR_REQ_BUFFER_PREALLOC
+	u8 tmp_buf[MAX_USB_IO_CTL_SIZE];
+	#endif
+#endif
 
 	/* RTW_INFO("%s %s:%d\n",__FUNCTION__, current->comm, current->pid); */
 	if (RTW_CANNOT_IO(pdvobjpriv)) {
