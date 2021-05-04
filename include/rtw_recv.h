@@ -585,25 +585,14 @@ struct recv_priv {
 
 	/* _queue	blk_strms[MAX_RX_NUMBLKS];    */ /* keeping the block ack frame until return ack */
 	_queue	free_recv_queue;
-	//_queue	recv_pending_queue;
-	//_queue	uc_swdec_pending_queue;
-
+	#if 0
+	_queue	uc_swdec_pending_queue;
+	#endif
 
 	u8 *pallocated_frame_buf;
 	u8 *precv_frame_buf;
 
 	uint free_recvframe_cnt;
-
-	#if DBG_RX_BH_TRACKING
-	u32 rx_bh_stage;
-	u32 rx_bh_buf_dq_cnt;
-	void *rx_bh_lbuf;
-	void *rx_bh_cbuf;
-	void *rx_bh_cbuf_data;
-	u32 rx_bh_cbuf_dlen;
-	u32 rx_bh_cbuf_pos;
-	void *rx_bh_cframe;
-	#endif
 
 	_adapter	*adapter;
 
