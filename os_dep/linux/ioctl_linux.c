@@ -10386,15 +10386,8 @@ static struct iw_statistics *rtw_get_wireless_stats(struct net_device *dev)
 		tmp_level = padapter->recvinfo.signal_strength;
 #endif
 
-		tmp_qual = adapter_to_dvobj(padapter)->recvpriv.signal_qual;
-		#ifdef CONFIG_BACKGROUND_NOISE_MONITOR
-		if (IS_NM_ENABLE(padapter)) {
-			tmp_noise = rtw_noise_measure_curchan(padapter);
-			#ifndef CONFIG_SIGNAL_DISPLAY_DBM
-			tmp_noise = translate_dbm_to_percentage(tmp_noise);/*percentage*/
-			#endif
-		}
-		#endif
+		tmp_qual = padapter->recvinfo.signal_qual;
+		/* RTW_INFO("level:%d, qual:%d, noise:%d, rssi (%d)\n", tmp_level, tmp_qual, tmp_noise, padapter->recvinfo.rssi); */
 
 		piwstats->qual.level = tmp_level;
 		piwstats->qual.qual = tmp_qual;

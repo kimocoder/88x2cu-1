@@ -801,14 +801,14 @@ void rtw_update_network(WLAN_BSSID_EX *dst, WLAN_BSSID_EX *src,
 	u8 ss_ori = dst->PhyInfo.SignalStrength;
 	u8 sq_ori = dst->PhyInfo.SignalQuality;
 	u8 ss_smp = src->PhyInfo.SignalStrength;
-	long rssi_smp = src->Rssi;
+	s8 rssi_smp = src->PhyInfo.rssi;
 #endif
-	long rssi_ori = dst->PhyInfo.rssi;
+	s8 rssi_ori = dst->PhyInfo.rssi;
 
 	u8 sq_smp = src->PhyInfo.SignalQuality;
 	u8 ss_final;
 	u8 sq_final;
-	long rssi_final;
+	s8 rssi_final;
 
 
 #ifdef CONFIG_ANTENNA_DIVERSITY
@@ -817,7 +817,7 @@ void rtw_update_network(WLAN_BSSID_EX *dst, WLAN_BSSID_EX *src,
 
 #if defined(DBG_RX_SIGNAL_DISPLAY_SSID_MONITORED) && 1
 	if (strcmp(dst->Ssid.Ssid, DBG_RX_SIGNAL_DISPLAY_SSID_MONITORED) == 0) {
-		RTW_INFO(FUNC_ADPT_FMT" %s("MAC_FMT", ch%u) ss_ori:%3u, sq_ori:%3u, rssi_ori:%3ld, ss_smp:%3u, sq_smp:%3u, rssi_smp:%3ld\n"
+		RTW_INFO(FUNC_ADPT_FMT" %s("MAC_FMT", ch%u) ss_ori:%3u, sq_ori:%3u, rssi_ori:%d, ss_smp:%3u, sq_smp:%3u, rssi_smp:%d\n"
 			 , FUNC_ADPT_ARG(padapter)
 			, src->Ssid.Ssid, MAC_ARG(src->MacAddress), src->Configuration.DSConfig
 			 , ss_ori, sq_ori, rssi_ori
@@ -830,7 +830,7 @@ void rtw_update_network(WLAN_BSSID_EX *dst, WLAN_BSSID_EX *src,
 	if (check_fwstate(&padapter->mlmepriv, WIFI_ASOC_STATE) && is_same_network(&(padapter->mlmepriv.cur_network.network), src, 0)) {
 		/* Take the recvpriv's value for the connected AP*/
 		ss_final = padapter->recvinfo.signal_strength;
-		sq_final = adapter_to_dvobj(padapter)->recvpriv.signal_qual;
+		sq_final = padapter->recvinfo.signal_qual;
 		/* the rssi value here is undecorated, and will be used for antenna diversity */
 		if (sq_smp != 101) /* from the right channel */
 			rssi_final = (src->PhyInfo.rssi + dst->PhyInfo.rssi * 4) / 5;
@@ -855,18 +855,16 @@ void rtw_update_network(WLAN_BSSID_EX *dst, WLAN_BSSID_EX *src,
 		dst->Reserved[1] = src->Reserved[1];
 		_rtw_memcpy((u8 *)dst, (u8 *)src, get_WLAN_BSSID_EX_sz(src));
 	}
-#ifdef CONFIG_LAYER2_ROAMING
-	dst->tsf = src->tsf;
-#endif
 	dst->PhyInfo.SignalStrength = ss_final;
 	dst->PhyInfo.SignalQuality = sq_final;
 	dst->PhyInfo.rssi = rssi_final;
 
 #if defined(DBG_RX_SIGNAL_DISPLAY_SSID_MONITORED) && 1
 	if (strcmp(dst->Ssid.Ssid, DBG_RX_SIGNAL_DISPLAY_SSID_MONITORED) == 0) {
-		RTW_INFO(FUNC_ADPT_FMT" %s("MAC_FMT"), SignalStrength:%u, SignalQuality:%u, RawRSSI:%ld\n"
+		RTW_INFO(FUNC_ADPT_FMT" %s("MAC_FMT"), SignalStrength:%u, SignalQuality:%u, RawRSSI:%d\n"
 			 , FUNC_ADPT_ARG(padapter)
-			, dst->Ssid.Ssid, MAC_ARG(dst->MacAddress), dst->PhyInfo.SignalStrength, dst->PhyInfo.SignalQuality, dst->PhyInfo.rssi);
+			, dst->Ssid.Ssid, MAC_ARG(dst->MacAddress),
+			dst->PhyInfo.SignalStrength, dst->PhyInfo.SignalQuality, dst->PhyInfo.rssi);
 	}
 #endif
 }
@@ -2338,28 +2336,25 @@ static void rtw_joinbss_update_network(_adapter *padapter, struct wlan_network *
 	_rtw_memcpy(&cur_network->network.IEs[0], &ptarget_wlan->network.IEs[0], MAX_IE_SZ);
 
 	cur_network->aid = pnetwork->join_res;
-
-
 #ifdef CONFIG_SIGNAL_STAT_PROCESS
 	rtw_set_signal_stat_timer(&padapter->recvinfo);
 #endif
 	padapter->recvinfo.signal_strength = ptarget_wlan->network.PhyInfo.SignalStrength;
-	adapter_to_dvobj(padapter)->recvpriv.signal_qual = ptarget_wlan->network.PhyInfo.SignalQuality;
+	padapter->recvinfo.signal_qual = ptarget_wlan->network.PhyInfo.SignalQuality;
 	/* the ptarget_wlan->network.PhyInfo.rssi is raw data, we use ptarget_wlan->network.PhyInfo.SignalStrength instead (has scaled) */
-	adapter_to_dvobj(padapter)->recvpriv.rssi = rtw_phl_rssi_to_dbm(ptarget_wlan->network.PhyInfo.SignalStrength);
+	padapter->recvinfo.rssi = rtw_phl_rssi_to_dbm(ptarget_wlan->network.PhyInfo.SignalStrength);
 #if defined(DBG_RX_SIGNAL_DISPLAY_PROCESSING) && 1
 	RTW_INFO(FUNC_ADPT_FMT" signal_strength:%3u, rssi:%3d, signal_qual:%3u"
 		 "\n"
 		 , FUNC_ADPT_ARG(padapter)
 		 , padapter->recvinfo.signal_strength
-		 , adapter_to_dvobj(padapter)->recvpriv.rssi
-		 , adapter_to_dvobj(padapter)->recvpriv.signal_qual
+		 , padapter->recvinfo.rssi
+		 , padapter->recvinfo.signal_qual
 		);
 #endif
 #ifdef CONFIG_SIGNAL_STAT_PROCESS
 	rtw_set_signal_stat_timer(&padapter->recvinfo);
 #endif
-
 	/* update fw_state */ /* will clr WIFI_UNDER_LINKING here indirectly */
 
 	switch (pnetwork->network.InfrastructureMode) {
@@ -2444,7 +2439,7 @@ void rtw_joinbss_event_prehandle(_adapter *adapter, u8 *pbuf, u16 status)
 					}
 
 					ptarget_wlan = _rtw_find_network(&pmlmepriv->scanned_queue, pnetwork->network.MacAddress);
-					if (check_fwstate(pmlmepriv, WIFI_STATION_STATE) == _TRUE) {
+					if (MLME_IS_STA(adapter)) {
 						if (ptarget_wlan)
 							ptarget_wlan->fixed = _TRUE;
 					}
@@ -2452,7 +2447,7 @@ void rtw_joinbss_event_prehandle(_adapter *adapter, u8 *pbuf, u16 status)
 
 			} else {
 				ptarget_wlan = _rtw_find_same_network(&pmlmepriv->scanned_queue, pnetwork);
-				if (check_fwstate(pmlmepriv, WIFI_STATION_STATE) == _TRUE) {
+				if (MLME_IS_STA(adapter)) {
 					if (ptarget_wlan)
 						ptarget_wlan->fixed = _TRUE;
 				}
@@ -2469,7 +2464,7 @@ void rtw_joinbss_event_prehandle(_adapter *adapter, u8 *pbuf, u16 status)
 
 
 			/* s3. find ptarget_sta & update ptarget_sta after update cur_network only for station mode */
-			if (check_fwstate(pmlmepriv, WIFI_STATION_STATE) == _TRUE) {
+			if (MLME_IS_STA(adapter)) {
 				ptarget_sta = rtw_joinbss_update_stainfo(adapter, pnetwork);
 				if (ptarget_sta == NULL) {
 					RTW_ERR("Can't update stainfo when joinbss_event callback\n");

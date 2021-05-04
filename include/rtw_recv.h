@@ -661,8 +661,6 @@ struct recv_priv {
 #endif
 
 	/* For display the phy informatiom */
-	u8 signal_qual;
-	s8 rssi;	/* translate_percentage_to_dbm(ptarget_wlan->network.PhyInfo.SignalStrength); */
 	struct rx_raw_rssi raw_rssi_info;
 
 	/* u32 signal_stat_converging_constant; */

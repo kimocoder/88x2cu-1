@@ -3541,8 +3541,8 @@ int proc_get_rx_signal(struct seq_file *m, void *v)
 	struct net_device *dev = m->private;
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
 
-	RTW_PRINT_SEL(m, "rssi:%d\n", adapter_to_dvobj(padapter)->recvpriv.rssi);
-#ifdef CONFIG_MP_INCLUDED
+	RTW_PRINT_SEL(m, "rssi:%d\n", padapter->recvinfo.rssi);
+#if 0//def CONFIG_MP_INCLUDED
 	if (padapter->registrypriv.mp_mode == 1) {
 		struct dm_struct *odm = adapter_to_phydm(padapter);
 		if (padapter->mppriv.antenna_rx == ANTENNA_A)
@@ -3569,12 +3569,9 @@ int proc_get_rx_signal(struct seq_file *m, void *v)
 	{
 		/* RTW_PRINT_SEL(m, "rxpwdb:%d\n", adapter_to_dvobj(padapter)->recvpriv.rxpwdb); */
 		RTW_PRINT_SEL(m, "signal_strength:%u\n", padapter->recvinfo.signal_strength);
-		RTW_PRINT_SEL(m, "signal_qual:%u\n", adapter_to_dvobj(padapter)->recvpriv.signal_qual);
+		RTW_PRINT_SEL(m, "signal_qual:%u\n", padapter->recvinfo.signal_qual);
 	}
-#ifdef DBG_RX_SIGNAL_DISPLAY_RAW_DATA
-	rtw_odm_get_perpkt_rssi(m, padapter);
-	rtw_get_raw_rssi_info(m, padapter);
-#endif
+
 	return 0;
 }
 
@@ -3623,31 +3620,6 @@ ssize_t proc_set_rx_signal(struct file *file, const char __user *buffer, size_t 
 
 int proc_get_mac_rptbuf(struct seq_file *m, void *v)
 {
-#ifdef CONFIG_RTL8814A
-	struct net_device *dev = m->private;
-	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
-	u16 i;
-	u16 mac_id;
-	u32 shcut_addr = 0;
-	u32 read_addr = 0;
-
-	RTW_PRINT_SEL(m, "TX ShortCut:\n");
-	for (mac_id = 0; mac_id < 64; mac_id++) {
-		rtw_write16(padapter, 0x140, 0x662 | ((mac_id & BIT5) >> 5));
-		shcut_addr = 0x8000;
-		shcut_addr = shcut_addr | ((mac_id & 0x1f) << 7);
-		RTW_PRINT_SEL(m, "mac_id=%d, 0x140=%x =>\n", mac_id, 0x662 | ((mac_id & BIT5) >> 5));
-		for (i = 0; i < 30; i++) {
-			read_addr = 0;
-			read_addr = shcut_addr | (i << 2);
-			RTW_PRINT_SEL(m, "i=%02d: MAC_%04x= %08x ", i, read_addr, rtw_read32(padapter, read_addr));
-			if (!((i + 1) % 4))
-				RTW_PRINT_SEL(m, "\n");
-			if (i == 29)
-				RTW_PRINT_SEL(m, "\n");
-		}
-	}
-#endif /* CONFIG_RTL8814A */
 	return 0;
 }
 
@@ -3858,66 +3830,6 @@ ssize_t proc_set_rx_ampdu(struct file *file, const char __user *buffer, size_t c
 
 	return count;
 }
-#ifdef CONFIG_SDIO_TX_ENABLE_AVAL_INT
-int proc_get_tx_aval_th(struct seq_file *m, void *v)
-{
-	struct net_device *dev = m->private;
-	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
-	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
-
-	if (padapter) {
-
-		switch(dvobj->tx_aval_int_thr_mode) {
-			case 0:
-				RTW_PRINT_SEL(m, "tx_aval_int_thr_mode = %u (auto) \n", dvobj->tx_aval_int_thr_mode);
-				break;
-			case 1:
-				RTW_PRINT_SEL(m, "tx_aval_int_thr_mode = %u (fixed)\n", dvobj->tx_aval_int_thr_mode);
-				RTW_PRINT_SEL(m, "tx_aval_threshold = 0x%x\n", dvobj->tx_aval_int_thr_value);
-				break;
-			case 2:
-				RTW_PRINT_SEL(m, "tx_aval_int_thr_mode = %u(by sdio_tx_max_len)\n", dvobj->tx_aval_int_thr_mode);
-			   	break;
-			default:
-				break;
-		}
-	}
-	return 0;
-}
-
-ssize_t proc_set_tx_aval_th(struct file *file, const char __user *buffer
-				 , size_t count, loff_t *pos, void *data)
-{
-	struct net_device *dev = data;
-	_adapter *padapter = (_adapter *)rtw_netdev_priv(dev);
-	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
-	char tmp[32];
-	u32 mode;
-	u32 threshold;
-
-	if (count < 1)
-		return -EFAULT;
-
-	if (count > sizeof(tmp)) {
-		rtw_warn_on(1);
-		return -EFAULT;
-	}
-
-	if (buffer && !copy_from_user(tmp, buffer, count)) {
-
-		int num = sscanf(tmp, "%d %d ",&mode, &threshold);
-
-		if(num >= 1)
-			dvobj->tx_aval_int_thr_mode = mode;
-		if(num >= 2)
-			dvobj->tx_aval_int_thr_value = threshold;
-		RTW_INFO("dvobj->tx_aval_int_thr_mode= 0x%x\n", mode);
-		RTW_INFO("dvobj->tx_aval_int_thr_value= 0x%x(range need 1~255)\n", threshold);
-	}
-
-	return count;
-}
-#endif /*CONFIG_SDIO_TX_ENABLE_AVAL_INT*/
 
 int proc_get_rx_ampdu_factor(struct seq_file *m, void *v)
 {
@@ -4148,6 +4060,9 @@ int proc_get_tx_amsdu(struct seq_file *m, void *v)
 		RTW_PRINT_SEL(m, "amsdu  time out count = %u\n", pxmitpriv->amsdu_debug_timeout);
 		RTW_PRINT_SEL(m, "amsdu coalesce one count = %u\n", pxmitpriv->amsdu_debug_coalesce_one);
 		RTW_PRINT_SEL(m, "amsdu coalesce two count = %u\n", pxmitpriv->amsdu_debug_coalesce_two);
+		RTW_PRINT_SEL(m, "amsdu tasklet count = %u\n", pxmitpriv->amsdu_debug_tasklet);
+		RTW_PRINT_SEL(m, "amsdu enqueue count = %u\n", pxmitpriv->amsdu_debug_enqueue);
+		RTW_PRINT_SEL(m, "amsdu dequeue count = %u\n", pxmitpriv->amsdu_debug_dequeue);
 	}
 
 	return 0;

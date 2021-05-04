@@ -4094,7 +4094,7 @@ _recv_entry_drop:
 static void rtw_signal_stat_timer_hdl(void *ctx)
 {
 	_adapter *adapter = (_adapter *)ctx;
-	struct recv_priv *recvpriv = &adapter_to_dvobj(adapter)->recvpriv;
+	struct recv_info *recvinfo = &adapter->recvinfo;
 
 	u32 tmp_s, tmp_q;
 	u8 avg_signal_strength = 0;
@@ -4103,24 +4103,24 @@ static void rtw_signal_stat_timer_hdl(void *ctx)
 	u32 num_signal_qual = 0;
 	u8 ratio_pre_stat = 0, ratio_curr_stat = 0, ratio_total = 0, ratio_profile = SIGNAL_STAT_CALC_PROFILE_0;
 
-	if (adapter->recvinfo.is_signal_dbg) {
+	if (recvinfo->is_signal_dbg) {
 		/* update the user specific value, signal_strength_dbg, to signal_strength, rssi */
-		adapter->recvinfo.signal_strength = adapter->recvinfo.signal_strength_dbg;
-		adapter_to_dvobj(adapter)->recvpriv.rssi = (s8)rtw_phl_rssi_to_dbm(adapter->recvinfo.signal_strength_dbg);
+		recvinfo->signal_strength = recvinfo->signal_strength_dbg;
+		recvinfo->rssi = (s8)rtw_phl_rssi_to_dbm((u8)recvinfo->signal_strength_dbg);
 	} else {
 
-		if (recvpriv->signal_strength_data.update_req == 0) { /* update_req is clear, means we got rx */
-			avg_signal_strength = recvpriv->signal_strength_data.avg_val;
-			num_signal_strength = recvpriv->signal_strength_data.total_num;
+		if (recvinfo->signal_strength_data.update_req == 0) { /* update_req is clear, means we got rx */
+			avg_signal_strength = recvinfo->signal_strength_data.avg_val;
+			num_signal_strength = recvinfo->signal_strength_data.total_num;
 			/* after avg_vals are accquired, we can re-stat the signal values */
-			recvpriv->signal_strength_data.update_req = 1;
+			recvinfo->signal_strength_data.update_req = 1;
 		}
 
-		if (recvpriv->signal_qual_data.update_req == 0) { /* update_req is clear, means we got rx */
-			avg_signal_qual = recvpriv->signal_qual_data.avg_val;
-			num_signal_qual = recvpriv->signal_qual_data.total_num;
+		if (recvinfo->signal_qual_data.update_req == 0) { /* update_req is clear, means we got rx */
+			avg_signal_qual = recvinfo->signal_qual_data.avg_val;
+			num_signal_qual = recvinfo->signal_qual_data.total_num;
 			/* after avg_vals are accquired, we can re-stat the signal values */
-			recvpriv->signal_qual_data.update_req = 1;
+			recvinfo->signal_qual_data.update_req = 1;
 		}
 
 		if (num_signal_strength == 0) {
@@ -4147,7 +4147,7 @@ static void rtw_signal_stat_timer_hdl(void *ctx)
 		ratio_total = ratio_pre_stat + ratio_curr_stat;
 
 		/* update value of signal_strength, rssi, signal_qual */
-		tmp_s = (ratio_curr_stat * avg_signal_strength + ratio_pre_stat * adapter->recvinfo.signal_strength);
+		tmp_s = (ratio_curr_stat * avg_signal_strength + ratio_pre_stat * recvinfo->signal_strength);
 		if (tmp_s % ratio_total)
 			tmp_s = tmp_s / ratio_total + 1;
 		else
@@ -4155,7 +4155,7 @@ static void rtw_signal_stat_timer_hdl(void *ctx)
 		if (tmp_s > 100)
 			tmp_s = 100;
 
-		tmp_q = (ratio_curr_stat * avg_signal_qual + ratio_pre_stat * recvpriv->signal_qual);
+		tmp_q = (ratio_curr_stat * avg_signal_qual + ratio_pre_stat * recvinfo->signal_qual);
 		if (tmp_q % ratio_total)
 			tmp_q = tmp_q / ratio_total + 1;
 		else
@@ -4163,9 +4163,9 @@ static void rtw_signal_stat_timer_hdl(void *ctx)
 		if (tmp_q > 100)
 			tmp_q = 100;
 
-		adapter->recvinfo.signal_strength = tmp_s;
-		recvpriv->rssi = (s8)rtw_phl_rssi_to_dbm(tmp_s);
-		recvpriv->signal_qual = tmp_q;
+		recvinfo->signal_strength = tmp_s;
+		recvinfo->rssi = (s8)rtw_phl_rssi_to_dbm(tmp_s);
+		recvinfo->signal_qual = tmp_q;
 
 #if defined(DBG_RX_SIGNAL_DISPLAY_PROCESSING) && 1
 		RTW_INFO(FUNC_ADPT_FMT" signal_strength:%3u, rssi:%3d, signal_qual:%3u"
@@ -4173,9 +4173,9 @@ static void rtw_signal_stat_timer_hdl(void *ctx)
 			 ", on_cur_ch_ms:%d"
 			 "\n"
 			 , FUNC_ADPT_ARG(adapter)
-			 , adapter->recvinfo.signal_strength
-			 , recvpriv->rssi
-			 , recvpriv->signal_qual
+			 , recvinfo->signal_strength
+			 , recvinfo->rssi
+			 , recvinfo->signal_qual
 			 , num_signal_strength, num_signal_qual
 			, rtw_get_on_cur_ch_time(adapter) ? rtw_get_passing_time_ms(rtw_get_on_cur_ch_time(adapter)) : 0
 			);
@@ -4183,7 +4183,7 @@ static void rtw_signal_stat_timer_hdl(void *ctx)
 	}
 
 set_timer:
-	rtw_set_signal_stat_timer(&adapter->recvinfo);
+	rtw_set_signal_stat_timer(recvinfo);
 
 }
 #endif /* CONFIG_SIGNAL_STAT_PROCESS */
