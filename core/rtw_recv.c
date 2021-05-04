@@ -5441,7 +5441,7 @@ void rtl8822c_query_rx_desc(union recv_frame *precvframe, u8 *pdesc);
 u32 rtw_core_rx_process(void *drv_priv)
 {
 	struct dvobj_priv *dvobj = (struct dvobj_priv *)drv_priv;
-	_adapter *adapter = dvobj_get_primary_adapter(dvobj);
+	_adapter *adapter = NULL;
 	struct rtw_recv_pkt *rx_req = NULL;
 	struct rtw_pkt_buf_list *pkt = NULL;
 	union recv_frame *prframe = NULL;
@@ -5471,11 +5471,6 @@ u32 rtw_core_rx_process(void *drv_priv)
 		if(rx_req == NULL)
 			goto rx_stop;
 
-		if (!rtw_is_adapter_up(adapter)) {
-			RTW_ERR("%s NEO adapter is not up - drop\n", __func__);
-			goto rx_next;
-		}
-
 		if(rtw_core_update_recvframe(dvobj, prframe, rx_req) != CORE_RX_CONTINUE) {
 			RTW_ERR("%s NEO rtw_core_update_recvframe failed - drop\n", __func__);
 			goto rx_next;
@@ -5487,6 +5482,12 @@ u32 rtw_core_rx_process(void *drv_priv)
 			goto rx_next;
 		}
 
+		adapter = prframe->u.hdr.adapter;
+
+		if (!rtw_is_adapter_up(adapter)) {
+			RTW_ERR("%s NEO adapter is not up - drop\n", __func__);
+			goto rx_next;
+		}
 
 #ifdef CONFIG_RTW_CORE_RXSC
 		if (core_rxsc_apply_check(adapter, prframe) == CORE_RX_GO_SHORTCUT &&
