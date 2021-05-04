@@ -1475,7 +1475,7 @@ struct mac_ax_sch_tx_en {
 struct mac_hw_info {
 	u8 done;
 	u8 chip_id;
-	u8 chip_cut;
+	u8 cv;
 	enum mac_intf intf;
 	u8 tx_ch_num;
 	u8 tx_data_ch_num;

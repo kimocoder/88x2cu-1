@@ -79,7 +79,6 @@ u32 _hal_read32(struct rtw_hal_com_t *hal, u32 addr)
 	u32(*_read32)(struct rtw_hal_com_t *hal, u32 addr);
 
 	#ifdef DBG_PHL_MAC_REG_RW
-aa
 	if (rtw_hal_mac_reg_chk(hal, addr) == false) {
 		r_val = 0xEAEAEAEA;
 		return r_val;
@@ -95,8 +94,10 @@ int _hal_write8(struct rtw_hal_com_t *hal, u32 addr, u8 val)
 {
 	struct hal_io_priv *io_priv = &hal->iopriv;
 	int (*_write8)(struct rtw_hal_com_t *hal, u32 addr, u8 val);
+	#ifdef RTW_WKARD_BUS_WRITE
 	int (*_write_post_cfg)(struct rtw_hal_com_t *hal, u32 addr,
 						   u32 value) = NULL;
+	#endif
 	int ret;
 
 	#ifdef DBG_PHL_MAC_REG_RW
@@ -107,19 +108,22 @@ int _hal_write8(struct rtw_hal_com_t *hal, u32 addr, u8 val)
 	_write8 = io_priv->io_ops._write8;
 	ret = _write8(hal, addr, val);
 
+	#ifdef RTW_WKARD_BUS_WRITE
 	_write_post_cfg = io_priv->io_ops._write_post_cfg;
 	if(NULL != _write_post_cfg) {
 		ret = _write_post_cfg(hal, addr, val);
 	}
-
+	#endif
 	return ret;
 }
 int _hal_write16(struct rtw_hal_com_t *hal, u32 addr, u16 val)
 {
 	struct hal_io_priv *io_priv = &hal->iopriv;
 	int (*_write16)(struct rtw_hal_com_t *hal, u32 addr, u16 val);
+	#ifdef RTW_WKARD_BUS_WRITE
 	int (*_write_post_cfg)(struct rtw_hal_com_t *hal, u32 addr,
 						   u32 value) = NULL;
+	#endif
 	int ret;
 
 	#ifdef DBG_PHL_MAC_REG_RW
@@ -130,19 +134,22 @@ int _hal_write16(struct rtw_hal_com_t *hal, u32 addr, u16 val)
 	_write16 = io_priv->io_ops._write16;
 	ret = _write16(hal, addr, val);
 
+	#ifdef RTW_WKARD_BUS_WRITE
 	_write_post_cfg = io_priv->io_ops._write_post_cfg;
 	if(NULL != _write_post_cfg) {
 		ret = _write_post_cfg(hal, addr, val);
 	}
-
+	#endif
 	return ret;
 }
 int _hal_write32(struct rtw_hal_com_t *hal, u32 addr, u32 val)
 {
 	struct hal_io_priv *io_priv = &hal->iopriv;
 	int (*_write32)(struct rtw_hal_com_t *hal, u32 addr, u32 val);
+	#ifdef RTW_WKARD_BUS_WRITE
 	int (*_write_post_cfg)(struct rtw_hal_com_t *hal, u32 addr,
 						   u32 value) = NULL;
+	#endif
 	int ret;
 
 	#ifdef DBG_PHL_MAC_REG_RW
@@ -153,11 +160,12 @@ int _hal_write32(struct rtw_hal_com_t *hal, u32 addr, u32 val)
 	_write32 = io_priv->io_ops._write32;
 	ret = _write32(hal, addr, val);
 
+	#ifdef RTW_WKARD_BUS_WRITE
 	_write_post_cfg = io_priv->io_ops._write_post_cfg;
 	if(NULL != _write_post_cfg) {
 		ret = _write_post_cfg(hal, addr, val);
 	}
-
+	#endif
 	return ret;
 }
 
@@ -270,6 +278,7 @@ u32 hal_init_io_priv(struct rtw_hal_com_t *hal,
 	_os_mutex_init(hal->drv_priv, &iopriv->sd_indirect_access_mutex);
 	#endif
 	set_intf_ops(hal, &iopriv->io_ops);
+
 	return RTW_HAL_STATUS_SUCCESS;
 }
 u32 hal_deinit_io_priv(struct rtw_hal_com_t *hal)

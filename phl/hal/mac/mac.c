@@ -130,6 +130,7 @@ static u32 get_chip_info(struct mac_ax_adapter *adapter,
 #if (MAC_AX_USB_SUPPORT || MAC_AX_PCIE_SUPPORT)
 	case MAC_AX_INTF_USB:
 	case MAC_AX_INTF_PCIE:
+#if 0 //NEO
 		cur_id = PLTFM_REG_R8(R_AX_SYS_CHIPINFO);
 		*cut = PLTFM_REG_R8(R_AX_SYS_CFG1 + 1) >> 4;
 		if (*cut <= CHIP_CUT_B) {
@@ -139,6 +140,8 @@ static u32 get_chip_info(struct mac_ax_adapter *adapter,
 			else
 				*cut = CHIP_CUT_B;
 		}
+#endif //NEO
+		*cut = 0;
 		break;
 #endif
 	default:
@@ -305,7 +308,8 @@ static u32 get_chip_info(void *drv_adapter, struct mac_pltfm_cb *pltfm_cb,
 #endif // if 0 NEO 
 
 	*id = MAC_CHIP_ID_8822C;
-	*cut = CHIP_CUT_B;
+	//*cut = CHIP_CUT_B;
+	*cut = 0;
 
 	return MACSUCCESS;
 }

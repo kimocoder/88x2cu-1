@@ -916,7 +916,7 @@ u32 rtw_hal_mac_init(struct rtw_phl_com_t *phl_com,
 		/*_os_warn_on(1);*/
 		goto error_mac_init;
 	}
-	hal_com->cut_version = mac->hw_info->chip_cut;
+	hal_com->cv = mac->hw_info->cv;
 	hal_info->mac = mac;
 
 	return hal_status;

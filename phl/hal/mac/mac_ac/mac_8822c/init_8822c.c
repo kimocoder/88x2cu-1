@@ -537,7 +537,7 @@ struct mac_ax_adapter *get_mac_8852a_adapter(enum mac_ax_intf intf,
 }
 #else
 struct mac_adapter *get_mac_8822c_adapter(enum mac_intf intf,
-					     u8 chip_cut, void *drv_adapter,
+					     u8 cv, void *drv_adapter,
 					     struct mac_pltfm_cb *pltfm_cb)
 {
 	struct mac_adapter *adapter = NULL;
@@ -575,7 +575,7 @@ struct mac_adapter *get_mac_8822c_adapter(enum mac_intf intf,
 	adapter->drv_adapter = drv_adapter;
 	adapter->pltfm_cb = pltfm_cb;
 	adapter->hw_info = hw_info;
-	adapter->hw_info->chip_cut = chip_cut;
+	adapter->hw_info->cv = cv;
 	adapter->hw_info->intf = intf;
 	adapter->hw_info->done = 1;
 

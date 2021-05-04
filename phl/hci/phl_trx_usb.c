@@ -1331,6 +1331,8 @@ struct rtw_phl_rx_pkt *phl_get_single_rx(struct phl_info_t *phl_info,
 	s32 pkt_offset = 0, align_offset = 0;
 	bool brel = true, balloc = false;
 	_os_spinlockfg sp_flags;
+	u8 mfrag = 0, frag_num = 0;
+	u16 netbuf_len = 0;
 
 	//initialize for compiler
 	pkt_buf = rx_buf->buffer;
@@ -1398,14 +1400,29 @@ struct rtw_phl_rx_pkt *phl_get_single_rx(struct phl_info_t *phl_info,
 		if (phl_rx->type == RTW_RX_TYPE_WIFI)
 		{
 			/* Pre-alloc netbuf and replace pkt_list[0].vir_addr */
+
+			/* For first fragment packet, driver need allocate 1536 to defrag packet.*/
+			mfrag = PHL_GET_80211_HDR_MORE_FRAG(phl_rx->r.pkt_list[0].vir_addr);
+			frag_num = PHL_GET_80211_HDR_FRAG_NUM(phl_rx->r.pkt_list[0].vir_addr);
+
+			if (mfrag == 1 && frag_num == 0) {
+				if (phl_rx->r.pkt_list[0].length < RTW_MAX_ETH_PKT_LEN)
+					netbuf_len = RTW_MAX_ETH_PKT_LEN;
+				else
+					netbuf_len = phl_rx->r.pkt_list[0].length;
+			} else {
+				netbuf_len = phl_rx->r.pkt_list[0].length;
+			}
+
 			netbuf = _os_alloc_netbuf(drv,
-						phl_rx->r.pkt_list[0].length,
+						netbuf_len,
 						&(phl_rx->r.os_priv));
 
 			if (netbuf) {
 				_os_mem_cpy(drv, netbuf,
 					phl_rx->r.pkt_list[0].vir_addr, phl_rx->r.pkt_list[0].length);
 				phl_rx->r.pkt_list[0].vir_addr = netbuf;
+				phl_rx->r.os_netbuf_len = netbuf_len;
 				balloc = true;
 			}
 		}
@@ -1455,6 +1472,78 @@ void rtw_phl_post_in_complete(void *phl, void *rxobj, u32 inbuf_len, u8 status_c
 		rtw_phl_start_rx_process(phl);
 }
 
+void phl_wp_report_record_sts_usb(struct phl_info_t *phl_info, u8 macid, u16 ac_queue,
+			 u8 txsts)
+{
+	struct rtw_phl_stainfo_t *phl_sta = NULL;
+	struct rtw_hal_stainfo_t *hal_sta = NULL;
+	struct rtw_wp_rpt_stats *wp_rpt_stats= NULL;
+
+	phl_sta = rtw_phl_get_stainfo_by_macid(phl_info, macid);
+
+	if (phl_sta) {
+		hal_sta = phl_sta->hal_sta;
+		/* Record Per ac queue statistics */
+		wp_rpt_stats = &hal_sta->trx_stat.wp_rpt_stats[ac_queue];
+
+		_os_spinlock(phl_to_drvpriv(phl_info), &hal_sta->trx_stat.tx_sts_lock, _bh, NULL);
+		if (TX_STATUS_TX_DONE == txsts) {
+			/* record total tx ok*/
+			hal_sta->trx_stat.tx_ok_cnt++;
+			/* record per ac queue tx ok*/
+			wp_rpt_stats->tx_ok_cnt++;
+		} else {
+			/* record total tx fail*/
+			hal_sta->trx_stat.tx_fail_cnt++;
+			/* record per ac queue tx fail*/
+			if (TX_STATUS_TX_FAIL_REACH_RTY_LMT == txsts)
+				wp_rpt_stats->rty_fail_cnt++;
+			else if (TX_STATUS_TX_FAIL_LIFETIME_DROP == txsts)
+				wp_rpt_stats->lifetime_drop_cnt++;
+			else if (TX_STATUS_TX_FAIL_MACID_DROP == txsts)
+				wp_rpt_stats->macid_drop_cnt++;
+		}
+		_os_spinunlock(phl_to_drvpriv(phl_info), &hal_sta->trx_stat.tx_sts_lock, _bh, NULL);
+
+		PHL_TRACE(COMP_PHL_DBG, _PHL_DEBUG_,"macid: %u, ac_queue: %u, tx_ok_cnt: %u, rty_fail_cnt: %u, "
+			"lifetime_drop_cnt: %u, macid_drop_cnt: %u\n"
+			, macid, ac_queue, wp_rpt_stats->tx_ok_cnt, wp_rpt_stats->rty_fail_cnt
+			, wp_rpt_stats->lifetime_drop_cnt, wp_rpt_stats->macid_drop_cnt);
+		PHL_TRACE(COMP_PHL_DBG, _PHL_DEBUG_,"totoal tx ok: %u \n totoal tx fail: %u\n"
+			, hal_sta->trx_stat.tx_ok_cnt, hal_sta->trx_stat.tx_fail_cnt);
+	} else {
+		PHL_TRACE(COMP_PHL_DBG, _PHL_DEBUG_, "%s: PHL_STA not found\n",
+				__FUNCTION__);
+	}
+}
+
+void _phl_rx_handle_wp_report_usb(struct phl_info_t *phl_info,
+							struct rtw_phl_rx_pkt *phl_rx)
+{
+	RTW_ERR("%s NEO TODO\n", __func__);
+#if 0 //NEO
+	struct rtw_recv_pkt *r = &phl_rx->r;
+	u8 *pkt = NULL;
+	u16 pkt_len = 0;
+	u16 rsize = 0;
+	u8 macid = 0, ac_queue = 0, txsts = 0;
+
+	pkt = r->pkt_list[0].vir_addr;
+	pkt_len = r->pkt_list[0].length;
+
+	while (pkt_len > 0) {
+		rsize = rtw_hal_handle_wp_rpt_usb(phl_info->hal, pkt, pkt_len,
+						&macid, &ac_queue, &txsts);
+		if (0 == rsize)
+			break;
+
+		phl_wp_report_record_sts_usb(phl_info, macid, ac_queue, txsts);
+		pkt += rsize;
+		pkt_len -= rsize;
+	}
+#endif //NEO
+}
+
 
 static void phl_rx_process_usb(struct phl_info_t *phl_info,
 							struct rtw_phl_rx_pkt *phl_rxhead)
@@ -1493,10 +1582,16 @@ static void phl_rx_process_usb(struct phl_info_t *phl_info,
 #endif
 			phl_recycle_rx_buf(phl_info, phl_rx);
 			break;
+		case RTW_RX_TYPE_TX_WP_RELEASE_HOST:
+			#ifdef CONFIG_PHL_USB_RELEASE_RPT_ENABLE
+			_phl_rx_handle_wp_report_usb(phl_info, phl_rx);
+			phl_recycle_rx_buf(phl_info, phl_rx);
+			phl_rx = NULL;
+			break;
+			#endif /* CONFIG_PHL_USB_RELEASE_RPT_ENABLE */
 		case RTW_RX_TYPE_C2H:
 		case RTW_RX_TYPE_CHANNEL_INFO:
 		case RTW_RX_TYPE_TX_RPT:
-		case RTW_RX_TYPE_TX_WP_RELEASE_HOST:
 		case RTW_RX_TYPE_DFS_RPT:
 		case RTW_RX_TYPE_MAX:
 			PHL_TRACE(COMP_PHL_RECV, _PHL_WARNING_, "phl_rx_process_usb(): Unsupported case:%d, please check it\n",
@@ -1571,8 +1666,8 @@ enum rtw_phl_status phl_pltfm_tx_usb(struct phl_info_t *phl_info,
 {
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_FAILURE;
 
-	RTW_ERR("NEO TODO %s\n", __func__);
-#if 0 // NEO TODO
+	RTW_ERR("%s NEO TODO\n", __func__);
+#if 0
 	struct rtw_h2c_pkt *h2c_pkt = (struct rtw_h2c_pkt *)pkt;
 	struct phl_usb_tx_buf_resource *reso = NULL;
 	struct phl_usb_buf *tx_buf = NULL;
@@ -1601,7 +1696,7 @@ enum rtw_phl_status phl_pltfm_tx_usb(struct phl_info_t *phl_info,
 				&reso->h2c_txbuf_list, tx_buf, _tail);
 		}
 	}
-#endif // if 0 NEO
+#endif
 	return pstatus;
 }
 
@@ -1647,7 +1742,7 @@ void phl_recycle_rx_pkt_usb(struct phl_info_t *phl_info,
 	if (phl_rx->r.os_priv)
 		_os_free_netbuf(phl_to_drvpriv(phl_info),
 			phl_rx->r.pkt_list[0].vir_addr,
-			phl_rx->r.pkt_list[0].length,
+			phl_rx->r.os_netbuf_len,
 			phl_rx->r.os_priv);
 
 	phl_recycle_rx_buf(phl_info, phl_rx);

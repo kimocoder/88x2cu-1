@@ -232,6 +232,10 @@ struct rtw_r_meta_data {
 	u8 dma_ch;
 	u8 hal_port;
 	u8 ta[6]; /* Transmitter Address */
+	u8 ppdu_cnt_chg;
+#ifdef CONFIG_PHL_CSUM_OFFLOAD_RX
+	u8 chksum_status; /*return mac_chk_rx_tcpip_chksum_ofd,0 is ok ,1 is fail*/
+#endif
 	u8 physt;
 	u8 *drv_info;
 
@@ -362,6 +366,7 @@ struct rtw_recv_pkt {
 	struct rtw_r_meta_data mdata;
 	u8 shortcut_id;
 	u8 pkt_cnt;
+	u16 os_netbuf_len;
 	struct rtw_wifi_role_t *rx_role;
 	struct rtw_phl_stainfo_t *tx_sta;
 	struct rtw_pkt_buf_list pkt_list[MAX_RX_BUF_SEG_NUM];

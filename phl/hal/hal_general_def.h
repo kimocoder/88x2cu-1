@@ -16,24 +16,12 @@
 #define _HAL_GENERAL_DEF_H_
 
 enum rtw_chip_id {
-	CHIP_WIFI5_8822C,
+	CHIP_WIFI5_8822C, //NEO
 	CHIP_WIFI6_8852A,
 	CHIP_WIFI6_8834A,
 	CHIP_WIFI6_8852B,
+	CHIP_WIFI6_8852C,
 	CHIP_WIFI6_MAX
-};
-
-enum rtw_cut_version {
-	CHIP_CUT_A,
-	CHIP_CUT_B,
-	CHIP_CUT_C,
-	CHIP_CUT_D,
-	CHIP_CUT_E,
-	CHIP_CUT_F,
-	CHIP_CUT_G,
-	CHIP_CUT_TEST,
-	CHIP_CUT_MAX,
-	CHIP_CUT_INVALID = CHIP_CUT_MAX,
 };
 
 enum rtw_efuse_info {
@@ -54,7 +42,9 @@ enum rtw_efuse_info {
 	EFUSE_INFO_RF_VALID_PATH,
 	EFUSE_INFO_RF_RFE,
 	EFUSE_INFO_RF_TXPWR,
+	EFUSE_INFO_RF_BOARD_OPTION,
 	EFUSE_INFO_RF_CHAN_PLAN,
+	EFUSE_INFO_RF_CHAN_PLAN_FORCE_HW,
 	EFUSE_INFO_RF_COUNTRY,
 	EFUSE_INFO_RF_THERMAL,
 	EFUSE_INFO_RF_2G_CCK_A_TSSI_DE_1,
@@ -176,6 +166,109 @@ enum rtw_efuse_info {
 	EFUSE_INFO_BTCOEX_MAX,
 };
 
+enum rtw_cv {
+	CAV,
+	CBV,
+	CCV,
+	CDV,
+	CEV,
+	CFV,
+	CGV,
+	CTV,
+	CMAXV,
+};
 
+enum rtw_fv {
+	FTV,
+	FUV,
+	FSV,
+};
+
+enum rtw_dv_sel {
+	DAV,
+	DDV,
+};
+
+enum hal_pwr_by_rate_setting {
+	PW_BY_RATE_ON = 0,
+	PW_BY_RATE_ALL_SAME = 1
+};
+
+enum hal_pwr_limit_type {
+	PWLMT_BY_EFUSE = 0,
+	PWLMT_DISABLE = 1,
+	PWBYRATE_AND_PWLMT = 2
+};
+
+enum rtw_mac_gfunc {
+	RTW_MAC_GPIO_WL_PD,
+	RTW_MAC_GPIO_BT_PD,
+	RTW_MAC_GPIO_WL_EXTWOL,
+	RTW_MAC_GPIO_BT_GPIO,
+	RTW_MAC_GPIO_WL_SDIO_INT,
+	RTW_MAC_GPIO_BT_SDIO_INT,
+	RTW_MAC_GPIO_WL_FLASH,
+	RTW_MAC_GPIO_BT_FLASH,
+	RTW_MAC_GPIO_SIC,
+	RTW_MAC_GPIO_LTE_UART,
+	RTW_MAC_GPIO_LTE_3W,
+	RTW_MAC_GPIO_WL_PTA,
+	RTW_MAC_GPIO_BT_PTA,
+	RTW_MAC_GPIO_MAILBOX,
+	RTW_MAC_GPIO_WL_LED,
+	RTW_MAC_GPIO_OSC,
+	RTW_MAC_GPIO_XTAL_CLK,
+	RTW_MAC_GPIO_EXT_XTAL_CLK,
+	RTW_MAC_GPIO_DBG_GNT,
+	RTW_MAC_GPIO_WL_RFE_CTRL,
+	RTW_MAC_GPIO_BT_UART_RQB,
+	RTW_MAC_GPIO_BT_WAKE_HOST,
+	RTW_MAC_GPIO_HOST_WAKE_BT,
+	RTW_MAC_GPIO_DBG,
+	RTW_MAC_GPIO_WL_UART_TX,
+	RTW_MAC_GPIO_WL_UART_RX,
+	RTW_MAC_GPIO_WL_JTAG,
+	RTW_MAC_GPIO_SW_IO,
+
+	/* keep last */
+	RTW_MAC_GPIO_LAST,
+	RTW_MAC_GPIO_MAX = RTW_MAC_GPIO_LAST,
+	RTW_MAC_GPIO_INVALID = RTW_MAC_GPIO_LAST,
+	RTW_MAC_GPIO_DFLT = RTW_MAC_GPIO_LAST,
+};
+
+
+#ifdef CONFIG_FW_IO_OFLD_SUPPORT
+enum rtw_mac_src_cmd_ofld {
+	RTW_MAC_BB_CMD_OFLD = 0,
+	RTW_MAC_RF_CMD_OFLD,
+	RTW_MAC_MAC_CMD_OFLD,
+	RTW_MAC_OTHER_CMD_OFLD
+};
+enum rtw_mac_cmd_type_ofld {
+	RTW_MAC_WRITE_OFLD = 0,
+	RTW_MAC_COMPARE_OFLD,
+	RTW_MAC_DELAY_OFLD
+};
+enum rtw_mac_rf_path {
+	RTW_MAC_RF_PATH_A = 0,   //Radio Path A
+	RTW_MAC_RF_PATH_B,	//Radio Path B
+	RTW_MAC_RF_PATH_C,	//Radio Path C
+	RTW_MAC_RF_PATH_D,	//Radio Path D
+};
+struct rtw_mac_cmd {
+	enum rtw_mac_src_cmd_ofld src;
+	enum rtw_mac_cmd_type_ofld type;
+	u8 lc;
+	enum rtw_mac_rf_path rf_path;
+	u16 offset;
+	u16 id;
+	u32 value;
+	u32 mask;
+};
+enum rtw_fw_ofld_cap {
+	FW_CAP_IO_OFLD = BIT(0),
+};
+#endif
 #endif /* _HAL_GENERAL_DEF_H_*/
 

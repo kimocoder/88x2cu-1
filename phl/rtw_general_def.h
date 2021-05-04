@@ -589,7 +589,9 @@ enum rtw_pcie_bus_func_cap_t {
 #define FRAME_OFFSET_SEQUENCE			22
 #define FRAME_OFFSET_ADDRESS4			24
 #define PHL_GET_80211_HDR_TYPE(_hdr)	LE_BITS_TO_2BYTE((u8 *)_hdr, 2, 6)
+#define PHL_GET_80211_HDR_MORE_FRAG(_hdr) LE_BITS_TO_2BYTE((u8 *)_hdr, 10, 1)
 #define PHL_GET_80211_HDR_RETRY(_hdr)	LE_BITS_TO_2BYTE((u8 *)_hdr, 11, 1)
+#define PHL_GET_80211_HDR_FRAG_NUM(_hdr)	LE_BITS_TO_2BYTE((u8 *)_hdr + 22, 0, 4)
 #define PHL_GET_80211_HDR_SEQUENCE(_hdr)	LE_BITS_TO_2BYTE((u8 *)_hdr + 22, 4, 12)
 #define PHL_GET_80211_HDR_ADDRESS2(_d, _hdr, _val) \
 		_os_mem_cpy(_d, (u8 *)_val, (u8 *)_hdr + FRAME_OFFSET_ADDRESS2, 6)
@@ -608,10 +610,16 @@ enum rtw_pcie_bus_func_cap_t {
 	 (_TYPE == RTW_FRAME_TYPE_ASOC_RESP) || \
 	 (_TYPE == RTW_FRAME_TYPE_ASOC_REQ)) ? true : false
 
+#define RTW_IS_ASOC_REQ_PKT(_TYPE) \
+		((_TYPE == RTW_FRAME_TYPE_REASOC_REQ) || \
+		 (_TYPE == RTW_FRAME_TYPE_ASOC_REQ)) ? true : false
+
 #define RTW_IS_BEACON_OR_PROBE_RESP_PKT(_TYPE) \
 	((_TYPE == RTW_FRAME_TYPE_BEACON) || \
 	 (_TYPE == RTW_FRAME_TYPE_PROBE_RESP)) ? true : false
 
 #define TU 1024 /* Time Unit (TU): 1024 us*/
+
+#define RTW_MAX_ETH_PKT_LEN 1536
 
 #endif /*_RTW_GENERAL_DEF_H_*/

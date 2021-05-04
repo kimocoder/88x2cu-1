@@ -15,6 +15,16 @@
 #ifndef _PHL_TRX_DEF_USB_H_
 #define _PHL_TRX_DEF_USB_H_
 
+/* Release report related format */
+#define WP_TID_INDIC_RESERVED_BIT BIT(14)
+#define WP_RESERVED_SEQ 0xFFF
+#define WP_MAX_SEQ_NUMBER WP_RESERVED_SEQ
+#define TX_STATUS_TX_DONE 0
+#define TX_STATUS_TX_FAIL_REACH_RTY_LMT 1
+#define TX_STATUS_TX_FAIL_LIFETIME_DROP 2
+#define TX_STATUS_TX_FAIL_MACID_DROP 3
+#define TX_STATUS_TX_FAIL_SW_DROP 4
+
 /* for tx */
 struct phl_usb_buf {
 	_os_list list;

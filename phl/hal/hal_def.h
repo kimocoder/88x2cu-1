@@ -15,6 +15,7 @@
 #ifndef _HAL_DEF_H_
 #define _HAL_DEF_H_
 
+#define halcom_to_drvpriv(_hcom)	(_hcom->drv_priv)
 
 #define MAX_WD_LEN		(48)
 #define MAX_WD_BODY_LEN (24)
@@ -53,7 +54,8 @@ enum rtw_hal_status {
 	RTW_HAL_STATUS_EFUSE_PG_FAIL, /* 11 */
 	RTW_HAL_STATUS_MAC_API_FAILURE, /* 12 */
 	RTW_HAL_STATUS_BB_CH_INFO_LAST_SEG, /*13*/
-	RTW_HAL_STATUS_UNKNOWN_RFE_TYPE /* 14 */
+	RTW_HAL_STATUS_UNKNOWN_RFE_TYPE, /* 14 */
+	RTW_HAL_STATUS_TIMEOUT, /* 15 */
 };
 
 #define FW_FILE_NIC_POSTFIX ""
@@ -67,6 +69,8 @@ enum rtw_fw_type {
 	RTW_FW_AP, /* 3 */
 	RTW_FW_ROM, /* 4 */
 	RTW_FW_SPIC, /* 5 */
+	RTW_FW_NIC_MP, /* 6 */
+	RTW_FW_AP_MP, /* 7 */
 	RTW_FW_MAX
 };
 
@@ -101,6 +105,12 @@ enum rtw_hal_config_int {
 	RTW_HAL_EN_HCI_INT,
 	RTW_HAL_DIS_HCI_INT,
 	RTW_HAL_CONFIG_INT_MAX
+};
+
+enum hal_mp_efuse_type {
+	HAL_MP_EFUSE_WIFI = 0,
+	HAL_MP_EFUSE_BT,
+	HAL_MP_EFUSE_NONE,
 };
 
 struct rtw_g6_h2c_hdr {
@@ -142,12 +152,6 @@ struct rtw_c2h_info {
 #endif
 };
 
-
-struct rtw_hw_band {
-	struct rtw_chan_def cur_chandef;
-	u8 ppdu_sts_appen_info;
-	u8 ppdu_sts_filter;
-};
 
 #define RTW_BTC_OVERWRITE_BUF_LEN 10
 struct hal_bt_msg {
@@ -380,7 +384,9 @@ struct hal_io_ops {
 	int (*_write32)(struct rtw_hal_com_t *hal, u32 addr, u32 val);
 	int (*_write_mem)(struct rtw_hal_com_t *hal, u32 addr, u32 length, u8 *pdata);
 
+#ifdef RTW_WKARD_BUS_WRITE
 	int (*_write_post_cfg)(struct rtw_hal_com_t *hal, u32 addr, u32 val);
+#endif
 
 #ifdef CONFIG_SDIO_HCI
 	u8(*_sd_f0_read8)(struct rtw_hal_com_t *hal, u32 addr);
@@ -436,15 +442,26 @@ struct bcn_entry_pool {
 };
 #endif
 
+enum rtw_hal_intr_mask_opt {
+	INTR_MASK_OPT_HAL_INIT,
+	INTR_MASK_OPT_WOW_RESUME_HNDL_RX,
+	INTR_MASK_OPT_WOW_RESUME_DONE
+};
+
+struct hal_intr_mask_cfg {
+	u8 halt_c2h_en;
+	u8 wdt_en;
+};
+
 struct hal_halt_c2h_int {
-	/*Halt C2h*/
+	/* halt c2h */
 	u32 intr;
 	u32 val_mask;
 	u32 val_default;
 };
 
 struct hal_watchdog_timer_int {
-	/*watchdog timer */
+	/* watchdog timer */
 	u32 intr;
 	u32 val_mask;
 	u32 val_default;
@@ -461,6 +478,7 @@ enum rtw_hal_c2h_ev {
 	HAL_C2H_EV_BB_MUGRP_DOWN = 1,/* BB Process C2H mu-score-tbl done */
 	HAL_C2H_EV_BTC_INFO = 2,	/* BTC event */
 	HAL_C2H_EV_BTC_SCBD = 3,	/* BTC event */
+	HAL_C2H_EV_MAC_TSF32_TOG = 4,	/* MAC event */
 	HAL_C2H_EV_MAX
 };
 
@@ -587,11 +605,23 @@ struct hal_ppdu_sts {
 		_RSSI.ma_rssi = (u8)(_RSSI.ma_rssi_ele_sum / \
 			_RSSI.ma_rssi_ele_cnt);\
 	} while (0)
+
+#define STA_UPDATE_MA_RSSI_FAST(_RSSI, _VAL) _RSSI = ((_RSSI * \
+					     (HAL_RSSI_MAVG_NUM - 1)) + _VAL) \
+					     / HAL_RSSI_MAVG_NUM
+
 struct rtw_rssi_info {
-        u8 rssi; /* u(8,1), hal-bb provide, read only : 0~110 (dBm = rssi -110) */
-        u16 rssi_ma; /* u(16,5),  hal-bb provide, read only : u16 U(12,4)*/
-        u8 rssi_ofdm; /* u(8,1),  hal-bb provide, read only : packet, for debug */
-        u8 rssi_cck; /* u(8,1),  hal-bb provide, read only : packet, for debug */
+	u8 rssi; /* u(8,1), hal-bb provide, read only : 0~110 (dBm = rssi -110) */
+	u16 rssi_ma; /* u(16,5),  hal-bb provide, read only : u16 U(12,4)*/
+	u16 rssi_ma_path[4];
+	u16 pkt_cnt_data;
+	u8 rssi_bcn; /* u(8,1), beacon RSSI, hal-bb provide, read only : 0~110 (dBm = rssi -110) */
+	u16 rssi_bcn_ma; /* u(16,5),  beacon RSSI, hal-bb provide, read only*/
+	u16 pkt_cnt_bcn;
+	u8 ma_factor:4;
+	u8 ma_factor_bcn:4;
+	u8 rssi_ofdm; /* u(8,1),  hal-bb provide, read only : packet, for debug */
+	u8 rssi_cck; /* u(8,1),  hal-bb provide, read only : packet, for debug */
 	u8 assoc_rssi; /* phl_rx provide, read only */
 	/* phl_rx provide, read only : Moving Average RSSI information for the STA */
 	u8 ma_rssi_ele_idx;
@@ -599,6 +629,7 @@ struct rtw_rssi_info {
 	u8 ma_rssi_ele[HAL_RSSI_MAVG_NUM]; /* rssi element for moving average */
 	u32 ma_rssi_ele_sum;
 	u8 ma_rssi; /* moving average : 0 ~ PHL_MAX_RSSI (dBm = rssi - PHL_MAX_RSSI) */
+	u8 ma_rssi_mgnt; /* moving average rssi for beacon/probe : 0 ~ PHL_MAX_RSSI (dBm = rssi - PHL_MAX_RSSI) */
 };
 
 struct rtw_rate_info {
@@ -724,8 +755,18 @@ struct rtw_trx_stat {
 	u32 rx_ok_cnt;
 	u32 rx_err_cnt;
 	u16 rx_rate_plurality;
+	/* add lock for tx statistics */
+	_os_lock tx_sts_lock;
+	/* Below info is for release report*/
+	u32 tx_fail_cnt;
+	u32 tx_ok_cnt;
+#ifdef CONFIG_USB_HCI
+	struct rtw_wp_rpt_stats wp_rpt_stats[PHL_AC_QUEUE_TOTAL];
+#endif
 #ifdef CONFIG_PCI_HCI
 	u8 *wp_rpt_stats;
+	u32 ltr_tx_dly_count;
+	u32 ltr_last_tx_dly_time;
 #endif
 };
 
@@ -781,6 +822,7 @@ struct bus_hw_cap_t {
 	u8 clkdly_ctrl;
 	u8 l0sdly_ctrl;
 	u8 l1dly_ctrl;
+	u8 ltr_sw_ctrl; /* whether ltr can be controlled by sw */
 	u32 max_txbd_num;
 	u32 max_rxbd_num;
 	u32 max_rpbd_num;
@@ -811,6 +853,8 @@ struct phy_hw_cap_t {
 	#endif
 	u8 tx_num;
 	u8 rx_num;
+	u16 hw_rts_time_th;
+	u16 hw_rts_len_th;
 };
 
 
@@ -895,8 +939,7 @@ enum phl_rf_mode {
 /*--------------------------[Structure]-------------------------------------*/
 enum rtw_tpu_op_mode {
 	TPU_NORMAL_MODE		= 0,
-	TPU_DBG_MODE		= 1,
-	TPU_DBG_MODE_RELEASE	= 2
+	TPU_DBG_MODE		= 1
 };
 
 struct rtw_tpu_pwr_by_rate_info { /*TX Power Unit (TPU)*/
@@ -939,11 +982,44 @@ struct rtw_tpu_info { /*TX Power Unit (TPU)*/
 	s8 pwr_lmt_ru[HAL_MAX_PATH][TPU_SIZE_RUA][TPU_SIZE_BW20_SC];
 	u16 pwr_lmt_ru_mem_size;
 	bool pwr_lmt_en;
+	u8 tx_ptrn_shap_idx;
+	u8 tx_ptrn_shap_idx_cck;
+};
+
+struct rtw_hal_stat_info {
+	u32 cnt_fail_all;
+	u32 cnt_cck_fail;
+	u32 cnt_ofdm_fail;
+	u32 cnt_cca_all;
+	u32 cnt_ofdm_cca;
+	u32 cnt_cck_cca;
+	u32 cnt_crc32_error_all;
+	u32 cnt_he_crc32_error;
+	u32 cnt_vht_crc32_error;
+	u32 cnt_ht_crc32_error ;
+	u32 cnt_ofdm_crc32_error;
+	u32 cnt_cck_crc32_error;
+	u32 cnt_crc32_ok_all;
+	u32 cnt_he_crc32_ok;
+	u32 cnt_vht_crc32_ok;
+	u32 cnt_ht_crc32_ok;
+	u32 cnt_ofdm_crc32_ok;
+	u32 cnt_cck_crc32_ok;
+	u32 igi_fa_rssi;
+};
+
+struct rtw_hw_band {
+	struct rtw_chan_def cur_chandef;
+	u8 ppdu_sts_appen_info;
+	u8 ppdu_sts_filter;
+	struct rtw_tpu_info rtw_tpu_i; /*TX Power Unit (TPU)*/
+	u16 tx_pause[PAUSE_RSON_MAX]; /* ref: enum rtw_sch_txen_cfg */
+	struct rtw_hal_stat_info stat_info;
 };
 
 struct rtw_hal_com_t {
 	enum rtw_chip_id chip_id;
-	enum rtw_cut_version cut_version;
+	enum rtw_cv cv;
 
 	struct ver_ctrl_t mac_vc;
 	struct ver_ctrl_t bb_vc;
@@ -972,6 +1048,10 @@ struct rtw_hal_com_t {
 
 	u8 rfpath_tx_num; /* rf path - instead of rf_type -1T1R.... */
 	u8 rfpath_rx_num;
+#ifdef RTW_WKARD_SINGLE_PATH_RSSI
+	enum rf_path cur_rx_rfpath;
+#endif
+
 	struct rtw_tpu_info rtw_tpu_i; /*TX Power Unit (TPU)*/
 
 #ifdef CONFIG_PCI_HCI /*TODO move to hal_info_t*/
@@ -984,7 +1064,11 @@ struct rtw_hal_com_t {
 	u32 block_sz;
 
 	/*interrupt*/
-	u32 int_mask;
+	/*
+	 * Change type of int_mask from u32 to unsigned long for bit operation
+	 * API, ex: _os_test_and_clear_bit() and _os_test_and_set_bit() .
+	 */
+	unsigned long int_mask;
 	u32 int_mask_default;
 #endif /* CONFIG_SDIO_HCI */
 
@@ -1064,7 +1148,7 @@ struct pkt_ofld_info {
 
 struct pkt_ofld_entry {
 	struct list_head list;
-	u8 macid;
+	u16 macid;
 	struct pkt_ofld_info pkt_info[PKT_OFLD_TYPE_MAX];
 };
 
@@ -1088,23 +1172,19 @@ enum rtw_c2h_clas {
 #define C2H_CLS_MAC_MIN 0x00
 #define C2H_CLS_MAC_MAX 0xFF
 
-enum rtw_hal_lps_listern_bcn_mode {
-	RTW_HAL_LPS_RLBM_MIN         = 0,
-	RTW_HAL_LPS_RLBM_MAX         = 1,
-	RTW_HAL_LPS_RLBM_USERDEFINE  = 2,
-};
-
-enum rtw_hal_lps_smart_ps_mode {
-	RTW_HAL_LPS_LEGACY_PWR1      = 0,
-	RTW_HAL_LPS_TRX_PWR0         = 1,
+enum rtw_hal_ps_pwr_req_src {
+	HAL_BB_PWR_REQ = 0,
+	HAL_RF_PWR_REQ = 1,
+	HAL_MAC_PWR_REQ = 2,
+	HAL_BTC_PWR_REQ = 3
 };
 
 struct rtw_hal_lps_info {
-	u8 en_lps;
-	u8 macid;
-	enum rtw_hal_lps_listern_bcn_mode listen_bcn_mode;
+	u8 lps_en;
+	u16 macid;
+	enum rtw_lps_listen_bcn_mode listen_bcn_mode;
 	u8 awake_interval;
-	enum rtw_hal_lps_smart_ps_mode smart_ps_mode;
+	enum rtw_lps_smart_ps_mode smart_ps_mode;
 };
 
 enum ps_pwr_state {
@@ -1146,4 +1226,19 @@ enum hal_tsf_sync_act {
 	HAL_TSF_EN_SYNC_AUTO = 1,
 	HAL_TSF_DIS_SYNC_AUTO = 2,
 };
+
+#ifdef CONFIG_RTW_ACS
+struct auto_chan_sel_report {
+	u8 clm_ratio;
+	u8 nhm_pwr;
+};
+#endif
+
+struct watchdog_nhm_report {
+	u8 ccx_rpt_stamp;
+	u8 ccx_rpt_result;
+	s8 nhm_pwr_dbm;
+	u8 nhm_ratio;
+};
+
 #endif /*_HAL_DEF_H_*/
