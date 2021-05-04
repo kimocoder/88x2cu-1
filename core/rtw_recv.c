@@ -17,27 +17,22 @@
 #include <drv_types.h>
 #include <hal_data.h>
 
-#ifdef CONFIG_SIGNAL_STAT_PROCESS
 static void rtw_signal_stat_timer_hdl(void *ctx);
 
 enum {
 	SIGNAL_STAT_CALC_PROFILE_0 = 0,
 	SIGNAL_STAT_CALC_PROFILE_1,
-	SIGNAL_STAT_CALC_PROFILE_2,
 	SIGNAL_STAT_CALC_PROFILE_MAX
 };
 
-u8 signal_stat_calc_profile[SIGNAL_STAT_CALC_PROFILE_MAX][3] = {
+u8 signal_stat_calc_profile[SIGNAL_STAT_CALC_PROFILE_MAX][2] = {
 	{4, 1},	/* Profile 0 => pre_stat : curr_stat = 4 : 1 */
-	{3, 7},	/* Profile 1 => pre_stat : curr_stat = 3 : 7 */
-	{0, 10}	/* Profile 2 => pre_stat : curr_stat = 0 : 10 */
+	{3, 7}	/* Profile 1 => pre_stat : curr_stat = 3 : 7 */
 };
 
 #ifndef RTW_SIGNAL_STATE_CALC_PROFILE
 	#define RTW_SIGNAL_STATE_CALC_PROFILE SIGNAL_STAT_CALC_PROFILE_1
 #endif
-
-#endif /* CONFIG_SIGNAL_STAT_PROCESS */
 
 u8 rtw_bridge_tunnel_header[] = { 0xaa, 0xaa, 0x03, 0x00, 0x00, 0xf8 };
 u8 rtw_rfc1042_header[] = { 0xaa, 0xaa, 0x03, 0x00, 0x00, 0x00 };
@@ -4144,9 +4139,7 @@ static void rtw_signal_stat_timer_hdl(void *ctx)
 		if (rtw_mi_buddy_check_fwstate(adapter, WIFI_UNDER_SURVEY) == _TRUE)
 			goto set_timer;
 #endif
-		if (adapter->registrypriv.mp_mode == 1)
-			ratio_profile = SIGNAL_STAT_CALC_PROFILE_2;
-		else if (RTW_SIGNAL_STATE_CALC_PROFILE < SIGNAL_STAT_CALC_PROFILE_MAX)
+		if (RTW_SIGNAL_STATE_CALC_PROFILE < SIGNAL_STAT_CALC_PROFILE_MAX)
 			ratio_profile = RTW_SIGNAL_STATE_CALC_PROFILE;
 
 		ratio_pre_stat = signal_stat_calc_profile[ratio_profile][0];
