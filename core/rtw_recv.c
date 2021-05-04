@@ -45,8 +45,6 @@ static u8 SNAP_ETH_TYPE_TDLS[2] = {0x89, 0x0d};
 void _rtw_init_sta_recv_priv(struct sta_recv_priv *psta_recvpriv)
 {
 
-
-
 	_rtw_memset((u8 *)psta_recvpriv, 0, sizeof(struct sta_recv_priv));
 
 	_rtw_spinlock_init(&psta_recvpriv->lock);
@@ -153,12 +151,7 @@ sint rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter)
 	#ifdef DBG_RECV_FRAME
 	_dump_recv_priv(dvobj, &dvobj->recvpriv.free_recv_queue);
 	#endif
-
-	_rtw_memset(&precvpriv->ip_statistic, 0,
-			sizeof(struct rtw_ip_dbg_cnt_statistic));
-
 exit:
-
 	return res;
 
 }

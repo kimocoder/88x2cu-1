@@ -603,8 +603,6 @@ struct recv_priv {
 	uint  rx_smallpacket_crcerr;
 	uint  rx_middlepacket_crcerr;
 
-	struct rtw_ip_dbg_cnt_statistic ip_statistic;
-
 #ifdef CONFIG_USB_HCI
 	/* u8 *pallocated_urb_buf; */
 	uint	ff_hwaddr;

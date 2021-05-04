@@ -17,15 +17,6 @@
 #include <drv_types.h>
 #include <hal_data.h>
 
-#if defined(CONFIG_WOWLAN) || defined(CONFIG_AP_WOWLAN)
-	#include <linux/inetdevice.h>
-	#define ETH_TYPE_OFFSET	12
-	#define PROTOCOL_OFFSET	23
-	#define IP_OFFSET	30
-	#define IPv6_OFFSET	38
-	#define IPv6_PROTOCOL_OFFSET	20
-#endif
-
 unsigned char ARTHEROS_OUI1[] = {0x00, 0x03, 0x7f};
 unsigned char ARTHEROS_OUI2[] = {0x00, 0x13, 0x74};
 
@@ -123,9 +114,6 @@ bool rtw_is_basic_rate_mix(u8 rate)
 			return 1;
 	return 0;
 }
-#ifdef CONFIG_BCN_CNT_CONFIRM_HDL
-int new_bcn_max = 3;
-#endif
 int cckrates_included(unsigned char *rate, int ratelen)
 {
 	int	i;
@@ -156,6 +144,7 @@ int cckratesonly_included(unsigned char *rate, int ratelen)
 s8 rtw_get_sta_rx_nss(_adapter *adapter, struct sta_info *psta)
 {
 	s8 nss = 1;
+	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
 
 	if (!psta)
 		return nss;
@@ -5298,159 +5287,4 @@ err_out:
 	RTW_INFO("[%s] rtw_zmalloc fail\n", __func__);
 }
 #endif
-
-inline u8 rtw_rx_dbg_monitor_condition_chk(
-	_adapter *padapter, u8 *ip, u32 port, u8 condition)
-{
-	struct recv_priv  *precvpriv = &(adapter_to_dvobj(padapter)->recvpriv);
-	u8 need_chk = _FALSE;
-
-	if (precvpriv->ip_statistic.enabled == _FALSE)
-		goto exit;
-
-	switch (condition) {
-		case 1:
-			if (ip && _rtw_memcmp(precvpriv->ip_statistic.ip, ip, 4))
-				need_chk = _TRUE;
-			break;
-		case 2:
-			if (precvpriv->ip_statistic.dst_port == port)
-				need_chk = _TRUE;
-			break;
-		default:
-			break;
-	}
-
-exit:
-	return need_chk;
-}
-
-void rtw_dbg_rx_iperf_udp_data_chk(_adapter *padapter, u8 *pdata)
-{
-	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
-	struct rtw_ip_dbg_cnt_statistic *st = &(precvpriv->ip_statistic);
-	u8 iperf_start_seq, iperf_seq_offset;
-	u16 udp_data_len;
-	u32 cur_iperf_seq, end_boundary = 0xffff;
-
-	/* no application data */
-	udp_data_len = __be16_to_cpu(*((u16 *)(pdata + 4)));
-	if (udp_data_len < 16)
-		return;
-
-	/* RTW_INFO_DUMP("iperf data : ", pdata, 24); */
-	if ((st->iperf_ver & 0x7f) >= 3) {
-		iperf_seq_offset = 16;
-		iperf_start_seq = 1 ;
-	} else {
-		iperf_seq_offset = 8;
-		iperf_start_seq = 0 ;
-	}
-
-	cur_iperf_seq = __be32_to_cpu(*((u32 *)(pdata + iperf_seq_offset)));
-	if (cur_iperf_seq >= (st->iperf_seq + end_boundary)) {
-		RTW_INFO("%s : terminate for end/abnormal of iperf pkt\n", __func__);
-		return;
-	}
-
-	if (cur_iperf_seq >= (iudp_ip_seq_get(st) + 1)) {
-		if (cur_iperf_seq > (iudp_ip_seq_get(st) + 1))
-			iudp_err_cnt_update(st, cur_iperf_seq);
-		iudp_ip_seq_set(st, cur_iperf_seq);
-	} else
-		iperf_out_of_order_cnt_inc(st, cur_iperf_seq);
-}
-
-void rtw_rx_dbg_monitor_ip_statistic(_adapter *padapter, struct sk_buff *pkt)
-{
-	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
-	u8 *ip_hdr, frag_flag, src_ip[4], frag_drop = _FALSE;
-	u16 ip_seq, frag_offset, sport = 0 , dport = 0;
-	u32 i;
-
-	if (pkt->protocol != __constant_htons(ETH_P_IP))
-		return;
-
-	/* RTW_INFO_DUMP("ip hdr :", pkt->data, 32); */
-	ip_hdr = pkt->data;
-	if ((GET_IPV4_PROTOCOL(ip_hdr) != 0x6) &&
-		(GET_IPV4_PROTOCOL(ip_hdr) != 0x11)) {
-		/* filter all non-tcp/udp packets */
-		return;
-	}
-
-	for (i=0; i<=3; i++)
-		src_ip[i] = *IPV4_SRC(ip_hdr + i);
-
-	if (!rtw_rx_dbg_monitor_condition_chk(padapter, src_ip, 0, 1)) {
-		/* filter all unmatched-packets by source-ip */
-		return;
-	}
-
-	ip_seq = be16_to_cpu(*((u16 *)(ip_hdr + 4)));
-	frag_offset = be16_to_cpu(*((u16 *)(ip_hdr + 6)));
-	frag_flag = frag_offset >> 13;
-	frag_offset &= 0x1fff;
-
-	/* no-fragments or 1st-fragment */
-	if ((frag_flag & BIT(1)) || (frag_offset == 0)) {
-		sport = GET_UDP_SRC(ip_hdr + 20);
-		dport = GET_UDP_DST(ip_hdr + 20);
-
-		if (!rtw_rx_dbg_monitor_condition_chk(padapter, NULL, dport, 2)) {
-			/* filter all unmatched-packets by destination-port */
-			return;
-		}
-
-		/* 1st-fragment */
-		if (frag_flag & BIT(0)) {
-			frag_cnt_inc(&precvpriv->ip_statistic);
-			if (need_to_chk_iudp_cnt(ip_hdr, &precvpriv->ip_statistic)) {
-				if (iudp_defrag_done_get(&precvpriv->ip_statistic) == _FALSE)
-					iudp_err_cnt_inc(&precvpriv->ip_statistic, "last-frag");
-
-				iudp_defrag_done_set(&precvpriv->ip_statistic, _FALSE);
-				iudp_ip_seq_chk_set(&precvpriv->ip_statistic, ip_seq);
-				iudp_frag_offset_chk_set(&precvpriv->ip_statistic, frag_offset);
-				iudp_max_frag_offset_chk_set(&precvpriv->ip_statistic, frag_offset);
-			}
-		}
-
-		ip_cnt_inc(&precvpriv->ip_statistic);
-		tcp_udp_cnt_inc(ip_hdr, &precvpriv->ip_statistic);
-		if (need_to_chk_iudp_cnt(ip_hdr, &precvpriv->ip_statistic))
-			rtw_dbg_rx_iperf_udp_data_chk(padapter, (ip_hdr + 20));
-
-	} else if (((frag_flag & BIT(0)) || (frag_flag == 0)) \
-			&& (frag_offset > 0)) {
-		/* more-or-last fragment */
-		frag_cnt_inc(&precvpriv->ip_statistic);
-		if (need_to_chk_iudp_cnt(ip_hdr, &precvpriv->ip_statistic)) {
-			/* fragment-lenth in 8byte-blocks without ip-header */
-			iudp_frag_offset_chk_set(&precvpriv->ip_statistic,
-				(iudp_frag_offset_chk_get(&precvpriv->ip_statistic) + ((pkt->len - 20)/8)));
-			iudp_max_frag_offset_chk_set(&precvpriv->ip_statistic,
-				(iudp_max_frag_offset_chk_get(&precvpriv->ip_statistic) + ((1500 - 20)/8)));
-
-			/* more-frag check */
-			if (frag_flag & BIT(0)) {
-				if ((ip_seq == iudp_ip_seq_chk_get(&precvpriv->ip_statistic))
-					&& (iudp_defrag_done_get(&precvpriv->ip_statistic) == _FALSE) \
-					&& (frag_offset > iudp_frag_offset_chk_get(&precvpriv->ip_statistic))) {
-					iudp_defrag_done_set(&precvpriv->ip_statistic, _TRUE);
-					iudp_err_cnt_inc(&precvpriv->ip_statistic, "more-frag");
-				}
-			} else {
-				if ((ip_seq == iudp_ip_seq_chk_get(&precvpriv->ip_statistic))
-					&& (iudp_defrag_done_get(&precvpriv->ip_statistic) == _FALSE)) {
-					iudp_defrag_done_set(&precvpriv->ip_statistic, _TRUE);
-					if (frag_offset > iudp_max_frag_offset_chk_get(&precvpriv->ip_statistic))
-						iudp_err_cnt_inc(&precvpriv->ip_statistic, "more-frag");
-				}
-			}
-		}
-
-		tcp_udp_cnt_inc(ip_hdr, &precvpriv->ip_statistic);
-	}
-}
 
