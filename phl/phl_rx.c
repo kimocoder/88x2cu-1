@@ -1001,20 +1001,19 @@ void _phl_rx_statistics_reset(struct phl_info_t *phl_info)
 	struct rtw_wifi_role_t *role = NULL;
 	void *drv = phl_to_drvpriv(phl_info);
 	struct phl_queue *sta_queue;
-	_os_spinlockfg sp_flags;
 	u8 i;
 
 	for (i = 0; i< MAX_WIFI_ROLE_NUMBER; i++) {
 		role = &phl_com->wifi_roles[i];
 		if (role->active && (role->mstate == MLME_LINKED)) {
 			sta_queue = &role->assoc_sta_queue;
-			_os_spinlock(drv, &sta_queue->lock, _irq, &sp_flags);
+			_os_spinlock(drv, &sta_queue->lock, _bh, NULL);
 			phl_list_for_loop(sta, struct rtw_phl_stainfo_t,
 						&sta_queue->queue, list) {
 				if (sta)
 					rtw_hal_set_sta_rx_sts(sta, true, NULL);
 			}
-			_os_spinunlock(drv, &sta_queue->lock, _irq, &sp_flags);
+			_os_spinunlock(drv, &sta_queue->lock, _bh, NULL);
 		}
 	}
 #endif // if 0 NEO
@@ -1209,7 +1208,6 @@ rtw_phl_leave_mon_mode(void *phl, struct rtw_wifi_role_t *wrole)
 void
 _phl_rx_proc_frame_list(struct phl_info_t *phl_info, struct phl_queue *pq)
 {
-	enum rtw_phl_status pstatus = RTW_PHL_STATUS_FAILURE;
 	void *d = phl_to_drvpriv(phl_info);
 	_os_list *pkt_list = NULL;
 	struct rtw_phl_rx_pkt *phl_rx = NULL;
@@ -1352,7 +1350,7 @@ phl_rx_proc_wait_phy_sts(struct phl_info_t *phl_info,
 	struct rtw_phl_ppdu_sts_info *psts_info = &(phl_info->phl_com->ppdu_sts_info);
 	struct rtw_phl_ppdu_sts_ent *sts_entry = NULL;
 	void *d = phl_to_drvpriv(phl_info);
-	u8 i = 0, j = 0;
+	u8 i = 0;
 	bool ret = false;
 	enum phl_band_idx band = HW_BAND_0;
 
@@ -1481,13 +1479,12 @@ phl_rx_proc_ppdu_sts(struct phl_info_t *phl_info, struct rtw_phl_rx_pkt *phl_rx)
 	struct rtw_phl_ppdu_sts_info *ppdu_info = NULL;
 	struct rtw_phl_ppdu_sts_ent *ppdu_sts_ent = NULL;
 	struct rtw_phl_stainfo_t *psta = NULL;
-	struct phl_msg_attribute attr = {0};
-	struct phl_msg msg = {0};
 #ifdef CONFIG_PHY_INFO_NTFY
 	struct  rtw_phl_ppdu_sts_ntfy *psts_ntfy;
 	void *d = phl_to_drvpriv(phl_info);
 #endif
 	enum phl_band_idx band = HW_BAND_0;
+	struct rtw_rssi_info *rssi_sts;
 
 	if ((NULL == phl_info) || (NULL == phl_rx))
 		return;
@@ -1505,21 +1502,59 @@ phl_rx_proc_ppdu_sts(struct phl_info_t *phl_info, struct rtw_phl_rx_pkt *phl_rx)
 	ppdu_sts_ent->phl_done = true;
 
 	/* update phl self varibles */
-	for( i = 0 ; i < PHL_MAX_PPDU_STA_NUM; i++) {
+	for(i = 0 ; i < ppdu_sts_ent->usr_num; i++) {
 		if (ppdu_sts_ent->sta[i].vld) {
 			psta = rtw_phl_get_stainfo_by_macid(phl_info,
 				 ppdu_sts_ent->sta[i].macid);
 			if (psta == NULL)
 				continue;
+			rssi_sts = &psta->hal_sta->rssi_stat;
 			STA_UPDATE_MA_RSSI(psta->hal_sta->rssi_stat,
 					    ppdu_sts_ent->phy_info.rssi);
 			/* update (re)associate req/resp pkt rssi */
 			if (RTW_IS_ASOC_PKT(ppdu_sts_ent->frame_type)) {
-				    psta->hal_sta->rssi_stat.assoc_rssi =
-				    		ppdu_sts_ent->phy_info.rssi;
+				rssi_sts->assoc_rssi =
+						ppdu_sts_ent->phy_info.rssi;
+			}
+
+			if (RTW_IS_BEACON_OR_PROBE_RESP_PKT(
+						ppdu_sts_ent->frame_type)) {
+				if (0 == rssi_sts->ma_rssi_mgnt) {
+					rssi_sts->ma_rssi_mgnt =
+						ppdu_sts_ent->phy_info.rssi;
+				} else {
+					STA_UPDATE_MA_RSSI_FAST(
+						rssi_sts->ma_rssi_mgnt,
+						ppdu_sts_ent->phy_info.rssi);
+				}
+			}
+		}
+		else {
+			if (RTW_IS_ASOC_REQ_PKT(ppdu_sts_ent->frame_type) &&
+				(ppdu_sts_ent->usr_num == 1)) {
+				psta = rtw_phl_get_stainfo_by_addr_ex(phl_info,
+						ppdu_sts_ent->src_mac_addr);
+				if (psta) {
+					psta->hal_sta->rssi_stat.assoc_rssi =
+						ppdu_sts_ent->phy_info.rssi;
+
+					#ifdef DBG_AP_CLIENT_ASSOC_RSSI
+					PHL_INFO("%s [Rx-ASOC_REQ] - macid:%d, MAC-Addr:%02x-%02x-%02x-%02x-%02x-%02x, assoc_rssi:%d\n",
+						__func__,
+						psta->macid,
+						ppdu_sts_ent->src_mac_addr[0],
+						ppdu_sts_ent->src_mac_addr[1],
+						ppdu_sts_ent->src_mac_addr[2],
+						ppdu_sts_ent->src_mac_addr[3],
+						ppdu_sts_ent->src_mac_addr[4],
+						ppdu_sts_ent->src_mac_addr[5],
+						psta->hal_sta->rssi_stat.assoc_rssi);
+					#endif
+				}
 			}
 		}
 	}
+
 #ifdef CONFIG_PHY_INFO_NTFY
 	/*2. prepare and send psts notify to core */
 	if((RTW_FRAME_TYPE_BEACON == ppdu_sts_ent->frame_type) ||
