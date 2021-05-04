@@ -190,24 +190,6 @@ u8 rtl8822c_hal_init(PADAPTER adapter)
 	return _TRUE;
 }
 
-u8 rtl8822c_mac_verify(PADAPTER adapter)
-{
-	struct dvobj_priv *d;
-	int err;
-
-
-	d = adapter_to_dvobj(adapter);
-
-	err = rtw_halmac_self_verify(d);
-	if (err) {
-		RTW_INFO("%s fail\n", __FUNCTION__);
-		return _FALSE;
-	}
-
-	RTW_INFO("%s successful\n", __FUNCTION__);
-	return _TRUE;
-}
-
 void rtl8822c_init_misc(PADAPTER adapter)
 {
 	PHAL_DATA_TYPE hal;

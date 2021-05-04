@@ -61,12 +61,6 @@
 static void
 init_state_machine_88xx(struct halmac_adapter *adapter);
 
-static enum halmac_ret_status
-verify_io_88xx(struct halmac_adapter *adapter);
-
-static enum halmac_ret_status
-verify_send_rsvd_page_88xx(struct halmac_adapter *adapter);
-
 void
 init_adapter_param_88xx(struct halmac_adapter *adapter)
 {
@@ -241,7 +235,6 @@ mount_api_88xx(struct halmac_adapter *adapter)
 	api->halmac_cfg_parameter = cfg_parameter_88xx;
 	api->halmac_update_datapack = update_datapack_88xx;
 	api->halmac_run_datapack = run_datapack_88xx;
-	api->halmac_verify_platform_api = verify_platform_api_88xx;
 	api->halmac_bcn_ie_filter = bcn_ie_filter_88xx;
 	api->halmac_cfg_txbf = cfg_txbf_88xx;
 	api->halmac_cfg_mumimo = cfg_mumimo_88xx;
@@ -603,36 +596,6 @@ reset_ofld_feature_88xx(struct halmac_adapter *adapter,
 	return HALMAC_RET_SUCCESS;
 }
 
-/**
- * (debug API)verify_platform_api_88xx() - verify platform api
- * @adapter : the adapter of halmac
- * Author : KaiYuan Chang/Ivan Lin
- * Return : enum halmac_ret_status
- * More details of status code can be found in prototype document
- */
-enum halmac_ret_status
-verify_platform_api_88xx(struct halmac_adapter *adapter)
-{
-	enum halmac_ret_status ret_status = HALMAC_RET_SUCCESS;
-
-	PLTFM_MSG_TRACE("[TRACE]%s ===>\n", __func__);
-
-	ret_status = verify_io_88xx(adapter);
-
-	if (ret_status != HALMAC_RET_SUCCESS)
-		return ret_status;
-
-	if (adapter->txff_alloc.la_mode != HALMAC_LA_MODE_FULL)
-		ret_status = verify_send_rsvd_page_88xx(adapter);
-
-	if (ret_status != HALMAC_RET_SUCCESS)
-		return ret_status;
-
-	PLTFM_MSG_TRACE("[TRACE]%s <===\n", __func__);
-
-	return ret_status;
-}
-
 void
 tx_desc_chksum_88xx(struct halmac_adapter *adapter, u8 enable)
 {
@@ -648,148 +611,6 @@ tx_desc_chksum_88xx(struct halmac_adapter *adapter, u8 enable)
 		HALMAC_REG_W16(REG_TXDMA_OFFSET_CHK, value16 | BIT(13));
 	else
 		HALMAC_REG_W16(REG_TXDMA_OFFSET_CHK, value16 & ~BIT(13));
-}
-
-static enum halmac_ret_status
-verify_io_88xx(struct halmac_adapter *adapter)
-{
-	u8 value8;
-	u8 wvalue8;
-	u32 value32;
-	u32 value32_2;
-	u32 wvalue32;
-	u32 offset;
-	enum halmac_ret_status ret_status = HALMAC_RET_SUCCESS;
-
-	if (adapter->intf == HALMAC_INTERFACE_SDIO) {
-#if HALMAC_SDIO_SUPPORT
-		offset = REG_PAGE5_DUMMY;
-		if (0 == (offset & 0xFFFF0000))
-			offset |= WLAN_IOREG_OFFSET;
-
-		ret_status = cnv_to_sdio_bus_offset_88xx(adapter, &offset);
-
-		/* Verify CMD52 R/W */
-		wvalue8 = 0xab;
-		PLTFM_SDIO_CMD52_W(offset, wvalue8);
-
-		value8 = PLTFM_SDIO_CMD52_R(offset);
-
-		if (value8 != wvalue8) {
-			PLTFM_MSG_ERR("[ERR]cmd52 r/w\n");
-			ret_status = HALMAC_RET_PLATFORM_API_INCORRECT;
-		}
-
-		/* Verify CMD53 R/W */
-		PLTFM_SDIO_CMD52_W(offset, 0xaa);
-		PLTFM_SDIO_CMD52_W(offset + 1, 0xbb);
-		PLTFM_SDIO_CMD52_W(offset + 2, 0xcc);
-		PLTFM_SDIO_CMD52_W(offset + 3, 0xdd);
-
-		value32 = PLTFM_SDIO_CMD53_R32(offset);
-
-		if (value32 != 0xddccbbaa) {
-			PLTFM_MSG_ERR("[ERR]cmd53 r\n");
-			ret_status = HALMAC_RET_PLATFORM_API_INCORRECT;
-		}
-
-		wvalue32 = 0x11223344;
-		PLTFM_SDIO_CMD53_W32(offset, wvalue32);
-
-		value32 = PLTFM_SDIO_CMD53_R32(offset);
-
-		if (value32 != wvalue32) {
-			PLTFM_MSG_ERR("[ERR]cmd53 w\n");
-			ret_status = HALMAC_RET_PLATFORM_API_INCORRECT;
-		}
-
-		/* value32 should be 0x33441122 */
-		value32 = PLTFM_SDIO_CMD53_R32(offset + 2);
-
-		wvalue32 = 0x11225566;
-		PLTFM_SDIO_CMD53_W32(offset, wvalue32);
-
-		/* value32 should be 0x55661122 */
-		value32_2 = PLTFM_SDIO_CMD53_R32(offset + 2);
-		if (value32_2 == value32) {
-			PLTFM_MSG_ERR("[ERR]cmd52 is used\n");
-			ret_status = HALMAC_RET_PLATFORM_API_INCORRECT;
-		}
-#else
-		return HALMAC_RET_WRONG_INTF;
-#endif
-	} else {
-		wvalue32 = 0x77665511;
-		PLTFM_REG_W32(REG_PAGE5_DUMMY, wvalue32);
-
-		value32 = PLTFM_REG_R32(REG_PAGE5_DUMMY);
-		if (value32 != wvalue32) {
-			PLTFM_MSG_ERR("[ERR]reg rw\n");
-			ret_status = HALMAC_RET_PLATFORM_API_INCORRECT;
-		}
-	}
-
-	return ret_status;
-}
-
-static enum halmac_ret_status
-verify_send_rsvd_page_88xx(struct halmac_adapter *adapter)
-{
-	u8 txdesc_size = adapter->hw_cfg_info.txdesc_size;
-	u8 *rsvd_buf = NULL;
-	u8 *rsvd_page = NULL;
-	u32 i;
-	u32 pkt_size = 64;
-	u32 payload = 0xab;
-	enum halmac_ret_status ret_status = HALMAC_RET_SUCCESS;
-
-	rsvd_buf = (u8 *)PLTFM_MALLOC(pkt_size);
-
-	if (!rsvd_buf) {
-		PLTFM_MSG_ERR("[ERR]rsvd buf malloc!!\n");
-		return HALMAC_RET_MALLOC_FAIL;
-	}
-
-	PLTFM_MEMSET(rsvd_buf, (u8)payload, pkt_size);
-
-	ret_status = dl_rsvd_page_88xx(adapter,
-				       adapter->txff_alloc.rsvd_boundary,
-				       rsvd_buf, pkt_size);
-	if (ret_status != HALMAC_RET_SUCCESS) {
-		PLTFM_FREE(rsvd_buf, pkt_size);
-		return ret_status;
-	}
-
-	rsvd_page = (u8 *)PLTFM_MALLOC(pkt_size + txdesc_size);
-
-	if (!rsvd_page) {
-		PLTFM_MSG_ERR("[ERR]rsvd page malloc!!\n");
-		PLTFM_FREE(rsvd_buf, pkt_size);
-		return HALMAC_RET_MALLOC_FAIL;
-	}
-
-	PLTFM_MEMSET(rsvd_page, 0x00, pkt_size + txdesc_size);
-
-	ret_status = dump_fifo_88xx(adapter, HAL_FIFO_SEL_RSVD_PAGE, 0,
-				    pkt_size + txdesc_size, rsvd_page);
-
-	if (ret_status != HALMAC_RET_SUCCESS) {
-		PLTFM_FREE(rsvd_buf, pkt_size);
-		PLTFM_FREE(rsvd_page, pkt_size + txdesc_size);
-		return ret_status;
-	}
-
-	for (i = 0; i < pkt_size; i++) {
-		if (*(rsvd_buf + i) != *(rsvd_page + (i + txdesc_size))) {
-			PLTFM_MSG_ERR("[ERR]Compare RSVD page Fail\n");
-			ret_status = HALMAC_RET_PLATFORM_API_INCORRECT;
-		}
-	}
-
-	PLTFM_FREE(rsvd_buf, pkt_size);
-	PLTFM_FREE(rsvd_page, pkt_size + txdesc_size);
-
-	return ret_status;
 }
 
 enum halmac_ret_status

@@ -3527,30 +3527,6 @@ out:
 	return err;
 }
 
-int rtw_halmac_self_verify(struct dvobj_priv *d)
-{
-	struct halmac_adapter *mac;
-	struct halmac_api *api;
-	enum halmac_ret_status status;
-	int err = -1;
-
-
-	mac = dvobj_to_halmac(d);
-	api = HALMAC_GET_API(mac);
-
-	status = api->halmac_verify_platform_api(mac);
-	if (status != HALMAC_RET_SUCCESS)
-		goto out;
-
-	status = api->halmac_h2c_lb(mac);
-	if (status != HALMAC_RET_SUCCESS)
-		goto out;
-
-	err = 0;
-out:
-	return err;
-}
-
 static u8 rtw_halmac_txfifo_is_empty(struct dvobj_priv *d)
 {
 	struct halmac_adapter *mac;

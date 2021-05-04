@@ -152,7 +152,6 @@ int rtw_halmac_poweroff(struct dvobj_priv *);
 int rtw_halmac_init_hal_fw(struct dvobj_priv *, u8 *fw, u32 fwsize);
 int rtw_halmac_init_hal_fw_file(struct dvobj_priv *, u8 *fwpath);
 int rtw_halmac_deinit_hal(struct dvobj_priv *);
-int rtw_halmac_self_verify(struct dvobj_priv *);
 int rtw_halmac_txfifo_wait_empty(struct dvobj_priv *d, u32 timeout);
 int rtw_halmac_dlfw(struct dvobj_priv *, u8 *fw, u32 fwsize);
 int rtw_halmac_dlfw_from_file(struct dvobj_priv *, u8 *fwpath);

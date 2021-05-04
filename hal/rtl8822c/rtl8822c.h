@@ -50,7 +50,6 @@ void rtl8822c_init_hal_spec(PADAPTER);
 u32 rtl8822c_power_on(PADAPTER);
 void rtl8822c_power_off(PADAPTER);
 u8 rtl8822c_hal_init(PADAPTER);
-u8 rtl8822c_mac_verify(PADAPTER);
 void rtl8822c_init_misc(PADAPTER padapter);
 u32 rtl8822c_init(PADAPTER);
 u32 rtl8822c_deinit(PADAPTER);

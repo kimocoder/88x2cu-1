@@ -40,9 +40,6 @@ enum halmac_ret_status
 reset_ofld_feature_88xx(struct halmac_adapter *adapter,
 			enum halmac_feature_id feature_id);
 
-enum halmac_ret_status
-verify_platform_api_88xx(struct halmac_adapter *adapter);
-
 void
 tx_desc_chksum_88xx(struct halmac_adapter *adapter, u8 enable);
 
