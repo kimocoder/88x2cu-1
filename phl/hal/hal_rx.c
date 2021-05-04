@@ -25,8 +25,8 @@ void rtw_hal_cfg_rxhci(void *hal, u8 en)
 	trx_ops->cfg_rxhci(hal_info, en);
 }
 
-enum rtw_hal_status rtw_hal_set_rxfltr_by_mode(void *hal,
-			u8 band, enum rtw_rx_fltr_mode mode)
+enum rtw_hal_status
+rtw_hal_set_rxfltr_by_mode(void *hal, u8 band, enum rtw_rx_fltr_mode mode)
 {
 	RTW_ERR("%s TODO NEO\n", __func__);
 	return RTW_HAL_STATUS_FAILURE;
@@ -34,14 +34,40 @@ enum rtw_hal_status rtw_hal_set_rxfltr_by_mode(void *hal,
 	struct hal_info_t *hal_info = (struct hal_info_t *)hal;
 	struct rtw_hal_com_t *hal_com = hal_info->hal_com;
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_FAILURE;
+	enum rtw_rx_fltr_mode set_mode = -1;
 
+	/* Note: @hal_info_t.rx_fltr_mode is used to recored any mode other than
+	 * sniffer mode, it effectively records the mode before entering monitor
+	 * mode and the subsequent modes set after entering monitor mode.
+	 */
 
-	hstatus = rtw_hal_mac_set_rxfltr_by_mode(hal_com, band, mode);
+	if ((mode == RX_FLTR_MODE_SNIFFER && hal_info->monitor_mode) ||
+	    (mode == RX_FLTR_MODE_RESTORE && !hal_info->monitor_mode))
+		return RTW_HAL_STATUS_FAILURE;
 
-	if (hstatus == RTW_HAL_STATUS_SUCCESS)
+	if (hal_info->monitor_mode && mode != RX_FLTR_MODE_RESTORE) {
+		hal_info->rx_fltr_mode = mode;
+		return RTW_HAL_STATUS_SUCCESS;
+	}
+
+	set_mode = (mode == RX_FLTR_MODE_RESTORE) ?
+		hal_info->rx_fltr_mode : mode;
+
+	hstatus = rtw_hal_mac_set_rxfltr_by_mode(hal_com, band, set_mode);
+	if (hstatus != RTW_HAL_STATUS_SUCCESS)
+		return hstatus;
+
+	hal_info->monitor_mode = (mode == RX_FLTR_MODE_SNIFFER);
+
+	/* Record @hal_info_t.rx_fltr_mode only when the mode is not monitor and
+	 * restore, otherwise, it is kept intact.
+	 * TODO: The rx fltr mode should be recorded  separately for each band.
+	 */
+	if (mode != RX_FLTR_MODE_SNIFFER &&
+	    mode != RX_FLTR_MODE_RESTORE)
 		hal_info->rx_fltr_mode = mode;
 
-	return hstatus;
+	return RTW_HAL_STATUS_SUCCESS;
 #endif // if 0 NEO
 }
 
@@ -366,12 +392,13 @@ hal_rx_ppdu_sts(struct rtw_phl_com_t *phl_com,
 	if ((NULL == phl_com) || (NULL == meta) || (NULL == ppdu_sts))
 		return;
 
-	if (0 == phy_info->is_valid)
-		return;
-
 	ppdu_info = &phl_com->ppdu_sts_info;
 	rssi_stat = &phl_com->rssi_stat;
 	band = (meta->bb_sel > 0) ? HW_BAND_1 : HW_BAND_0;
+	ppdu_info->latest_rx_is_psts[band] = true;
+
+	if (0 == phy_info->is_valid)
+		return;
 
 	if (ppdu_info->cur_rx_ppdu_cnt[band] != meta->ppdu_cnt) {
 		PHL_TRACE(COMP_PHL_PSTS, _PHL_INFO_,
@@ -413,6 +440,7 @@ hal_rx_ppdu_sts(struct rtw_phl_com_t *phl_com,
 		    &(sts_ent->phy_info),
 		    phy_info, sizeof(struct rtw_phl_ppdu_phy_info));
 
+	sts_ent->usr_num = ppdu_sts->usr_num;
 	for (i = 0; i < ppdu_sts->usr_num; i++) {
 		if (ppdu_sts->usr[i].vld) {
 			sts_ent->sta[i].macid =
