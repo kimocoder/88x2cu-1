@@ -236,7 +236,7 @@ union recv_frame *rtw_alloc_recvframe(_queue *pfree_recv_queue)
 	return precvframe;
 }
 
-void rtw_init_recvframe(union recv_frame *precvframe, struct recv_priv *precvpriv)
+void rtw_init_recvframe(union recv_frame *precvframe)
 {
 	/* Perry: This can be removed */
 	_rtw_init_listhead(&precvframe->u.hdr.list);
@@ -247,7 +247,6 @@ void rtw_init_recvframe(union recv_frame *precvframe, struct recv_priv *precvpri
 int rtw_free_recvframe(union recv_frame *precvframe)
 {
 	struct dvobj_priv *dvobj;
-	_adapter *padapter;
 	struct recv_priv *precvpriv;
 	_queue *pfree_recv_queue;
 
@@ -258,17 +257,11 @@ int rtw_free_recvframe(union recv_frame *precvframe)
 	}
 
 	dvobj = precvframe->u.hdr.dvobj;
-	padapter = precvframe->u.hdr.adapter;
 	precvpriv = &dvobj->recvpriv;
 	pfree_recv_queue = &(precvpriv->free_recv_queue);
-
-#ifdef CONFIG_CONCURRENT_MODE
-	padapter = dvobj_get_primary_adapter(dvobj);
-	precvpriv = &dvobj->recvpriv;
-	pfree_recv_queue = &precvpriv->free_recv_queue;
-	precvframe->u.hdr.adapter = padapter;
+#ifdef DBG_RECV_FRAME
+	RTW_INFO("%s dvobj:%p, phl:%p\n", __func__, dvobj, dvobj->phl);
 #endif
-
 
 #ifdef RTW_PHL_RX
 	if(precvframe->u.hdr.rx_req)
@@ -277,19 +270,19 @@ int rtw_free_recvframe(union recv_frame *precvframe)
 
 	rtw_os_free_recvframe(precvframe);
 
-
 	_rtw_spinlock_bh(&pfree_recv_queue->lock);
 
 	rtw_list_delete(&(precvframe->u.hdr.list));
 
 	precvframe->u.hdr.len = 0;
-	precvframe->u.hdr.attrib.phy_info.physts_rpt_valid = _FALSE;
 
 	rtw_list_insert_tail(&(precvframe->u.hdr.list), get_list_head(pfree_recv_queue));
 	precvpriv->free_recvframe_cnt++;
 
 	_rtw_spinunlock_bh(&pfree_recv_queue->lock);
-
+#ifdef DBG_RECV_FRAME
+	RTW_INFO("%s =>precvpriv->free_recvframe_cnt:%d\n", __func__, precvpriv->free_recvframe_cnt);
+#endif
 
 	return _SUCCESS;
 
@@ -631,7 +624,9 @@ union recv_frame *decryptor(_adapter *padapter, union recv_frame *precv_frame)
 	#endif
 
 	if (res == _FAIL) {
-		rtw_free_recvframe(return_packet);
+		/* Let rtw_core_rx_process or rtw_mi_buddy_clone_bcmc_packet */
+		/* to handle it */
+		/* rtw_free_recvframe(return_packet); */
 		return_packet = NULL;
 	} else
 		prxattrib->bdecrypted = _TRUE;

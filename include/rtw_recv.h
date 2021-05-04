@@ -707,8 +707,8 @@ typedef enum _RX_PACKET_TYPE {
 
 extern union recv_frame *_rtw_alloc_recvframe(_queue *pfree_recv_queue);   /* get a free recv_frame from pfree_recv_queue */
 extern union recv_frame *rtw_alloc_recvframe(_queue *pfree_recv_queue);   /* get a free recv_frame from pfree_recv_queue */
-extern void rtw_init_recvframe(union recv_frame *precvframe , struct recv_priv *precvpriv);
-extern int	 rtw_free_recvframe(union recv_frame *precvframe);
+extern void rtw_init_recvframe(union recv_frame *precvframe);
+extern int rtw_free_recvframe(union recv_frame *precvframe);
 
 #define rtw_dequeue_recvframe(queue) rtw_alloc_recvframe(queue)
 
