@@ -1844,7 +1844,7 @@ bip_verify:
 		ret = rtw_bip_verify(bip_cipher, pattrib->pkt_len,
 			get_recvframe_data(precv_frame),
 			get_recvframe_len(precv_frame),
-			igtk, igtk_id, ipn);
+			igtk, igtk_id, ipn, (u8 *)precv_frame);
 
 		if (ret == _FAIL) {
 			/* RTW_INFO("802.11w BIP verify fail\n"); */

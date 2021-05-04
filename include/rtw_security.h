@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- * Copyright(c) 2007 - 2017 Realtek Corporation.
+ * Copyright(c) 2007 - 2019 Realtek Corporation.
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of version 2 of the GNU General Public License as
@@ -44,6 +44,7 @@ enum security_type {
 #endif
 };
 
+
 /* 802.11W use wrong key */
 #define IEEE80211W_RIGHT_KEY	0x0
 #define IEEE80211W_WRONG_KEY	0x1
@@ -73,7 +74,7 @@ typedef enum {
 	ENCRYP_PROTOCOL_OPENSYS,   /* open system */
 	ENCRYP_PROTOCOL_WEP,       /* WEP */
 	ENCRYP_PROTOCOL_WPA,       /* WPA */
-	ENCRYP_PROTOCOL_WPA2,      /* WPA2 */
+	ENCRYP_PROTOCOL_RSN,       /* RSN(WPA2/WPA3) */
 	ENCRYP_PROTOCOL_WAPI,      /* WAPI: Not support in this version */
 	ENCRYP_PROTOCOL_MAX
 } ENCRYP_PROTOCOL_E;
@@ -171,8 +172,8 @@ struct security_priv {
 	unsigned int wpa2_pairwise_cipher;
 	unsigned int akmp; /* An authentication and key management protocol */
 #endif
-	u8 mfp_opt;
-	u8	dot118021x_bmc_cam_id;
+	u8 mfp_opt; //NEO
+	u8	dot118021x_bmc_cam_id; //NEO
 	/*IEEE802.11-2012 Std. Table 8-101 AKM Suite Selectors*/
 	u32	rsn_akm_suite_type;
 
@@ -201,7 +202,7 @@ struct security_priv {
 	s32	sw_encrypt;/* from registry_priv */
 	s32	sw_decrypt;/* from registry_priv */
 
-	s32 	hw_decrypted;/* if the rx packets is hw_decrypted==_FALSE, it means the hw has not been ready. */
+	s32 hw_decrypted; /* Broadcast HW security is ready or not */
 
 
 	/* keeps the auth_type & enc_status from upper layer ioctl(wpa_supplicant or wzc) */
@@ -210,9 +211,6 @@ struct security_priv {
 
 	NDIS_802_11_WEP ndiswep;
 
-	u8 assoc_info[600];
-	u8 szofcapability[256]; /* for wpa2 usage */
-	u8 oidassociation[512]; /* for wpa/wpa2 usage */
 	u8 authenticator_ie[256];  /* store ap security information element */
 	u8 supplicant_ie[256];  /* store sta security information element */
 
@@ -377,6 +375,10 @@ void rtw_wep_decrypt(_adapter *padapter, u8  *precvframe);
 u32 rtw_gcmp_encrypt(_adapter *padapter, u8 *pxmitframe);
 u32 rtw_gcmp_decrypt(_adapter *padapter, u8 *precvframe);
 
+#if 0 //RTW_PHL_TX: mark un-finished codes for reading
+u32 rtw_core_aes_encrypt(_adapter *padapter, u8 *pxframe);
+#endif
+
 #ifdef CONFIG_RTW_MESH_AEK
 int rtw_aes_siv_encrypt(const u8 *key, size_t key_len,
 	const u8 *pw, size_t pwlen, size_t num_elem,
@@ -390,7 +392,8 @@ int rtw_aes_siv_decrypt(const u8 *key, size_t key_len,
 u8 rtw_calculate_bip_mic(enum security_type gmcs, u8 *whdr_pos, s32 len,
 	const u8 *key, const u8 *data, size_t data_len, u8 *mic);
 u32 rtw_bip_verify(enum security_type gmcs, u16 pkt_len,
-	u8 *whdr_pos, sint flen, const u8 *key, u16 keyid, u64 *ipn);
+	u8 *whdr_pos, sint flen, const u8 *key, u16 keyid, u64 *ipn,
+	u8 *precvframe);
 #endif
 #ifdef CONFIG_TDLS
 void wpa_tdls_generate_tpk(_adapter *padapter, void *sta);
