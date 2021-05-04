@@ -194,30 +194,29 @@ void rtw_free_recv_priv(struct dvobj_priv *dvobj)
 
 union recv_frame *_rtw_alloc_recvframe(_queue *pfree_recv_queue)
 {
-
 	union recv_frame  *precvframe;
 	_list	*plist, *phead;
-	_adapter *padapter;
 	struct recv_priv *precvpriv;
+	struct dvobj_priv *dvobj;
 
-	if (_rtw_queue_empty(pfree_recv_queue) == _TRUE)
+#ifdef DBG_RECV_FRAME
+	RTW_INFO("%s ->pfree_recv_queue:%p\n", __func__, pfree_recv_queue);
+#endif
+
+	if (_rtw_queue_empty(pfree_recv_queue) == _TRUE) {
 		precvframe = NULL;
+	}
 	else {
 		phead = get_list_head(pfree_recv_queue);
 
 		plist = get_next(phead);
 
 		precvframe = LIST_CONTAINOR(plist, union recv_frame, u);
-
 		rtw_list_delete(&precvframe->u.hdr.list);
-		padapter = precvframe->u.hdr.adapter;
-		if (padapter != NULL) {
-			precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
-			if (pfree_recv_queue == &precvpriv->free_recv_queue)
-				precvpriv->free_recvframe_cnt--;
-		}
+		dvobj = precvframe->u.hdr.dvobj;
+		precvpriv = &dvobj->recvpriv;
+		precvpriv->free_recvframe_cnt--;
 	}
-
 
 	return precvframe;
 
@@ -225,14 +224,30 @@ union recv_frame *_rtw_alloc_recvframe(_queue *pfree_recv_queue)
 
 union recv_frame *rtw_alloc_recvframe(_queue *pfree_recv_queue)
 {
-	union recv_frame  *precvframe;
+	union recv_frame *precvframe = NULL;
+	#ifdef DBG_RECV_FRAME
+	struct recv_priv *precvpriv;
+	struct dvobj_priv *dvobj;
 
+	RTW_INFO("%s =>pfree_recv_queue:%p\n", __func__, pfree_recv_queue);
+	#endif
 	_rtw_spinlock_bh(&pfree_recv_queue->lock);
 
 	precvframe = _rtw_alloc_recvframe(pfree_recv_queue);
 
 	_rtw_spinunlock_bh(&pfree_recv_queue->lock);
 
+	if(precvframe) {
+		precvframe->u.hdr.rx_req = NULL;
+		#ifdef DBG_RECV_FRAME
+		dvobj = precvframe->u.hdr.dvobj;
+		precvpriv = &dvobj->recvpriv;
+		RTW_INFO("%s =>dvobj:%p precvpriv->free_recvframe_cnt:%d\n",
+			__func__,
+			dvobj,
+			precvpriv->free_recvframe_cnt);
+		#endif
+	}
 	return precvframe;
 }
 
