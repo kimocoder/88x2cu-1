@@ -1244,6 +1244,7 @@ void devobj_trx_resource_deinit(struct dvobj_priv *dvobj)
 	rtw_free_lite_xmit_resource(dvobj);
 	rtw_free_lite_recv_resource(dvobj);
 #endif
+	rtw_free_recv_priv(dvobj);
 	rtw_free_cmd_priv(dvobj);
 }
 
@@ -1613,8 +1614,6 @@ u8 rtw_free_drv_sw(_adapter *padapter)
 	_rtw_free_xmit_priv(&padapter->xmitpriv);
 
 	_rtw_free_sta_priv(&padapter->stapriv); /* will free bcmc_stainfo here */
-
-	_rtw_free_recv_priv(&adapter_to_dvobj(padapter)->recvpriv);
 
 	rtw_free_pwrctrl_priv(padapter);
 

@@ -17,7 +17,7 @@
 
 u8 rtw_init_recv_info(_adapter *adapter);
 sint rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter);
-void _rtw_free_recv_priv(struct recv_priv *precvpriv);
+void rtw_free_recv_priv(struct dvobj_priv *dvobj);
 
 #if 0
 extern s32  rtw_recv_entry(union recv_frame *precv_frame);

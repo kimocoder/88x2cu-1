@@ -168,17 +168,13 @@ exit:
 
 }
 
-void rtw_mfree_recv_priv_lock(struct recv_priv *precvpriv);
-void _rtw_free_recv_priv(struct recv_priv *precvpriv)
+void rtw_free_recv_priv(struct dvobj_priv *dvobj)
 {
-	_adapter	*padapter = precvpriv->adapter;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
+	struct recv_priv *precvpriv = &dvobj->recvpriv;
 
 	#if 0
-	rtw_free_uc_swdec_pending_queue(padapter);
+	rtw_free_uc_swdec_pending_queue(dvobj);
 	#endif
-
-	rtw_mfree_recv_priv_lock(precvpriv);
 
 #ifdef CONFIG_RECV_THREAD_MODE
 	_rtw_free_sema(&precvpriv->recv_sema);
@@ -189,21 +185,11 @@ void _rtw_free_recv_priv(struct recv_priv *precvpriv)
 	if (precvpriv->pallocated_frame_buf)
 		rtw_vmfree(precvpriv->pallocated_frame_buf, NR_RECVFRAME * sizeof(union recv_frame) + RXFRAME_ALIGN_SZ);
 
+	_rtw_deinit_queue(&precvpriv->free_recv_queue);
+
 	rtw_intf_free_recv_priv(dvobj);
 
 
-}
-
-void rtw_mfree_recv_priv_lock(struct recv_priv *precvpriv)
-{
-	_rtw_spinlock_free(&precvpriv->free_recv_queue.lock);
-	//_rtw_spinlock_free(&precvpriv->recv_pending_queue.lock);
-
-	_rtw_spinlock_free(&precvpriv->free_recv_buf_queue.lock);
-
-#ifdef CONFIG_USE_USB_BUFFER_ALLOC_RX
-	_rtw_spinlock_free(&precvpriv->recv_buf_pending_queue.lock);
-#endif /* CONFIG_USE_USB_BUFFER_ALLOC_RX */
 }
 
 union recv_frame *_rtw_alloc_recvframe(_queue *pfree_recv_queue)
