@@ -188,7 +188,7 @@ union recv_frame *_rtw_alloc_recvframe(_queue *pfree_recv_queue)
 	struct dvobj_priv *dvobj;
 
 #ifdef DBG_RECV_FRAME
-	RTW_INFO("%s ->pfree_recv_queue:%p\n", __func__, pfree_recv_queue);
+	RTW_INFO("%s =>pfree_recv_queue:%p\n", __func__, pfree_recv_queue);
 #endif
 
 	if (_rtw_queue_empty(pfree_recv_queue) == _TRUE) {
@@ -209,7 +209,6 @@ union recv_frame *_rtw_alloc_recvframe(_queue *pfree_recv_queue)
 	return precvframe;
 
 }
-
 union recv_frame *rtw_alloc_recvframe(_queue *pfree_recv_queue)
 {
 	union recv_frame *precvframe = NULL;
@@ -310,7 +309,7 @@ sint _rtw_enqueue_recvframe(union recv_frame *precvframe, _queue *queue)
 {
 
 	_adapter *padapter = precvframe->u.hdr.adapter;
-	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
+	struct recv_priv *precvpriv = &padapter->recvpriv;
 
 
 	/* _rtw_init_listhead(&(precvframe->u.hdr.list)); */
@@ -376,29 +375,21 @@ void rtw_free_recvframe_queue(_queue *pframequeue)
 }
 
 #if 0
-u32 rtw_free_uc_swdec_pending_queue(_adapter *adapter)
+u32 rtw_free_uc_swdec_pending_queue(struct dvobj_priv *dvobj)
 {
 	u32 cnt = 0;
 	union recv_frame *pending_frame;
-	while ((pending_frame = rtw_alloc_recvframe(&adapter->recvpriv.uc_swdec_pending_queue))) {
+	while ((pending_frame = rtw_alloc_recvframe(&dvobj->recvpriv.uc_swdec_pending_queue))) {
 		rtw_free_recvframe(pending_frame);
 		cnt++;
 	}
 
 	if (cnt)
-		RTW_INFO(FUNC_ADPT_FMT" dequeue %d\n", FUNC_ADPT_ARG(adapter), cnt);
+		RTW_INFO("dequeue %d\n", cnt);
 
 	return cnt;
 }
 #endif
-
-#ifndef CONFIG_RECVBUF_QUEUE_LOCK_BH
-#ifdef CONFIG_SDIO_HCI
-#define CONFIG_RECVBUF_QUEUE_LOCK_BH 1
-#else
-#define CONFIG_RECVBUF_QUEUE_LOCK_BH 0
-#endif
-#endif /* CONFIG_RECVBUF_QUEUE_LOCK_BH */
 
 sint recvframe_chkmic(_adapter *adapter,  union recv_frame *precvframe)
 {
@@ -508,6 +499,7 @@ union recv_frame *decryptor(_adapter *padapter, union recv_frame *precv_frame)
 	struct rx_pkt_attrib *prxattrib = &precv_frame->u.hdr.attrib;
 	struct security_priv *psecuritypriv = &padapter->securitypriv;
 	union recv_frame *return_packet = precv_frame;
+	struct sta_info *psta = precv_frame->u.hdr.psta;
 	u32	 res = _SUCCESS;
 
 
@@ -543,8 +535,12 @@ union recv_frame *decryptor(_adapter *padapter, union recv_frame *precv_frame)
 			#ifdef CONFIG_CONCURRENT_MODE
 			&& !IS_MCAST(prxattrib->ra) /* bc/mc packets may use sw decryption for concurrent mode */
 			#endif
-		)
-			psecuritypriv->hw_decrypted = _FALSE;
+		) {
+			if (IS_MCAST(prxattrib->ra))
+				psecuritypriv->hw_decrypted = _FALSE;
+			else
+				psta->hw_decrypted = _FALSE;
+		}
 
 #ifdef DBG_RX_SW_DECRYPTOR
 		RTW_INFO(ADPT_FMT" - sec_type:%s DO SW decryption\n",
@@ -552,12 +548,13 @@ union recv_frame *decryptor(_adapter *padapter, union recv_frame *precv_frame)
 #endif
 
 #ifdef DBG_RX_DECRYPTOR
-		RTW_INFO("[%s] %d:prxstat->bdecrypted:%d,  prxattrib->encrypt:%d,  Setting psecuritypriv->hw_decrypted = %d\n",
+		RTW_INFO("[%s] %d: PKT decrypted(%d),  PKT encrypt(%d),  Set %pM hw_decrypted(%d)\n",
 			 __FUNCTION__,
 			 __LINE__,
 			 prxattrib->bdecrypted,
 			 prxattrib->encrypt,
-			 psecuritypriv->hw_decrypted);
+			 psta->phl_sta->mac_addr,
+			 psta->hw_decrypted);
 #endif
 
 		switch (prxattrib->encrypt) {
@@ -593,29 +590,42 @@ union recv_frame *decryptor(_adapter *padapter, union recv_frame *precv_frame)
 		   && prxattrib->encrypt > 0
 		&& (psecuritypriv->busetkipkey == 1 || prxattrib->encrypt != _TKIP_)
 		  ) {
+#if 0
+		if ((prxstat->icv == 1) && (prxattrib->encrypt != _AES_)) {
+			psecuritypriv->hw_decrypted = _FALSE;
+
+
+			rtw_free_recvframe(precv_frame);
+
+			return_packet = NULL;
+
+		} else
+#endif
 		{
 			DBG_COUNTER(padapter->rx_logs.core_rx_post_decrypt_hw);
 
 			psecuritypriv->hw_decrypted = _TRUE;
+			psta->hw_decrypted = _TRUE;
 #ifdef DBG_RX_DECRYPTOR
-			RTW_INFO("[%s] %d:prxstat->bdecrypted:%d,  prxattrib->encrypt:%d,  Setting psecuritypriv->hw_decrypted = %d\n",
-				 __FUNCTION__,
-				 __LINE__,
-				 prxattrib->bdecrypted,
-				 prxattrib->encrypt,
-				 psecuritypriv->hw_decrypted);
-
+			RTW_INFO("[%s] %d: PKT decrypted(%d), PKT encrypt(%d), Set %pM hw_decrypted(%d)\n",
+			 __FUNCTION__,
+			 __LINE__,
+			 prxattrib->bdecrypted,
+			 prxattrib->encrypt,
+			 psta->phl_sta->mac_addr,
+			 psta->hw_decrypted);
 #endif
 		}
 	} else {
 		DBG_COUNTER(padapter->rx_logs.core_rx_post_decrypt_unknown);
 #ifdef DBG_RX_DECRYPTOR
-		RTW_INFO("[%s] %d:prxstat->bdecrypted:%d,  prxattrib->encrypt:%d,  Setting psecuritypriv->hw_decrypted = %d\n",
+		RTW_INFO("[%s] %d: PKT decrypted(%d), PKT encrypt(%d), Set %pM hw_decrypted(%d)\n",
 			 __FUNCTION__,
 			 __LINE__,
 			 prxattrib->bdecrypted,
 			 prxattrib->encrypt,
-			 psecuritypriv->hw_decrypted);
+			 psta->phl_sta->mac_addr,
+			 psta->hw_decrypted);
 #endif
 	}
 
@@ -628,7 +638,7 @@ union recv_frame *decryptor(_adapter *padapter, union recv_frame *precv_frame)
 
 	if (res == _FAIL) {
 		/* Let rtw_core_rx_process or rtw_mi_buddy_clone_bcmc_packet */
-		/* to handle it */
+		/* to handle it.*/
 		/* rtw_free_recvframe(return_packet); */
 		return_packet = NULL;
 	} else
@@ -639,6 +649,7 @@ union recv_frame *decryptor(_adapter *padapter, union recv_frame *precv_frame)
 	return return_packet;
 
 }
+
 /* ###set the security information in the recv_frame */
 union recv_frame *portctrl(_adapter *adapter, union recv_frame *precv_frame)
 {
