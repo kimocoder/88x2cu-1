@@ -120,9 +120,6 @@ enum h2c_cmd {
 #ifdef CONFIG_FW_HANDLE_TXBCN
 	H2C_FW_BCN_OFFLOAD = 0xBA,
 #endif
-#ifdef CONFIG_SUPPORT_DYNAMIC_TXPWR
-	H2C_FW_CRC5_SEARCH = 0xBB,
-#endif
 	H2C_RESET_TSF = 0xC0,
 #ifdef CONFIG_FW_CORRECT_BCN
 	H2C_BCNHWSEQ = 0xC5,
@@ -206,10 +203,6 @@ enum h2c_cmd {
 
 #define H2C_SINGLE_CHANNELSWITCH_V2_LEN 3
 #define H2C_BT_UNKNOWN_DEVICE_WA_LEN 1
-
-#ifdef CONFIG_SUPPORT_DYNAMIC_TXPWR
-#define H2C_FW_CRC5_SEARCH_LEN	7
-#endif
 
 #ifdef CONFIG_WAR_OFFLOAD
 #define	H2C_WAR_OFFLOAD_LEN			3
@@ -663,19 +656,6 @@ s32 rtw_hal_customer_str_write(_adapter *adapter, const u8 *cs);
 #define SET_H2CCMD_LPSPG_LOC(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE((__pH2CCmd)+1, 0, 8, __Value)/*Loc_LPS_PG*/
 #define SET_H2CCMD_LPSPG_DPK_INFO_LOC(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE((__pH2CCmd)+2, 0, 8, __Value)/*Loc_LPS_PG_DPK_info*/
 #define SET_H2CCMD_LPSPG_IQK_INFO_LOC(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE((__pH2CCmd) + 3, 0, 8, __Value)/*Loc_IQK_result*/
-#endif
-
-#if defined(CONFIG_RTL8822C) && defined(CONFIG_SUPPORT_DYNAMIC_TXPWR)
-#define SET_H2CCMD_FW_CRC5_SEARCH_EN(cmd, v)	\
-	SET_BITS_TO_LE_1BYTE((cmd), 0, 1, (v));
-#define SET_H2CCMD_FW_CRC5_SEARCH_MACID(cmd, v)	\
-	SET_BITS_TO_LE_1BYTE((cmd), 1, 7, (v));
-#define SET_H2CCMD_FW_CRC5_SEARCH_MAC(cmd, mac)	\
-	do {		\
-		int __offset = 0;	\
-		for (__offset = 0; __offset < ETH_ALEN; __offset++)	\
-			SET_BITS_TO_LE_1BYTE((u8 *)(cmd + __offset), 0, 8, *((u8 *)(mac + __offset)));	\
-	} while(0)
 #endif
 
 #ifdef CONFIG_WAR_OFFLOAD

@@ -229,81 +229,6 @@ void record_ra_info(void *p_dm_void, u8 macid, struct cmn_sta_info *p_sta, u64 r
 	}
 }
 
-#ifdef CONFIG_SUPPORT_DYNAMIC_TXPWR
-void rtw_phydm_fill_desc_dpt(void *dm, u8 *desc, u8 dpt_lv)
-{
-	struct dm_struct *p_dm = (struct dm_struct *)dm;
-	_adapter *adapter = p_dm->adapter;
-
-	switch (rtw_get_chip_type(adapter)) {
-/*
-	#ifdef CONFIG_RTL8188F
-	case RTL8188F:
-		break;
-	#endif
-
-	#ifdef CONFIG_RTL8723B
-	case RTL8723B :
-		break;
-	#endif
-
-	#ifdef CONFIG_RTL8703B
-	case RTL8703B :
-		break;
-	#endif
-
-	#ifdef CONFIG_RTL8812A
-	case RTL8812 :
-		break;
-	#endif
-
-	#ifdef CONFIG_RTL8821A
-	case RTL8821:
-		break;
-	#endif
-
-	#ifdef CONFIG_RTL8814A
-	case RTL8814A :
-		break;
-	#endif
-
-	#ifdef CONFIG_RTL8192F
-	case RTL8192F :
-		break;
-	#endif
-*/
-/*
-	#ifdef CONFIG_RTL8192E
-	case RTL8192E :
-		SET_TX_DESC_TX_POWER_0_PSET_92E(desc, dpt_lv);
-		break;
-	#endif
-*/
-	#ifdef CONFIG_RTL8822B
-	case RTL8822B :
-		SET_TX_DESC_TXPWR_OFSET_8822B(desc, dpt_lv);
-	break;
-	#endif
-
-	#ifdef CONFIG_RTL8821C
-	case RTL8821C :
-		SET_TX_DESC_TXPWR_OFSET_8821C(desc, dpt_lv);
-	break;
-	#endif
-
-	default :
-		RTW_ERR("%s IC not support dynamic tx power\n", __func__);
-		break;
-	}
-}
-void rtw_phydm_set_dyntxpwr(_adapter *adapter, u8 *desc, u8 mac_id)
-{
-	struct dm_struct *dm = adapter_to_phydm(adapter);
-
-	odm_set_dyntxpwr(dm, desc, mac_id);
-}
-#endif
-
 #ifdef CONFIG_TDMADIG
 void rtw_phydm_tdmadig(_adapter *adapter, u8 state)
 {
@@ -337,9 +262,6 @@ void rtw_phydm_ops_func_init(struct dm_struct *p_phydm)
 	struct ra_table *p_ra_t = &p_phydm->dm_ra_table;
 
 	p_ra_t->record_ra_info = record_ra_info;
-	#ifdef CONFIG_SUPPORT_DYNAMIC_TXPWR
-	p_phydm->fill_desc_dyntxpwr = rtw_phydm_fill_desc_dpt;
-	#endif
 }
 void rtw_phydm_priv_init(_adapter *adapter)
 {

@@ -5677,11 +5677,17 @@ static int	cfg80211_rtw_del_station(struct wiphy *wiphy, struct net_device *ndev
 	_adapter *padapter = (_adapter *)rtw_netdev_priv(ndev);
 	struct mlme_priv *pmlmepriv = &(padapter->mlmepriv);
 	struct sta_priv *pstapriv = &padapter->stapriv;
+	bool is_ucast = 1;
+	u8 use_disassoc = _FALSE;
+	u16 reason_code = WLAN_REASON_DEAUTH_LEAVING;
 
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 19, 0))
 	target_mac = mac;
 #else
 	target_mac = params->mac;
+	reason_code = params->reason_code;
+	if (params->subtype == (WIFI_DISASSOC >> 4))
+		use_disassoc = _TRUE;
 #endif
 
 	RTW_INFO("+"FUNC_NDEV_FMT" mac=%pM\n", FUNC_NDEV_ARG(ndev), target_mac);

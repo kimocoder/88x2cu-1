@@ -4312,49 +4312,6 @@ void rtw_set_p2p_ps_offload_cmd(_adapter *adapter, u8 p2p_ps_state)
 }
 #endif /* CONFIG_P2P */
 
-#if defined(CONFIG_RTL8822C) && defined(CONFIG_SUPPORT_DYNAMIC_TXPWR)
-static void _rtw_hal_dtp_macid_set(
-	_adapter *padapter, u8 opmode, u8 mac_id)
-{
-	struct macid_ctl_t *macid_ctl = &(padapter->dvobj->macid_ctl);
-	struct sta_info *psta;
-	u8 h2c_cmd[H2C_FW_CRC5_SEARCH_LEN] = {0};
-	u8 mac_addr[ETH_ALEN] = {0};
-
-	if (opmode) {
-		psta = macid_ctl->sta[mac_id];
-		if (psta)
-			_rtw_memcpy(mac_addr, psta->cmn.mac_addr, ETH_ALEN);
-
-		if (rtw_check_invalid_mac_address(mac_addr, _FALSE))
-			return;
-	}
-	/* else DON'T CARE H2C_FW_CRC5_SEARCH mac addr in disconnected case */
-
-	if (rtw_get_chip_type(padapter) == RTL8822C) {
-		SET_H2CCMD_FW_CRC5_SEARCH_EN(h2c_cmd, opmode);
-		SET_H2CCMD_FW_CRC5_SEARCH_MACID(h2c_cmd, mac_id);
-		SET_H2CCMD_FW_CRC5_SEARCH_MAC(&h2c_cmd[1], mac_addr);
-		if (rtw_hal_fill_h2c_cmd(padapter, H2C_FW_CRC5_SEARCH,
-						H2C_FW_CRC5_SEARCH_LEN, h2c_cmd) != _SUCCESS)
-			RTW_WARN("%s : set h2c - 0x%02x fail!\n", __func__, H2C_FW_CRC5_SEARCH);
-	}
-}
-
-static void rtw_hal_dtp_macid_set(_adapter *padapter, u8 opmode,
-	bool macid_ind, u8 mac_id, u8 macid_end)
-{
-	int i;
-
-	if (macid_ind == 0) {
-		_rtw_hal_dtp_macid_set(padapter, opmode, mac_id);
-	} else {
-		for (i = mac_id; i <= macid_end; i++)
-			_rtw_hal_dtp_macid_set(padapter, opmode, i);
-	}
-}
-#endif
-
 /*
 * rtw_hal_set_FwMediaStatusRpt_cmd -
 *
@@ -4377,10 +4334,6 @@ s32 rtw_hal_set_FwMediaStatusRpt_cmd(_adapter *adapter, bool opmode, bool miraca
 	u8 hw_port = rtw_hal_get_port(adapter);
 #endif
 	u8 op_num_change_bmp = 0;
-
-#if defined(CONFIG_RTL8822C) && defined(CONFIG_SUPPORT_DYNAMIC_TXPWR)
-	rtw_hal_dtp_macid_set(adapter, opmode, macid_ind, macid, macid_end);
-#endif
 
 	SET_H2CCMD_MSRRPT_PARM_OPMODE(parm, opmode);
 	SET_H2CCMD_MSRRPT_PARM_MACID_IND(parm, macid_ind);
