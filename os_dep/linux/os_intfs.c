@@ -1227,6 +1227,11 @@ u8 devobj_trx_resource_init(struct dvobj_priv *dvobj)
 	if (ret == _FAIL)
 		goto exit;
 #endif
+	ret = rtw_init_recv_priv(dvobj);
+	if (ret == _FAIL) {
+		RTW_ERR("%s rtw_init_recv_priv failed\n", __func__);
+		goto exit;
+	}
 
 	ret = rtw_init_cmd_priv(dvobj);
 	if (ret == _FAIL) {
@@ -1256,15 +1261,6 @@ u8 rtw_init_drv_sw(_adapter *padapter)
 #ifdef CONFIG_RTW_CFGVENDOR_RANDOM_MAC_OUI
 	struct rtw_wdev_priv *pwdev_priv = adapter_wdev_data(padapter);
 #endif
-
-	#if defined(CONFIG_AP_MODE) && defined(CONFIG_SUPPORT_MULTI_BCN)
-	_rtw_init_listhead(&padapter->list);
-	#ifdef CONFIG_FW_HANDLE_TXBCN
-	padapter->vap_id = CONFIG_LIMITED_AP_NUM;
-	if (is_primary_adapter(padapter))
-		adapter_to_dvobj(padapter)->vap_tbtt_rpt_map = adapter_to_regsty(padapter)->fw_tbtt_rpt;
-	#endif
-	#endif
 
 	#ifdef CONFIG_CLIENT_PORT_CFG
 	padapter->client_id = MAX_CLIENT_PORT_NUM;
@@ -1337,12 +1333,6 @@ u8 rtw_init_drv_sw(_adapter *padapter)
 			ret8 = _FAIL;
 			goto exit;
 		}
-#if 0 // NEO move to devobj_data_init
-		if (rtw_rfctl_init(padapter) == _FAIL) {
-			ret8 = _FAIL;
-			goto exit;
-		}
-#endif // if 0
 	}
 
 	if (rtw_init_mlme_priv(padapter) == _FAIL) {
@@ -1350,12 +1340,7 @@ u8 rtw_init_drv_sw(_adapter *padapter)
 		goto exit;
 	}
 
-#if (defined(CONFIG_P2P) && defined(CONFIG_CONCURRENT_MODE)) || defined(CONFIG_IOCTL_CFG80211)
-	rtw_init_roch_info(padapter);
-#endif
-
 #ifdef CONFIG_P2P
-	rtw_init_wifidirect_timers(padapter);
 	init_wifidirect_info(padapter, P2P_ROLE_DISABLE);
 	reset_global_wifidirect_info(padapter);
 #ifdef CONFIG_WFD
@@ -1383,12 +1368,6 @@ u8 rtw_init_drv_sw(_adapter *padapter)
 
 	if (_rtw_init_xmit_priv(&padapter->xmitpriv, padapter) == _FAIL) {
 		RTW_INFO("Can't _rtw_init_xmit_priv\n");
-		ret8 = _FAIL;
-		goto exit;
-	}
-
-	if (rtw_init_recv_priv(&adapter_to_dvobj(padapter)->recvpriv, padapter) == _FAIL) {
-		RTW_INFO("Can't rtw_init_recv_priv\n");
 		ret8 = _FAIL;
 		goto exit;
 	}
@@ -1432,17 +1411,7 @@ u8 rtw_init_drv_sw(_adapter *padapter)
 
 	/* _rtw_memset((u8 *)&padapter->qospriv, 0, sizeof (struct qos_priv)); */ /* move to mlme_priv */
 
-#ifdef CONFIG_MP_INCLUDED
-	if (init_mp_priv(padapter) == _FAIL)
-		RTW_INFO("%s: initialize MP private data Fail!\n", __func__);
-#endif
-
 	rtw_hal_dm_init(padapter);
-
-#if 0 //NEO - change to G6's
-	if (is_primary_adapter(padapter))
-		rtw_rfctl_chplan_init(padapter);
-#endif //NEO
 
 #ifdef CONFIG_RTW_SW_LED
 	rtw_hal_sw_led_init(padapter);
@@ -1460,32 +1429,15 @@ u8 rtw_init_drv_sw(_adapter *padapter)
 	_rtw_spinlock_init(&padapter->br_ext_lock);
 #endif /* CONFIG_BR_EXT */
 
-#ifdef CONFIG_BEAMFORMING
-#ifdef RTW_BEAMFORMING_VERSION_2
-	rtw_bf_init(padapter);
-#endif /* RTW_BEAMFORMING_VERSION_2 */
-#endif /* CONFIG_BEAMFORMING */
-
-#ifdef CONFIG_RTW_REPEATER_SON
-	init_rtw_rson_data(adapter_to_dvobj(padapter));
-#endif
-
 #ifdef CONFIG_RTW_80211K
 	rtw_init_rm(padapter);
 #endif
 
 #ifdef CONFIG_RTW_CFGVENDOR_RANDOM_MAC_OUI
-	memset(pwdev_priv->pno_mac_addr, 0xFF, ETH_ALEN);
+	_rtw_memset(pwdev_priv->pno_mac_addr, 0xFF, ETH_ALEN);
 #endif
 
 exit:
-
-//NEO
-#if 0 //def CONFIG_STA_CMD_DISPR
-	rtw_connect_req_init(padapter);
-	rtw_disconnect_req_init(padapter);
-#endif /* CONFIG_STA_CMD_DISPR */
-
 	return ret8;
 
 }

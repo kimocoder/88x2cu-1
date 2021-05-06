@@ -16,7 +16,7 @@
 #define __RECV_OSDEP_H_
 
 u8 rtw_init_recv_info(_adapter *adapter);
-sint rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter);
+sint rtw_init_recv_priv(struct dvobj_priv *dvobj);
 void rtw_free_recv_priv(struct dvobj_priv *dvobj);
 
 #if 0

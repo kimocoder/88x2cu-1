@@ -89,13 +89,12 @@ void _dump_recv_priv(struct dvobj_priv *dvobj, _queue *pfree_recv_queue)
 
 #endif
 
-sint rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter)
+sint rtw_init_recv_priv(struct dvobj_priv *dvobj)
 {
 	sint i;
 	union recv_frame *precvframe;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
 	sint	res = _SUCCESS;
-	//struct recv_priv *precvpriv = &dvobj->recvpriv;
+	struct recv_priv *precvpriv = &dvobj->recvpriv;
 
 #ifdef CONFIG_RECV_THREAD_MODE
 	_rtw_init_sema(&precvpriv->recv_sema, 0);
@@ -106,7 +105,6 @@ sint rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter)
 	_rtw_init_queue(&precvpriv->uc_swdec_pending_queue);
 	#endif
 
-	precvpriv->adapter = padapter;
 	precvpriv->dvobj = dvobj;
 
 	precvpriv->free_recvframe_cnt = NR_RECVFRAME;
@@ -140,8 +138,8 @@ sint rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter)
 		precvframe->u.hdr.dvobj = dvobj;
 		precvframe->u.hdr.adapter = NULL; //NEO : check why fail
 		precvframe->u.hdr.rx_req = NULL;
-		precvframe++;
 
+		precvframe++;
 	}
 	#ifdef DBG_RECV_FRAME
 	RTW_INFO("%s =>precvpriv->free_recvframe_cnt:%d\n", __func__, precvpriv->free_recvframe_cnt);

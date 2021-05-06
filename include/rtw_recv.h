@@ -594,7 +594,7 @@ struct recv_priv {
 
 	uint free_recvframe_cnt;
 
-	_adapter	*adapter;
+//	_adapter	*adapter;
 
 	u32 is_any_non_be_pkts;
 
