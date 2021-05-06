@@ -1749,5 +1749,274 @@ s8 rtw_noise_query_by_idx(struct _ADAPTER *a, u8 idx)
 		return 0;
 }
 #endif /* CONFIG_RTW_ACS */
-
 #endif // if 0 NEO
+
+#ifdef CONFIG_WOWLAN
+static u8 _cfg_keep_alive_info(struct _ADAPTER *a, u8 enable)
+{
+	struct rtw_keep_alive_info info;
+	struct dvobj_priv *d;
+	void *phl;
+	enum rtw_phl_status status;
+	u8 check_period = 5;
+
+	d = adapter_to_dvobj(a);
+	phl = GET_PHL_INFO(d);
+
+	_rtw_memset(&info, 0, sizeof(struct rtw_keep_alive_info));
+
+	info.keep_alive_en = enable;
+	info.keep_alive_period = check_period;
+
+	RTW_INFO("%s: keep_alive_en=%d, keep_alive_period=%d\n",
+				info.keep_alive_en, info.keep_alive_period);
+
+	status = rtw_phl_cfg_keep_alive_info(phl, &info);
+	if (status != RTW_PHL_STATUS_SUCCESS) {
+		RTW_INFO("%s fail(%d)\n", __func__, status);
+		return _FAIL;
+	}
+
+	return _SUCCESS;
+}
+
+static u8 _cfg_disc_det_info(struct _ADAPTER *a, u8 enable)
+{
+	struct rtw_disc_det_info info;
+	struct dvobj_priv *d;
+	void *phl;
+	enum rtw_phl_status status;
+	struct registry_priv *registry;
+	u8 check_period = 100, trypkt_num = 5;
+
+	d = adapter_to_dvobj(a);
+	phl = GET_PHL_INFO(d);
+	registry = &a->registrypriv;
+
+	_rtw_memset(&info, 0, sizeof(struct rtw_disc_det_info));
+
+	info.disc_det_en = enable;
+
+	/* wake up event includes deauth wake up */
+	if (registry->wakeup_event & BIT(2))
+		info.disc_wake_en = _TRUE;
+
+	info.try_pkt_count = trypkt_num;
+	info.check_period = check_period;
+
+	info.cnt_bcn_lost_en = 0;
+	info.cnt_bcn_lost_limit = 0;
+
+	status = rtw_phl_cfg_disc_det_info(phl, &info);
+	if (status != RTW_PHL_STATUS_SUCCESS) {
+		RTW_INFO("%s fail(%d)\n", __func__, status);
+		return _FAIL;
+	}
+
+	return _SUCCESS;
+}
+
+static u8 _cfg_nlo_info(struct _ADAPTER *a)
+{
+	struct rtw_nlo_info info;
+	struct dvobj_priv *d;
+	void *phl;
+	enum rtw_phl_status status;
+
+	d = adapter_to_dvobj(a);
+	phl = GET_PHL_INFO(d);
+
+	_rtw_memset(&info, 0, sizeof(struct rtw_nlo_info));
+	status = rtw_phl_cfg_nlo_info(phl, &info);
+	if (status != RTW_PHL_STATUS_SUCCESS) {
+		RTW_INFO("%s fail(%d)\n", __func__, status);
+		return _FAIL;
+	}
+
+	return _SUCCESS;
+}
+
+static u8 _cfg_arp_ofld_info(struct _ADAPTER *a)
+{
+	struct rtw_arp_ofld_info info;
+	struct dvobj_priv *d;
+	void *phl;
+	enum rtw_phl_status status;
+	struct security_priv *secpriv;
+	u8 arp_en;
+
+	d = adapter_to_dvobj(a);
+	phl = GET_PHL_INFO(d);
+	secpriv = &a->securitypriv;
+
+	_rtw_memset(&info, 0, sizeof(struct rtw_arp_ofld_info));
+
+#ifdef CONFIG_ARP_KEEP_ALIVE
+	if ((secpriv->dot11PrivacyAlgrthm == _WEP40_) ||
+		(secpriv->dot11PrivacyAlgrthm == _WEP104_))
+		arp_en = 0;
+	else
+		arp_en = 1;
+#else
+	arp_en = 0;
+#endif /* CONFIG_ARP_KEEP_ALIVE */
+
+	info.arp_en = arp_en;
+
+	if (info.arp_en) {
+	} else {
+	}
+
+	rtw_phl_cfg_arp_ofld_info(phl, &info);
+
+	return _SUCCESS;
+}
+
+static u8 _cfg_ndp_ofld_info(struct _ADAPTER *a)
+{
+	struct rtw_ndp_ofld_info info;
+	struct dvobj_priv *d;
+	void *phl;
+	enum rtw_phl_status status;
+
+	d = adapter_to_dvobj(a);
+	phl = GET_PHL_INFO(d);
+
+	_rtw_memset(&info, 0, sizeof(struct rtw_ndp_ofld_info));
+
+	rtw_phl_cfg_ndp_ofld_info(phl, &info);
+
+	return _SUCCESS;
+}
+
+static u8 _cfg_gtk_ofld_info(struct _ADAPTER *a)
+{
+	struct rtw_gtk_ofld_info info;
+	struct dvobj_priv *d;
+	void *phl;
+	enum rtw_phl_status status;
+
+	d = adapter_to_dvobj(a);
+	phl = GET_PHL_INFO(d);
+
+	_rtw_memset(&info, 0, sizeof(struct rtw_gtk_ofld_info));
+	rtw_phl_cfg_gtk_ofld_info(phl, &info);
+
+	return _SUCCESS;
+}
+
+static u8 _cfg_realwow_info(struct _ADAPTER *a)
+{
+	struct rtw_realwow_info info;
+	struct dvobj_priv *d;
+	void *phl;
+	enum rtw_phl_status status;
+
+	d = adapter_to_dvobj(a);
+	phl = GET_PHL_INFO(d);
+
+	/* default disable */
+	_rtw_memset(&info, 0, sizeof(struct rtw_realwow_info));
+	status = rtw_phl_cfg_realwow_info(phl, &info);
+	if (status != RTW_PHL_STATUS_SUCCESS) {
+		RTW_INFO("%s fail(%d)\n", __func__, status);
+		return _FAIL;
+	}
+
+	return _SUCCESS;
+}
+
+static u8 _cfg_wow_wake(struct _ADAPTER *a, u8 wow_en)
+{
+	struct rtw_wow_wake_info info;
+	struct dvobj_priv *d;
+	void *phl;
+	enum rtw_phl_status status;
+
+	d = adapter_to_dvobj(a);
+	phl = GET_PHL_INFO(d);
+
+	_rtw_memset(&info, 0, sizeof(struct rtw_wow_wake_info));
+
+	info.wow_en = 1;
+	info.pattern_match_en = 1;
+	info.magic_pkt_en = 1;
+
+	status = rtw_phl_cfg_wow_wake(phl, &info);
+	if (status != RTW_PHL_STATUS_SUCCESS) {
+		RTW_INFO("%s fail(%d)\n", __func__, status);
+		return _FAIL;
+	}
+
+	return _SUCCESS;
+}
+
+static u8 _wow_cfg(struct _ADAPTER *a, u8 wow_en)
+{
+	struct dvobj_priv *d;
+	void *phl;
+	struct rtw_phl_stainfo_t *phl_sta;
+	enum rtw_phl_status status;
+
+	d = adapter_to_dvobj(a);
+	phl = GET_PHL_INFO(d);
+
+	if (!_cfg_keep_alive_info(a, wow_en))
+		return _FAIL;
+
+	if(!_cfg_disc_det_info(a, wow_en))
+		return _FAIL;
+
+	if (!_cfg_nlo_info(a))
+		return _FAIL;
+
+	if (!_cfg_arp_ofld_info(a))
+		return _FAIL;
+
+	if (!_cfg_ndp_ofld_info(a))
+		return _FAIL;
+
+	if (!_cfg_gtk_ofld_info(a))
+		return _FAIL;
+
+	if (!_cfg_realwow_info(a))
+		return _FAIL;
+
+	if (!_cfg_wow_wake(a, wow_en))
+		return _FAIL;
+
+	return _SUCCESS;
+}
+
+u8 rtw_hw_wow(struct _ADAPTER *a, u8 wow_en)
+{
+	struct dvobj_priv *d;
+	void *phl;
+	struct rtw_phl_stainfo_t *phl_sta;
+	enum rtw_phl_status status;
+
+
+	d = adapter_to_dvobj(a);
+	phl = GET_PHL_INFO(d);
+
+	rtw_wow_lps_level_decide(a, _TRUE);
+
+
+	if (!_wow_cfg(a, wow_en))
+		return _FAIL;
+
+	phl_sta = rtw_phl_get_stainfo_by_addr(phl, a->phl_role, get_bssid(&a->mlmepriv));
+
+	if (wow_en)
+		status = rtw_phl_suspend(phl, phl_sta, wow_en);
+	else
+		status = rtw_phl_resume(phl, phl_sta, &wow_en);
+
+	if (status != RTW_PHL_STATUS_SUCCESS) {
+		RTW_ERR("%s wow %s fail(status: %d)\n", __func__, wow_en ? "enable" : "disable", status);
+		return _FAIL;
+	}
+
+	return _SUCCESS;
+}
+#endif
