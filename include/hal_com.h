@@ -481,9 +481,6 @@ void linked_info_dump(_adapter *padapter, u8 benable);
 	void rtw_dump_raw_rssi_info(_adapter *padapter, void *sel);
 #endif
 
-#ifdef DBG_RX_DFRAME_RAW_DATA
-	void rtw_dump_rx_dframe_info(_adapter *padapter, void *sel);
-#endif
 void rtw_store_phy_info(_adapter *padapter, union recv_frame *prframe);
 #define		HWSET_MAX_SIZE			1024
 

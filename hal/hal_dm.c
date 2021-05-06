@@ -930,9 +930,6 @@ void SetHalODMVar(
 		sel = pValue1;
 
 		/*_RTW_PRINT_SEL(sel , "HAL_ODM_RX_Dframe_INFO\n");*/
-#ifdef DBG_RX_DFRAME_RAW_DATA
-		rtw_dump_rx_dframe_info(Adapter, sel);
-#endif
 	}
 		break;
 
