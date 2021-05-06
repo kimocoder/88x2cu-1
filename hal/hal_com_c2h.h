@@ -124,12 +124,6 @@ int c2h_customer_str_rpt_2_hdl(_adapter *adapter, u8 *data, u8 len);
 int c2h_per_rate_rpt_hdl(_adapter *adapter, u8 *data, u8 len);
 #endif
 
-#ifdef CONFIG_LPS_ACK
-/* C2H_LPS_STATUS_RPT, 0x32 */
-#define LPS_STATUS_RPT_LEN 2
-int c2h_lps_status_rpt(PADAPTER adapter, u8 *data, u8 len);
-#endif /* CONFIG_LPS_ACK */
-
 #ifdef CONFIG_FW_OFFLOAD_SET_TXPWR_IDX
 /* C2H_SET_TXPWR_FINISH, 0x70 */
 #define SET_TXPWR_FINISH_LEN 1

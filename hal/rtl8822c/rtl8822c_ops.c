@@ -1854,19 +1854,6 @@ static void hw_var_set_acm_ctrl(PADAPTER adapter, u8 ctrl)
 
 void hw_var_lps_rfon_chk(_adapter *adapter, u8 rfon_ctrl)
 {
-#ifdef CONFIG_LPS_ACK
-	struct pwrctrl_priv 	*pwrpriv = adapter_to_pwrctl(adapter);
-
-	if (rfon_ctrl == rf_on) {
-		if (rtw_sctx_wait(&pwrpriv->lps_ack_sctx, __func__)) {
-			if (pwrpriv->lps_ack_status > 0)
-				RTW_INFO(FUNC_ADPT_FMT" RF_ON function is not ready !!!\n", FUNC_ADPT_ARG(adapter));
-		} else {
-			RTW_WARN("LPS RFON sctx query timeout, operation abort!!\n");
-		}
-		pwrpriv->lps_ack_status = -1;
-	}
-#endif
 }
 
 static void hw_var_set_sec_dk_cfg(PADAPTER adapter, u8 enable)

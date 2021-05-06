@@ -1892,53 +1892,6 @@ exit:
 }
 #endif /* RTW_PER_CMD_SUPPORT_FW */
 
-#ifdef CONFIG_LPS_ACK
-#define	GET_C2H_LPS_STATUS_RPT_GET_ACTION(_data)	LE_BITS_TO_1BYTE(((u8 *)(_data)), 0, 8)
-#define	GET_C2H_LPS_STATUS_RPT_GET_STATUS_CODE(_data)		LE_BITS_TO_1BYTE(((u8 *)(_data)) + 1, 0, 8)
-#define DBG_LPS_STATUS_RPT 0
-
-int c2h_lps_status_rpt(PADAPTER adapter, u8 *data, u8 len)
-{
-	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(adapter);
-	struct submit_ctx *lps_sctx = &pwrpriv->lps_ack_sctx;
-	u8 action = 0;
-	s8 status_code = 0;
-	int ret = _FAIL;
-
-	if (len < LPS_STATUS_RPT_LEN) {
-		RTW_WARN("%s len(%u) < %d\n", __func__, len, LPS_STATUS_RPT_LEN);
-		goto exit;
-	}
-
-	action = GET_C2H_LPS_STATUS_RPT_GET_ACTION(data);
-	status_code = GET_C2H_LPS_STATUS_RPT_GET_STATUS_CODE(data);
-
-	/* action=0: report force leave null data status */
-	/* action=1: report Rf on status when receiving a SetPwrMode H2C with PwrState = RFON */
-	switch (action) {
-		case 0: 
-			/* status code 0: success, 1: no ack, 2: timeout, 3: cancel */
-		case 1: 
-			/* status code 0: FW has already turn to RFON */
-			pwrpriv->lps_ack_status = status_code;
-
-			if (DBG_LPS_STATUS_RPT)
-				RTW_INFO("=== [C2H LPS Action(%d)] LPS Status Code:%d ===\n", action, status_code);
-			
-			break;
-		default:
-			RTW_INFO("UnKnown Action(%d) for C2H LPS RPT\n", action);
-			break;
-	}
-
-	rtw_sctx_done(&lps_sctx);
-	ret = _SUCCESS;
-
-exit:
-	return ret;
-}
-#endif /* CONFIG_LPS_ACK */
-
 void rtw_hal_update_sta_wset(_adapter *adapter, struct sta_info *psta)
 {
 	u8 w_set = 0;
@@ -12567,21 +12520,6 @@ void rtw_lps_state_chk(_adapter *adapter, u8 ps_mode)
 	s8 leave_wait_count = LPS_ACTIVE_TIMEOUT;
 
 	if (ps_mode == PM_PS_MODE_ACTIVE) {
-#ifdef CONFIG_LPS_ACK
-		if (rtw_sctx_wait(&pwrpriv->lps_ack_sctx, __func__)) {
-			if (pwrpriv->lps_ack_status > 0) {
-				psta = rtw_get_stainfo(pstapriv, pmlmeinfo->network.MacAddress);
-				if (psta != NULL) {
-					if(issue_nulldata(adapter, psta->cmn.mac_addr, PM_PS_MODE_ACTIVE, 3, 1) == _FAIL)
-						RTW_INFO(FUNC_ADPT_FMT" LPS state sync not yet finished.\n", FUNC_ADPT_ARG(adapter));
-				}
-			}
-		} else {
-			RTW_WARN("LPS sctx query timeout, operation abort!!\n");
-			return;
-		}
-		pwrpriv->lps_ack_status = -1;
-#else
 		do {
 			if ((rtw_read8(adapter, REG_TCR) & BIT_PWRBIT_OW_EN) == 0) {
 				ps_ready = _TRUE;
@@ -12594,9 +12532,8 @@ void rtw_lps_state_chk(_adapter *adapter, u8 ps_mode)
 			RTW_WARN(FUNC_ADPT_FMT" Power Bit Control is still in HW!\n", FUNC_ADPT_ARG(adapter));
 			return;
 		}
-#endif /* CONFIG_LPS_ACK */
-		}
 	}
+}
 
 void rtw_var_set_basic_rate(PADAPTER padapter, u8 *val) {
 

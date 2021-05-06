@@ -94,7 +94,8 @@
 	#endif
 	/* #define SUPPORT_HW_RFOFF_DETECTED	1 */
 
-	#define CONFIG_LPS	1
+	//NEO
+	/* #define CONFIG_LPS	1 */
 	#if defined(CONFIG_LPS)
 		/* #define CONFIG_LPS_LCLK	1 */
 	#endif
