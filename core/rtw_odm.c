@@ -232,11 +232,21 @@ void rtw_odm_parse_rx_phy_status_chinfo(union recv_frame *rframe, u8 *phys)
 #endif
 
 #if (ODM_PHY_STATUS_NEW_TYPE_SUPPORT == 1)
-	_adapter *adapter = rframe->u.hdr.adapter;
-	struct dm_struct *phydm = adapter_to_phydm(adapter);
-	struct rx_pkt_attrib *attrib = &rframe->u.hdr.attrib;
-	u8 *wlanhdr = get_recvframe_data(rframe);
+	_adapter *adapter;
+	struct dm_struct *phydm;
+	struct rx_pkt_attrib *attrib;
+	u8 *wlanhdr;
 
+	adapter = rframe->u.hdr.adapter;
+	//NEO
+	if (!adapter) {
+		pr_info("%s NEO adapter == NULL\n", __func__);
+		return;
+	}
+
+	phydm = adapter_to_phydm(adapter);
+	attrib = &rframe->u.hdr.attrib;
+	wlanhdr = get_recvframe_data(rframe);
 	if (phydm->support_ic_type & PHYSTS_2ND_TYPE_IC) {
 		/*
 		* 8723D:

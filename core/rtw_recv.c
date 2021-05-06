@@ -138,7 +138,7 @@ sint rtw_init_recv_priv(struct recv_priv *precvpriv, _adapter *padapter)
 		precvframe->u.hdr.len = 0;
 
 		precvframe->u.hdr.dvobj = dvobj;
-		precvframe->u.hdr.adapter = padapter;
+		precvframe->u.hdr.adapter = NULL; //NEO : check why fail
 		precvframe->u.hdr.rx_req = NULL;
 		precvframe++;
 
@@ -761,14 +761,26 @@ sint recv_ucast_pn_decache(union recv_frame *precv_frame)
 
 sint recv_bcast_pn_decache(union recv_frame *precv_frame)
 {
-	_adapter *padapter = precv_frame->u.hdr.adapter;
-	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
-	struct security_priv *psecuritypriv = &padapter->securitypriv;
-	struct rx_pkt_attrib *pattrib = &precv_frame->u.hdr.attrib;
-	u8 *pdata = precv_frame->u.hdr.rx_data;
+	_adapter *padapter;
+	struct mlme_priv *pmlmepriv;
+	struct security_priv *psecuritypriv;
+	struct rx_pkt_attrib *pattrib;
+	u8 *pdata;
 	u64 tmp_iv_hdr = 0;
 	u64 curr_pn = 0, pkt_pn = 0;
 	u8 key_id;
+
+	padapter = precv_frame->u.hdr.adapter;
+	//NEO
+	if (!padapter) {
+		pr_info("%s NEO adapter == NULL\n", __func__);
+		return _FAIL;
+	}
+
+	pmlmepriv = &padapter->mlmepriv;
+	psecuritypriv = &padapter->securitypriv;
+	pattrib = &precv_frame->u.hdr.attrib;
+	pdata = precv_frame->u.hdr.rx_data;
 
 	if ((pattrib->encrypt == _AES_) && (MLME_IS_STA(padapter))) {
 
@@ -1520,6 +1532,12 @@ int rtw_sta_rx_amsdu_act_check(union recv_frame *rframe
 
 #ifdef CONFIG_RTW_WDS
 	_adapter *adapter = rframe->u.hdr.adapter;
+
+	//NEO
+	if (!adapter) {
+		pr_info("%s NEO adapter == NULL\n", __func__);
+		return act;
+	}
 
 	if (adapter_use_wds(adapter)
 		&& IS_MCAST(da)
@@ -2662,18 +2680,34 @@ union recv_frame *recvframe_chk_defrag(_adapter *padapter, union recv_frame *pre
 
 static int rtw_recv_indicatepkt_check(union recv_frame *rframe, u8 *ehdr_pos, u32 pkt_len)
 {
-	_adapter *adapter = rframe->u.hdr.adapter;
-	struct recv_info *recvinfo = &adapter->recvinfo;
-	struct ethhdr *ehdr = (struct ethhdr *)ehdr_pos;
-	struct rx_pkt_attrib *pattrib = &rframe->u.hdr.attrib;
+	_adapter *adapter;
+	struct recv_info *recvinfo;
+	struct ethhdr *ehdr;
+	struct rx_pkt_attrib *pattrib;
 #ifdef DBG_IP_R_MONITOR
 	int i;
-	struct mlme_ext_priv *pmlmeext = &adapter->mlmeextpriv;
-	struct mlme_priv	*pmlmepriv = &adapter->mlmepriv;
-	struct wlan_network *cur_network = &(pmlmepriv->cur_network);
+	struct mlme_ext_priv *pmlmeext;
+	struct mlme_priv	*pmlmepriv;
+	struct wlan_network *cur_network;
 #endif/*DBG_IP_R_MONITOR*/
 	enum eap_type eapol_type;
 	int ret = _FAIL;
+
+	adapter = rframe->u.hdr.adapter;
+	//NEO
+	if (!adapter) {
+		pr_info("%s NEO adapter == NULL\n", __func__);
+		return ret;
+	}
+
+	recvinfo = &adapter->recvinfo;
+	ehdr = (struct ethhdr *)ehdr_pos;
+	pattrib = &rframe->u.hdr.attrib;
+#ifdef DBG_IP_R_MONITOR
+	pmlmeext = &adapter->mlmeextpriv;
+	pmlmepriv = &adapter->mlmepriv;
+	cur_network = &(pmlmepriv->cur_network);
+#endif/*DBG_IP_R_MONITOR*/
 
 #ifdef CONFIG_WAPI_SUPPORT
 	if (rtw_wapi_check_for_drop(adapter, rframe, ehdr_pos)) {
@@ -4340,17 +4374,29 @@ void rx_query_phy_status(
 	union recv_frame	*precvframe,
 	u8 *pphy_status)
 {
-	PADAPTER			padapter = precvframe->u.hdr.adapter;
-	struct rx_pkt_attrib	*pattrib = &precvframe->u.hdr.attrib;
-	HAL_DATA_TYPE		*pHalData = GET_HAL_DATA(padapter);
-	struct phydm_phyinfo_struct *p_phy_info = &pattrib->phy_info;
+	PADAPTER			padapter;
+	struct rx_pkt_attrib	*pattrib;
+	HAL_DATA_TYPE		*pHalData;
+	struct phydm_phyinfo_struct *p_phy_info;
 	u8					*wlanhdr;
 	struct phydm_perpkt_info_struct pkt_info;
 	u8 *ta, *ra;
 	u8 is_ra_bmc;
 	struct sta_priv *pstapriv;
 	struct sta_info *psta = NULL;
-	struct recv_info  *precvinfo = &padapter->recvinfo;
+	struct recv_info  *precvinfo;
+
+	padapter = precvframe->u.hdr.adapter;
+	//NEO
+	if (!padapter) {
+		pr_info("%s NEO adapter == NULL\n", __func__);
+		return;
+	}
+
+	pattrib = &precvframe->u.hdr.attrib;
+	pHalData = GET_HAL_DATA(padapter);
+	p_phy_info = &pattrib->phy_info;
+	precvinfo = &padapter->recvinfo;
 
 	pkt_info.is_packet_match_bssid = _FALSE;
 	pkt_info.is_packet_to_self = _FALSE;
@@ -5031,19 +5077,30 @@ static inline void _rx_process_ss_sq(_adapter *padapter, union recv_frame *prfra
 /*#define DBG_RECV_INFO*/
 void rx_process_phy_info(union recv_frame *precvframe)
 {
-	_adapter *padapter = precvframe->u.hdr.adapter;
-	struct rx_pkt_attrib *pattrib = &precvframe->u.hdr.attrib;
-	struct phydm_phyinfo_struct *phy_info = &pattrib->phy_info;
+	_adapter *padapter;
+	struct rx_pkt_attrib *pattrib;
+	struct phydm_phyinfo_struct *phy_info;
 	u8 *wlanhdr = NULL;
 	u8 *ta, *ra;
 	u8 is_ra_bmc;
 	struct sta_priv *pstapriv;
 	struct sta_info *psta = NULL;
-	struct recv_info  *precvinfo = &padapter->recvinfo;
+	struct recv_info  *precvinfo;
 
 	bool is_packet_match_bssid = _FALSE;
 	bool is_packet_to_self = _FALSE;
 	bool is_packet_beacon = _FALSE;
+
+	padapter = precvframe->u.hdr.adapter;
+	//NEO
+	if (!padapter) {
+		pr_info("%s NEO adapter == NULL\n", __func__);
+		return;
+	}
+
+	pattrib = &precvframe->u.hdr.attrib;
+	phy_info = &pattrib->phy_info;
+	precvinfo = &padapter->recvinfo;
 
 	wlanhdr = precvframe->u.hdr.rx_data;
 	ta = get_ta(wlanhdr);
@@ -5375,12 +5432,20 @@ s32 rtw_core_update_recvframe(struct dvobj_priv *dvobj,
 		}
 	}
 
+	//NEO
+	#if 1 // NEO: for rx_query_phy_status in core_update_recvframe_mdata, need to fix further
+	prframe->u.hdr.adapter = primary_padapter;
+	if (!primary_padapter) {
+		pr_info("%s NEO adapter == NULL\n", __func__);
+		goto exit;
+	}
+	prframe->u.hdr.pkt->dev = primary_padapter->pnetdev;
+	#endif
+
 	core_update_recvframe_mdata(prframe, rx_req);
 	#ifdef RTW_WKARD_CORE_RSSI_V1
 	core_update_recvframe_phyinfo(prframe, rx_req);
 	#endif
-	prframe->u.hdr.adapter = primary_padapter;
-	prframe->u.hdr.pkt->dev = primary_padapter->pnetdev;
 
 	pbuf = prframe->u.hdr.rx_data;
 

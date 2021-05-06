@@ -6668,11 +6668,22 @@ exit:
 
 s32 rtw_action_public_decache(union recv_frame *rframe, u8 token_offset)
 {
-	_adapter *adapter = rframe->u.hdr.adapter;
-	struct mlme_ext_priv *mlmeext = &(adapter->mlmeextpriv);
-	u8 *frame = rframe->u.hdr.rx_data;
-	u16 seq_ctrl = ((rframe->u.hdr.attrib.seq_num & 0xffff) << 4) | (rframe->u.hdr.attrib.frag_num & 0xf);
-	u8 token = *(rframe->u.hdr.rx_data + sizeof(struct rtw_ieee80211_hdr_3addr) + token_offset);
+	_adapter *adapter;
+	struct mlme_ext_priv *mlmeext;
+	u8 *frame;
+	u16 seq_ctrl;
+	u8 token;
+
+	adapter = rframe->u.hdr.adapter;
+	if (!adapter) {
+		pr_info("%s NEO adapter == NULL\n", __func__);
+		return _FAIL;
+	}
+
+	mlmeext = &(adapter->mlmeextpriv);
+	frame = rframe->u.hdr.rx_data;
+	seq_ctrl = ((rframe->u.hdr.attrib.seq_num & 0xffff) << 4) | (rframe->u.hdr.attrib.frag_num & 0xf);
+	token = *(rframe->u.hdr.rx_data + sizeof(struct rtw_ieee80211_hdr_3addr) + token_offset);
 
 	if (GetRetry(frame)) {
 		if ((seq_ctrl == mlmeext->action_public_rxseq)
@@ -6707,6 +6718,12 @@ unsigned int on_action_public_p2p(union recv_frame *precv_frame)
 	u32 merged_p2p_ielen = 0;
 #endif /* CONFIG_P2P */
 
+	//NEO
+	if (!padapter) {
+		pr_info("%s adapter == NULL\n", __func__);
+		return _FAIL;
+	}
+
 	frame_body = (unsigned char *)(pframe + sizeof(struct rtw_ieee80211_hdr_3addr));
 
 #ifdef CONFIG_P2P
@@ -6731,11 +6748,17 @@ unsigned int on_action_public_vendor(union recv_frame *precv_frame)
 	u8 *pframe = precv_frame->u.hdr.rx_data;
 	u8 *frame_body = pframe + sizeof(struct rtw_ieee80211_hdr_3addr);
 	_adapter *adapter = precv_frame->u.hdr.adapter;
-	struct dvobj_priv *dvobj = adapter_to_dvobj(adapter);
-
+	struct dvobj_priv *dvobj;
 	int cnt = 0;
 	char msg[64];
 
+	//NEO
+	if (!adapter) {
+		pr_info("%s NEO adapter == NULL\n", __func__);
+		return ret;
+	}
+
+	dvobj = adapter_to_dvobj(adapter);
 	if (_rtw_memcmp(frame_body + 2, P2P_OUI, 4) == _TRUE) {
 		if (rtw_action_public_decache(precv_frame, 7) == _FAIL)
 			goto exit;
@@ -6766,6 +6789,12 @@ unsigned int on_action_public_default(union recv_frame *precv_frame, u8 action)
 	_adapter *adapter = precv_frame->u.hdr.adapter;
 	int cnt = 0;
 	char msg[64];
+
+	//NEO
+	if (!adapter) {
+		pr_info("%s NEO adapter == NULL\n", __func__);
+		return ret;
+	}
 
 	token = frame_body[2];
 
