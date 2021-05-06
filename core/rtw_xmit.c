@@ -43,9 +43,6 @@ void	_rtw_init_sta_xmit_priv(struct sta_xmit_priv *psta_xmitpriv)
 	_init_txservq(&psta_xmitpriv->bk_q);
 	_init_txservq(&psta_xmitpriv->vi_q);
 	_init_txservq(&psta_xmitpriv->vo_q);
-#ifdef CONFIG_RTW_MGMT_QUEUE
-	_init_txservq(&psta_xmitpriv->mgmt_q);
-#endif
 	_rtw_init_listhead(&psta_xmitpriv->legacy_dz);
 	_rtw_init_listhead(&psta_xmitpriv->apsd);
 
@@ -194,9 +191,6 @@ s32	_rtw_init_xmit_priv(struct xmit_priv *pxmitpriv, _adapter *padapter)
 	/* _rtw_init_queue(&pxmitpriv->apsd_queue); */
 
 	_rtw_init_queue(&pxmitpriv->free_xmit_queue);
-#ifdef CONFIG_LAYER2_ROAMING
-	_rtw_init_queue(&pxmitpriv->rpkt_queue);
-#endif
 
 	/*
 	Please allocate memory with the sz = (struct xmit_frame) * NR_XMITFRAME,
@@ -456,7 +450,6 @@ exit:
 	return res;
 }
 
-void  rtw_mfree_xmit_priv_lock(struct xmit_priv *pxmitpriv);
 void  rtw_mfree_xmit_priv_lock(struct xmit_priv *pxmitpriv)
 {
 	_rtw_spinlock_free(&pxmitpriv->lock);

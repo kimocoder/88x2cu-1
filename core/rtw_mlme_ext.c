@@ -7545,7 +7545,7 @@ void update_mgntframe_attrib_addr(_adapter *padapter, struct xmit_frame *pmgntfr
 {
 	u8 *pframe;
 	struct pkt_attrib *pattrib = &pmgntframe->attrib;
-#if defined(CONFIG_BEAMFORMING) || defined(CONFIG_ANTENNA_DIVERSITY) || defined(CONFIG_RTW_MGMT_QUEUE)
+#if defined(CONFIG_BEAMFORMING) || defined(CONFIG_ANTENNA_DIVERSITY)
 	struct sta_info *sta = NULL;
 #endif
 
@@ -7554,18 +7554,13 @@ void update_mgntframe_attrib_addr(_adapter *padapter, struct xmit_frame *pmgntfr
 	_rtw_memcpy(pattrib->ra, GetAddr1Ptr(pframe), ETH_ALEN);
 	_rtw_memcpy(pattrib->ta, get_addr2_ptr(pframe), ETH_ALEN);
 
-#if defined(CONFIG_BEAMFORMING) || defined(CONFIG_ANTENNA_DIVERSITY) || defined(CONFIG_RTW_MGMT_QUEUE)
+#if defined(CONFIG_BEAMFORMING) || defined(CONFIG_ANTENNA_DIVERSITY)
 	sta = pattrib->psta;
 	if (!sta) {
 		sta = rtw_get_stainfo(&padapter->stapriv, pattrib->ra);
 		pattrib->psta = sta;
 	}
-
-	#ifdef CONFIG_BEAMFORMING
-	if (sta)
-		update_attrib_txbf_info(padapter, pattrib, sta);
-	#endif
-#endif /* defined(CONFIG_BEAMFORMING) || defined(CONFIG_ANTENNA_DIVERSITY) || defined(CONFIG_RTW_MGMT_QUEUE) */
+#endif /* defined(CONFIG_BEAMFORMING) || defined(CONFIG_ANTENNA_DIVERSITY) */
 }
 
 void dump_mgntframe(_adapter *padapter, struct xmit_frame *pmgntframe)

@@ -798,25 +798,6 @@ s32	rtw_hal_mgnt_xmit(_adapter *padapter, struct xmit_frame *pmgntframe)
 		rtw_mgmt_xmitframe_coalesce(padapter, pmgntframe->pkt, pmgntframe);
 #endif
 
-#ifdef CONFIG_RTW_MGMT_QUEUE
-#ifdef CONFIG_AP_MODE
-	if (MLME_IS_AP(padapter) || MLME_IS_MESH(padapter)) {
-		_rtw_spinlock_bh(&pxmitpriv->lock);
-		ret = mgmt_xmitframe_enqueue_for_sleeping_sta(padapter, pmgntframe);
-		_rtw_spinunlock_bh(&pxmitpriv->lock);
-
-		#ifdef DBG_MGMT_QUEUE
-		if (ret == _TRUE)
-			RTW_INFO("%s doesn't be queued, dattrib->ra:"MAC_FMT" seq_num = %u, subtype = 0x%x\n",
-			__func__, MAC_ARG(pmgntframe->attrib.ra), pmgntframe->attrib.seqnum, pmgntframe->attrib.subtype);
-		#endif
-
-		if (ret == RTW_QUEUE_MGMT)
-			return ret;
-	}
-#endif
-#endif
-
 	ret = padapter->hal_func.mgnt_xmit(padapter, pmgntframe);
 	return ret;
 }
