@@ -546,7 +546,7 @@ union recv_frame *decryptor(_adapter *padapter, union recv_frame *precv_frame)
 #endif
 
 #ifdef DBG_RX_DECRYPTOR
-		RTW_INFO("[%s] %d: PKT decrypted(%d),  PKT encrypt(%d),  Set %pM hw_decrypted(%d)\n",
+		RTW_INFO("[%s] %d: PKT decrypted(%d), PKT encrypt(%d), Set %pM hw_decrypted(%d)\n",
 			 __FUNCTION__,
 			 __LINE__,
 			 prxattrib->bdecrypted,
@@ -676,6 +676,7 @@ union recv_frame *portctrl(_adapter *adapter, union recv_frame *precv_frame)
 
 	psta = rtw_get_stainfo(pstapriv, psta_addr);
 
+
 	if (auth_alg == dot11AuthAlgrthm_8021X) {
 		if ((psta != NULL) && (psta->ieee8021x_blocked)) {
 			/* blocked */
@@ -691,8 +692,8 @@ union recv_frame *portctrl(_adapter *adapter, union recv_frame *precv_frame)
 			if (ether_type == eapol_type)
 				prtnframe = precv_frame;
 			else {
-				/* free this frame */
-				rtw_free_recvframe(precv_frame);
+				/* Let rtw_core_rx_process to handle it */
+				/* rtw_free_recvframe(precv_frame); */
 				prtnframe = NULL;
 			}
 		} else {
@@ -725,6 +726,7 @@ union recv_frame *portctrl(_adapter *adapter, union recv_frame *precv_frame)
 #define PN_LESS_CHK(a, b)	(((a-b) & 0x800000000000) != 0)
 #define VALID_PN_CHK(new, old)	(((old) == 0) || PN_LESS_CHK(old, new))
 #define CCMPH_2_KEYID(ch)	(((ch) & 0x00000000c0000000) >> 30)
+
 sint recv_ucast_pn_decache(union recv_frame *precv_frame)
 {
 	struct rx_pkt_attrib *pattrib = &precv_frame->u.hdr.attrib;
@@ -759,26 +761,14 @@ sint recv_ucast_pn_decache(union recv_frame *precv_frame)
 
 sint recv_bcast_pn_decache(union recv_frame *precv_frame)
 {
-	_adapter *padapter;
-	struct mlme_priv *pmlmepriv;
-	struct security_priv *psecuritypriv;
-	struct rx_pkt_attrib *pattrib;
-	u8 *pdata;
+	_adapter *padapter = precv_frame->u.hdr.adapter;
+	struct mlme_priv *pmlmepriv = &padapter->mlmepriv;
+	struct security_priv *psecuritypriv = &padapter->securitypriv;
+	struct rx_pkt_attrib *pattrib = &precv_frame->u.hdr.attrib;
+	u8 *pdata = precv_frame->u.hdr.rx_data;
 	u64 tmp_iv_hdr = 0;
 	u64 curr_pn = 0, pkt_pn = 0;
 	u8 key_id;
-
-	padapter = precv_frame->u.hdr.adapter;
-	//NEO
-	if (!padapter) {
-		pr_info("%s NEO adapter == NULL\n", __func__);
-		return _FAIL;
-	}
-
-	pmlmepriv = &padapter->mlmepriv;
-	psecuritypriv = &padapter->securitypriv;
-	pattrib = &precv_frame->u.hdr.attrib;
-	pdata = precv_frame->u.hdr.rx_data;
 
 	if ((pattrib->encrypt == _AES_) && (MLME_IS_STA(padapter))) {
 

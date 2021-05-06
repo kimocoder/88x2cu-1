@@ -314,6 +314,19 @@ struct sta_info {
 	union pn48		dot11rxpn;			/* PN48 used for Unicast recv. */
 	s8	hw_decrypted; /* STA HW security is ready or not */
 
+#ifdef RTW_PHL_TX
+	u8	iv_len;
+	u8	icv_len;
+	u8	iv[18];
+	u8	icv[16];
+#endif
+
+#ifdef CONFIG_RTW_CORE_RXSC
+	u32 rxsc_idx_new;
+	u32 rxsc_idx_cached;
+	struct core_rxsc_entry rxsc_entry[NUM_RXSC_ENTRY];
+#endif
+
 #ifdef CONFIG_RTW_MESH
 	/* peer's GTK, RX only */
 	u8 group_privacy;
@@ -343,6 +356,7 @@ struct sta_info {
 
 	u8	cts2self;
 	u8	rtsen;
+	u8 	hw_rts_en;
 
 	u8	init_rate;
 	u8	wireless_mode;	/* NETWORK_TYPE */
@@ -391,6 +405,14 @@ struct sta_info {
 	struct vht_priv	vhtpriv;
 #endif
 
+#ifdef CONFIG_80211AX_HE
+	struct he_priv	hepriv;
+#endif
+
+#ifdef CONFIG_RTW_MBO
+	struct mbo_priv mbopriv;
+#endif /* CONFIG_RTW_MBO */
+
 	/* Notes:	 */
 	/* STA_Mode: */
 	/* curr_network(mlme_priv/security_priv/qos/ht) + sta_info: (STA & AP) CAP/INFO	 */
@@ -402,10 +424,8 @@ struct sta_info {
 
 	unsigned int expire_to;
 
-	int flags;
-
-	u8 bpairwise_key_installed;
-
+	int flags; //NEO
+	u8 bpairwise_key_installed; //NEO
 #ifdef CONFIG_AP_MODE
 
 	_list asoc_list;
@@ -416,6 +436,7 @@ struct sta_info {
 	unsigned char chg_txt[128];
 
 	u16 capability;
+	int flags;
 
 	int dot8021xalg;/* 0:disable, 1:psk, 2:802.1x */
 	int wpa_psk;/* 0:disable, bit(0): WPA, bit(1):WPA2 */
@@ -426,6 +447,7 @@ struct sta_info {
 
 	u32 akm_suite_type;
 
+	u8 bpairwise_key_installed;
 #ifdef CONFIG_RTW_80211R
 	u8 ft_pairwise_key_installed;
 #endif
@@ -538,6 +560,18 @@ struct sta_info {
 	u8 tx_q_enable;
 	struct __queue tx_queue;
 	_workitem tx_q_work;
+
+#ifdef CONFIG_CORE_TXSC
+	u32 txsc_cache_hit;
+	u32 txsc_cache_miss;
+	u32 txsc_path_slow;
+	u32 txsc_path_ps;
+	u8 txsc_cur_idx; /* next entry to add */
+	u8 txsc_cache_idx; /* latest cache idx */
+	u8 txsc_cache_num; /* num of txsc entry */
+	struct txsc_entry txsc_entry_cache[CORE_TXSC_ENTRY_NUM];
+	u8 debug_buf[CORE_TXSC_DEBUG_BUF_SIZE];
+#endif /* CONFIG_CORE_TXSC */
 };
 
 #ifdef CONFIG_RTW_MESH
