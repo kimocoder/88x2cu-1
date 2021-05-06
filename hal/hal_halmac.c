@@ -3291,15 +3291,9 @@ static int init_mac_flow(struct dvobj_priv *d)
 	/* Sync driver RCR cache with register setting */
 	rtw_hal_get_hwreg(dvobj_get_primary_adapter(d), HW_VAR_RCR, NULL);
 
-#ifdef CONFIG_RTS_FULL_BW
-	err = rtw_halmac_set_rts_full_bw(d, _TRUE);
-	if (err)
-		RTW_WARN("%s: Fail to set RTS FULL BW mode\n", __FUNCTION__);
-#else
 	err = rtw_halmac_set_rts_full_bw(d, _FALSE);
 	if (err)
 		RTW_WARN("%s: Fail to disable RTS FULL BW mode\n", __FUNCTION__);
-#endif /* CONFIG_RTS_FULL_BW */
 
 	_init_trx_cfg_drv(d);
 	/* Driver inser flow end */

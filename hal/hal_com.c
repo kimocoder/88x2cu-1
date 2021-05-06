@@ -12882,13 +12882,6 @@ u8 SetHwReg(_adapter *adapter, u8 variable, u8 *val)
 		rtw_lps_state_chk(adapter, *(u8 *)val);
 		break;
 
-#ifdef CONFIG_RTS_FULL_BW
-	case HW_VAR_SET_RTS_BW:
-	{
-			rtw_halmac_set_rts_full_bw(adapter_to_dvobj(adapter), (*val));
-	}
-	break;
-#endif/*CONFIG_RTS_FULL_BW*/
 #if defined(CONFIG_PCI_HCI)
 	case HW_VAR_ENSWBCN: 
 	if (*val == _TRUE) {
@@ -14772,49 +14765,6 @@ void update_IOT_info(_adapter *padapter)
 	}
 
 }
-#ifdef CONFIG_RTS_FULL_BW 
-/*
-8188E: not support full RTS BW feature(mac REG no define 480[5])
-*/
-void rtw_set_rts_bw(_adapter *padapter) {
-	int i;
-	u8 enable = 1;
-	bool connect_to_8812 = _FALSE;
-	u8 bc_addr[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
-	struct dvobj_priv *dvobj = adapter_to_dvobj(padapter);
-	struct macid_ctl_t *macid_ctl = dvobj_to_macidctl(dvobj);
-	struct sta_info *station = NULL;
-
-	for (i = 0; i < macid_ctl->num; i++) {
-		if (rtw_macid_is_used(macid_ctl, i)) {
-
-			station = NULL;
-			station = macid_ctl->sta[i];
-			if(station) {
-				
-				 _adapter *sta_adapter =station->padapter;
-				struct mlme_ext_priv	*pmlmeext = &(sta_adapter->mlmeextpriv);
-				struct mlme_ext_info	*pmlmeinfo = &(pmlmeext->mlmext_info);
-				
-				if ( pmlmeinfo->state != WIFI_FW_NULL_STATE) {
-					if(_rtw_memcmp(macid_ctl->sta[i]->cmn.mac_addr, bc_addr, ETH_ALEN) !=  _TRUE) {
-						if (  macid_ctl->sta[i]->vendor_8812) {
-							connect_to_8812 = _TRUE;
-							enable = 0;
-						}	
-					}	
-				}
-			}
-		}
-
-		if(connect_to_8812)
-			break;
-	}
-	
-		RTW_INFO("%s connect_to_8812=%d,enable=%u\n", __FUNCTION__,connect_to_8812,enable);
-		rtw_hal_set_hwreg(padapter, HW_VAR_SET_RTS_BW, &enable);
-}
-#endif/*CONFIG_RTS_FULL_BW*/
 
 int hal_spec_init(_adapter *adapter)
 {

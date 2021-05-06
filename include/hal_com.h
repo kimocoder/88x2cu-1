@@ -551,9 +551,6 @@ void rtw_hal_set_input_gpio(_adapter *padapter, u8 index);
 #endif
 
 void update_IOT_info(_adapter *padapter);
-#ifdef CONFIG_RTS_FULL_BW
-void rtw_set_rts_bw(_adapter *padapter);
-#endif/*CONFIG_RTS_FULL_BW*/
 
 void ResumeTxBeacon(_adapter *padapter);
 void StopTxBeacon(_adapter *padapter);
