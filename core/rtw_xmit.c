@@ -552,6 +552,7 @@ out:
 
 u8 rtw_init_lite_xmit_resource(struct dvobj_priv *dvobj)
 {
+
 	u8 ret = _SUCCESS;
 /* YiWei todo need use correct litexmitbuf_nr urb_nr */
 	u32 litexmitbuf_nr = RTW_LITEXMITBUF_NR;
