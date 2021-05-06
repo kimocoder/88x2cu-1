@@ -2482,7 +2482,8 @@ void rtw_joinbss_event_prehandle(_adapter *adapter, u8 *pbuf, u16 status)
 			}
 
 			/* s5. Cancle assoc_timer					 */
-			_cancel_timer_ex(&pmlmepriv->assoc_timer);
+			/*_cancel_timer_ex(&pmlmepriv->assoc_timer);*/
+			cancel_assoc_timer(pmlmepriv);
 
 
 		} else {
@@ -2495,7 +2496,8 @@ void rtw_joinbss_event_prehandle(_adapter *adapter, u8 *pbuf, u16 status)
 	} else if (pnetwork->join_res == -4) {
 		rtw_reset_securitypriv(adapter);
 		pmlmepriv->join_status = status;
-		_set_timer(&pmlmepriv->assoc_timer, 1);
+		/*_set_timer(&pmlmepriv->assoc_timer, 1);*/
+		set_assoc_timer(pmlmepriv, 1);
 
 		/* rtw_free_assoc_resources(adapter, _TRUE); */
 
@@ -2513,7 +2515,8 @@ void rtw_joinbss_event_prehandle(_adapter *adapter, u8 *pbuf, u16 status)
 
 		if (res == _SUCCESS) {
 			/* extend time of assoc_timer */
-			_set_timer(&pmlmepriv->assoc_timer, MAX_JOIN_TIMEOUT);
+			/*_set_timer(&pmlmepriv->assoc_timer, MAX_JOIN_TIMEOUT);*/
+			set_assoc_timer(pmlmepriv, MAX_JOIN_TIMEOUT);
 			retry++;
 		} else if (res == 2) { /* there is no need to wait for join */
 			_clr_fwstate_(pmlmepriv, WIFI_UNDER_LINKING);
@@ -2521,7 +2524,8 @@ void rtw_joinbss_event_prehandle(_adapter *adapter, u8 *pbuf, u16 status)
 		} else {
 #endif
 			pmlmepriv->join_status = status;
-			_set_timer(&pmlmepriv->assoc_timer, 1);
+			/*_set_timer(&pmlmepriv->assoc_timer, 1);*/
+			set_assoc_timer(pmlmepriv, 1);
 			/* rtw_free_assoc_resources(adapter, _TRUE); */
 			_clr_fwstate_(pmlmepriv, WIFI_UNDER_LINKING);
 

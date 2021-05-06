@@ -841,14 +841,11 @@ struct mlme_priv {
 		/*RTW_INFO("%s set_assoc_timer(%p, %d)\n", __FUNCTION__, (mlme), (ms));*/ \
 		_set_timer(&(mlme)->assoc_timer, (ms)); \
 	} while (0)
-
 #define cancel_assoc_timer(mlme) \
 	do { \
 		/*RTW_INFO("%s cancel_assoc_timer(%p)\n", __FUNCTION__, (mlme));*/ \
 		_cancel_timer_ex(&(mlme)->assoc_timer); \
 	} while (0)
-
-
 
 #define RTW_AUTO_SCAN_REASON_UNSPECIFIED		0
 #define RTW_AUTO_SCAN_REASON_2040_BSS			BIT0

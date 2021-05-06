@@ -136,7 +136,7 @@ u8 rtw_do_join(_adapter *padapter)
 		select_ret = rtw_select_and_join_from_scanned_queue(pmlmepriv);
 		if (select_ret == _SUCCESS) {
 			pmlmepriv->to_join = _FALSE;
-			_set_timer(&pmlmepriv->assoc_timer, MAX_JOIN_TIMEOUT);
+			set_assoc_timer(pmlmepriv, MAX_JOIN_TIMEOUT); /*_set_timer(&pmlmepriv->assoc_timer, MAX_JOIN_TIMEOUT);*/
 		} else {
 			if (check_fwstate(pmlmepriv, WIFI_ADHOC_STATE) == _TRUE) {
 				#ifdef CONFIG_AP_MODE
@@ -228,16 +228,16 @@ u8 rtw_set_802_11_bssid(_adapter *padapter, u8 *bssid)
 	if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE | WIFI_ADHOC_MASTER_STATE) == _TRUE) {
 
 		if (_rtw_memcmp(&pmlmepriv->cur_network.network.MacAddress, bssid, ETH_ALEN) == _TRUE) {
-			if (check_fwstate(pmlmepriv, WIFI_STATION_STATE) == _FALSE)
+			if (!MLME_IS_STA(padapter))
 				goto release_mlme_lock;/* it means driver is in WIFI_ADHOC_MASTER_STATE, we needn't create bss again. */
 		} else {
 
 			rtw_disassoc_cmd(padapter, 0, 0);
 
-			if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE)
+			if (check_fwstate(pmlmepriv, WIFI_ASOC_STATE) == _TRUE) {
+				rtw_free_assoc_resources_cmd(padapter, _TRUE, 0);
 				rtw_indicate_disconnect(padapter, 0, _FALSE);
-
-			rtw_free_assoc_resources_cmd(padapter, _TRUE, 0);
+			}
 
 			if ((check_fwstate(pmlmepriv, WIFI_ADHOC_MASTER_STATE) == _TRUE)) {
 				_clr_fwstate_(pmlmepriv, WIFI_ADHOC_MASTER_STATE);

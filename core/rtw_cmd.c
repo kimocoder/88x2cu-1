@@ -5470,7 +5470,6 @@ void rtw_disassoc_cmd_callback(_adapter	*padapter,  struct cmd_obj *pcmd)
 exit:
 	return;
 }
-
 void rtw_joinbss_cmd_callback(_adapter	*padapter,  struct cmd_obj *pcmd)
 {
 	struct	mlme_priv *pmlmepriv = &padapter->mlmepriv;
@@ -5479,12 +5478,11 @@ void rtw_joinbss_cmd_callback(_adapter	*padapter,  struct cmd_obj *pcmd)
 	if (pcmd->res == H2C_DROPPED) {
 		/* TODO: cancel timer and do timeout handler directly... */
 		/* need to make timeout handlerOS independent */
-		_set_timer(&pmlmepriv->assoc_timer, 1);
+		set_assoc_timer(pmlmepriv, 1); /*_set_timer(&pmlmepriv->assoc_timer, 1);*/
 	} else if (pcmd->res != H2C_SUCCESS)
-		_set_timer(&pmlmepriv->assoc_timer, 1);
+		set_assoc_timer(pmlmepriv, 1); /*_set_timer(&pmlmepriv->assoc_timer, 1);*/
 
 	rtw_free_cmd_obj(pcmd);
-
 }
 
 void rtw_create_ibss_post_hdl(_adapter *padapter, int status)
@@ -5495,9 +5493,10 @@ void rtw_create_ibss_post_hdl(_adapter *padapter, int status)
 	struct wlan_network *mlme_cur_network = &(pmlmepriv->cur_network);
 
 	if (status != H2C_SUCCESS)
-		_set_timer(&pmlmepriv->assoc_timer, 1);
+		set_assoc_timer(pmlmepriv, 1); /*_set_timer(&pmlmepriv->assoc_timer, 1);*/
 
-	_cancel_timer_ex(&pmlmepriv->assoc_timer);
+	/*_cancel_timer_ex(&pmlmepriv->assoc_timer);*/
+	cancel_assoc_timer(pmlmepriv);
 
 	_rtw_spinlock_bh(&pmlmepriv->lock);
 
