@@ -791,10 +791,6 @@ defined(CONFIG_RTL8723F) /*|| defined(CONFIG_RTL8814A)*/
 #define CONFIG_BCN_ICF
 #endif 
 
-#ifndef CONFIG_RTW_MGMT_QUEUE
-	#define CONFIG_RTW_MGMT_QUEUE
-#endif
-
 #ifndef CONFIG_PCI_MSI
 #define CONFIG_RTW_PCI_MSI_DISABLE
 #endif

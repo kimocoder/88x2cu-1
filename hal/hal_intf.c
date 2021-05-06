@@ -780,27 +780,14 @@ u8	rtw_hal_intf_ps_func(_adapter *padapter, HAL_INTF_PS_FUNC efunc_id, u8 *val)
 	return _FAIL;
 }
 
-#ifdef CONFIG_RTW_MGMT_QUEUE
-s32	rtw_hal_mgmt_xmitframe_enqueue(_adapter *padapter, struct xmit_frame *pxmitframe)
-{
-	return padapter->hal_func.hal_mgmt_xmitframe_enqueue(padapter, pxmitframe);
-}
-#endif
-
 /*
  * [IMPORTANT] This function would be run in interrupt context.
  */
 s32	rtw_hal_mgnt_xmit(_adapter *padapter, struct xmit_frame *pmgntframe)
 {
-#ifdef CONFIG_RTW_MGMT_QUEUE
-	struct xmit_priv *pxmitpriv = &(padapter->xmitpriv);
-#endif
 	s32 ret = _FAIL;
 
 	update_mgntframe_attrib_addr(padapter, pmgntframe);
-#ifdef CONFIG_RTW_MGMT_QUEUE
-	update_mgntframe_subtype(padapter, pmgntframe);
-#endif
 
 #if defined(CONFIG_IEEE80211W) || defined(CONFIG_RTW_MESH)
 	if ((!MLME_IS_MESH(padapter) && SEC_IS_BIP_KEY_INSTALLED(&padapter->securitypriv) == _TRUE)

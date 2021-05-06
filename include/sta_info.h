@@ -17,6 +17,14 @@
 
 #include <cmn_info/rtw_sta_info.h>
 
+#ifdef CONFIG_CORE_TXSC
+#include <rtw_xmit_shortcut.h>
+#endif
+
+#ifdef CONFIG_RTW_CORE_RXSC
+#include <rtw_recv_shortcut.h>
+#endif
+
 #define IBSS_START_MAC_ID	2
 #define NUM_STA MACID_NUM_SW_LIMIT
 
@@ -286,10 +294,6 @@ struct sta_info {
 #endif
 	_queue sleep_q;
 	unsigned int sleepq_len;
-#ifdef CONFIG_RTW_MGMT_QUEUE
-	_queue mgmt_sleep_q;
-	unsigned int mgmt_sleepq_len;
-#endif
 
 	uint state;
 	uint qos_option;
