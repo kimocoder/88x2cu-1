@@ -15,9 +15,6 @@
 #define _RTW_MLME_C_
 
 #include <hal_data.h>
-#ifdef CONFIG_PLATFORM_CMAP_INTFS
-#include "../os_dep/linux/custom_multiap_intfs/custom_multiap_intfs.h"
-#endif
 
 extern void indicate_wx_scan_complete_event(_adapter *padapter);
 extern u8 rtw_do_join(_adapter *padapter);
@@ -1929,14 +1926,19 @@ void rtw_free_assoc_resources(_adapter *adapter, u8 lock_scanned_queue)
 	struct tdls_info *ptdlsinfo = &adapter->tdlsinfo;
 #endif /* CONFIG_TDLS */
 
-
 	RTW_INFO("%s-"ADPT_FMT" tgt_network MacAddress=" MAC_FMT" ssid=%s\n",
 		__func__, ADPT_ARG(adapter), MAC_ARG(tgt_network->network.MacAddress), tgt_network->network.Ssid.Ssid);
 
-	if (check_fwstate(pmlmepriv, WIFI_STATION_STATE)) {
+	if (MLME_IS_STA(adapter)) {
 		struct sta_info *psta;
 
 		psta = rtw_get_stainfo(&adapter->stapriv, tgt_network->network.MacAddress);
+		if (!psta) {
+			RTW_WARN("[TODO]" FUNC_ADPT_FMT ": fail to find stainfo"
+				 "(" MAC_FMT ")\n",
+				 FUNC_ADPT_ARG(adapter),
+				 MAC_ARG(tgt_network->network.MacAddress));
+		}
 
 #ifdef CONFIG_TDLS
 		rtw_free_all_tdls_sta(adapter, _TRUE);
@@ -1947,17 +1949,13 @@ void rtw_free_assoc_resources(_adapter *adapter, u8 lock_scanned_queue)
 #endif /* CONFIG_TDLS */
 
 		rtw_free_stainfo(adapter, psta);
+		rtw_init_self_stainfo(adapter);
 	}
 
 	if (check_fwstate(pmlmepriv, WIFI_ADHOC_STATE | WIFI_ADHOC_MASTER_STATE)) {
 		struct sta_info *psta;
 
 		rtw_free_all_stainfo(adapter);
-
-		psta = rtw_get_bcmc_stainfo(adapter);
-		rtw_free_stainfo(adapter, psta);
-
-		rtw_init_bcmc_stainfo(adapter);
 	}
 
 	if (lock_scanned_queue)
@@ -1975,7 +1973,7 @@ void rtw_free_assoc_resources(_adapter *adapter, u8 lock_scanned_queue)
 			RTW_INFO("Free disconnecting network of scanned_queue\n");
 			rtw_free_network_nolock(adapter, pwlan);
 #ifdef CONFIG_P2P
-			if (!rtw_p2p_chk_state(&adapter->wdinfo, P2P_STATE_NONE)) {
+			if (!rtw_p2p_chk_role(&adapter->wdinfo, P2P_ROLE_DISABLE)) {
 				rtw_set_scan_deny(adapter, 2000);
 				/* rtw_clear_scan_deny(adapter); */
 			}

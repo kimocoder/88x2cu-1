@@ -1405,7 +1405,6 @@ u8 rtw_init_drv_sw(_adapter *padapter)
 	padapter->drv_rx_cnt_crcerror = 0;
 	padapter->drv_rx_cnt_drop = 0;
 #endif
-	rtw_init_bcmc_stainfo(padapter);
 
 	rtw_init_pwrctrl_priv(padapter);
 

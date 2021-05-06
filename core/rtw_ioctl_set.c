@@ -69,7 +69,6 @@ exit:
 	return ret;
 }
 
-u8 rtw_do_join(_adapter *padapter);
 u8 rtw_do_join(_adapter *padapter)
 {
 	_list	*plist, *phead;
@@ -497,9 +496,6 @@ u8 rtw_set_802_11_infrastructure_mode(_adapter *padapter,
 
 		case Ndis802_11Infrastructure:
 			set_fwstate(pmlmepriv, WIFI_STATION_STATE);
-
-			if (ap2sta_mode)
-				rtw_init_bcmc_stainfo(padapter);
 			break;
 
 		case Ndis802_11APMode:

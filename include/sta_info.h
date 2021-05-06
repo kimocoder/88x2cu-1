@@ -797,10 +797,14 @@ int rtw_stainfo_offset(struct sta_priv *stapriv, struct sta_info *sta);
 struct sta_info *rtw_get_stainfo_by_offset(struct sta_priv *stapriv, int offset);
 
 extern struct sta_info *rtw_alloc_stainfo(struct	sta_priv *pstapriv, const u8 *hwaddr);
+
+extern struct sta_info *rtw_alloc_stainfo_sw(struct	sta_priv *stapriv, const u8 *hwaddr);
+extern u32 rtw_alloc_stainfo_hw(struct	sta_priv *stapriv, struct sta_info *psta);
+
 extern u32	rtw_free_stainfo(_adapter *padapter , struct sta_info *psta);
+u32 rtw_free_stainfo_sw(_adapter *padapter, struct sta_info *psta);
 extern void rtw_free_all_stainfo(_adapter *padapter);
 extern struct sta_info *rtw_get_stainfo(struct sta_priv *pstapriv, const u8 *hwaddr);
-extern u32 rtw_init_bcmc_stainfo(_adapter *padapter);
 extern struct sta_info *rtw_get_bcmc_stainfo(_adapter *padapter);
 
 u32 rtw_free_self_stainfo(_adapter *adapter);
@@ -816,8 +820,8 @@ extern u8 rtw_access_ctrl(_adapter *adapter, const u8 *mac_addr);
 void dump_macaddr_acl(void *sel, _adapter *adapter);
 #endif
 
-bool rtw_is_pre_link_sta(struct sta_priv *stapriv, u8 *addr);
 #if CONFIG_RTW_PRE_LINK_STA
+bool rtw_is_pre_link_sta(struct sta_priv *stapriv, u8 *addr);
 struct sta_info *rtw_pre_link_sta_add(struct sta_priv *stapriv, u8 *hwaddr);
 void rtw_pre_link_sta_del(struct sta_priv *stapriv, u8 *hwaddr);
 void rtw_pre_link_sta_ctl_reset(struct sta_priv *stapriv);
