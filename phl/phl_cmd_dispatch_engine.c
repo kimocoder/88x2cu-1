@@ -316,8 +316,6 @@ void disp_eng_notify_share_thread(struct phl_info_t *phl, void *dispr)
 }
 u8 phl_disp_eng_is_dispr_busy(struct phl_info_t *phl, u8 band_idx)
 {
-	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
-	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
 	void* dispr = NULL;
 	void *handle = NULL;
 
@@ -335,7 +333,6 @@ phl_disp_eng_set_cur_cmd_info(struct phl_info_t *phl,
                               struct phl_module_op_info *op_info)
 {
 	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
-	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
 	void* dispr = NULL;
 
 	status = _disp_eng_get_dispr_by_idx(phl, band_idx, &dispr);
@@ -351,7 +348,6 @@ phl_disp_eng_query_cur_cmd_info(struct phl_info_t *phl,
                                 struct phl_module_op_info *op_info)
 {
 	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
-	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
 	void* dispr = NULL;
 
 	status = _disp_eng_get_dispr_by_idx(phl, band_idx, &dispr);
@@ -368,7 +364,6 @@ phl_disp_eng_set_bk_module_info(struct phl_info_t *phl,
                                 struct phl_module_op_info *op_info)
 {
 	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
-	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
 	void* dispr = NULL;
 	void* handle = NULL;
 
@@ -390,7 +385,6 @@ phl_disp_eng_query_bk_module_info(struct phl_info_t *phl,
                                   struct phl_module_op_info *op_info)
 {
 	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
-	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
 	void* dispr = NULL;
 	void* handle = NULL;
 
@@ -411,7 +405,6 @@ phl_disp_eng_set_src_info(struct phl_info_t *phl,
                           struct phl_module_op_info *op_info)
 {
 	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
-	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
 	void* dispr = NULL;
 
 	status = _disp_eng_get_dispr_by_idx(phl, msg->band_idx, &dispr);
@@ -427,7 +420,6 @@ phl_disp_eng_query_src_info(struct phl_info_t *phl,
                             struct phl_module_op_info *op_info)
 {
 	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
-	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
 	void* dispr = NULL;
 
 	status = _disp_eng_get_dispr_by_idx(phl, msg->band_idx, &dispr);
@@ -444,7 +436,6 @@ phl_disp_eng_send_msg(struct phl_info_t *phl,
                       u32 *msg_hdl)
 {
 	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
-	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
 	void* dispr = NULL;
 
 	status = _disp_eng_get_dispr_by_idx(phl, msg->band_idx, &dispr);
@@ -458,7 +449,6 @@ enum rtw_phl_status
 phl_disp_eng_cancel_msg(struct phl_info_t *phl, u8 band_idx, u32 *msg_hdl)
 {
 	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
-	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
 	void* dispr = NULL;
 
 	status = _disp_eng_get_dispr_by_idx(phl, band_idx, &dispr);
@@ -472,7 +462,6 @@ enum rtw_phl_status
 phl_disp_eng_clr_pending_msg(struct phl_info_t *phl, u8 band_idx)
 {
 	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
-	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
 	void* dispr = NULL;
 
 	status = _disp_eng_get_dispr_by_idx(phl, band_idx, &dispr);
@@ -489,7 +478,6 @@ phl_disp_eng_add_token_req(struct phl_info_t *phl,
                            u32 *req_hdl)
 {
 	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
-	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
 	void* dispr = NULL;
 
 	status = _disp_eng_get_dispr_by_idx(phl, band_idx, &dispr);
@@ -503,7 +491,6 @@ enum rtw_phl_status
 phl_disp_eng_cancel_token_req(struct phl_info_t *phl, u8 band_idx, u32 *req_hdl)
 {
 	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
-	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
 	void* dispr = NULL;
 
 	status = _disp_eng_get_dispr_by_idx(phl, band_idx, &dispr);
@@ -517,7 +504,6 @@ enum rtw_phl_status
 phl_disp_eng_free_token(struct phl_info_t *phl, u8 band_idx, u32 *req_hdl)
 {
 	enum rtw_phl_status status = RTW_PHL_STATUS_FAILURE;
-	struct phl_cmd_dispatch_engine *disp_eng = &(phl->disp_eng);
 	void* dispr = NULL;
 
 	status = _disp_eng_get_dispr_by_idx(phl, band_idx, &dispr);
