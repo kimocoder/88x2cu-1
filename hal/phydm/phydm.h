@@ -1328,11 +1328,6 @@ struct dm_struct {
 	struct _ANT_DETECTED_INFO	ant_detected_info;
 #endif
 
-#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN | ODM_CE))
-#ifdef PHYDM_BEAMFORMING_SUPPORT
-	struct _RT_BEAMFORMING_INFO 	beamforming_info;
-#endif
-#endif
 #ifdef PHYDM_AUTO_DEGBUG
 	struct	phydm_auto_dbg_struct	auto_dbg_table;
 #endif

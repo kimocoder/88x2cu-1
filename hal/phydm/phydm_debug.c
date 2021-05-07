@@ -5574,37 +5574,6 @@ void phydm_cmd_parser(struct dm_struct *dm, char input[][MAX_ARGV],
 	case PHYDM_BB_INFO:
 		phydm_bb_hw_dbg_info(dm, input, &used, output, &out_len);
 		break;
-	/*
-	case PHYDM_TXBF: {
-	#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN | ODM_CE))
-	#ifdef PHYDM_BEAMFORMING_SUPPORT
-		struct _RT_BEAMFORMING_INFO *beamforming_info = NULL;
-
-		beamforming_info = &dm->beamforming_info;
-
-		PHYDM_SSCANF(input[1], DCMD_DECIMAL, &var1[0]);
-		if (var1[0] == 0) {
-			beamforming_info->apply_v_matrix = false;
-			beamforming_info->snding3ss = true;
-			PDM_SNPF(out_len, used, output + used, out_len - used,
-				 "\r\n dont apply V matrix and 3SS 789 snding\n");
-		} else if (var1[0] == 1) {
-			beamforming_info->apply_v_matrix = true;
-			beamforming_info->snding3ss = true;
-			PDM_SNPF(out_len, used, output + used, out_len - used,
-				 "\r\n apply V matrix and 3SS 789 snding\n");
-		} else if (var1[0] == 2) {
-			beamforming_info->apply_v_matrix = true;
-			beamforming_info->snding3ss = false;
-			PDM_SNPF(out_len, used, output + used, out_len - used,
-				 "\r\n default txbf setting\n");
-		} else
-			PDM_SNPF(out_len, used, output + used, out_len - used,
-				 "\r\n unknown cmd!!\n");
-	#endif
-	#endif
-	} break;
-	*/
 	case PHYDM_H2C:
 		phydm_h2C_debug(dm, input, &used, output, &out_len);
 		break;

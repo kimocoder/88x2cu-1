@@ -431,9 +431,6 @@ void phydm_common_info_self_update(struct dm_struct *dm)
 				one_entry_macid = i;
 
 			phydm_cmn_sta_info_update(dm, (u8)i);
-			#ifdef PHYDM_BEAMFORMING_SUPPORT
-			/*@phydm_get_txbf_device_num(dm, (u8)i);*/
-			#endif
 
 			ma_rx_tp = sta->rx_moving_average_tp +
 				   sta->tx_moving_average_tp;
@@ -1838,13 +1835,6 @@ enum phydm_init_result odm_dm_init(struct dm_struct *dm)
 	phydm_la_init(dm);
 #endif
 
-#ifdef PHYDM_BEAMFORMING_VERSION1
-	phydm_beamforming_init(dm);
-#endif
-
-#if (RTL8188E_SUPPORT)
-	odm_ra_info_init_all(dm);
-#endif
 #ifdef PHYDM_PRIMARY_CCA
 	phydm_primary_cca_init(dm);
 #endif
@@ -2445,10 +2435,6 @@ void phydm_watchdog(struct dm_struct *dm)
 #endif
 #ifdef CONFIG_ADAPTIVE_SOML
 	phydm_adaptive_soml(dm);
-#endif
-
-#ifdef PHYDM_BEAMFORMING_VERSION1
-	phydm_beamforming_watchdog(dm);
 #endif
 
 	halrf_watchdog(dm);
@@ -3162,64 +3148,6 @@ void odm_init_all_work_items(struct dm_struct *dm)
 
 #endif /*#if USE_WORKITEM*/
 
-#ifdef PHYDM_BEAMFORMING_SUPPORT
-	odm_initialize_work_item(
-		dm,
-		&dm->beamforming_info.txbf_info.txbf_enter_work_item,
-		(RT_WORKITEM_CALL_BACK)hal_com_txbf_enter_work_item_callback,
-		(void *)adapter,
-		"txbf_enter_work_item");
-
-	odm_initialize_work_item(
-		dm,
-		&dm->beamforming_info.txbf_info.txbf_leave_work_item,
-		(RT_WORKITEM_CALL_BACK)hal_com_txbf_leave_work_item_callback,
-		(void *)adapter,
-		"txbf_leave_work_item");
-
-	odm_initialize_work_item(
-		dm,
-		&dm->beamforming_info.txbf_info.txbf_fw_ndpa_work_item,
-		(RT_WORKITEM_CALL_BACK)hal_com_txbf_fw_ndpa_work_item_callback,
-		(void *)adapter,
-		"txbf_fw_ndpa_work_item");
-
-	odm_initialize_work_item(
-		dm,
-		&dm->beamforming_info.txbf_info.txbf_clk_work_item,
-		(RT_WORKITEM_CALL_BACK)hal_com_txbf_clk_work_item_callback,
-		(void *)adapter,
-		"txbf_clk_work_item");
-
-	odm_initialize_work_item(
-		dm,
-		&dm->beamforming_info.txbf_info.txbf_rate_work_item,
-		(RT_WORKITEM_CALL_BACK)hal_com_txbf_rate_work_item_callback,
-		(void *)adapter,
-		"txbf_rate_work_item");
-
-	odm_initialize_work_item(
-		dm,
-		&dm->beamforming_info.txbf_info.txbf_status_work_item,
-		(RT_WORKITEM_CALL_BACK)hal_com_txbf_status_work_item_callback,
-		(void *)adapter,
-		"txbf_status_work_item");
-
-	odm_initialize_work_item(
-		dm,
-		&dm->beamforming_info.txbf_info.txbf_reset_tx_path_work_item,
-		(RT_WORKITEM_CALL_BACK)hal_com_txbf_reset_tx_path_work_item_callback,
-		(void *)adapter,
-		"txbf_reset_tx_path_work_item");
-
-	odm_initialize_work_item(
-		dm,
-		&dm->beamforming_info.txbf_info.txbf_get_tx_rate_work_item,
-		(RT_WORKITEM_CALL_BACK)hal_com_txbf_get_tx_rate_work_item_callback,
-		(void *)adapter,
-		"txbf_get_tx_rate_work_item");
-#endif
-
 #if (PHYDM_LA_MODE_SUPPORT == 1)
 	odm_initialize_work_item(
 		dm,
@@ -3265,17 +3193,6 @@ void odm_free_all_work_items(struct dm_struct *dm)
 /*odm_free_work_item((&dm->sbdcnt_workitem));*/
 #endif
 
-#ifdef PHYDM_BEAMFORMING_SUPPORT
-	odm_free_work_item((&dm->beamforming_info.txbf_info.txbf_enter_work_item));
-	odm_free_work_item((&dm->beamforming_info.txbf_info.txbf_leave_work_item));
-	odm_free_work_item((&dm->beamforming_info.txbf_info.txbf_fw_ndpa_work_item));
-	odm_free_work_item((&dm->beamforming_info.txbf_info.txbf_clk_work_item));
-	odm_free_work_item((&dm->beamforming_info.txbf_info.txbf_rate_work_item));
-	odm_free_work_item((&dm->beamforming_info.txbf_info.txbf_status_work_item));
-	odm_free_work_item((&dm->beamforming_info.txbf_info.txbf_reset_tx_path_work_item));
-	odm_free_work_item((&dm->beamforming_info.txbf_info.txbf_get_tx_rate_work_item));
-#endif
-
 #if (PHYDM_LA_MODE_SUPPORT == 1)
 	odm_free_work_item((&dm->adcsmp.adc_smp_work_item));
 	odm_free_work_item((&dm->adcsmp.adc_smp_work_item_1));
@@ -3305,20 +3222,8 @@ void odm_init_all_timers(struct dm_struct *dm)
 #if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
 	odm_initialize_timer(dm, &dm->sbdcnt_timer,
 			     (void *)phydm_sbd_callback, NULL, "SbdTimer");
-#ifdef PHYDM_BEAMFORMING_SUPPORT
-	odm_initialize_timer(dm, &dm->beamforming_info.txbf_info.txbf_fw_ndpa_timer,
-			     (void *)hal_com_txbf_fw_ndpa_timer_callback, NULL,
-			     "txbf_fw_ndpa_timer");
-#endif
 #endif
 
-#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN | ODM_CE))
-#ifdef PHYDM_BEAMFORMING_SUPPORT
-	odm_initialize_timer(dm, &dm->beamforming_info.beamforming_timer,
-			     (void *)beamforming_sw_timer_callback, NULL,
-			     "beamforming_timer");
-#endif
-#endif
 }
 
 void odm_cancel_all_timers(struct dm_struct *dm)
@@ -3348,16 +3253,8 @@ void odm_cancel_all_timers(struct dm_struct *dm)
 
 #if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
 	odm_cancel_timer(dm, &dm->sbdcnt_timer);
-#ifdef PHYDM_BEAMFORMING_SUPPORT
-	odm_cancel_timer(dm, &dm->beamforming_info.txbf_info.txbf_fw_ndpa_timer);
-#endif
 #endif
 
-#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN | ODM_CE))
-#ifdef PHYDM_BEAMFORMING_SUPPORT
-	odm_cancel_timer(dm, &dm->beamforming_info.beamforming_timer);
-#endif
-#endif
 }
 
 void odm_release_all_timers(struct dm_struct *dm)
@@ -3381,16 +3278,8 @@ void odm_release_all_timers(struct dm_struct *dm)
 
 #if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
 	odm_release_timer(dm, &dm->sbdcnt_timer);
-#ifdef PHYDM_BEAMFORMING_SUPPORT
-	odm_release_timer(dm, &dm->beamforming_info.txbf_info.txbf_fw_ndpa_timer);
-#endif
 #endif
 
-#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN | ODM_CE))
-#ifdef PHYDM_BEAMFORMING_SUPPORT
-	odm_release_timer(dm, &dm->beamforming_info.beamforming_timer);
-#endif
-#endif
 }
 
 #if (DM_ODM_SUPPORT_TYPE == ODM_AP)

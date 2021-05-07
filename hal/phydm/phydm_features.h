@@ -62,12 +62,6 @@
 
 #define CONFIG_POWERSAVING 0
 
-#ifdef BEAMFORMING_SUPPORT
-#if (BEAMFORMING_SUPPORT)
-	#define PHYDM_BEAMFORMING_SUPPORT
-#endif
-#endif
-
 #if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
 	#include	"phydm_features_win.h"
 #elif (DM_ODM_SUPPORT_TYPE == ODM_CE)
