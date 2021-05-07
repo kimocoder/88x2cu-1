@@ -1317,11 +1317,6 @@ u8 rtw_init_drv_sw(_adapter *padapter)
 
 	adapter_to_dvobj(padapter)->cmdpriv.padapter = padapter;
 
-	if ((rtw_init_evt_priv(&padapter->evtpriv)) == _FAIL) {
-		ret8 = _FAIL;
-		goto exit;
-	}
-
 	if (is_primary_adapter(padapter)) {
 		if (rtw_hal_rfpath_init(padapter) == _FAIL) {
 			ret8 = _FAIL;
@@ -1549,8 +1544,6 @@ u8 rtw_free_drv_sw(_adapter *padapter)
 #ifdef CONFIG_RTW_80211K
 	rtw_free_rm_priv(padapter);
 #endif
-
-	rtw_free_evt_priv(&padapter->evtpriv);
 
 	rtw_free_mlme_priv(&padapter->mlmepriv);
 // NEO

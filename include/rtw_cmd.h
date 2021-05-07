@@ -182,8 +182,6 @@ thread_return rtw_cmd_thread(thread_context context);
 u32 rtw_init_cmd_priv(struct dvobj_priv *dvobj);
 void rtw_free_cmd_priv(struct dvobj_priv *dvobj);
 
-extern u32 rtw_init_evt_priv(struct evt_priv *pevtpriv);
-extern void rtw_free_evt_priv(struct evt_priv *pevtpriv);
 extern void rtw_cmd_clr_isr(struct cmd_priv *pcmdpriv);
 extern void rtw_evt_notify_isr(struct evt_priv *pevtpriv);
 #ifdef CONFIG_P2P
