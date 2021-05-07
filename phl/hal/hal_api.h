@@ -770,7 +770,49 @@ enum rtw_hal_status rtw_hal_mcc_disable(void *hal, u8 group, u16 macid);
 enum rtw_hal_status rtw_hal_mcc_enable(void *hal, struct rtw_phl_mcc_en_info *info);
 #endif /* CONFIG_MCC_SUPPORT */
 
+#ifdef CONFIG_PHL_P2PPS
+enum rtw_hal_status rtw_hal_noa_enable(void *hal,
+	struct rtw_phl_noa_info *noa_info,
+	struct rtw_phl_noa_desc *in_desc,
+	u16 macid);
+
+enum rtw_hal_status rtw_hal_noa_disable(void *hal,
+	struct rtw_phl_noa_info *noa_info,
+	struct rtw_phl_noa_desc *in_desc,
+	u16 macid);
+
+enum rtw_hal_status rtw_hal_tsf32_tog_enable(void *hal,
+	struct rtw_wifi_role_t *w_role);
+
+enum rtw_hal_status rtw_hal_tsf32_tog_disable(void *hal,
+	struct rtw_wifi_role_t *w_role);
+
+enum rtw_hal_status rtw_hal_get_tsf32_tog_rpt(void *hal,
+	struct rtw_phl_tsf32_tog_rpt *rpt);
+#endif
+void rtw_hal_disconnect_notify(void *hal, struct rtw_chan_def *chandef);
+
+bool rtw_hal_check_ch_rfk(void *hal, struct rtw_chan_def *chandef);
+enum rtw_hal_status rtw_hal_ppdu_sts_cfg(void *hal, u8 band_idx, bool en);
+void rtw_hal_notification(void *hal, enum phl_msg_evt_id event, u8 hw_idx);
+
+void rtw_hal_notification(void *hal, enum phl_msg_evt_id event, u8 hw_idx);
+
 enum rtw_hal_status
 rtw_hal_config_rts_th(void *hal, u8 band_idx, u16 rts_time_th, u16 rts_len_th);
+
+enum rtw_hal_status
+rtw_hal_query_txsts_rpt(void *hal, u16 macid);
+
+enum rtw_hal_status
+rtw_hal_thermal_protect_cfg_tx_ampdu(
+	void *hal,
+	struct rtw_phl_stainfo_t *sta,
+	u8 ratio);
+
+bool rtw_hal_check_thermal_protect(
+	struct rtw_phl_com_t *phl_com,
+	void *hal
+);
 
 #endif /*_HAL_API_H_*/

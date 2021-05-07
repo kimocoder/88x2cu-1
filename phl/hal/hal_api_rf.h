@@ -14,6 +14,14 @@
  *****************************************************************************/
 #ifndef _HAL_API_RF_H_
 #define _HAL_API_RF_H_
+
+enum halrf_thermal_status{
+	HALRF_THERMAL_STATUS_BELOW_THRESHOLD,
+	HALRF_THERMAL_STATUS_STAY_THRESHOLD,
+	HALRF_THERMAL_STATUS_ABOVE_THRESHOLD,
+	HALRF_THERMAL_STATUS_UNKNOWN
+};
+
 enum rtw_hal_status
 rtw_hal_rf_init(struct rtw_phl_com_t *phl_com,
 			struct hal_info_t *hal_info);
@@ -165,4 +173,43 @@ rtw_hal_rf_config_radio_to_fw(struct hal_info_t *hal_info);
 
 bool
 rtw_hal_rf_check_efuse_data(struct rtw_hal_com_t *hal_com, enum phl_phy_idx phy_idx);
+
+void
+rtw_hal_rf_disconnect_notify(void *hal, struct rtw_chan_def *chandef);
+
+bool
+rtw_hal_rf_check_mcc_ch(void *hal, struct rtw_chan_def *chandef);
+
+void
+rtw_hal_rf_dpk_switch(void *hal, bool enable);
+
+void
+rtw_hal_rf_tssi_config(void *hal, enum phl_phy_idx phy_idx, bool enable);
+
+
+enum rtw_hal_status
+rtw_hal_rf_set_ch_bw(struct hal_info_t *hal_info, u8 center_ch, enum channel_width bw);
+
+void
+rtw_hal_rf_get_efuse_ex(struct rtw_hal_com_t *hal_com, enum phl_phy_idx phy_idx);
+
+
+/* PSD */
+enum rtw_hal_status rtw_hal_rf_psd_init(struct hal_info_t *hal_info, u8 cur_phy_idx,
+					u8 path, u8 iq_path, u32 avg, u32 fft);
+
+enum rtw_hal_status rtw_hal_rf_psd_restore(struct hal_info_t *hal_info, u8 cur_phy_idx);
+
+enum rtw_hal_status rtw_hal_rf_psd_get_point_data(struct hal_info_t *hal_info, u8 cur_phy_idx,
+					s32 point, u32 *value);
+
+enum rtw_hal_status rtw_hal_rf_psd_query(struct hal_info_t *hal_info, u8 cur_phy_idx,
+					u32 point, u32 start_point, u32 stop_point, u32 *outbuf);
+
+void rtw_hal_rf_rx_ant(struct hal_info_t *hal_info, /*enum halrf_ant*/ u8 ant);
+
+enum halrf_thermal_status
+rtw_hal_rf_get_ther_protected_threshold(
+	struct hal_info_t *hal_info
+);
 #endif /*_HAL_API_RF_H_*/

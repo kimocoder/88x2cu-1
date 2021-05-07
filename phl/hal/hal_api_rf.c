@@ -697,6 +697,13 @@ rtw_hal_rf_check_efuse_data(struct rtw_hal_com_t *hal_com, enum phl_phy_idx phy_
 
 #endif // if 0 NEO
 
+
+void
+rtw_hal_rf_disconnect_notify(void *hal, struct rtw_chan_def *chandef)
+{
+	RTW_ERR("%s NEO TODO\n", __func__);
+}
+
 #else /*ifdef USE_TRUE_PHY*/
 enum rtw_hal_status
 rtw_hal_rf_init(struct rtw_phl_com_t *phl_com, struct hal_info_t *hal_info)
@@ -977,5 +984,95 @@ rtw_hal_rf_config_radio_to_fw(struct hal_info_t *hal_info)
 	return RTW_HAL_STATUS_SUCCESS;
 }
 
+enum rtw_hal_status rtw_hal_rf_set_tssi_avg(struct hal_info_t *hal_info, u8 cur_phy_idx,
+						s32 xdbm)
+{
+	return RTW_HAL_STATUS_SUCCESS;
+}
+
+bool
+rtw_hal_rf_check_efuse_data(struct rtw_hal_com_t *hal_com, enum phl_phy_idx phy_idx)
+{
+	return true;
+}
+
+enum rtw_hal_status
+rtw_hal_rf_set_ch_bw(struct hal_info_t *hal_info, u8 center_ch, enum channel_width bw)
+{
+	return RTW_HAL_STATUS_SUCCESS;
+}
+
+/* PSD */
+enum rtw_hal_status rtw_hal_rf_psd_init(struct hal_info_t *hal_info, u8 cur_phy_idx,
+					u8 path, u8 iq_path, u32 avg, u32 fft)
+{
+	return RTW_HAL_STATUS_SUCCESS;
+}
+
+enum rtw_hal_status rtw_hal_rf_psd_restore(struct hal_info_t *hal_info, u8 cur_phy_idx)
+{
+	return RTW_HAL_STATUS_SUCCESS;
+}
+
+enum rtw_hal_status rtw_hal_rf_psd_get_point_data(struct hal_info_t *hal_info, u8 cur_phy_idx,
+					s32 point, u32 *value)
+{
+	return RTW_HAL_STATUS_SUCCESS;
+}
+
+enum rtw_hal_status rtw_hal_rf_psd_query(struct hal_info_t *hal_info, u8 cur_phy_idx,
+					u32 point, u32 start_point, u32 stop_point, u32 *outbuf)
+{
+	return RTW_HAL_STATUS_SUCCESS;
+}
+
+void
+rtw_hal_rf_disconnect_notify(void *hal, struct rtw_chan_def *chandef)
+{
+}
+
+bool
+rtw_hal_rf_check_mcc_ch(void *hal, struct rtw_chan_def *chandef)
+{
+	return false;
+}
+
+void
+rtw_hal_rf_dpk_switch(void *hal, bool enable)
+{
+
+}
+
+void
+rtw_hal_rf_tssi_config(void *hal, enum phl_phy_idx phy_idx, bool enable)
+{
+
+}
+
+void
+rtw_hal_rf_get_efuse_ex(struct rtw_hal_com_t *hal_com, enum phl_phy_idx phy_idx)
+{
+}
+
+void
+rtw_hal_rf_set_power_table_switch(struct rtw_hal_com_t *hal_com,
+				enum phl_phy_idx phy_idx,
+				u8 pwrbyrate_type, u8 pwrlmt_type)
+{
+	return;
+}
+
+void rtw_hal_rf_rx_ant(struct hal_info_t *hal_info, /*enum halrf_ant*/u8 ant)
+{
+
+}
+
+enum halrf_thermal_status
+rtw_hal_rf_get_ther_protected_threshold(
+	struct hal_info_t *hal_info
+)
+{
+	return HALRF_THERMAL_STATUS_BELOW_THRESHOLD;
+}
 
 #endif /*ifdef USE_TRUE_PHY*/

@@ -27,10 +27,10 @@
 #include "../phl_debug.h"
 #include "../phl_trx_def.h"
 #include "../phl_wow_def.h"
+#include "../phl_btc_def.h"
 #include "../phl_test_def.h"
 #include "../phl_ser_def.h"
 #include "../phl_regulation_def.h"
-#include "../phl_btc_def.h"
 #include "../phl_led_def.h"
 #include "../phl_acs.h"
 
@@ -78,6 +78,7 @@
 #include "hal_acs.h"
 #include "hal_mcc_def.h"
 #include "hal_ld_file.h"
+#include "hal_notify.h"
 
 #define hal_to_drvpriv(_halinfo) (_halinfo->hal_com->drv_priv)
 

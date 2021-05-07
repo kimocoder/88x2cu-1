@@ -16,33 +16,6 @@
 #define _HAL_COM_I_C_
 #include "hal_headers.h"
 
-enum rtw_hal_status rtw_hal_notify_scan_start(void *hinfo, enum phl_phy_idx phy_idx)
-{
-	enum rtw_hal_status hal_status = RTW_HAL_STATUS_SUCCESS;
-
-	RTW_INFO("%s NEO DO\n", __func__);
-#ifdef CONFIG_BTCOEX
-aa
-	enum band_type band;
-	struct hal_info_t *hal_info = (struct hal_info_t *)hinfo;
-
-	band = hal_info->hal_com->band[phy_idx].cur_chandef.band;
-	rtw_hal_btc_scan_start_ntfy(hal_info, phy_idx, band);
-#endif
-	return hal_status;
-}
-
-enum rtw_hal_status rtw_hal_notify_scan_complete(void *hinfo, enum phl_phy_idx phy_idx)
-{
-	enum rtw_hal_status hal_status = RTW_HAL_STATUS_SUCCESS;
-#ifdef CONFIG_BTCOEX
-	struct hal_info_t *hal_info = (struct hal_info_t *)hinfo;
-
-	rtw_hal_btc_scan_finish_ntfy(hal_info, phy_idx);
-#endif
-	return hal_status;
-}
-
 enum rtw_hal_status rtw_hal_scan_pause_tx_fifo(void *hinfo,
 	u8 band_idx, bool off_ch)
 {
@@ -308,6 +281,15 @@ rtw_hal_reset(struct rtw_hal_com_t *hal_com, enum phl_phy_idx phy_idx, u8 band_i
 	}
 	return status;
 #endif
+}
+
+
+void
+rtw_hal_disconnect_notify(void *hal, struct rtw_chan_def *chandef)
+{
+	rtw_hal_rf_disconnect_notify(hal, chandef);
+	PHL_TRACE(COMP_PHL_MCC, _PHL_INFO_, "rtw_hal_disconnect_notify(): chan(%d)\n",
+		chandef->chan);
 }
 
 #endif /* _HAL_COM_I_C_ */

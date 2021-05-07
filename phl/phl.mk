@@ -30,6 +30,7 @@ _PHL_FILES := $(phl_path)phl_init.o \
 		$(phl_path)phl_sw_cap.o \
 		$(phl_path)phl_util.o \
 		$(phl_path)phl_pkt_ofld.o \
+		$(phl_path)phl_connect.o \
 		$(phl_path)phl_wow.o \
 		$(phl_path)phl_led.o \
 		$(phl_path)phl_msg_hub.o \

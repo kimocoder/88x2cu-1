@@ -313,7 +313,7 @@ void _cmd_scan_end(
 						false, &param->fltr_mode);
 		rtw_hal_scan_pause_tx_fifo(phl_info->hal, wifi_role->hw_band, false);
 
-		rtw_hal_notify_scan_complete(phl_info->hal, wifi_role->hw_band);
+		rtw_hal_notification(phl_info->hal, MSG_EVT_SCAN_END, wifi_role->hw_band);
 	}
 
 	if (param->ops->scan_complete)
@@ -537,7 +537,8 @@ enum phl_mdl_ret_code _cmd_scan_hdl_internal_evt(
 			rtw_hal_scan_set_rxfltr_by_mode(phl_info->hal, wifi_role->hw_band,
 							true, &param->fltr_mode);
 
-			rtw_hal_notify_scan_start(phl_info->hal, wifi_role->hw_band);
+			rtw_hal_notification(phl_info->hal, MSG_EVT_SCAN_START,
+					     wifi_role->hw_band);
 
 			/* [scan start notify] */
 			if (param->ops->scan_start)

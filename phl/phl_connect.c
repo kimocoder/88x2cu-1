@@ -21,7 +21,6 @@ enum rtw_phl_status rtw_phl_connect_prepare(void *phl,
 {
 	enum rtw_phl_status phl_status = RTW_PHL_STATUS_FAILURE;
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct phl_cmd_dispatch_engine *disp_eng = &(phl_info->disp_eng);
 	struct phl_msg msg = {0};
 	struct phl_msg_attribute attr = {0};
 
@@ -98,7 +97,6 @@ enum rtw_phl_status rtw_phl_disconnect(void *phl,
 {
 	enum rtw_phl_status phl_status = RTW_PHL_STATUS_FAILURE;
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct phl_cmd_dispatch_engine *disp_eng = &(phl_info->disp_eng);
 	struct phl_msg msg = {0};
 	struct phl_msg_attribute attr = {0};
 
@@ -149,6 +147,11 @@ enum rtw_phl_status rtw_phl_connect_prepare(void *phl,
 		goto _exit;
 	}
 
+#ifdef CONFIG_PHL_P2PPS
+	/* pasue all NoA */
+	phl_p2pps_noa_all_role_pause(phl, wrole->hw_band);
+#endif
+
 	PHL_DUMP_MR_EX(phl_info);
 _exit:
 	return psts;
@@ -198,6 +201,21 @@ enum rtw_phl_status rtw_phl_connected(void *phl,
 _exit:
 	return psts;
 }
+enum rtw_phl_status rtw_phl_disconnect_prepare(void *phl,
+				struct rtw_wifi_role_t *wrole)
+{
+	enum rtw_phl_status psts = RTW_PHL_STATUS_SUCCESS;
+	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
+
+#ifdef CONFIG_PHL_P2PPS
+	/* disable NoA for this role */
+	phl_p2pps_noa_disable_all(phl_info, wrole);
+	/* pasue buddy NoA */
+	phl_p2pps_noa_all_role_pause(phl_info, wrole->hw_band);
+#endif
+
+	return psts;
+}
 
 enum rtw_phl_status rtw_phl_disconnect(void *phl,
 				       struct rtw_wifi_role_t *wrole)
@@ -236,6 +254,11 @@ enum rtw_phl_status rtw_phl_disconnect(void *phl,
 		goto _exit;
 	}
 	rtw_hal_disconnect_notify(phl_info->hal, &wrole->chandef);
+
+#ifdef CONFIG_PHL_P2PPS
+	/* resume buddy NoA */
+	phl_p2pps_noa_all_role_resume(phl, wrole->hw_band);
+#endif
 	PHL_DUMP_MR_EX(phl_info);
 _exit:
 	return psts;
@@ -247,7 +270,6 @@ enum rtw_phl_status rtw_phl_ap_started(void *phl, struct rtw_wifi_role_t *wrole)
 {
 	enum rtw_phl_status phl_status = RTW_PHL_STATUS_FAILURE;
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct phl_cmd_dispatch_engine *disp_eng = &(phl_info->disp_eng);
 	struct phl_msg msg = {0};
 	struct phl_msg_attribute attr = {0};
 
@@ -270,12 +292,15 @@ enum rtw_phl_status rtw_phl_ap_stop(void *phl, struct rtw_wifi_role_t *wrole)
 {
 	enum rtw_phl_status phl_status = RTW_PHL_STATUS_FAILURE;
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
-	struct phl_cmd_dispatch_engine *disp_eng = &(phl_info->disp_eng);
 	struct phl_msg msg = {0};
 	struct phl_msg_attribute attr = {0};
 
 	SET_MSG_MDL_ID_FIELD(msg.msg_id, PHL_FG_MDL_AP_STOP);
+#ifdef PHL_PLATFORM_LINUX
 	SET_MSG_EVT_ID_FIELD(msg.msg_id, MSG_EVT_AP_STOP);
+#else
+	SET_MSG_EVT_ID_FIELD(msg.msg_id, MSG_EVT_AP_STOP_PREPARE);
+#endif
 	msg.band_idx = wrole->hw_band;
 	msg.rsvd[0] = (u8*)wrole;
 
@@ -290,6 +315,16 @@ exit:
 	return phl_status;
 }
 #else  /* CONFIG_AP_CMD_DISPR */
+enum rtw_phl_status rtw_phl_ap_start_prepare(void *phl, struct rtw_wifi_role_t *wrole)
+{
+	enum rtw_phl_status psts = RTW_PHL_STATUS_SUCCESS;
+#ifdef CONFIG_PHL_P2PPS
+	/* pasue all NoA */
+	phl_p2pps_noa_all_role_pause(phl, wrole->hw_band);
+#endif
+
+	return psts;
+}
 enum rtw_phl_status rtw_phl_ap_started(void *phl, struct rtw_wifi_role_t *wrole)
 {
 	enum rtw_phl_status psts = RTW_PHL_STATUS_FAILURE;
@@ -325,6 +360,21 @@ enum rtw_phl_status rtw_phl_ap_started(void *phl, struct rtw_wifi_role_t *wrole)
 	PHL_DUMP_MR_EX(phl_info);
 
 _exit:
+	return psts;
+}
+
+enum rtw_phl_status rtw_phl_ap_stop_prepare(void *phl, struct rtw_wifi_role_t *wrole)
+{
+	enum rtw_phl_status psts = RTW_PHL_STATUS_SUCCESS;
+	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
+
+#ifdef CONFIG_PHL_P2PPS
+	/* disable NoA for this role */
+	phl_p2pps_noa_disable_all(phl_info, wrole);
+	/* pasue buddy NoA */
+	phl_p2pps_noa_all_role_pause(phl_info, wrole->hw_band);
+#endif
+
 	return psts;
 }
 
@@ -370,6 +420,10 @@ enum rtw_phl_status rtw_phl_ap_stop(void *phl, struct rtw_wifi_role_t *wrole)
 	}
 #endif
 	rtw_hal_disconnect_notify(phl_info->hal, &wrole->chandef);
+#ifdef CONFIG_PHL_P2PPS
+	/* resume buddy NoA */
+	phl_p2pps_noa_all_role_resume(phl, wrole->hw_band);
+#endif
 	PHL_DUMP_MR_EX(phl_info);
 _exit:
 	return psts;
