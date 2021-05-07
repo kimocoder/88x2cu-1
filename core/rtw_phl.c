@@ -517,6 +517,8 @@ static void _hw_ic_info_cfg(struct dvobj_priv *dvobj, struct rtw_ic_info *ic_inf
 		ic_info->sdio_info.io_align_sz = 4;
 		ic_info->sdio_info.block_sz = sdio->block_transfer_len;
 		ic_info->sdio_info.tx_align_sz = sdio->block_transfer_len;
+		ic_info->sdio_info.tx_512_by_byte_mode =
+			(sdio->max_byte_size >= 512) ? true : false;
 	}
 	#endif
 }
@@ -677,7 +679,9 @@ u8 rtw_hw_init(struct dvobj_priv *dvobj)
 	evt_ops = &(dvobj->phl_com->evt_ops);
 	evt_ops->rx_process = rtw_core_rx_process;
 	evt_ops->tx_recycle = rtw_core_tx_recycle;
-
+#ifdef CONFIG_RTW_IPS
+	evt_ops->set_rf_state = rtw_core_set_ips_state;
+#endif
 	rtw_core_register_phl_msg(dvobj);
 
 #if 0 // NEO : TODO : mark off first
@@ -691,9 +695,16 @@ u8 rtw_hw_init(struct dvobj_priv *dvobj)
 
 	rtw_hw_dump_hal_spec(RTW_DBGDUMP, dvobj);
 
+	#ifdef CONFIG_CMD_GENERAL
+	rtw_phl_watchdog_init(dvobj->phl,
+			0,
+			rtw_core_watchdog_sw_hdlr,
+			rtw_core_watchdog_hw_hdlr);
+	#else
 	rtw_phl_job_reg_wdog(dvobj->phl,
 			rtw_dynamic_check_handlder,
                         dvobj, NULL, 0, "rtw_dm", PWR_BASIC_IO);
+	#endif
 #endif
 	rst = _SUCCESS;
 	return rst;
