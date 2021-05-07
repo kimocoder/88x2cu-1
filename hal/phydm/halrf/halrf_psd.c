@@ -66,21 +66,11 @@ u32 halrf_get_psd_data(
 	}
 #endif
 
-	if (dm->support_ic_type & (ODM_RTL8812 | ODM_RTL8821 | ODM_RTL8814A | ODM_RTL8822B | ODM_RTL8821C)) {
-		psd_reg = R_0x910;
-		psd_report = R_0xf44;
-	} else {
-		psd_reg = R_0x808;
-		psd_report = R_0x8b4;
-	}
+	psd_reg = R_0x808;
+	psd_report = R_0x8b4;
 
-	if (dm->support_ic_type & ODM_RTL8710B) {
-		psd_point = 0xeffffc00;
-		psd_start = 0x10000000;
-	} else {
-		psd_point = 0xffbffc00;
-		psd_start = 0x00400000;
-	}
+	psd_point = 0xffbffc00;
+	psd_start = 0x00400000;
 
 	psd_val = odm_get_bb_reg(dm, psd_reg, MASKDWORD);
 
@@ -98,12 +88,7 @@ u32 halrf_get_psd_data(
 
 	psd_val = odm_get_bb_reg(dm, psd_report, MASKDWORD);
 
-	if (dm->support_ic_type & (ODM_RTL8821C | ODM_RTL8710B)) {
-		psd_val &= MASKL3BYTES;
-		psd_val = psd_val / 32;
-	} else {
-		psd_val &= MASKLWORD;
-	}
+	psd_val &= MASKLWORD;
 
 	return psd_val;
 }
@@ -131,41 +116,16 @@ void halrf_psd(
 	else
 		average_tmp = average & 0xffff;
 
-	if (dm->support_ic_type & (ODM_RTL8812 | ODM_RTL8821 | ODM_RTL8814A | ODM_RTL8822B | ODM_RTL8821C))
-		psd_reg = R_0x910;
-	else
-		psd_reg = R_0x808;
-
-#if 0
-	dbg_print("[PSD]point=%d, start_point=%d, stop_point=%d, average=%d, average_tmp=%d, buf_size=%d\n",
-		point, start_point, stop_point, average, average_tmp, psd->buf_size);
-#endif
+	psd_reg = R_0x808;
 
 	for (i = 0; i < psd->buf_size; i++)
 		psd->psd_data[i] = 0;
 
-	if (dm->support_ic_type & ODM_RTL8710B)
-		avg_org = odm_get_bb_reg(dm, psd_reg, 0x30000);
-	else
-		avg_org = odm_get_bb_reg(dm, psd_reg, 0x3000);
+	avg_org = odm_get_bb_reg(dm, psd_reg, 0x3000);
 
 	if (mode == 1) {
-		if (dm->support_ic_type & ODM_RTL8710B)
-			odm_set_bb_reg(dm, psd_reg, 0x30000, 0x1);
-		else
-			odm_set_bb_reg(dm, psd_reg, 0x3000, 0x1);
+		odm_set_bb_reg(dm, psd_reg, 0x3000, 0x1);
 	}
-
-#if 0
-	if (avg_temp == 0)
-		avg = 1;
-	else if (avg_temp == 1)
-		avg = 8;
-	else if (avg_temp == 2)
-		avg = 16;
-	else if (avg_temp == 3)
-		avg = 32;
-#endif
 
 	i = start_point;
 	while (i < stop_point) {
@@ -180,16 +140,7 @@ void halrf_psd(
 			data_temp[k] = halrf_get_psd_data(dm, point_temp);
 			data_tatal = data_tatal + (data_temp[k] * data_temp[k]);
 
-#if 0
-			if ((k % 20) == 0)
-				dbg_print("\n ");
-
-			dbg_print("0x%x ", data_temp[k]);
-#endif
 		}
-#if 0
-		/*dbg_print("\n");*/
-#endif
 
 		data_tatal = phydm_division64((data_tatal * 100), average_tmp);
 		psd->psd_data[j] = (u32)_sqrt(data_tatal);
@@ -198,20 +149,7 @@ void halrf_psd(
 		j++;
 	}
 
-#if 0
-	for (i = 0; i < psd->buf_size; i++) {
-		if ((i % 20) == 0)
-			dbg_print("\n ");
-
-		dbg_print("0x%x ", psd->psd_data[i]);
-	}
-	dbg_print("\n\n");
-#endif
-
-	if (dm->support_ic_type & ODM_RTL8710B)
-		odm_set_bb_reg(dm, psd_reg, 0x30000, avg_org);
-	else
-		odm_set_bb_reg(dm, psd_reg, 0x3000, avg_org);
+	odm_set_bb_reg(dm, psd_reg, 0x3000, avg_org);
 }
 
 void backup_bb_register(struct dm_struct *dm, u32 *bb_backup, u32 *backup_bb_reg, u32 counter)
@@ -239,20 +177,6 @@ void _halrf_psd_iqk_init(struct dm_struct *dm)
 	odm_set_bb_reg(dm, 0x1b0c, 0xc00, 0x3);
 	odm_set_bb_reg(dm, 0x1b14, MASKDWORD, 0x0);
 	odm_set_bb_reg(dm, 0x1b18, BIT(0), 0x1);
-
-	if (dm->support_ic_type & ODM_RTL8197G)
-		odm_set_bb_reg(dm, 0x1b20, MASKDWORD, 0x00040008);
-	if (dm->support_ic_type & ODM_RTL8198F)
-		odm_set_bb_reg(dm, 0x1b20, MASKDWORD, 0x00000000);
-
-	if (dm->support_ic_type & (ODM_RTL8197G | ODM_RTL8198F)) {
-		odm_set_bb_reg(dm, 0x1b24, MASKDWORD, 0x00030000);
-		odm_set_bb_reg(dm, 0x1b28, MASKDWORD, 0x00000000);
-		odm_set_bb_reg(dm, 0x1b2c, MASKDWORD, 0x00180018);
-		odm_set_bb_reg(dm, 0x1b30, MASKDWORD, 0x20000000);
-		/*odm_set_bb_reg(dm, 0x1b38, MASKDWORD, 0x20000000);*/
-		/*odm_set_bb_reg(dm, 0x1b3c, MASKDWORD, 0x20000000);*/
-	}
 
 	odm_set_bb_reg(dm, 0x1b1c, 0xfff, 0xd21);
 	odm_set_bb_reg(dm, 0x1b1c, 0xfff00000, 0x821);
@@ -341,24 +265,7 @@ u64 halrf_get_iqk_psd_data(void *dm_void, u32 point)
 	u64 psd_val, psd_val1, psd_val2;
 	u32 psd_point, i, delay_time = 0;
 
-#if (DEV_BUS_TYPE == RT_USB_INTERFACE) || (DEV_BUS_TYPE == RT_SDIO_INTERFACE)
-	if (dm->support_interface == ODM_ITRF_USB || dm->support_interface == ODM_ITRF_SDIO) {
-		if (dm->support_ic_type & ODM_RTL8822C)
-			delay_time = 1000;
-		else if (dm->support_ic_type & ODM_RTL8723F)
-			delay_time = 1000;
-		else
-			delay_time = 0;
-	}
-#endif
-#if (DEV_BUS_TYPE == RT_PCI_INTERFACE)
-	if (dm->support_interface == ODM_ITRF_PCIE) {
-		if (dm->support_ic_type & ODM_RTL8822C)
-			delay_time = 1000;
-		else
-			delay_time = 150;
-	}
-#endif
+	delay_time = 1000;
 	psd_point = odm_get_bb_reg(dm, R_0x1b2c, MASKDWORD);
 
 	psd_point &= 0xF000FFFF;
@@ -376,45 +283,17 @@ u64 halrf_get_iqk_psd_data(void *dm_void, u32 point)
 	for (i = 0; i < delay_time; i++)
 		ODM_delay_us(1);
 
-	if (dm->support_ic_type & (ODM_RTL8197G | ODM_RTL8198F)) {
-		if (dm->support_ic_type & ODM_RTL8197G)
-			odm_set_bb_reg(dm, R_0x1bd4, MASKDWORD, 0x001a0001);
-		else
-			odm_set_bb_reg(dm, R_0x1bd4, MASKDWORD, 0x00250001);
+	odm_set_bb_reg(dm, R_0x1bd4, MASKDWORD, 0x00250001);
 
-		psd_val1 = odm_get_bb_reg(dm, R_0x1bfc, MASKDWORD);
+	psd_val1 = odm_get_bb_reg(dm, R_0x1bfc, MASKDWORD);
 
-		psd_val1 = (psd_val1 & 0x001f0000) >> 16;
+	psd_val1 = (psd_val1 & 0x07FF0000) >> 16;
 
-		if (dm->support_ic_type & ODM_RTL8197G)
-			odm_set_bb_reg(dm, R_0x1bd4, MASKDWORD, 0x001b0001);
-		else
-			odm_set_bb_reg(dm, R_0x1bd4, MASKDWORD, 0x002e0001);
+	odm_set_bb_reg(dm, R_0x1bd4, MASKDWORD, 0x002e0001);
 
-		psd_val2 = odm_get_bb_reg(dm, R_0x1bfc, MASKDWORD);
+	psd_val2 = odm_get_bb_reg(dm, R_0x1bfc, MASKDWORD);
 
-		psd_val = (psd_val1 << 27) + (psd_val2 >> 5);
-	} else if (dm->support_ic_type & ODM_RTL8723F) {
-		odm_set_bb_reg(dm, R_0x1bd4, MASKDWORD, 0x00210001);
-		psd_val1 = odm_get_bb_reg(dm, R_0x1bfc, MASKDWORD);
-		psd_val1 = (psd_val1 & 0x00FF0000) >> 16;
-		odm_set_bb_reg(dm, R_0x1bd4, MASKDWORD, 0x00220001);
-		psd_val2 = odm_get_bb_reg(dm, R_0x1bfc, MASKDWORD);
-		//psd_val = (psd_val1 << 27) + (psd_val2 >> 5);
-		psd_val = (psd_val1 << 32) + psd_val2;
-	} else {
-		odm_set_bb_reg(dm, R_0x1bd4, MASKDWORD, 0x00250001);
-
-		psd_val1 = odm_get_bb_reg(dm, R_0x1bfc, MASKDWORD);
-
-		psd_val1 = (psd_val1 & 0x07FF0000) >> 16;
-
-		odm_set_bb_reg(dm, R_0x1bd4, MASKDWORD, 0x002e0001);
-
-		psd_val2 = odm_get_bb_reg(dm, R_0x1bfc, MASKDWORD);
-
-		psd_val = (psd_val1 << 21) + (psd_val2 >> 11);
-	}
+	psd_val = (psd_val1 << 21) + (psd_val2 >> 11);
 
 	return psd_val;
 }
@@ -439,20 +318,7 @@ void halrf_iqk_psd(
 	mode = average >> 16;
 
 	if (mode == 2) {
-		if (dm->support_ic_type & (ODM_RTL8822C | ODM_RTL8723F))
-			average_tmp = 1; //HW average
-		else {
-			reg_tmp = odm_get_bb_reg(dm, R_0x1b1c, 0x000e0000);
-			if (reg_tmp == 0)
-				average_tmp = 1;
-			else if (reg_tmp == 3)
-				average_tmp = 8;
-			else if (reg_tmp == 4)
-				average_tmp = 16;
-			else if (reg_tmp == 5)
-				average_tmp = 32;
-			odm_set_bb_reg(dm, R_0x1b1c, 0x000e0000, 0x0);
-		}
+		average_tmp = 1; //HW average
 	} else {
 		reg_tmp = odm_get_bb_reg(dm, R_0x1b1c, 0x000e0000);
 		if (reg_tmp == 0)
@@ -478,7 +344,6 @@ void halrf_iqk_psd(
 
 	i = start_point;
 
-#ifndef RTL8723F_SUPPORT
 	while (i < stop_point) {
 		data_tatal = 0;
 
@@ -486,13 +351,7 @@ void halrf_iqk_psd(
 			point_temp = i - point;
 		else
 		{
-			if (dm->support_ic_type & ODM_RTL8814B)
-			{
-				s_point_tmp = i - point - 1;
-				point_temp = s_point_tmp & 0xfff;
-			}
-			else
-				point_temp = i;
+			point_temp = i;
 		}
 
 		for (k = 0; k < average_tmp; k++) {
@@ -500,12 +359,6 @@ void halrf_iqk_psd(
 			/*data_tatal = data_tatal + (data_temp[k] * data_temp[k]);*/
 			data_tatal = data_tatal + data_temp[k];
 
-#if 0
-			if ((k % 20) == 0)
-				DbgPrint("\n ");
-
-			DbgPrint("0x%x ", data_temp[k]);
-#endif
 		}
 
 		data_tatal = phydm_division64((data_tatal * 10), average_tmp);
@@ -517,37 +370,6 @@ void halrf_iqk_psd(
 
 	if (dm->support_ic_type & (ODM_RTL8814B | ODM_RTL8198F | ODM_RTL8197G))
 		odm_set_bb_reg(dm, R_0x1b1c, 0x000e0000, reg_tmp);
-#else
-	while (i < stop_point) {
-		data_tatal = 0;
-
-		if (i >= point)
-			point_temp = i - point;
-		else
-			point_temp = i + 0xB00;
-		//-640:0xD80,640:0x280,0x280+0xB00 =0xD80
-			//point_temp = i + 0xC00;
-		//-512:0xE00,512:0x200,0x200+0xC00 = 0xE00
-
-		data_temp[k] = halrf_get_iqk_psd_data(dm, point_temp);
-		data_tatal = data_temp[k];
-		psd->psd_data[j] = (u32)data_tatal;
-		i++;
-		j++;
-	}
-
-#endif
-#if 0
-	DbgPrint("\n [iqk psd]psd result:\n");
-
-	for (i = 0; i < psd->buf_size; i++) {
-		if ((i % 20) == 0)
-		DbgPrint("\n ");
-
-		DbgPrint("0x%x ", psd->psd_data[i]);
-	}
-	DbgPrint("\n\n");
-#endif
 }
 
 
@@ -559,36 +381,15 @@ halrf_psd_init(
 	struct dm_struct *dm = (struct dm_struct *)dm_void;
 	struct _hal_rf_ *rf = &(dm->rf_table);
 	struct _halrf_psd_data *psd = &(rf->halrf_psd_data);
-#ifndef RTL8723F_SUPPORT
-#if 0
-	u32 bb_backup[12];
-	u32 backup_bb_reg[12] = {0x1b04, 0x1b08, 0x1b0c, 0x1b14, 0x1b18,
-				0x1b1c, 0x1b28, 0x1bcc, 0x1b2c, 0x1b34,
-				0x1bd4, 0x1bfc};
-#endif
-#else
-	u32 bb_backup[10];
-	u32 backup_bb_reg[10] = {0x09f0, 0x09b4, 0x1c38, 0x1860, 0x1cd0,
-				 0x824, 0x2a24, 0x1d40, 0x1c20, 0x1880};
-#endif
+
 	if (psd->psd_progress) {
 		ret_status = RT_STATUS_PENDING;
 	} else {
 		psd->psd_progress = 1;
-		if (dm->support_ic_type & ODM_RTL8723F) {
-			backup_bb_register(dm, bb_backup, backup_bb_reg, 10);
-			_halrf_iqk_psd_init_8723f(dm, true);
-			halrf_iqk_psd(dm, psd->point, psd->start_point, psd->stop_point, psd->average);
-			_halrf_iqk_psd_init_8723f(dm, false);
-			restore_bb_register(dm, bb_backup, backup_bb_reg, 10);
-		} else if (dm->support_ic_type & 
-		(ODM_RTL8822C | ODM_RTL8814B | ODM_RTL8198F | ODM_RTL8197G)) {
-			/*backup_bb_register(dm, bb_backup, backup_bb_reg, 12);*/
-			_halrf_psd_iqk_init(dm);
-			halrf_iqk_psd(dm, psd->point, psd->start_point, psd->stop_point, psd->average);
-			/*restore_bb_register(dm, bb_backup, backup_bb_reg, 12);*/
-		} else
-			halrf_psd(dm, psd->point, psd->start_point, psd->stop_point, psd->average);
+		/*backup_bb_register(dm, bb_backup, backup_bb_reg, 12);*/
+		_halrf_psd_iqk_init(dm);
+		halrf_iqk_psd(dm, psd->point, psd->start_point, psd->stop_point, psd->average);
+		/*restore_bb_register(dm, bb_backup, backup_bb_reg, 12);*/
 		psd->psd_progress = 0;
 	}
 	return ret_status;

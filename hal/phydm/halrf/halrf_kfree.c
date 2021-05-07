@@ -3680,11 +3680,9 @@ void phydm_do_kfree(void *dm_void, u8 channel_to_sw)
 		}
 	} else {
 		RF_DBG(dm, DBG_RF_MP, "[kfree] Set default Register\n");
-		if (!(dm->support_ic_type & ODM_RTL8192F)) {
-			for (rfpath = RF_PATH_A; rfpath < max_path; rfpath++) {
-				bb_gain = pwrtrim->bb_gain[channel_idx][rfpath];
-				phydm_clear_kfree_to_rf(dm, rfpath, bb_gain);
-			}
+		for (rfpath = RF_PATH_A; rfpath < max_path; rfpath++) {
+			bb_gain = pwrtrim->bb_gain[channel_idx][rfpath];
+			phydm_clear_kfree_to_rf(dm, rfpath, bb_gain);
 		}
 	}
 }
