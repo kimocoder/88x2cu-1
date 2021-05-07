@@ -270,142 +270,23 @@
 #define PABIASK_VER_8197G \
 	(dm->power_trim_data.pa_bias_flag & PA_BIAS_FLAG_ON) ? "0x01" : "NONE"
 
-#define HALRF_IQK_VER \
-	(dm->support_ic_type == ODM_RTL8188E) ? IQK_VER_8188E : \
-	(dm->support_ic_type == ODM_RTL8192E) ? IQK_VER_8192E : \
-	(dm->support_ic_type == ODM_RTL8192F) ? IQK_VER_8192F : \
-	(dm->support_ic_type == ODM_RTL8723B) ? IQK_VER_8723B : \
-	(dm->support_ic_type == ODM_RTL8812) ? IQK_VER_8812A : \
-	(dm->support_ic_type == ODM_RTL8821) ? IQK_VER_8821A : \
-	(dm->support_ic_type == ODM_RTL8814A) ? IQK_VER_8814A : \
-	(dm->support_ic_type == ODM_RTL8188F) ? IQK_VER_8188F : \
-	(dm->support_ic_type == ODM_RTL8197F) ? IQK_VER_8197F : \
-	(dm->support_ic_type == ODM_RTL8703B) ? IQK_VER_8703B : \
-	(dm->support_ic_type == ODM_RTL8710B) ? IQK_VER_8710B : \
-	(dm->support_ic_type == ODM_RTL8723D) ? IQK_VER_8723D : \
-	(dm->support_ic_type == ODM_RTL8822B) ? IQK_VER_8822B : \
-	(dm->support_ic_type == ODM_RTL8822C) ? IQK_VER_8822C : \
-	(dm->support_ic_type == ODM_RTL8821C) ? IQK_VER_8821C : \
-	(dm->support_ic_type == ODM_RTL8814B) ? IQK_VER_8814B : \
-	(dm->support_ic_type == ODM_RTL8710C) ? IQK_VER_8710C : \
-	(dm->support_ic_type == ODM_RTL8723F) ? IQK_VER_8723F : \
-	(dm->support_ic_type == ODM_RTL8197G) ? IQK_VER_8197G : "unknown"
+#define HALRF_IQK_VER IQK_VER_8822C
 
-#define HALRF_LCK_VER \
-	(dm->support_ic_type == ODM_RTL8188E) ? LCK_VER_8188E : \
-	(dm->support_ic_type == ODM_RTL8192E) ? LCK_VER_8192E : \
-	(dm->support_ic_type == ODM_RTL8192F) ? LCK_VER_8192F : \
-	(dm->support_ic_type == ODM_RTL8723B) ? LCK_VER_8723B : \
-	(dm->support_ic_type == ODM_RTL8812) ? LCK_VER_8812A : \
-	(dm->support_ic_type == ODM_RTL8821) ? LCK_VER_8821A : \
-	(dm->support_ic_type == ODM_RTL8814A) ? LCK_VER_8814A : \
-	(dm->support_ic_type == ODM_RTL8188F) ? LCK_VER_8188F : \
-	(dm->support_ic_type == ODM_RTL8197F) ? LCK_VER_8197F : \
-	(dm->support_ic_type == ODM_RTL8703B) ? LCK_VER_8703B : \
-	(dm->support_ic_type == ODM_RTL8710B) ? LCK_VER_8710B : \
-	(dm->support_ic_type == ODM_RTL8723D) ? LCK_VER_8723D : \
-	(dm->support_ic_type == ODM_RTL8822B) ? LCK_VER_8822B : \
-	(dm->support_ic_type == ODM_RTL8822C) ? LCK_VER_8822C : \
-	(dm->support_ic_type == ODM_RTL8821C) ? LCK_VER_8821C : \
-	(dm->support_ic_type == ODM_RTL8814B) ? LCK_VER_8814B : \
-	(dm->support_ic_type == ODM_RTL8710C) ? LCK_VER_8710C : \
-	(dm->support_ic_type == ODM_RTL8710C) ? LCK_VER_8710C : "unknown"
-#define HALRF_POWRTRACKING_VER \
-	(dm->support_ic_type == ODM_RTL8188E) ? PWRTRK_VER_8188E : \
-	(dm->support_ic_type == ODM_RTL8192E) ? PWRTRK_VER_8192E : \
-	(dm->support_ic_type == ODM_RTL8192F) ? PWRTRK_VER_8192F : \
-	(dm->support_ic_type == ODM_RTL8723B) ? PWRTRK_VER_8723B : \
-	(dm->support_ic_type == ODM_RTL8812) ? PWRTRK_VER_8812A : \
-	(dm->support_ic_type == ODM_RTL8821) ? PWRTRK_VER_8821A : \
-	(dm->support_ic_type == ODM_RTL8814A) ? PWRTRK_VER_8814A : \
-	(dm->support_ic_type == ODM_RTL8188F) ? PWRTRK_VER_8188F : \
-	(dm->support_ic_type == ODM_RTL8197F) ? PWRTRK_VER_8197F : \
-	(dm->support_ic_type == ODM_RTL8703B) ? PWRTRK_VER_8703B : \
-	(dm->support_ic_type == ODM_RTL8710B) ? PWRTRK_VER_8710B : \
-	(dm->support_ic_type == ODM_RTL8723D) ? PWRTRK_VER_8723D : \
-	(dm->support_ic_type == ODM_RTL8822B) ? PWRTRK_VER_8822B : \
-	(dm->support_ic_type == ODM_RTL8822C) ? PWRTRK_VER_8822C : \
-	(dm->support_ic_type == ODM_RTL8821C) ? PWRTRK_VER_8821C : \
-	(dm->support_ic_type == ODM_RTL8197G) ? PWRTRK_VER_8197G : "unknown"
+#define HALRF_LCK_VER LCK_VER_8822C
 
-#define HALRF_DPK_VER \
-	(dm->support_ic_type == ODM_RTL8188E) ? DPK_VER_8188E : \
-	(dm->support_ic_type == ODM_RTL8192E) ? DPK_VER_8192E : \
-	(dm->support_ic_type == ODM_RTL8192F) ? DPK_VER_8192F : \
-	(dm->support_ic_type == ODM_RTL8723B) ? DPK_VER_8723B : \
-	(dm->support_ic_type == ODM_RTL8812) ? DPK_VER_8812A : \
-	(dm->support_ic_type == ODM_RTL8821) ? DPK_VER_8821A : \
-	(dm->support_ic_type == ODM_RTL8814A) ? DPK_VER_8814A : \
-	(dm->support_ic_type == ODM_RTL8188F) ? DPK_VER_8188F : \
-	(dm->support_ic_type == ODM_RTL8197F) ? DPK_VER_8197F : \
-	(dm->support_ic_type == ODM_RTL8198F) ? DPK_VER_8198F : \
-	(dm->support_ic_type == ODM_RTL8703B) ? DPK_VER_8703B : \
-	(dm->support_ic_type == ODM_RTL8710B) ? DPK_VER_8710B : \
-	(dm->support_ic_type == ODM_RTL8723D) ? DPK_VER_8723D : \
-	(dm->support_ic_type == ODM_RTL8822B) ? DPK_VER_8822B : \
-	(dm->support_ic_type == ODM_RTL8822C) ? DPK_VER_8822C : \
-	(dm->support_ic_type == ODM_RTL8812F) ? DPK_VER_8812F : \
-	(dm->support_ic_type == ODM_RTL8821C) ? DPK_VER_8821C : \
-	(dm->support_ic_type == ODM_RTL8814B) ? DPK_VER_8814B : \
-	(dm->support_ic_type == ODM_RTL8197G) ? DPK_VER_8197G : "unknown"
+#define HALRF_POWRTRACKING_VER PWRTRK_VER_8822C
 
-#define HALRF_KFREE_VER \
-	(dm->support_ic_type == ODM_RTL8188E) ? KFREE_VER_8188E : \
-	(dm->support_ic_type == ODM_RTL8192E) ? KFREE_VER_8192E : \
-	(dm->support_ic_type == ODM_RTL8192F) ? KFREE_VER_8192F : \
-	(dm->support_ic_type == ODM_RTL8723B) ? KFREE_VER_8723B : \
-	(dm->support_ic_type == ODM_RTL8812) ? KFREE_VER_8812A : \
-	(dm->support_ic_type == ODM_RTL8821) ? KFREE_VER_8821A : \
-	(dm->support_ic_type == ODM_RTL8814A) ? KFREE_VER_8814A : \
-	(dm->support_ic_type == ODM_RTL8188F) ? KFREE_VER_8188F : \
-	(dm->support_ic_type == ODM_RTL8197F) ? KFREE_VER_8197F : \
-	(dm->support_ic_type == ODM_RTL8703B) ? KFREE_VER_8703B : \
-	(dm->support_ic_type == ODM_RTL8710B) ? KFREE_VER_8710B : \
-	(dm->support_ic_type == ODM_RTL8723D) ? KFREE_VER_8723D : \
-	(dm->support_ic_type == ODM_RTL8822B) ? KFREE_VER_8822B : \
-	(dm->support_ic_type == ODM_RTL8822C) ? KFREE_VER_8822C : \
-	(dm->support_ic_type == ODM_RTL8821C) ? KFREE_VER_8821C : \
-	(dm->support_ic_type == ODM_RTL8814B) ? KFREE_VER_8814B : \
-	(dm->support_ic_type == ODM_RTL8197G) ? KFREE_VER_8197G : "unknown"
+#define HALRF_DPK_VER DPK_VER_8822C
 
-#define HALRF_TSSI_VER \
-	(dm->support_ic_type == ODM_RTL8812F) ? TSSI_VER_8812F : \
-	(dm->support_ic_type == ODM_RTL8822C) ? TSSI_VER_8822C : \
-	(dm->support_ic_type == ODM_RTL8821C) ? TSSI_VER_8821C : \
-	(dm->support_ic_type == ODM_RTL8814B) ? TSSI_VER_8814B : \
-	(dm->support_ic_type == ODM_RTL8197G) ? TSSI_VER_8197G : \
-	(dm->support_ic_type == ODM_RTL8723F) ? TSSI_VER_8723F : "unknown"
+#define HALRF_KFREE_VER KFREE_VER_8822C
 
-#define HALRF_PABIASK_VER \
-	(dm->support_ic_type == ODM_RTL8188E) ? PABIASK_VER_8188E : \
-	(dm->support_ic_type == ODM_RTL8192E) ? PABIASK_VER_8192E : \
-	(dm->support_ic_type == ODM_RTL8192F) ? PABIASK_VER_8192F : \
-	(dm->support_ic_type == ODM_RTL8723B) ? PABIASK_VER_8723B : \
-	(dm->support_ic_type == ODM_RTL8812) ? PABIASK_VER_8812A : \
-	(dm->support_ic_type == ODM_RTL8821) ? PABIASK_VER_8821A : \
-	(dm->support_ic_type == ODM_RTL8814A) ? PABIASK_VER_8814A : \
-	(dm->support_ic_type == ODM_RTL8188F) ? PABIASK_VER_8188F : \
-	(dm->support_ic_type == ODM_RTL8197F) ? PABIASK_VER_8197F : \
-	(dm->support_ic_type == ODM_RTL8703B) ? PABIASK_VER_8703B : \
-	(dm->support_ic_type == ODM_RTL8710B) ? PABIASK_VER_8710B : \
-	(dm->support_ic_type == ODM_RTL8723D) ? PABIASK_VER_8723D : \
-	(dm->support_ic_type == ODM_RTL8822B) ? PABIASK_VER_8822B : \
-	(dm->support_ic_type == ODM_RTL8822C) ? PABIASK_VER_8822C : \
-	(dm->support_ic_type == ODM_RTL8821C) ? PABIASK_VER_8821C : \
-	(dm->support_ic_type == ODM_RTL8814B) ? PABIASK_VER_8814B : \
-	(dm->support_ic_type == ODM_RTL8197G) ? PABIASK_VER_8197G : "unknown"
+#define HALRF_TSSI_VER TSSI_VER_8822C
 
-#define HALRF_RFK_INIT_VER \
-	(dm->support_ic_type == ODM_RTL8822B) ? RFK_INIT_VER_8822B : \
-	(dm->support_ic_type == ODM_RTL8822C) ? RFK_INIT_VER_8822C : \
-	(dm->support_ic_type == ODM_RTL8812F) ? RFK_INIT_VER_8812F : \
-	(dm->support_ic_type == ODM_RTL8198F) ? RFK_INIT_VER_8198F : \
-	(dm->support_ic_type == ODM_RTL8814B) ? RFK_INIT_VER_8814B : \
-	(dm->support_ic_type == ODM_RTL8197G) ? RFK_INIT_VER_8197G : "unknown"
+#define HALRF_PABIASK_VER PABIASK_VER_8822C
 
-#define HALRF_DACK_VER \
-	(dm->support_ic_type == ODM_RTL8822C) ? DACK_VER_8822C : \
-	(dm->support_ic_type == ODM_RTL8814B) ? DACK_VER_8814B : "unknown"
+#define HALRF_RFK_INIT_VER RFK_INIT_VER_8822C
+
+#define HALRF_DACK_VER DACK_VER_8822C
 
 #define IQK_THRESHOLD 8
 #define DPK_THRESHOLD 4

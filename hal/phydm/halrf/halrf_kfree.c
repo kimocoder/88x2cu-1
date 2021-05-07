@@ -3581,188 +3581,37 @@ s8 phydm_get_tssi_trim_de(void *dm_void, u8 path)
 {
 	struct dm_struct *dm = (struct dm_struct *)dm_void;
 
-	if (dm->support_ic_type & ODM_RTL8822C)
-		return phydm_get_tssi_trim_de_8822c(dm, path);
-	else if (dm->support_ic_type & ODM_RTL8812F)
-		return phydm_get_tssi_trim_de_8812f(dm, path);
-	else if (dm->support_ic_type & ODM_RTL8197G)
-		return phydm_get_tssi_trim_de_8197g(dm, path);
-	else if (dm->support_ic_type & ODM_RTL8814B)
-		return phydm_get_tssi_trim_de_8814b(dm, path);
-	else if (dm->support_ic_type & ODM_RTL8723F)
-		return phydm_get_tssi_trim_de_8723f(dm, path);
-	else
-		return 0;
+	return phydm_get_tssi_trim_de_8822c(dm, path);
 }
 
 void phydm_do_new_kfree(void *dm_void)
 {
 	struct dm_struct *dm = (struct dm_struct *)dm_void;
 
-	if (dm->support_ic_type & ODM_RTL8822C) {
-		phydm_get_set_thermal_trim_offset_8822c(dm);
-		phydm_get_set_power_trim_offset_8822c(dm);
-		phydm_get_set_pa_bias_offset_8822c(dm);
-		phydm_get_tssi_trim_offset_8822c(dm);
-	}
-
-	if (dm->support_ic_type & ODM_RTL8812F) {
-		phydm_get_set_thermal_trim_offset_8812f(dm);
-		phydm_get_set_power_trim_offset_8812f(dm);
-		phydm_get_set_pa_bias_offset_8812f(dm);
-		phydm_get_tssi_trim_offset_8812f(dm);
-	}
-
-	if (dm->support_ic_type & ODM_RTL8195B) {
-		phydm_get_thermal_trim_offset_8195b(dm);
-		phydm_get_set_power_trim_offset_8195b(dm);
-		phydm_get_set_pa_bias_offset_8195b(dm);
-	}
-
-	if (dm->support_ic_type & ODM_RTL8721D) {
-		phydm_get_thermal_trim_offset_8721d(dm);
-		phydm_get_set_power_trim_offset_8721d(dm);
-		/*phydm_get_set_pa_bias_offset_8721d(dm);*/
-	}
-
-	if (dm->support_ic_type & ODM_RTL8198F) {
-		phydm_get_pa_bias_offset_8198f(dm);
-		phydm_get_set_lna_offset_8198f(dm);
-	}
-
-	if (dm->support_ic_type & ODM_RTL8197G) {
-		phydm_get_thermal_trim_offset_8197g(dm);
-		phydm_get_set_power_trim_offset_8197g(dm);
-		phydm_get_set_pa_bias_offset_8197g(dm);
-		phydm_get_tssi_trim_offset_8197g(dm);
-		phydm_get_set_lna_offset_8197g(dm);
-	}
-
-	if (dm->support_ic_type & ODM_RTL8710C) {
-		phydm_get_thermal_trim_offset_8710c(dm);
-		phydm_get_set_power_trim_offset_8710c(dm);
-		phydm_get_set_pa_bias_offset_8710c(dm);
-	}
-
-	if (dm->support_ic_type & ODM_RTL8814B) {
-		phydm_get_thermal_trim_offset_8814b(dm);
-		phydm_get_set_power_trim_offset_8814b(dm);
-		phydm_get_pa_bias_offset_8814b(dm);
-		phydm_get_tssi_trim_offset_8814b(dm);
-	}
-	if (dm->support_ic_type & ODM_RTL8723F) {
-		phydm_get_thermal_trim_offset_8723f(dm);
-		phydm_get_set_power_trim_offset_8723f(dm);
-		//phydm_get_set_pa_bias_offset_8723f(dm);
-		phydm_get_tssi_trim_offset_8723f(dm);
-	}
+	phydm_get_set_thermal_trim_offset_8822c(dm);
+	phydm_get_set_power_trim_offset_8822c(dm);
+	phydm_get_set_pa_bias_offset_8822c(dm);
+	phydm_get_tssi_trim_offset_8822c(dm);
 }
 
 void phydm_set_kfree_to_rf(void *dm_void, u8 e_rf_path, u8 data)
 {
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-
-	if (dm->support_ic_type & ODM_RTL8814A)
-		phydm_set_kfree_to_rf_8814a(dm, e_rf_path, data);
-
-	if ((dm->support_ic_type & ODM_RTL8821C) &&
-	    (*dm->band_type == ODM_BAND_2_4G))
-		phydm_set_kfree_to_rf_8821c(dm, e_rf_path, true, data);
-	else if (dm->support_ic_type & ODM_RTL8821C)
-		phydm_set_kfree_to_rf_8821c(dm, e_rf_path, false, data);
-
-	if (dm->support_ic_type & ODM_RTL8822B)
-		phydm_set_kfree_to_rf_8822b(dm, e_rf_path, data);
-
-	if (dm->support_ic_type & ODM_RTL8710B)
-		phydm_set_kfree_to_rf_8710b(dm, e_rf_path, data);
-
-	if (dm->support_ic_type & ODM_RTL8198F)
-		phydm_set_kfree_to_rf_8198f(dm, e_rf_path, data);
 }
 
 void phydm_clear_kfree_to_rf(void *dm_void, u8 e_rf_path, u8 data)
 {
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-
-	if (dm->support_ic_type & ODM_RTL8822B)
-		phydm_clear_kfree_to_rf_8822b(dm, e_rf_path, 1);
-
-	if (dm->support_ic_type & ODM_RTL8821C)
-		phydm_clear_kfree_to_rf_8821c(dm, e_rf_path, 1);
-
-	if (dm->support_ic_type & ODM_RTL8198F)
-		phydm_clear_kfree_to_rf_8198f(dm, e_rf_path, 0);
 }
 
 void phydm_get_thermal_trim_offset(void *dm_void)
 {
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-
-#if (DM_ODM_SUPPORT_TYPE & ODM_WIN)
-	void *adapter = dm->adapter;
-	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(((PADAPTER)adapter));
-	PEFUSE_HAL pEfuseHal = &hal_data->EfuseHal;
-	u1Byte eFuseContent[DCMD_EFUSE_MAX_SECTION_NUM * EFUSE_MAX_WORD_UNIT * 2];
-
-	if (HAL_MAC_Dump_EFUSE(&GET_HAL_MAC_INFO((PADAPTER)adapter), EFUSE_WIFI, eFuseContent, pEfuseHal->PhysicalLen_WiFi, HAL_MAC_EFUSE_PHYSICAL, HAL_MAC_EFUSE_PARSE_DRV) != RT_STATUS_SUCCESS)
-		RF_DBG(dm, DBG_RF_MP, "[kfree] dump efuse fail !!!\n");
-#endif
-
-	if (dm->support_ic_type & ODM_RTL8821C)
-		phydm_get_thermal_trim_offset_8821c(dm_void);
-	else if (dm->support_ic_type & ODM_RTL8822B)
-		phydm_get_thermal_trim_offset_8822b(dm_void);
-	else if (dm->support_ic_type & ODM_RTL8710B)
-		phydm_get_thermal_trim_offset_8710b(dm_void);
-	else if (dm->support_ic_type & ODM_RTL8192F)
-		phydm_get_thermal_trim_offset_8192f(dm_void);
-	else if (dm->support_ic_type & ODM_RTL8198F)
-		phydm_get_thermal_trim_offset_8198f(dm_void);
 }
 
 void phydm_get_power_trim_offset(void *dm_void)
 {
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-
-#if 0 //(DM_ODM_SUPPORT_TYPE & ODM_WIN)	// 2017 MH DM Should use the same code.s
-	void		*adapter = dm->adapter;
-	HAL_DATA_TYPE	*hal_data = GET_HAL_DATA(((PADAPTER)adapter));
-	PEFUSE_HAL		pEfuseHal = &hal_data->EfuseHal;
-	u1Byte			eFuseContent[DCMD_EFUSE_MAX_SECTION_NUM * EFUSE_MAX_WORD_UNIT * 2];
-
-	if (HAL_MAC_Dump_EFUSE(&GET_HAL_MAC_INFO(adapter), EFUSE_WIFI, eFuseContent, pEfuseHal->PhysicalLen_WiFi, HAL_MAC_EFUSE_PHYSICAL, HAL_MAC_EFUSE_PARSE_DRV) != RT_STATUS_SUCCESS)
-		RF_DBG(dm, DBG_RF_MP, "[kfree] dump efuse fail !!!\n");
-#endif
-
-	if (dm->support_ic_type & ODM_RTL8821C)
-		phydm_get_power_trim_offset_8821c(dm_void);
-	else if (dm->support_ic_type & ODM_RTL8822B)
-		phydm_get_power_trim_offset_8822b(dm_void);
-	else if (dm->support_ic_type & ODM_RTL8710B)
-		phydm_get_power_trim_offset_8710b(dm_void);
-	else if (dm->support_ic_type & ODM_RTL8192F)
-		phydm_get_power_trim_offset_8192f(dm_void);
-	else if (dm->support_ic_type & ODM_RTL8198F)
-		phydm_get_power_trim_offset_8198f(dm_void);
 }
 
 void phydm_get_pa_bias_offset(void *dm_void)
 {
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-
-#if (DM_ODM_SUPPORT_TYPE & ODM_WIN)
-	void *adapter = dm->adapter;
-	HAL_DATA_TYPE *hal_data = GET_HAL_DATA(((PADAPTER)adapter));
-	PEFUSE_HAL pEfuseHal = &hal_data->EfuseHal;
-	u1Byte eFuseContent[DCMD_EFUSE_MAX_SECTION_NUM * EFUSE_MAX_WORD_UNIT * 2];
-
-	if (HAL_MAC_Dump_EFUSE(&GET_HAL_MAC_INFO((PADAPTER)adapter), EFUSE_WIFI, eFuseContent, pEfuseHal->PhysicalLen_WiFi, HAL_MAC_EFUSE_PHYSICAL, HAL_MAC_EFUSE_PARSE_DRV) != RT_STATUS_SUCCESS)
-		RF_DBG(dm, DBG_RF_MP, "[kfree] dump efuse fail !!!\n");
-#endif
-
-	if (dm->support_ic_type & ODM_RTL8822B)
-		phydm_get_pa_bias_offset_8822b(dm_void);
 }
 
 s8 phydm_get_thermal_offset(void *dm_void)
@@ -3795,63 +3644,18 @@ void phydm_do_kfree(void *dm_void, u8 channel_to_sw)
 	u8 i, j;
 	s8 bb_gain;
 
-	if (dm->support_ic_type & ODM_RTL8814A)
-		max_path = 4; /*0~3*/
-	else if (dm->support_ic_type &
-		 (ODM_RTL8812 | ODM_RTL8822B | ODM_RTL8192F)) {
-		max_path = 2; /*0~1*/
-		kfree_band_num = KFREE_BAND_NUM;
-	} else if (dm->support_ic_type & ODM_RTL8821C) {
-		max_path = 1;
-		kfree_band_num = KFREE_BAND_NUM;
-	} else if (dm->support_ic_type & ODM_RTL8710B) {
-		max_path = 1;
-		kfree_band_num = 1;
-	} else if (dm->support_ic_type & ODM_RTL8198F) {
-		max_path = 4;
-		kfree_band_num = 3;
-	}
 
-	if (dm->support_ic_type &
-	    (ODM_RTL8192F | ODM_RTL8822B | ODM_RTL8821C |
-	    ODM_RTL8814A | ODM_RTL8710B)) {
-		for (i = 0; i < kfree_band_num; i++) {
-			for (j = 0; j < max_path; j++)
-				RF_DBG(dm, DBG_RF_MP,
-				       "[kfree] PwrTrim->gain[%d][%d]=0x%X\n",
-				       i, j, pwrtrim->bb_gain[i][j]);
-		}
-	}
 	if (*dm->band_type == ODM_BAND_2_4G &&
 	    pwrtrim->flag & KFREE_FLAG_ON_2G) {
-		if (!(dm->support_ic_type & ODM_RTL8192F)) {
-			if (channel_to_sw >= 1 && channel_to_sw <= 14)
-				channel_idx = PHYDM_2G;
-			for (rfpath = RF_PATH_A; rfpath < max_path; rfpath++) {
-				RF_DBG(dm, DBG_RF_MP,
-				       "[kfree] %s:chnl=%d PATH=%d gain:0x%X\n",
-				       __func__, channel_to_sw, rfpath,
-				       pwrtrim->bb_gain[channel_idx][rfpath]);
-				bb_gain = pwrtrim->bb_gain[channel_idx][rfpath];
-				phydm_set_kfree_to_rf(dm, rfpath, bb_gain);
-			}
-		} else if (dm->support_ic_type & ODM_RTL8192F) {
-			if (channel_to_sw >= 1 && channel_to_sw <= 3)
-				channel_idx = 0;
-			if (channel_to_sw >= 4 && channel_to_sw <= 9)
-				channel_idx = 1;
-			if (channel_to_sw >= 10 && channel_to_sw <= 14)
-				channel_idx = 2;
-			for (rfpath = RF_PATH_A; rfpath < max_path; rfpath++) {
-				RF_DBG(dm, DBG_RF_MP,
-				       "[kfree] %s:chnl=%d PATH=%d gain:0x%X\n",
-				       __func__, channel_to_sw, rfpath,
-				       pwrtrim->bb_gain[channel_idx][rfpath]);
-				bb_gain = pwrtrim->bb_gain[channel_idx][rfpath];
-				phydm_set_kfree_to_rf_8192f(dm, rfpath,
-							    channel_idx,
-							    bb_gain);
-			}
+		if (channel_to_sw >= 1 && channel_to_sw <= 14)
+			channel_idx = PHYDM_2G;
+		for (rfpath = RF_PATH_A; rfpath < max_path; rfpath++) {
+			RF_DBG(dm, DBG_RF_MP,
+			       "[kfree] %s:chnl=%d PATH=%d gain:0x%X\n",
+			       __func__, channel_to_sw, rfpath,
+			       pwrtrim->bb_gain[channel_idx][rfpath]);
+			bb_gain = pwrtrim->bb_gain[channel_idx][rfpath];
+			phydm_set_kfree_to_rf(dm, rfpath, bb_gain);
 		}
 	} else if (*dm->band_type == ODM_BAND_5G &&
 		   pwrtrim->flag & KFREE_FLAG_ON_5G) {
@@ -3882,18 +3686,6 @@ void phydm_do_kfree(void *dm_void, u8 channel_to_sw)
 				phydm_clear_kfree_to_rf(dm, rfpath, bb_gain);
 			}
 		}
-#if 0
-		/*else if(dm->support_ic_type & ODM_RTL8192F){
-			if (channel_to_sw >= 1 && channel_to_sw <= 3)
-				channel_idx = 0;
-			if (channel_to_sw >= 4 && channel_to_sw <= 9)
-				channel_idx = 1;
-			if (channel_to_sw >= 9 && channel_to_sw <= 14)
-				channel_idx = 2;
-			for (rfpath = RF_PATH_A;  rfpath < max_path; rfpath++)
-				phydm_clear_kfree_to_rf_8192f(dm, rfpath, pwrtrim->bb_gain[channel_idx][rfpath]);
-		}*/
-#endif
 	}
 }
 
@@ -3940,9 +3732,6 @@ void phydm_config_kfree(void *dm_void, u8 channel_to_sw)
 			       __func__);
 			return;
 		}
-#if 0
-		/*if kfree_table[0] == 0xff, means no Kfree*/
-#endif
 		phydm_do_kfree(dm, channel_to_sw);
 	}
 	RF_DBG(dm, DBG_RF_MP, "<===[kfree] phy_ConfigKFree()\n");
@@ -3950,9 +3739,5 @@ void phydm_config_kfree(void *dm_void, u8 channel_to_sw)
 
 void phydm_set_lna_trim_offset (void *dm_void, u8 path, u8 cg_cs, u8 enable)
 {
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-
-	if (dm->support_ic_type & ODM_RTL8197G)
-		phydm_set_lna_trim_offset_8197g(dm, path, cg_cs, enable);
 }
 
