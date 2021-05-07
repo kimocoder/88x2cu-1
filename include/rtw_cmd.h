@@ -47,11 +47,6 @@ enum {
 };
 
 struct cmd_priv {
-	_sema	cmd_queue_sema;
-	/* _sema	cmd_done_sema; */
-	_sema	start_cmdthread_sema;
-
-	_queue	cmd_queue;
 	u8	cmd_seq;
 	u8	*cmd_buf;	/* shall be non-paged, and 4 bytes aligned */
 	u8	*cmd_allocated_buf;
@@ -60,12 +55,19 @@ struct cmd_priv {
 	u32	cmd_issued_cnt;
 	u32	cmd_done_cnt;
 	u32	rsp_cnt;
-	ATOMIC_T cmdthd_running;
 	/* u8 cmdthd_running; */
 
 	_adapter *padapter;
 	struct dvobj_priv *dvobj;
 	_mutex sctx_mutex;
+
+	#ifdef CONFIG_CORE_CMD_THREAD
+	_queue	cmd_queue;
+	_sema	cmd_queue_sema;
+	_sema	start_cmdthread_sema;
+	ATOMIC_T cmdthd_running;
+	#endif
+
 };
 
 #ifdef CONFIG_EVENT_THREAD_MODE
@@ -172,8 +174,10 @@ extern struct evt_obj *rtw_dequeue_evt(_queue *queue);
 extern void rtw_free_evt_obj(struct evt_obj *pcmd);
 #endif
 
+#ifdef CONFIG_CORE_CMD_THREAD
 void rtw_stop_cmd_thread(_adapter *adapter);
 thread_return rtw_cmd_thread(thread_context context);
+#endif
 
 u32 rtw_init_cmd_priv(struct dvobj_priv *dvobj);
 void rtw_free_cmd_priv(struct dvobj_priv *dvobj);

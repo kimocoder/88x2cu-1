@@ -32,11 +32,12 @@ u32	rtw_init_cmd_priv(struct dvobj_priv *dvobj)
 	struct cmd_priv *pcmdpriv = &dvobj->cmdpriv;
 
 
+	pcmdpriv->dvobj = dvobj;
+	#ifdef CONFIG_CORE_CMD_THREAD
 	_rtw_init_sema(&(pcmdpriv->cmd_queue_sema), 0);
-	/* _rtw_init_sema(&(pcmdpriv->cmd_done_sema), 0); */
 	_rtw_init_sema(&(pcmdpriv->start_cmdthread_sema), 0);
-
 	_rtw_init_queue(&(pcmdpriv->cmd_queue));
+	#endif
 
 	/* allocate DMA-able/Non-Page memory for cmd_buf and rsp_buf */
 
@@ -208,10 +209,12 @@ void rtw_free_cmd_priv(struct dvobj_priv *dvobj)
 {
 	struct cmd_priv *pcmdpriv = &dvobj->cmdpriv;
 
+	#ifdef CONFIG_CORE_CMD_THREAD
 	_rtw_spinlock_free(&(pcmdpriv->cmd_queue.lock));
 	_rtw_free_sema(&(pcmdpriv->cmd_queue_sema));
 	/* _rtw_free_sema(&(pcmdpriv->cmd_done_sema)); */
 	_rtw_free_sema(&(pcmdpriv->start_cmdthread_sema));
+	#endif
 
 	if (pcmdpriv->cmd_allocated_buf)
 		rtw_mfree(pcmdpriv->cmd_allocated_buf, MAX_CMDSZ + CMDBUFF_ALIGN_SZ);
@@ -235,6 +238,7 @@ ISR/Call-Back functions can't call this sub-function.
 extern u8 dump_cmd_id;
 #endif
 
+#ifdef CONFIG_CORE_CMD_THREAD
 sint _rtw_enqueue_cmd(_queue *queue, struct cmd_obj *obj, bool to_head)
 {
 	unsigned long sp_flags;
@@ -292,7 +296,35 @@ exit:
 
 	return _SUCCESS;
 }
+#else
+static sint _rtw_enqueue_cmd(struct cmd_obj *obj, bool to_head)
+{
+	u32 res;
 
+	res = rtw_enqueue_phl_cmd(obj);
+
+#ifdef DBG_CMD_QUEUE
+	if (dump_cmd_id) {
+		RTW_INFO("%s===> cmdcode:0x%02x\n", __FUNCTION__, obj->cmdcode);
+		if (obj->cmdcode == CMD_SET_MLME_EVT) {
+			if (obj->parmbuf) {
+				struct rtw_evt_header *evt_hdr = (struct rtw_evt_header *)(obj->parmbuf);
+				RTW_INFO("evt_hdr->id:%d\n", evt_hdr->id);
+			}
+		}
+		if (obj->cmdcode == CMD_SET_DRV_EXTRA) {
+			if (obj->parmbuf) {
+				struct drvextra_cmd_parm *pdrvextra_cmd_parm = (struct drvextra_cmd_parm *)(obj->parmbuf);
+				RTW_INFO("pdrvextra_cmd_parm->ec_id:0x%02x\n", pdrvextra_cmd_parm->ec_id);
+			}
+		}
+	}
+#endif /* DBG_CMD_QUEUE */
+	return res;
+}
+#endif
+
+#ifdef CONFIG_CORE_CMD_THREAD
 struct	cmd_obj	*_rtw_dequeue_cmd(_queue *queue)
 {
 	struct cmd_obj *obj;
@@ -351,6 +383,17 @@ struct	cmd_obj	*_rtw_dequeue_cmd(_queue *queue)
 	return obj;
 }
 
+struct	cmd_obj	*rtw_dequeue_cmd(struct cmd_priv *pcmdpriv)
+{
+	struct cmd_obj *cmd_obj;
+
+
+	cmd_obj = _rtw_dequeue_cmd(&pcmdpriv->cmd_queue);
+
+	return cmd_obj;
+}
+#endif
+
 u32	rtw_init_evt_priv(struct	evt_priv *pevtpriv)
 {
 	int	res;
@@ -363,7 +406,6 @@ void rtw_free_evt_priv(struct	evt_priv *pevtpriv)
 	_rtw_free_evt_priv(pevtpriv);
 }
 
-int rtw_cmd_filter(struct cmd_priv *pcmdpriv, struct cmd_obj *cmd_obj);
 int rtw_cmd_filter(struct cmd_priv *pcmdpriv, struct cmd_obj *cmd_obj)
 {
 #ifndef CONFIG_MAC_LOOPBACK_DRIVER
@@ -394,11 +436,15 @@ int rtw_cmd_filter(struct cmd_priv *pcmdpriv, struct cmd_obj *cmd_obj)
 		bAllow = _TRUE;
 
 	if ((!rtw_is_hw_init_completed(pcmdpriv->padapter) && (bAllow == _FALSE))
+	#ifdef CONFIG_CORE_CMD_THREAD
 	    || ATOMIC_READ(&(pcmdpriv->cmdthd_running)) == _FALSE	/* com_thread not running */
+	#endif
 	   ) {
+		#ifdef CONFIG_CORE_CMD_THREAD
 		if (DBG_CMD_EXECUTE)
 			RTW_INFO(ADPT_FMT" drop "CMD_FMT" hw_init_completed:%u, cmdthd_running:%u\n", ADPT_ARG(cmd_obj->padapter)
 				, CMD_ARG(cmd_obj), rtw_get_hw_init_completed(cmd_obj->padapter), ATOMIC_READ(&pcmdpriv->cmdthd_running));
+		#endif
 		if (0)
 			rtw_warn_on(1);
 
@@ -412,19 +458,12 @@ int rtw_cmd_filter(struct cmd_priv *pcmdpriv, struct cmd_obj *cmd_obj)
 u32 rtw_enqueue_cmd(struct cmd_priv *pcmdpriv, struct cmd_obj *cmd_obj)
 {
 	int res = _FAIL;
-	PADAPTER padapter = pcmdpriv->padapter;
-
+	_adapter *padapter = pcmdpriv->padapter;
 
 	if (cmd_obj == NULL)
 		goto exit;
 
 	cmd_obj->padapter = padapter;
-
-#ifdef CONFIG_CONCURRENT_MODE
-	/* change pcmdpriv to primary's pcmdpriv */
-	if (!is_primary_adapter(padapter))
-		pcmdpriv = &(GET_PRIMARY_ADAPTER(padapter)->cmdpriv);
-#endif
 
 	res = rtw_cmd_filter(pcmdpriv, cmd_obj);
 	if ((_FAIL == res) || (cmd_obj->cmdsz > MAX_CMDSZ)) {
@@ -443,25 +482,19 @@ u32 rtw_enqueue_cmd(struct cmd_priv *pcmdpriv, struct cmd_obj *cmd_obj)
 		goto exit;
 	}
 
+	#ifdef CONFIG_CORE_CMD_THREAD
 	res = _rtw_enqueue_cmd(&pcmdpriv->cmd_queue, cmd_obj, 0);
+	#else
+	res = _rtw_enqueue_cmd(cmd_obj, 0);
+	#endif
 
+	#ifdef CONFIG_CORE_CMD_THREAD
 	if (res == _SUCCESS)
 		_rtw_up_sema(&pcmdpriv->cmd_queue_sema);
+	#endif
 
 exit:
-
-
 	return res;
-}
-
-struct	cmd_obj	*rtw_dequeue_cmd(struct cmd_priv *pcmdpriv)
-{
-	struct cmd_obj *cmd_obj;
-
-
-	cmd_obj = _rtw_dequeue_cmd(&pcmdpriv->cmd_queue);
-
-	return cmd_obj;
 }
 
 void rtw_cmd_clr_isr(struct	cmd_priv *pcmdpriv)
@@ -568,6 +601,7 @@ post_process:
 	}
 }
 
+#ifdef CONFIG_CORE_CMD_THREAD
 void rtw_stop_cmd_thread(_adapter *adapter)
 {
 	if (adapter->cmdThread) {
@@ -791,6 +825,7 @@ post_process:
 
 	return 0;
 }
+#endif
 
 
 #ifdef CONFIG_EVENT_THREAD_MODE

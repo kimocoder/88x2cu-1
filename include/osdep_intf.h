@@ -71,8 +71,11 @@ u8 rtw_free_drv_sw(_adapter *padapter);
 u8 rtw_reset_drv_sw(_adapter *padapter);
 void rtw_drv_stop_prim_iface(_adapter *adapter);
 
+#ifdef CONFIG_CORE_CMD_THREAD
 u32 rtw_start_drv_threads(_adapter *padapter);
 void rtw_stop_drv_threads(_adapter *padapter);
+#endif
+
 #if defined(CONFIG_WOWLAN) || defined(CONFIG_AP_WOWLAN)
 void rtw_cancel_dynamic_chk_timer(_adapter *padapter);
 #endif

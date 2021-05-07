@@ -18,7 +18,5 @@
 
 extern sint _rtw_init_evt_priv(struct evt_priv *pevtpriv);
 extern void _rtw_free_evt_priv(struct	evt_priv *pevtpriv);
-extern sint _rtw_enqueue_cmd(_queue *queue, struct cmd_obj *obj, bool to_head);
-extern struct cmd_obj *_rtw_dequeue_cmd(_queue *queue);
 
 #endif

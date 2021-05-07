@@ -3319,6 +3319,7 @@ out:
 	return err_ret;
 }
 
+#ifdef CONFIG_CORE_CMD_THREAD 
 static int _drv_enable_trx(struct dvobj_priv *d)
 {
 	struct _ADAPTER *adapter;
@@ -3338,6 +3339,7 @@ static int _drv_enable_trx(struct dvobj_priv *d)
 
 	return 0;
 }
+#endif
 
 /*
  * Notices:
@@ -3391,10 +3393,12 @@ static int _halmac_init_hal(struct dvobj_priv *d, u8 *fw, u32 fwsize)
 	if (err)
 		goto out;
 
+	#ifdef CONFIG_CORE_CMD_THREAD 
 	/* Driver insert flow: Enable TR/RX */
 	err = _drv_enable_trx(d);
 	if (err)
 		goto out;
+	#endif
 
 	/* halmac_send_general_info */
 	if (_TRUE == fw_ok) {

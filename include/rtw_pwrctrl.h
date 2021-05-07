@@ -630,8 +630,12 @@ extern s32 rtw_register_tx_alive(PADAPTER padapter);
 extern void rtw_unregister_tx_alive(PADAPTER padapter);
 extern s32 rtw_register_rx_alive(PADAPTER padapter);
 extern void rtw_unregister_rx_alive(PADAPTER padapter);
+
+#ifdef CONFIG_CORE_CMD_THREAD
 extern s32 rtw_register_cmd_alive(PADAPTER padapter);
 extern void rtw_unregister_cmd_alive(PADAPTER padapter);
+#endif
+
 extern s32 rtw_register_evt_alive(PADAPTER padapter);
 extern void rtw_unregister_evt_alive(PADAPTER padapter);
 extern void cpwm_int_hdl(PADAPTER padapter, struct reportpwrstate_parm *preportpwrstate);

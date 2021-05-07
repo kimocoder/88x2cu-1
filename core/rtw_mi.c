@@ -635,6 +635,7 @@ void rtw_mi_buddy_scan_abort(_adapter *adapter, bool bwait)
 	_rtw_mi_process(adapter, _TRUE, &in_data, _rtw_mi_scan_abort);
 }
 
+#ifdef CONFIG_CORE_CMD_THREAD
 static u32 _rtw_mi_start_drv_threads(_adapter *adapter, bool exclude_self)
 {
 	int i;
@@ -687,6 +688,7 @@ void rtw_mi_buddy_stop_drv_threads(_adapter *adapter)
 {
 	_rtw_mi_stop_drv_threads(adapter, _TRUE);
 }
+#endif
 
 static u8 _rtw_mi_cancel_all_timer(_adapter *adapter, void *data)
 {

@@ -783,6 +783,7 @@ void rtw_os_ndevs_free(struct dvobj_priv *dvobj)
 #endif
 }
 
+#ifdef CONFIG_CORE_CMD_THREAD
 u32 rtw_start_drv_threads(_adapter *padapter)
 {
 	u32 _status = _SUCCESS;
@@ -858,6 +859,7 @@ void rtw_stop_drv_threads(_adapter *padapter)
 
 	rtw_hal_stop_thread(padapter);
 }
+#endif
 
 u8 rtw_init_default_value(_adapter *padapter)
 {
@@ -1829,7 +1831,9 @@ static void rtw_drv_stop_vir_if(_adapter *padapter)
 
 		padapter->netif_up = _FALSE;
 	}
+	#ifdef CONFIG_CORE_CMD_THREAD
 	rtw_stop_drv_threads(padapter);
+	#endif
 	/* cancel timer after thread stop */
 	rtw_cancel_all_timer(padapter);
 }
@@ -3341,8 +3345,9 @@ int rtw_resume_process_wow(_adapter *padapter)
 	if(registry_par->suspend_type == FW_IPS_WRC)
 		rtw_hal_set_hwreg(padapter, HW_VAR_VENDOR_WOW_MODE, &en);
 
+	#if 0
 	rtw_mi_start_drv_threads(padapter);
-
+	#endif
 	rtw_mi_intf_start(padapter);
 
 	if(registry_par->suspend_type == FW_IPS_DISABLE_BBRF && !check_fwstate(pmlmepriv, WIFI_ASOC_STATE)) {
@@ -3470,7 +3475,9 @@ int rtw_resume_process_ap_wow(_adapter *padapter)
 	rtw_clr_drv_stopped(padapter);
 	RTW_INFO("%s: wowmode resuming, DriverStopped:%s\n", __func__, rtw_is_drv_stopped(padapter) ? "True" : "False");
 
+	#if 0
 	rtw_mi_start_drv_threads(padapter);
+	#endif
 
 	if (rtw_mi_check_status(padapter, MI_LINKED)) {
 		ch =  rtw_mi_get_union_chan(padapter);

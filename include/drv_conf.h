@@ -17,6 +17,9 @@
 #include "autoconf.h"
 #include "hal_ic_cfg.h"
 
+//NEO
+#define CONFIG_CORE_CMD_THREAD
+
 #define CONFIG_RSSI_PRIORITY
 
 /* 

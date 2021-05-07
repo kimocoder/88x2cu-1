@@ -1569,9 +1569,10 @@ void cpwm_int_hdl(
 	pwrpriv->cpwm_tog = preportpwrstate->state & PS_TOGGLE;
 
 	if (pwrpriv->cpwm >= PS_STATE_S2) {
+		#ifdef CONFIG_CORE_CMD_THREAD
 		if (pwrpriv->alives & CMD_ALIVE)
 			_rtw_up_sema(&padapter->cmdpriv.cmd_queue_sema);
-
+		#endif
 		if (pwrpriv->alives & XMIT_ALIVE)
 			_rtw_up_sema(&padapter->xmitpriv.xmit_sema);
 	}
@@ -1915,6 +1916,7 @@ s32 rtw_register_tx_alive(PADAPTER padapter)
  *	_SUCCESS	rtw_cmd_thread can issue cmds to firmware afterwards.
  *	_FAIL		rtw_cmd_thread can not do anything.
  */
+#ifdef CONFIG_CORE_CMD_THREAD
 s32 rtw_register_cmd_alive(PADAPTER padapter)
 {
 	s32 res;
@@ -1952,6 +1954,7 @@ s32 rtw_register_cmd_alive(PADAPTER padapter)
 
 	return res;
 }
+#endif
 
 /*
  * Caller: rx_isr
@@ -2012,6 +2015,7 @@ s32 rtw_register_evt_alive(PADAPTER padapter)
  * No more pkts for TX,
  * Then driver shall call this fun. to power down firmware again.
  */
+#ifdef CONFIG_CORE_CMD_THREAD
 void rtw_unregister_tx_alive(PADAPTER padapter)
 {
 	struct pwrctrl_priv *pwrctrl;
@@ -2062,6 +2066,7 @@ void rtw_unregister_tx_alive(PADAPTER padapter)
 	_exit_pwrlock(&pwrctrl->lock);
 
 }
+#endif
 
 /*
  * Caller: ISR

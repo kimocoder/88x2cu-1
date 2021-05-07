@@ -70,6 +70,7 @@ typedef struct _ADAPTER _adapter, ADAPTER, *PADAPTER;
 
 /*CONFIG_PHL_ARCH*/
 #include "rtw_phl.h"
+#include "rtw_phl_cmd.h"
 #include "../phl/phl_headers_core.h"
 
 #include <hal_intf.h>
@@ -1797,7 +1798,10 @@ aa
 		void (*callback[8])(u8 level);
 	} gpiointpriv;
 #endif
+	#ifdef CONFIG_CORE_CMD_THREAD
 	_thread_hdl_ cmdThread;
+	#endif
+
 #ifdef CONFIG_EVENT_THREAD_MODE
 	_thread_hdl_ evtThread;
 #endif

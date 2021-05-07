@@ -16,5 +16,9 @@
 #define __RTW_PHL_CMD__
 u32 rtw_enqueue_phl_cmd(struct cmd_obj *pcmd);
 
+#if defined (CONFIG_CMD_GENERAL) && defined (CONFIG_PCIE_TRX_MIT)
+u8 rtw_pcie_trx_mit_cmd(_adapter *padapter, u32 tx_timer, u8 tx_counter,
+			u32 rx_timer, u8 rx_counter, u8 fixed_mit);
+#endif
 #endif /* __RTW_PHL_CMD__ */
 
