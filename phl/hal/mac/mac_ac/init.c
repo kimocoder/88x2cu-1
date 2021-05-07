@@ -41,7 +41,7 @@ struct mac_ax_adapter *get_mac_ax_adapter(enum mac_ax_intf intf,
 }
 #else
 struct mac_adapter *get_mac_adapter(enum mac_intf intf,
-					  u8 chip_id, u8 chip_cut,
+					  u8 chip_id, u8 cv,
 					  void *drv_adapter,
 					  struct mac_pltfm_cb *pltfm_cb)
 {
@@ -50,18 +50,18 @@ struct mac_adapter *get_mac_adapter(enum mac_intf intf,
 	switch (chip_id) {
 #if MAC_AX_8852A_SUPPORT
 	case MAC_CHIP_ID_8852A:
-		adapter = get_mac_8852a_adapter(intf, chip_cut, drv_adapter,
+		adapter = get_mac_8852a_adapter(intf, cv, drv_adapter,
 						pltfm_cb);
 		break;
 #endif
 #if MAC_AX_8852B_SUPPORT
 	case MAC_CHIP_ID_8852B:
-		adapter = get_mac_8852b_adapter(intf, chip_cut, drv_adapter,
+		adapter = get_mac_8852b_adapter(intf, cv, drv_adapter,
 						pltfm_cb);
 		break;
 #endif
 	case MAC_CHIP_ID_8822C:
-		adapter = get_mac_8822c_adapter(intf, chip_cut, drv_adapter,
+		adapter = get_mac_8822c_adapter(intf, cv, drv_adapter,
 						pltfm_cb);
 		break;
 

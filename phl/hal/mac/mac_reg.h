@@ -16,6 +16,8 @@
 #ifndef __INC_MAC_REG_H
 #define __INC_MAC_REG_H
 
+#include "mac_reg_ac.h"
+
 //
 // WL_AX_REG_DMAC.xls
 //

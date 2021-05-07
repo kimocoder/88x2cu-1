@@ -183,6 +183,7 @@ static void read_chip_version(PADAPTER adapter)
 	hal->version_id.ICType = CHIP_8822C;
 	hal->version_id.ChipType = ((value32 & BIT_RTL_ID_8822C) ? TEST_CHIP : NORMAL_CHIP);
 	hal->version_id.CUTVersion = BIT_GET_CHIP_VER_8822C(value32);
+	pr_info("%s NEO cut version: 0x%x\n", __func__, hal->version_id.CUTVersion);
 	hal->version_id.VendorType = BIT_GET_VENDOR_ID_8822C(value32);
 	hal->version_id.VendorType >>= 2;
 	switch (hal->version_id.VendorType) {

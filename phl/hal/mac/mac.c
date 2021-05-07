@@ -14,8 +14,7 @@
  ******************************************************************************/
 
 #include "mac.h"
-
-
+#include "mac_reg.h"
 
 #define CHIP_ID_HW_DEF_8852A	0x50
 #define CHIP_ID_HW_DEF_8852B	0x51
@@ -112,52 +111,31 @@ static u8 r8_indir_cmd52_sdio(void *drv_adapter,
 #endif
 static u32 get_chip_info(struct mac_ax_adapter *adapter,
 			 struct mac_ax_pltfm_cb *pltfm_cb,
-			 enum mac_ax_intf intf, u8 *id, u8 *cut)
+			 enum mac_ax_intf intf, u8 *id, u8 *cv)
 {
-	u32 cut_temp;
-	u8 cur_id;
+	u32 cv_temp;
 
-	if (!cut || !id)
+	if (!cv || !id)
 		return MACNPTR;
 
 	switch (intf) {
 #if MAC_AX_SDIO_SUPPORT
 	case MAC_AX_INTF_SDIO:
 		cur_id = r8_indir_cmd52_sdio(adapter, R_AX_SYS_CHIPINFO);
-		*cut = r8_indir_cmd52_sdio(adapter, R_AX_SYS_CFG1 + 1) >> 4;
+		*cv = r8_indir_cmd52_sdio(adapter, R_AX_SYS_CFG1 + 1) >> 4;
 		break;
 #endif
 #if (MAC_AX_USB_SUPPORT || MAC_AX_PCIE_SUPPORT)
 	case MAC_AX_INTF_USB:
 	case MAC_AX_INTF_PCIE:
-#if 0 //NEO
-		cur_id = PLTFM_REG_R8(R_AX_SYS_CHIPINFO);
-		*cut = PLTFM_REG_R8(R_AX_SYS_CFG1 + 1) >> 4;
-		if (*cut <= CHIP_CUT_B) {
-			cut_temp = PLTFM_REG_R32(R_AX_GPIO0_7_FUNC_SEL);
-			if (cut_temp == 0xdeadbeef)
-				*cut = CHIP_CUT_A;
-			else
-				*cut = CHIP_CUT_B;
-		}
-#endif //NEO
-		*cut = 0;
+		*cut = PLTFM_REG_R8(REG_SYS_CFG1_8822C + 3);
 		break;
 #endif
 	default:
 		return MACINTF;
 	}
 
-	switch (cur_id) {
-	case CHIP_ID_HW_DEF_8852A:
-		*id = MAC_AX_CHIP_ID_8852A;
-		break;
-	case CHIP_ID_HW_DEF_8852B:
-		*id = MAC_AX_CHIP_ID_8852B;
-		break;
-	default:
-		return MACCHIPID;
-	}
+	*id = MAC_CHIP_ID_8822C;
 
 	return MACSUCCESS;
 }
@@ -169,7 +147,7 @@ u32 mac_ax_ops_init_v1(void *phl_adapter, void *drv_adapter,
 		       struct mac_ax_ops **mac_ops)
 {
 	u32 ret;
-	u8 chip_cut;
+	u8 cv;
 	struct mac_ax_adapter *adapter;
 	enum mac_ax_intf intf = MAC_AX_INTF_INVALID;
 
@@ -185,11 +163,11 @@ u32 mac_ax_ops_init_v1(void *phl_adapter, void *drv_adapter,
 	else if (hci == RTW_HCI_SDIO)
 		intf = MAC_AX_INTF_SDIO;
 
-	ret = get_chip_info(drv_adapter, NULL, intf, &chip_id, &chip_cut);
+	ret = get_chip_info(drv_adapter, NULL, intf, &chip_id, &cv);
 	if (ret)
 		return ret;
 
-	adapter = get_mac_ax_adapter(intf, chip_id, chip_cut, phl_adapter,
+	adapter = get_mac_ax_adapter(intf, chip_id, cv, phl_adapter,
 				     drv_adapter, NULL);
 	if (!adapter) {
 		PLTFM_MSG_PRINT("[ERR]Get MAC adapter\n");
@@ -244,72 +222,27 @@ static u8 r8_indir_cmd52_sdio(void *drv_adapter,
 }
 #endif
 
-static u32 get_chip_info(void *drv_adapter, struct mac_pltfm_cb *pltfm_cb,
-			 enum mac_intf intf, u8 *id, u8 *cut)
+static u32 get_chip_info(struct mac_adapter *drv_adapter,
+			 struct mac_pltfm_cb *pltfm_cb,
+			 enum mac_intf intf, u8 *id, u8 *cv)
 {
-#if 0 // NEO
-#if MAC_SDIO_SUPPORT
-	u8 sdio_cut_temp;
-#endif
-#if (MAC_USB_SUPPORT || MAC_PCIE_SUPPORT)
-	u32 cut_temp;
-#endif
-	u8 cur_id;
+	u32 cv_temp;
 
-	if (!cut || !id)
+	if (!cv || !id)
 		return MACNPTR;
 
 	switch (intf) {
-#if MAC_SDIO_SUPPORT
 	case MAC_INTF_SDIO:
-		cur_id = r8_indir_cmd52_sdio(drv_adapter, pltfm_cb,
-					     R_AX_SYS_CHIPINFO);
-		*cut = r8_indir_cmd52_sdio(drv_adapter, pltfm_cb,
-					   R_AX_SYS_CFG1 + 1) >> 4;
-		if (*cut <= CHIP_CUT_B) {
-			sdio_cut_temp = r8_indir_cmd52_sdio(drv_adapter, pltfm_cb,
-							    R_AX_GPIO0_7_FUNC_SEL);
-			if (sdio_cut_temp == 0xef)
-				*cut = CHIP_CUT_A;
-			else
-				*cut = CHIP_CUT_B;
-		}
 		break;
-#endif
-#if (MAC_USB_SUPPORT || MAC_PCIE_SUPPORT)
 	case MAC_INTF_USB:
 	case MAC_INTF_PCIE:
-		cur_id = pltfm_cb->reg_r8(drv_adapter, R_AX_SYS_CHIPINFO);
-		*cut = pltfm_cb->reg_r8(drv_adapter, R_AX_SYS_CFG1 + 1) >> 4;
-		if (*cut <= CHIP_CUT_B) {
-			cut_temp = pltfm_cb->reg_r32(drv_adapter,
-						     R_AX_GPIO0_7_FUNC_SEL);
-			if (cut_temp == 0xdeadbeef)
-				*cut = CHIP_CUT_A;
-			else
-				*cut = CHIP_CUT_B;
-		}
+		*cv = pltfm_cb->reg_r8(drv_adapter, REG_SYS_CFG1_8822C + 1) >> 4;
 		break;
-#endif
 	default:
 		return MACINTF;
 	}
 
-	switch (cur_id) {
-	case CHIP_ID_HW_DEF_8852A:
-		*id = MAC_AX_CHIP_ID_8852A;
-		break;
-	case CHIP_ID_HW_DEF_8852B:
-		*id = MAC_AX_CHIP_ID_8852B;
-		break;
-	default:
-		return MACCHIPID;
-	}
-#endif // if 0 NEO 
-
 	*id = MAC_CHIP_ID_8822C;
-	//*cut = CHIP_CUT_B;
-	*cut = 0;
 
 	return MACSUCCESS;
 }
@@ -321,10 +254,8 @@ u32 mac_ops_init(void *drv_adapter, struct mac_pltfm_cb *pltfm_cb,
 {
 	u32 ret;
 	u8 chip_id = 0;
-	u8 chip_cut = 0;
+	u8 cv = 0;
 	struct mac_adapter *adapter;
-
-	RTW_INFO("%s NEO: TODO\n", __func__);
 
 	if (!chk_pltfm_cb(drv_adapter, intf, pltfm_cb))
 		return MACPFCB;
@@ -340,11 +271,11 @@ u32 mac_ops_init(void *drv_adapter, struct mac_pltfm_cb *pltfm_cb,
 			    MAC_MAJOR_VER, MAC_PROTOTYPE_VER,
 			    MAC_SUB_VER, MAC_SUB_INDEX);
 
-	ret = get_chip_info(drv_adapter, pltfm_cb, intf, &chip_id, &chip_cut);
+	ret = get_chip_info(drv_adapter, pltfm_cb, intf, &chip_id, &cv);
 	if (ret)
 		return ret;
 
-	adapter = get_mac_adapter(intf, chip_id, chip_cut, drv_adapter,
+	adapter = get_mac_adapter(intf, chip_id, cv, drv_adapter,
 				     pltfm_cb);
 	if (!adapter) {
 		pltfm_cb->msg_print(drv_adapter, "[ERR]Get MAC adapter\n");
@@ -466,17 +397,4 @@ u32 mac_ops_exit(struct mac_adapter *adapter)
 	return MACSUCCESS;
 }
 
-#if 0 // NEO
-
-u32 is_chip_id(struct mac_adapter *adapter, enum mac_chip_id id)
-{
-	return (id == adapter->hw_info->chip_id ? 1 : 0);
-}
-
-u32 is_chip_cut(struct mac_adapter *adapter, enum rtw_cut_version cut)
-{
-	return (cut == adapter->hw_info->chip_cut ? 1 : 0);
-}
-
-#endif // if 0 NEO
 

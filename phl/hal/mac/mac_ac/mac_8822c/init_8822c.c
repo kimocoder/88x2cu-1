@@ -544,7 +544,6 @@ struct mac_adapter *get_mac_8822c_adapter(enum mac_intf intf,
 	struct mac_hw_info *hw_info = NULL;
 	//struct mac_ax_mac_pwr_info *pwr_info;
 
-	RTW_INFO("%s NEO TODO\n", __func__);
 	if (!pltfm_cb)
 		return NULL;
 
@@ -576,6 +575,7 @@ struct mac_adapter *get_mac_8822c_adapter(enum mac_intf intf,
 	adapter->pltfm_cb = pltfm_cb;
 	adapter->hw_info = hw_info;
 	adapter->hw_info->cv = cv;
+	pr_info("%s NEO cv:%x\n", __func__, adapter->hw_info->cv);
 	adapter->hw_info->intf = intf;
 	adapter->hw_info->done = 1;
 

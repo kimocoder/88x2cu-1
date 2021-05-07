@@ -1446,19 +1446,6 @@ int c2h_mac_hidden_rpt_2_hdl(_adapter *adapter, u8 *data, u8 len)
 			RTW_PRINT("%s: 0x%02X\n", __func__, *(data + i));
 	}
 
-	#if defined(CONFIG_RTL8188F) || defined(CONFIG_RTL8188GTV)
-	if (IS_8188F(hal_data->version_id) || IS_8188GTV(hal_data->version_id)) {
-		#define GET_C2H_MAC_HIDDEN_RPT_IRV(_data)	LE_BITS_TO_1BYTE(((u8 *)(_data)) + 0, 0, 4)
-		u8 irv = GET_C2H_MAC_HIDDEN_RPT_IRV(data);
-
-		if (DBG_C2H_MAC_HIDDEN_RPT_HANDLE)
-			RTW_PRINT("irv:0x%x\n", irv);
-
-		if(irv != 0xf)
-			hal_data->version_id.CUTVersion = irv;
-	}
-	#endif
-
 	ret = _SUCCESS;
 
 exit:
@@ -15497,29 +15484,6 @@ u8 phy_get_current_tx_num(_adapter *adapter, enum MGN_RATE rate)
 
 	return tx_num == 0 ? RF_1TX : tx_num - 1;
 }
-
-#ifdef CONFIG_RTL8812A
-u8 * rtw_hal_set_8812a_vendor_ie(_adapter *padapter , u8 *pframe ,uint *frlen ) {
-	int vender_len = 7;
-	unsigned char	vendor_info[vender_len];
-	unsigned char REALTEK_OUI[] = {0x00, 0xe0, 0x4c};
-	HAL_DATA_TYPE	*pHalData = GET_HAL_DATA(padapter);
-
-	if( !IS_HARDWARE_TYPE_8812(padapter) )
-		return pframe;
-
-	_rtw_memset(vendor_info,0,vender_len);
-	_rtw_memcpy(vendor_info, REALTEK_OUI, 3);
-	vendor_info[4] =2;
-	if(pHalData->version_id.CUTVersion > B_CUT_VERSION )
-		vendor_info[6] = RT_HT_CAP_USE_JAGUAR_CCUT;
-	else
-		vendor_info[6] = RT_HT_CAP_USE_JAGUAR_BCUT;
-	pframe = rtw_set_ie(pframe, _VENDOR_SPECIFIC_IE_,vender_len,vendor_info , frlen);
-	
-	return pframe;
-}
-#endif /*CONFIG_RTL8812A*/
 
 static inline void rtw_enter_protsel(struct protsel *protsel, u32 sel)
 {
