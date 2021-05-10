@@ -93,59 +93,26 @@ enum phydm_halmac_param {
 #define _bit_all(_name)			BIT_##_name
 #define _bit_ic(_name, _ic)		BIT_##_name##_ic
 
-#if defined(DM_ODM_CE_MAC80211)
-#define ODM_BIT(name, dm)				\
-	((dm->support_ic_type & ODM_IC_11N_SERIES) ?	\
-	 ODM_BIT_##name##_11N : ODM_BIT_##name##_11AC)
-
-#define ODM_REG(name, dm)				\
-	((dm->support_ic_type & ODM_IC_11N_SERIES) ?	\
-	 ODM_REG_##name##_11N : ODM_REG_##name##_11AC)
-#else
 #define _reg_11N(_name)			ODM_REG_##_name##_11N
 #define _reg_11AC(_name)		ODM_REG_##_name##_11AC
 #define _bit_11N(_name)			ODM_BIT_##_name##_11N
 #define _bit_11AC(_name)		ODM_BIT_##_name##_11AC
 
-#ifdef __ECOS
-#define _rtk_cat(_name, _ic_type, _func)                                \
-	(                                                               \
-		((_ic_type) & ODM_IC_11N_SERIES) ? _func##_11N(_name) : \
-						   _func##_11AC(_name))
-#else
 
-#define _cat(_name, _ic_type, _func)                                    \
+#define _cat(_name, _func)                                    \
 	(                                                               \
-		((_ic_type) & ODM_IC_11N_SERIES) ? _func##_11N(_name) : \
 						   _func##_11AC(_name))
-#endif
-/*@
- * only sample code
- *#define _cat(_name, _ic_type, _func)					\
- *	(								\
- *		((_ic_type) & ODM_RTL8188E) ? _func##_ic(_name, _8188E) :\
- *		_func##_ic(_name, _8195)				\
- *	)
- */
 
 /* @_name: name of register or bit.
  * Example: "ODM_REG(R_A_AGC_CORE1, dm)"
  * gets "ODM_R_A_AGC_CORE1" or "ODM_R_A_AGC_CORE1_8192C",
  * depends on support_ic_type.
  */
-#ifdef __ECOS
 	#define ODM_REG(_name, _pdm_odm)	\
-		_rtk_cat(_name, _pdm_odm->support_ic_type, _reg)
+		_cat(_name, _reg)
 	#define ODM_BIT(_name, _pdm_odm)	\
-		_rtk_cat(_name, _pdm_odm->support_ic_type, _bit)
-#else
-	#define ODM_REG(_name, _pdm_odm)	\
-		_cat(_name, _pdm_odm->support_ic_type, _reg)
-	#define ODM_BIT(_name, _pdm_odm)	\
-		_cat(_name, _pdm_odm->support_ic_type, _bit)
-#endif
+		_cat(_name, _bit)
 
-#endif
 /*@
  * =========== Extern Variable ??? It should be forbidden.
  */
