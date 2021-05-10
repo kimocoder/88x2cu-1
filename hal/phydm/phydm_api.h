@@ -103,11 +103,6 @@ enum channel_width phydm_rxsc_2_bw(void *dm_void, u8 rxsc);
 
 void phydm_reset_bb_hw_cnt(void *dm_void);
 
-#ifdef DYN_ANT_WEIGHTING_SUPPORT
-void phydm_ant_weight_dbg(void *dm_void, char input[][16], u32 *_used,
-			  char *output, u32 *_out_len);
-#endif
-
 void phydm_trx_antenna_setting_init(void *dm_void, u8 num_rf_path);
 
 void phydm_config_ofdm_rx_path(void *dm_void, enum bb_path path);
@@ -192,9 +187,7 @@ phydm_api_set_txagc(void *dm_void, u32 power_index, enum rf_path path,
 
 u8 phydm_api_get_txagc(void *dm_void, enum rf_path path, u8 hw_rate);
 
-#if (RTL8822C_SUPPORT)
 void phydm_shift_rxagc_table(void *dm_void, boolean shift_up, u8 shift);
-#endif
 
 boolean
 phydm_api_switch_bw_channel(void *dm_void, u8 central_ch, u8 primary_ch_idx,
@@ -211,9 +204,6 @@ u8 config_phydm_read_txagc_n(void *dm_void, enum rf_path path, u8 hw_rate);
 #endif
 
 #ifdef CONFIG_MCC_DM
-#ifdef DYN_ANT_WEIGHTING_SUPPORT
-void phydm_dynamic_ant_weighting_mcc_8822b(void *dm_void);
-#endif /*#ifdef DYN_ANT_WEIGHTING_SUPPORT*/
 void phydm_fill_mcccmd(void *dm_void, u8 regid, u16 reg_add,
 		       u8 val0,	u8 val1);
 u8 phydm_check(void *dm_void);

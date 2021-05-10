@@ -5610,9 +5610,6 @@ void phydm_cmd_parser(struct dm_struct *dm, char input[][MAX_ARGV],
 		break;
 
 	case PHYDM_DIS_DYM_ANT_WEIGHTING:
-		#ifdef DYN_ANT_WEIGHTING_SUPPORT
-		phydm_ant_weight_dbg(dm, input, &used, output, &out_len);
-		#endif
 		break;
 
 	case PHYDM_FORECE_PT_STATE:
