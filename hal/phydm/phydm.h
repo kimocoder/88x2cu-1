@@ -1518,9 +1518,6 @@ void *
 phydm_get_structure(struct dm_struct *dm, u8 structure_type);
 
 void
-phydm_receiver_blocking(void *dm_void);
-
-void
 phydm_dyn_bw_indication(void *dm_void);
 
 void

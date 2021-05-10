@@ -54,47 +54,8 @@ void phydm_reset_bb_hw_cnt(void *dm_void)
 	struct dm_struct *dm = (struct dm_struct *)dm_void;
 
 	/*@ Reset all counter when 1 */
-	if (dm->support_ic_type & ODM_IC_JGR3_SERIES) {
-		#if (RTL8723F_SUPPORT)
-		if (dm->support_ic_type & ODM_RTL8723F) {
-			odm_set_bb_reg(dm, R_0x2a44, BIT(21), 0);
-			odm_set_bb_reg(dm, R_0x2a44, BIT(21), 1);
-		}
-		#endif
-		odm_set_bb_reg(dm, R_0x1eb4, BIT(25), 1);
-		odm_set_bb_reg(dm, R_0x1eb4, BIT(25), 0);
-	} else if (dm->support_ic_type & ODM_IC_11AC_SERIES) {
-		/*@ Reset all counter when 1 (including PMAC and PHY)*/
-		/* Reset Page F counter*/
-		odm_set_bb_reg(dm, R_0xb58, BIT(0), 1);
-		odm_set_bb_reg(dm, R_0xb58, BIT(0), 0);
-	} else if (dm->support_ic_type & ODM_IC_11N_SERIES) {
-		odm_set_bb_reg(dm, R_0xf14, BIT(16), 0x1);
-		odm_set_bb_reg(dm, R_0xf14, BIT(16), 0x0);
-	}
-}
-
-void phydm_dynamic_ant_weighting(void *dm_void)
-{
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-
-#ifdef DYN_ANT_WEIGHTING_SUPPORT
-	#if (RTL8197F_SUPPORT)
-	if (dm->support_ic_type & (ODM_RTL8197F))
-		phydm_dynamic_ant_weighting_8197f(dm);
-	#endif
-
-	#if (RTL8812A_SUPPORT)
-	if (dm->support_ic_type & (ODM_RTL8812)) {
-		phydm_dynamic_ant_weighting_8812a(dm);
-	}
-	#endif
-
-	#if (RTL8822B_SUPPORT)
-	if (dm->support_ic_type & (ODM_RTL8822B))
-		phydm_dynamic_ant_weighting_8822b(dm);
-	#endif
-#endif
+	odm_set_bb_reg(dm, R_0x1eb4, BIT(25), 1);
+	odm_set_bb_reg(dm, R_0x1eb4, BIT(25), 0);
 }
 
 #ifdef DYN_ANT_WEIGHTING_SUPPORT

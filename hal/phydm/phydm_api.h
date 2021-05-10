@@ -103,8 +103,6 @@ enum channel_width phydm_rxsc_2_bw(void *dm_void, u8 rxsc);
 
 void phydm_reset_bb_hw_cnt(void *dm_void);
 
-void phydm_dynamic_ant_weighting(void *dm_void);
-
 #ifdef DYN_ANT_WEIGHTING_SUPPORT
 void phydm_ant_weight_dbg(void *dm_void, char input[][16], u32 *_used,
 			  char *output, u32 *_out_len);

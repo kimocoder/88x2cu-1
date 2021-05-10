@@ -790,7 +790,6 @@ void phydm_watchdog_lps(struct dm_struct *dm)
 	phydm_common_info_self_update(dm);
 	phydm_rssi_monitor_check(dm);
 	phydm_basic_dbg_message(dm);
-	phydm_receiver_blocking(dm);
 	phydm_false_alarm_counter_statistics(dm);
 	phydm_dig_by_rssi_lps(dm);
 	#ifdef PHYDM_SUPPORT_CCKPD
@@ -1154,8 +1153,6 @@ void phydm_watchdog(struct dm_struct *dm)
 #ifdef PHYDM_AUTO_DEGBUG
 	phydm_auto_dbg_engine(dm);
 #endif
-	phydm_receiver_blocking(dm);
-
 	if (phydm_stop_dm_watchdog_check(dm) == true)
 		return;
 
@@ -1319,12 +1316,7 @@ void odm_cmn_info_init(struct dm_struct *dm, enum odm_cmninfo cmn_info,
 		dm->fw_sub_version = (u8)value;
 		break;
 	case ODM_CMNINFO_RFE_TYPE:
-#if (RTL8821C_SUPPORT)
-		if (dm->support_ic_type & ODM_RTL8821C)
-			dm->rfe_type_expand = (u8)value;
-		else
-#endif
-			dm->rfe_type = (u8)value;
+		dm->rfe_type = (u8)value;
 
 #ifdef CONFIG_RFE_BY_HW_INFO
 		phydm_init_hw_info_by_rfe(dm);
@@ -2148,72 +2140,11 @@ void odm_dtc(struct dm_struct *dm)
 
 #endif /* @#if (DM_ODM_SUPPORT_TYPE == ODM_CE) */
 
-void phydm_receiver_blocking(void *dm_void)
-{
-#ifdef CONFIG_RECEIVER_BLOCKING
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-	u32 chnl = *dm->channel;
-	u8 bw = *dm->band_width;
-	u32 bb_regf0 = odm_get_bb_reg(dm, R_0xf0, 0xf000);
-
-	if (!(dm->support_ic_type & ODM_RECEIVER_BLOCKING_SUPPORT) ||
-	    *dm->edcca_mode != PHYDM_EDCCA_ADAPT_MODE)
-		return;
-
-	if ((dm->support_ic_type & ODM_RTL8188E && bb_regf0 < 8) ||
-	    dm->support_ic_type & ODM_RTL8192E) {
-	    /*@8188E_T version*/
-		if (dm->consecutive_idlel_time <= 10 || *dm->mp_mode)
-			goto end;
-
-		if (bw == CHANNEL_WIDTH_20 && chnl == 1) {
-			phydm_nbi_setting(dm, FUNC_ENABLE, chnl, 20, 2410,
-					  PHYDM_DONT_CARE);
-			dm->is_rx_blocking_en = true;
-		} else if ((bw == CHANNEL_WIDTH_20) && (chnl == 13)) {
-			phydm_nbi_setting(dm, FUNC_ENABLE, chnl, 20, 2473,
-					  PHYDM_DONT_CARE);
-			dm->is_rx_blocking_en = true;
-		} else if (dm->is_rx_blocking_en && chnl != 1 && chnl != 13) {
-			phydm_nbi_enable(dm, FUNC_DISABLE);
-			odm_set_bb_reg(dm, R_0xc40, 0x1f000000, 0x1f);
-			dm->is_rx_blocking_en = false;
-		}
-		return;
-	} else if ((dm->support_ic_type & ODM_RTL8188E && bb_regf0 >= 8)) {
-	/*@8188E_S version*/
-		if (dm->consecutive_idlel_time <= 10 || *dm->mp_mode)
-			goto end;
-
-		if (bw == CHANNEL_WIDTH_20 && chnl == 13) {
-			phydm_nbi_setting(dm, FUNC_ENABLE, chnl, 20, 2473,
-					  PHYDM_DONT_CARE);
-			dm->is_rx_blocking_en = true;
-		} else if (dm->is_rx_blocking_en && chnl != 13) {
-			phydm_nbi_enable(dm, FUNC_DISABLE);
-			odm_set_bb_reg(dm, R_0xc40, 0x1f000000, 0x1f);
-			dm->is_rx_blocking_en = false;
-		}
-		return;
-	}
-
-end:
-	if (dm->is_rx_blocking_en) {
-		phydm_nbi_enable(dm, FUNC_DISABLE);
-		odm_set_bb_reg(dm, R_0xc40, 0x1f000000, 0x1f);
-		dm->is_rx_blocking_en = false;
-	}
-#endif
-}
-
 void phydm_dyn_bw_indication(void *dm_void)
 {
 #ifdef CONFIG_BW_INDICATION
 	struct dm_struct *dm = (struct dm_struct *)dm_void;
 	u8 en_auto_bw_th = dm->en_auto_bw_th;
-
-	if (!(dm->support_ic_type & ODM_DYM_BW_INDICATION_SUPPORT))
-		return;
 
 	/*driver decide bw cobime timing*/
 	if (dm->dis_dym_bw_indication) {
