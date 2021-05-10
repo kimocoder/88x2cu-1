@@ -356,19 +356,6 @@ void phydm_cckpd_type2(void *dm_void)
 		}
 	}
 
-	/*[Abnormal case] =================================================*/
-	#if (DM_ODM_SUPPORT_TYPE & ODM_WIN)
-	/*@21C Miracast lag issue & [PCIE-3298]*/
-	if (dm->support_ic_type & ODM_RTL8821C && rssi_min > 60) {
-		lv = CCK_PD_LV_4;
-		cckpd_t->cck_pd_lv = lv;
-		phydm_write_cck_pd_type2(dm, 0x1d, (cckpd_t->aaa_default + 8));
-		is_update = false;
-		PHYDM_DBG(dm, DBG_CCKPD, "CCKPD Abnormal case1\n");
-	}
-	#endif
-	/*=================================================================*/
-
 	if (is_update) {
 		phydm_set_cckpd_lv_type2(dm, lv);
 	}
@@ -792,31 +779,10 @@ void phydm_read_cckpd_para_type4(void *dm_void)
 	curr_cck_pd_t[1][0][0] = (u8)(reg1 & 0x000000ff);
 	curr_cck_pd_t[0][0][1] = (u8)(reg2 & 0x0000001f);
 	curr_cck_pd_t[1][0][1] = (u8)((reg2 & 0x01f00000) >> 20);
-	#if (defined(PHYDM_COMPILE_ABOVE_2SS))
-	if (dm->support_ic_type & PHYDM_IC_ABOVE_2SS) {
-		curr_cck_pd_t[0][1][0] = (u8)((reg0 & 0x0000ff00) >> 8);
-		curr_cck_pd_t[1][1][0] = (u8)((reg1 & 0x0000ff00) >> 8);
-		curr_cck_pd_t[0][1][1] = (u8)((reg2 & 0x000003E0) >> 5);
-		curr_cck_pd_t[1][1][1] = (u8)((reg2 & 0x3E000000) >> 25);
-	}
-	#endif
-	#if (defined(PHYDM_COMPILE_ABOVE_3SS))
-	if (dm->support_ic_type & PHYDM_IC_ABOVE_3SS) {
-		curr_cck_pd_t[0][2][0] = (u8)((reg0 & 0x00ff0000) >> 16);
-		curr_cck_pd_t[1][2][0] = (u8)((reg1 & 0x00ff0000) >> 16);
-		curr_cck_pd_t[0][2][1] = (u8)((reg2 & 0x00007C00) >> 10);
-		curr_cck_pd_t[1][2][1] = (u8)((reg2 & 0xC0000000) >> 30) |
-					 (u8)((reg3 & 0x00000007) << 2);
-	}
-	#endif
-	#if (defined(PHYDM_COMPILE_ABOVE_4SS))
-	if (dm->support_ic_type & PHYDM_IC_ABOVE_4SS) {
-		curr_cck_pd_t[0][3][0] = (u8)((reg0 & 0xff000000) >> 24);
-		curr_cck_pd_t[1][3][0] = (u8)((reg1 & 0xff000000) >> 24);
-		curr_cck_pd_t[0][3][1] = (u8)((reg2 & 0x000F8000) >> 15);
-		curr_cck_pd_t[1][3][1] = (u8)((reg3 & 0x000000F8) >> 3);
-	}
-	#endif
+	curr_cck_pd_t[0][1][0] = (u8)((reg0 & 0x0000ff00) >> 8);
+	curr_cck_pd_t[1][1][0] = (u8)((reg1 & 0x0000ff00) >> 8);
+	curr_cck_pd_t[0][1][1] = (u8)((reg2 & 0x000003E0) >> 5);
+	curr_cck_pd_t[1][1][1] = (u8)((reg2 & 0x3E000000) >> 25);
 
 	PHYDM_DBG(dm, DBG_CCKPD, "bw=%dM, Nrx=%d\n", 20 << bw, n_rx);
 	PHYDM_DBG(dm, DBG_CCKPD, "lv=%d, readback CS_th=0x%x, PD th=0x%x\n",
@@ -971,35 +937,20 @@ void phydm_cck_pd_init_type4(void *dm_void)
 		pw_step = i * 2;
 		cs_step = i * 2;
 
-		#if (RTL8197G_SUPPORT)
-		if (dm->support_ic_type & ODM_RTL8197G) {
-			pw_step = i;
-			cs_step = i;
-			if (i > CCK_PD_LV_3) {
-				pw_step = 3;
-				cs_step = 3;
-			}
+		if (i == CCK_PD_LV_1) {
+			pw_step = 9; /*IGI-19.2:0x11=d'17*/
+			cs_step = 0;
+		} else if (i == CCK_PD_LV_2) {
+			pw_step = 12; /*IGI-15.5:0x14=d'20*/
+			cs_step = 1;
+		} else if (i == CCK_PD_LV_3) {
+			pw_step = 14; /*IGI-14:0x16=d'22*/
+			cs_step = 1;
+		} else if (i == CCK_PD_LV_4) {
+			pw_step = 17; /*IGI-12:0x19=d'25*/
+			cs_step = 1;
 		}
-		#endif
 
-		#if (RTL8822C_SUPPORT)
-		if (dm->support_ic_type & ODM_RTL8822C) {
-			if (i == CCK_PD_LV_1) {
-				pw_step = 9; /*IGI-19.2:0x11=d'17*/
-				cs_step = 0;
-			} else if (i == CCK_PD_LV_2) {
-				pw_step = 12; /*IGI-15.5:0x14=d'20*/
-				cs_step = 1;
-			} else if (i == CCK_PD_LV_3) {
-				pw_step = 14; /*IGI-14:0x16=d'22*/
-				cs_step = 1;
-			} else if (i == CCK_PD_LV_4) {
-				pw_step = 17; /*IGI-12:0x19=d'25*/
-				cs_step = 1;
-			}
-		}
-		#endif
-		
 		val = (u8)(reg0 & 0x000000ff) + pw_step;
 		PHYDM_DBG(dm, DBG_CCKPD, "lvl %d val = %x\n\n", i, val);
 		cckpd_t->cckpd_jgr3[0][0][0][i] = val;
@@ -1013,52 +964,17 @@ void phydm_cck_pd_init_type4(void *dm_void)
 		val = (u8)((reg2 & 0x01f00000) >> 20) + cs_step;
 		cckpd_t->cckpd_jgr3[1][0][1][i] = val;
 
-		#ifdef PHYDM_COMPILE_ABOVE_2SS
-		if (dm->support_ic_type & PHYDM_IC_ABOVE_2SS) {
-			val = (u8)((reg0 & 0x0000ff00) >> 8) + pw_step;
-			cckpd_t->cckpd_jgr3[0][1][0][i] = val;
+		val = (u8)((reg0 & 0x0000ff00) >> 8) + pw_step;
+		cckpd_t->cckpd_jgr3[0][1][0][i] = val;
 
-			val = (u8)((reg1 & 0x0000ff00) >> 8) + pw_step;
-			cckpd_t->cckpd_jgr3[1][1][0][i] = val;
+		val = (u8)((reg1 & 0x0000ff00) >> 8) + pw_step;
+		cckpd_t->cckpd_jgr3[1][1][0][i] = val;
 
-			val = (u8)((reg2 & 0x000003e0) >> 5) + cs_step;
-			cckpd_t->cckpd_jgr3[0][1][1][i] = val;
+		val = (u8)((reg2 & 0x000003e0) >> 5) + cs_step;
+		cckpd_t->cckpd_jgr3[0][1][1][i] = val;
 
-			val = (u8)((reg2 & 0x3e000000) >> 25) + cs_step;
-			cckpd_t->cckpd_jgr3[1][1][1][i] = val;
-		}
-		#endif
-
-		#ifdef PHYDM_COMPILE_ABOVE_3SS
-		if (dm->support_ic_type & PHYDM_IC_ABOVE_3SS) {
-			val = (u8)((reg0 & 0x00ff0000) >> 16) + pw_step;
-			cckpd_t->cckpd_jgr3[0][2][0][i] = val;
-
-			val = (u8)((reg1 & 0x00ff0000) >> 16) + pw_step;
-			cckpd_t->cckpd_jgr3[1][2][0][i] = val;
-			val = (u8)((reg2 & 0x00007c00) >> 10) + cs_step;
-			cckpd_t->cckpd_jgr3[0][2][1][i] = val;
-			val = (u8)(((reg2 & 0xc0000000) >> 30) |
-			      ((reg3 & 0x7) << 3)) + cs_step;
-			cckpd_t->cckpd_jgr3[1][2][1][i] = val;
-		}
-		#endif
-
-		#ifdef PHYDM_COMPILE_ABOVE_4SS
-		if (dm->support_ic_type & PHYDM_IC_ABOVE_4SS) {
-			val = (u8)((reg0 & 0xff000000) >> 24) + pw_step;
-			cckpd_t->cckpd_jgr3[0][3][0][i] = val;
-
-			val = (u8)((reg1 & 0xff000000) >> 24) + pw_step;
-			cckpd_t->cckpd_jgr3[1][3][0][i] = val;
-
-			val = (u8)((reg2 & 0x000f8000) >> 15) + cs_step;
-			cckpd_t->cckpd_jgr3[0][3][1][i] = val;
-
-			val = (u8)((reg3 & 0x000000f8) >> 3) + cs_step;
-			cckpd_t->cckpd_jgr3[1][3][1][i] = val;
-		}
-		#endif
+		val = (u8)((reg2 & 0x3e000000) >> 25) + cs_step;
+		cckpd_t->cckpd_jgr3[1][1][1][i] = val;
 	}
 }
 
@@ -1086,29 +1002,6 @@ void phydm_invalid_cckpd_type4(void *dm_void)
 					MAXVALID_CS_RATIO;
 			}
 		}
-
-		#if (RTL8198F_SUPPORT)
-		if (dm->support_ic_type & ODM_RTL8198F) {
-			val = cckpd_t->cckpd_jgr3[0][3][1][i];
-			if (i == CCK_PD_LV_1 && val > 0x10)
-				cckpd_t->cckpd_jgr3[0][3][1][i] = 0x10;
-			else if (i == CCK_PD_LV_2 && val > 0x10)
-				cckpd_t->cckpd_jgr3[0][3][1][i] = 0x10;
-			else if (i == CCK_PD_LV_3 && val > 0x10)
-				cckpd_t->cckpd_jgr3[0][3][1][i] = 0x10;
-			else if (i == CCK_PD_LV_4 && val > 0x10)
-				cckpd_t->cckpd_jgr3[0][3][1][i] = 0x10;
-			val = cckpd_t->cckpd_jgr3[1][3][1][i];
-			if (i == CCK_PD_LV_1 && val > 0xF)
-				cckpd_t->cckpd_jgr3[1][3][1][i] = 0xF;
-			else if (i == CCK_PD_LV_2 && val > 0xF)
-				cckpd_t->cckpd_jgr3[1][3][1][i] = 0xF;
-			else if (i == CCK_PD_LV_3 && val > 0xF)
-				cckpd_t->cckpd_jgr3[1][3][1][i] = 0xF;
-			else if (i == CCK_PD_LV_4 && val > 0xF)
-				cckpd_t->cckpd_jgr3[1][3][1][i] = 0xF;
-		}
-		#endif
 	}
 }
 
@@ -1299,33 +1192,11 @@ void phydm_read_cckpd_para_type5(void *dm_void)
 	curr_cck_pd_t[0][0][1] = (u8)(reg2 & 0x0000001f);
 	curr_cck_pd_t[1][0][1] = (u8)(reg3 & 0x0000001f);
 	n_rx = 1;
-	#if (defined(PHYDM_COMPILE_ABOVE_2SS))
-	if (dm->support_ic_type & PHYDM_IC_ABOVE_2SS) {
-		curr_cck_pd_t[0][1][0] = (u8)((reg0 & 0x000003E0) >> 5);
-		curr_cck_pd_t[1][1][0] = (u8)((reg1 & 0x000003E0) >> 5);
-		curr_cck_pd_t[0][1][1] = (u8)((reg2 & 0x000003E0) >> 5);
-		curr_cck_pd_t[1][1][1] = (u8)((reg3 & 0x000003E0) >> 5);
-		n_rx = 2;
-	}
-	#endif
-	#if (defined(PHYDM_COMPILE_ABOVE_3SS))
-	if (dm->support_ic_type & PHYDM_IC_ABOVE_3SS) {
-		curr_cck_pd_t[0][2][0] = (u8)((reg0 & 0x00007C00) >> 10);
-		curr_cck_pd_t[1][2][0] = (u8)((reg1 & 0x00007C00) >> 10);
-		curr_cck_pd_t[0][2][1] = (u8)((reg2 & 0x00007C00) >> 10);
-		curr_cck_pd_t[1][2][1] = (u8)((reg3 & 0x00007C00) >> 10);
-		n_rx = 3;
-	}
-	#endif
-	#if (defined(PHYDM_COMPILE_ABOVE_4SS))
-	if (dm->support_ic_type & PHYDM_IC_ABOVE_4SS) {
-		curr_cck_pd_t[0][3][0] = (u8)((reg0 & 0x000F8000) >> 15);
-		curr_cck_pd_t[1][3][0] = (u8)((reg1 & 0x000F8000) >> 15);
-		curr_cck_pd_t[0][3][1] = (u8)((reg2 & 0x000F8000) >> 15);
-		curr_cck_pd_t[1][3][1] = (u8)((reg3 & 0x000F8000) >> 15);
-		n_rx = 4;
-	}
-	#endif
+	curr_cck_pd_t[0][1][0] = (u8)((reg0 & 0x000003E0) >> 5);
+	curr_cck_pd_t[1][1][0] = (u8)((reg1 & 0x000003E0) >> 5);
+	curr_cck_pd_t[0][1][1] = (u8)((reg2 & 0x000003E0) >> 5);
+	curr_cck_pd_t[1][1][1] = (u8)((reg3 & 0x000003E0) >> 5);
+	n_rx = 2;
 
 	PHYDM_DBG(dm, DBG_CCKPD, "bw=%dM, Nrx=%d\n", 20 << bw, n_rx);
 	PHYDM_DBG(dm, DBG_CCKPD, "lv=%d, readback CS_th=0x%x, PD th=0x%x\n",
@@ -1454,23 +1325,6 @@ void phydm_cck_pd_init_type5(void *dm_void)
 		pw_step = i * 2;
 		cs_step = i * 2;
 
-		#if (RTL8723F_SUPPORT)
-		if (dm->support_ic_type & ODM_RTL8723F) {
-			if (i == CCK_PD_LV_1) {
-				pw_step = 9; /*IGI-19.2:0x11=d'17*/
-				cs_step = 0;
-			} else if (i == CCK_PD_LV_2) {
-				pw_step = 12; /*IGI-15.5:0x14=d'20*/
-				cs_step = 1;
-			} else if (i == CCK_PD_LV_3) {
-				pw_step = 14; /*IGI-14:0x16=d'22*/
-				cs_step = 1;
-			} else if (i == CCK_PD_LV_4) {
-				pw_step = 17; /*IGI-12:0x19=d'25*/
-				cs_step = 1;
-			}
-		}
-		#endif
 		val = (u8)(reg0 & 0x0000001F) + pw_step;
 		PHYDM_DBG(dm, DBG_CCKPD, "lvl %d val = %x\n\n", i, val);
 		cckpd_t->cck_pd_table_jgr3[0][0][0][i] = val;
@@ -1484,59 +1338,20 @@ void phydm_cck_pd_init_type5(void *dm_void)
 		val = (u8)(reg3 & 0x0000001F) + cs_step;
 		cckpd_t->cck_pd_table_jgr3[1][0][1][i] = val;
 
-		#ifdef PHYDM_COMPILE_ABOVE_2SS
-		if (dm->support_ic_type & PHYDM_IC_ABOVE_2SS) {
-			val = (u8)((reg0 & 0x000003E0) >> 5) + pw_step;
-			cckpd_t->cck_pd_table_jgr3[0][1][0][i] = val;
+		val = (u8)((reg0 & 0x000003E0) >> 5) + pw_step;
+		cckpd_t->cck_pd_table_jgr3[0][1][0][i] = val;
 
-			val = (u8)((reg1 & 0x000003E0) >> 5) + pw_step;
-			cckpd_t->cck_pd_table_jgr3[1][1][0][i] = val;
+		val = (u8)((reg1 & 0x000003E0) >> 5) + pw_step;
+		cckpd_t->cck_pd_table_jgr3[1][1][0][i] = val;
 
-			val = (u8)((reg2 & 0x000003E0) >> 5) + cs_step;
-			cckpd_t->cck_pd_table_jgr3[0][1][1][i] = val;
+		val = (u8)((reg2 & 0x000003E0) >> 5) + cs_step;
+		cckpd_t->cck_pd_table_jgr3[0][1][1][i] = val;
 
-			val = (u8)((reg3 & 0x000003E0) >> 5) + cs_step;
-			cckpd_t->cck_pd_table_jgr3[1][1][1][i] = val;
+		val = (u8)((reg3 & 0x000003E0) >> 5) + cs_step;
+		cckpd_t->cck_pd_table_jgr3[1][1][1][i] = val;
 
-			cck_n_rx = 2;
-		}
-		#endif
-		#ifdef PHYDM_COMPILE_ABOVE_3SS
-		if (dm->support_ic_type & PHYDM_IC_ABOVE_3SS) {
-			val = (u8)((reg0 & 0x00007C00) >> 10) + pw_step;
-			cckpd_t->cck_pd_table_jgr3[0][2][0][i] = val;
-
-			val = (u8)((reg1 & 0x00007C00) >> 10) + pw_step;
-			cckpd_t->cck_pd_table_jgr3[1][2][0][i] = val;
-
-			val = (u8)((reg2 & 0x00007C00) >> 10) + cs_step;
-			cckpd_t->cck_pd_table_jgr3[0][2][1][i] = val;
-
-			val = (u8)((reg3 & 0x00007C00) >> 10) + cs_step;
-			cckpd_t->cck_pd_table_jgr3[1][2][1][i] = val;
-
-			cck_n_rx = 3;
-		}
-		#endif
-
-		#ifdef PHYDM_COMPILE_ABOVE_4SS
-		if (dm->support_ic_type & PHYDM_IC_ABOVE_4SS) {
-			val = (u8)((reg0 & 0x000F8000) >> 15) + pw_step;
-			cckpd_t->cck_pd_table_jgr3[0][3][0][i] = val;
-
-			val = (u8)((reg1 & 0x000F8000) >> 15) + pw_step;
-			cckpd_t->cck_pd_table_jgr3[1][3][0][i] = val;
-
-			val = (u8)((reg2 & 0x000F8000) >> 15) + cs_step;
-			cckpd_t->cck_pd_table_jgr3[0][3][1][i] = val;
-
-			val = (u8)((reg3 & 0x000F8000) >> 15) + cs_step;
-			cckpd_t->cck_pd_table_jgr3[1][3][1][i] = val;
-
-			cck_n_rx = 4;
-		}
-		#endif
-			}
+		cck_n_rx = 2;
+	}
 	cckpd_t->cck_n_rx = cck_n_rx;
 }
 
@@ -1703,17 +1518,7 @@ void phydm_cck_pd_init(void *dm_void)
 	if (*dm->mp_mode)
 		return;
 
-	if (dm->support_ic_type & CCK_PD_IC_TYPE1)
-		cckpd_t->cckpd_hw_type = 1;
-	else if (dm->support_ic_type & CCK_PD_IC_TYPE2)
-		cckpd_t->cckpd_hw_type = 2;
-	else if (dm->support_ic_type & CCK_PD_IC_TYPE3)
-		cckpd_t->cckpd_hw_type = 3;
-	else if (dm->support_ic_type & CCK_PD_IC_TYPE4)
-		cckpd_t->cckpd_hw_type = 4;
-
-	if (dm->support_ic_type & CCK_PD_IC_TYPE5)
-		cckpd_t->cckpd_hw_type = 5;
+	cckpd_t->cckpd_hw_type = 4;
 
 	PHYDM_DBG(dm, DBG_CCKPD, "[%s] cckpd_hw_type=%d\n",
 		  __func__, cckpd_t->cckpd_hw_type);

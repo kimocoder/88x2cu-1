@@ -82,11 +82,6 @@ void phydm_auto_check_hang_engine_n(
 	if (atd_t->auto_dbg_type == AUTO_DBG_STOP)
 		return;
 
-	if (dm->support_ic_type & ODM_IC_11AC_SERIES) {
-		phydm_check_hang_reset(dm);
-		return;
-	}
-
 	if (atd_t->dbg_step == 0) {
 		pr_debug("dbg_step=0\n\n");
 
@@ -157,11 +152,6 @@ void phydm_auto_check_hang_engine_n(
 			}
 		}
 		value32_tmp = odm_get_rf_reg(dm, 0, RF_0xb0, 0xf0000);
-		if (dm->support_ic_type == ODM_RTL8188E) {
-			if (value32_tmp != 0xff8c8) {
-				pr_debug("ReasonCode:RHN-3\n");
-			}
-		}
 		/* ----- Check BB Register ----------------------------------*/
 		/*BB mode table*/
 		value32_tmp = odm_get_bb_reg(dm, R_0x824, 0xe);
@@ -314,9 +304,6 @@ void phydm_bb_auto_check_hang_start_n(
 	u32 used = *_used;
 	u32 out_len = *_out_len;
 
-	if (dm->support_ic_type & ODM_IC_11AC_SERIES)
-		return;
-
 	PDM_SNPF(out_len, used, output + used, out_len - used,
 		 "PHYDM auto check hang (N-series) is started, Please check the system log\n");
 
@@ -338,9 +325,6 @@ void phydm_dbg_port_dump_n(void *dm_void, u32 *_used, char *output,
 	u32 used = *_used;
 	u32 out_len = *_out_len;
 
-	if (dm->support_ic_type & ODM_IC_11AC_SERIES)
-		return;
-
 	PDM_SNPF(out_len, used, output + used, out_len - used,
 		 "not support now\n");
 
@@ -359,15 +343,9 @@ void phydm_dbg_port_dump_ac(void *dm_void, u32 *_used, char *output,
 	u32 used = *_used;
 	u32 out_len = *_out_len;
 
-	if (dm->support_ic_type & ODM_IC_11N_SERIES)
-		return;
-
 	value32 = odm_get_bb_reg(dm, R_0xf80, MASKDWORD);
 	PDM_SNPF(out_len, used, output + used, out_len - used,
 		 "\r\n %-35s = 0x%x", "rptreg of sc/bw/ht/...", value32);
-
-	if (dm->support_ic_type & ODM_RTL8822B)
-		odm_set_bb_reg(dm, R_0x198c, BIT(2) | BIT(1) | BIT(0), 7);
 
 	/* dbg_port = basic state machine */
 	{
@@ -569,24 +547,9 @@ void phydm_dbg_port_dump_jgr3(void *dm_void, u32 *_used, char *output,
 	u32 dbg_port_idx = 0;
 	u32 i = 0;
 
-	if (!(dm->support_ic_type & ODM_IC_JGR3_SERIES))
-		return;
-
 	PDM_VAST_SNPF(out_len, used, output + used, out_len - used,
 		      "%-17s = %s\n", "DbgPort index", "Value");
 
-#if 0
-	/*0x000/0x001/0x002*/
-	for (i = 0; i < 3; i++) {
-		dbg_port_idx = dbg_port_idx_all[i];
-		if (phydm_set_bb_dbg_port(dm, DBGPORT_PRI_3, dbg_port_idx)) {
-			val = phydm_get_bb_dbg_port_val(dm);
-			PDM_SNPF(out_len, used, output + used, out_len - used,
-				 "0x%-15x = 0x%x\n", dbg_port_idx, val);
-			phydm_release_bb_dbg_port(dm);
-		}
-	}
-#endif
 	for (dbg_port_idx = 0x0; dbg_port_idx <= 0xfff; dbg_port_idx++) {
 		if (phydm_set_bb_dbg_port(dm, DBGPORT_PRI_3, dbg_port_idx)) {
 			val = phydm_get_bb_dbg_port_val(dm);
@@ -660,19 +623,8 @@ void phydm_auto_dbg_console(
 		if (var1[1] == 1) {
 			phydm_dbg_port_dump(dm, &used, output, &out_len);
 		} else if (var1[1] == 2) {
-			if (dm->support_ic_type & ODM_IC_11AC_SERIES) {
-				PDM_SNPF(out_len, used, output + used,
-					 out_len - used, "Not support\n");
-			} else {
-				#if (ODM_IC_11N_SERIES_SUPPORT == 1)
-				phydm_bb_auto_check_hang_start_n(dm, &used,
-								 output,
-								 &out_len);
-				#else
-				PDM_SNPF(out_len, used, output + used,
-					 out_len - used, "Not support\n");
-				#endif
-			}
+			PDM_SNPF(out_len, used, output + used,
+				 out_len - used, "Not support\n");
 		}
 	}
 
@@ -693,15 +645,7 @@ void phydm_auto_dbg_engine(void *dm_void)
 	pr_debug("%s ======>\n", __func__);
 
 	if (atd_t->auto_dbg_type == AUTO_DBG_CHECK_HANG) {
-		if (dm->support_ic_type & ODM_IC_11AC_SERIES) {
-			pr_debug("Not Support\n");
-		} else {
-			#if (ODM_IC_11N_SERIES_SUPPORT == 1)
-			phydm_auto_check_hang_engine_n(dm);
-			#else
-			pr_debug("Not Support\n");
-			#endif
-		}
+		pr_debug("Not Support\n");
 
 	} else if (atd_t->auto_dbg_type == AUTO_DBG_CHECK_RA) {
 		pr_debug("Not Support\n");
