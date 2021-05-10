@@ -551,19 +551,6 @@ void phydm_supportability_init(void *dm_void)
 			support_ability &= ~ODM_BB_DYNAMIC_TXPWR;
 	}
 	dm->support_ability = support_ability;
-	PHYDM_DBG(dm, ODM_COMP_INIT, "IC=0x%x, mp=%d, Supportability=0x%llx\n",
-		  dm->support_ic_type, *dm->mp_mode, dm->support_ability);
-}
-
-void phydm_rfe_init(void *dm_void)
-{
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-
-	PHYDM_DBG(dm, ODM_COMP_INIT, "RFE_Init\n");
-#if (RTL8822B_SUPPORT == 1)
-	if (dm->support_ic_type == ODM_RTL8822B)
-		phydm_rfe_8822b_init(dm);
-#endif
 }
 
 #ifdef CONFIG_DYNAMIC_TXCOLLISION_TH
@@ -620,7 +607,6 @@ enum phydm_init_result odm_dm_init(struct dm_struct *dm)
 	halrf_init(dm);
 	phydm_supportability_init(dm);
 	phydm_pause_func_init(dm);
-	phydm_rfe_init(dm);
 	phydm_common_info_self_init(dm);
 	phydm_rx_phy_status_init(dm);
 #ifdef PHYDM_AUTO_DEGBUG
