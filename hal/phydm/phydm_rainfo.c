@@ -219,10 +219,6 @@ void phydm_ra_debug(void *dm_void, char input[][16], u32 *_used, char *output,
 			 "{3} {en}: Dynamic RRSR\n");
 		PDM_SNPF(out_len, used, output + used, out_len - used,
 			 "{4} {0:pkt RA, 1:TBTT RA, 100:query RA mode}\n");
-#ifdef CONFIG_DYNAMIC_TXCOLLISION_TH
-		PDM_SNPF(out_len, used, output + used, out_len - used,
-			 "{5} {0:dis, 1:en}{th; 255:auto, xx:dB}: Tx CLS\n");
-#endif
 	} else if (var[0] == 1) { /*@Adjust PCR offset*/
 
 		if (var[1] == 100) {
@@ -262,37 +258,6 @@ void phydm_ra_debug(void *dm_void, char input[][16], u32 *_used, char *output,
 			ra_tab->ra_trigger_mode = (u8)var[1];
 		PDM_SNPF(out_len, used, output + used, out_len - used,
 		"[RA trigger] mode=%d\n", ra_tab->ra_trigger_mode);
-#ifdef CONFIG_DYNAMIC_TXCOLLISION_TH
-	} else if (var[0] == 5) { /*@Tx Collision Detection*/
-		tx_cls_en = (u8)var[1];
-		ra_tab->ra_tx_cls_th = (u8)var[2];
-		tmp = (u8)var[2];
-		tx_cls_th = (tmp < 50) ? 0 : (tmp > 81) ? 31 : tmp - 50;
-		if (tx_cls_en) {
-			odm_set_bb_reg(dm, R_0x8f8, BIT(16), 1);
-			if (ra_tab->ra_tx_cls_th != 255) {
-				phydm_tx_collsion_th_set(dm, tx_cls_th,
-							 tx_cls_th);
-			}
-
-		} else {
-			odm_set_bb_reg(dm, R_0x8f8, BIT(16), 0);
-		}
-
-		if (tx_cls_en & ra_tab->ra_tx_cls_th != 255) {
-			PDM_SNPF(out_len, used, output + used, out_len - used,
-				 "[Tx Collision Detec] {en, th}={%d, %d}\n",
-				 tx_cls_en, tx_cls_th + 50);
-		} else if (tx_cls_en & ra_tab->ra_tx_cls_th == 255) {
-			PDM_SNPF(out_len, used, output + used, out_len - used,
-				 "[Tx Collision Detec] {en, th}={%d, auto}\n",
-				 tx_cls_en);
-		} else {
-			PDM_SNPF(out_len, used, output + used, out_len - used,
-				 "[Tx Collision Detec] {en, th}={%d, xx}\n",
-				 tx_cls_en);
-		}
-#endif
 	} else {
 		PDM_SNPF(out_len, used, output + used, out_len - used,
 			 "[Set] Error\n");

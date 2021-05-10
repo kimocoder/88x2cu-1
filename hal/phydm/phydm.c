@@ -553,41 +553,6 @@ void phydm_supportability_init(void *dm_void)
 	dm->support_ability = support_ability;
 }
 
-#ifdef CONFIG_DYNAMIC_TXCOLLISION_TH
-void phydm_tx_collsion_th_init(void *dm_void)
-{
-
-struct dm_struct *dm = (struct dm_struct *)dm_void;
-
-#if (RTL8197G_SUPPORT)
-	if (dm->support_ic_type & ODM_RTL8197G)
-		phydm_tx_collsion_th_init_8197g(dm);
-#endif
-
-#if (RTL8812F_SUPPORT)
-	if (dm->support_ic_type & ODM_RTL8812F)
-		phydm_tx_collsion_th_init_8812f(dm);
-#endif
-
-}
-
-void phydm_tx_collsion_th_set(void *dm_void, u8 val_r2t, u8 val_t2r)
-{
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-
-#if (RTL8197G_SUPPORT)
-	if (dm->support_ic_type & ODM_RTL8197G)
-		phydm_tx_collsion_th_set_8197g(dm, val_r2t, val_t2r);
-#endif
-
-#if (RTL8812F_SUPPORT)
-	if (dm->support_ic_type & ODM_RTL8812F)
-		phydm_tx_collsion_th_set_8812f(dm, val_r2t, val_t2r);
-#endif
-	
-}
-#endif
-
 void phydm_dm_early_init(struct dm_struct *dm)
 {
 #if (DM_ODM_SUPPORT_TYPE == ODM_CE)
@@ -669,10 +634,6 @@ enum phydm_init_result odm_dm_init(struct dm_struct *dm)
 
 #ifdef CONFIG_MU_RSOML
 	phydm_mu_rsoml_init(dm);
-#endif
-
-#ifdef CONFIG_DYNAMIC_TXCOLLISION_TH
-	phydm_tx_collsion_th_init(dm);
 #endif
 
 	return result;

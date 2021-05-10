@@ -1529,26 +1529,6 @@ phydm_dyn_bw_indication(void *dm_void);
 void
 phydm_iot_patch_id_update(void *dm_void, u32 iot_idx, boolean en);
 
-
-#ifdef CONFIG_DYNAMIC_TXCOLLISION_TH
-void
-phydm_tx_collsion_th_init(void *dm_void);
-
-void
-phydm_tx_collsion_th_set(void *dm_void, u8 val_r2t, u8 val_t2r);
-#endif
-
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-void
-odm_init_all_work_items(
-	struct dm_struct	*dm
-);
-void
-odm_free_all_work_items(
-	struct dm_struct	*dm
-);
-#endif	/*@#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)*/
-
 #if (DM_ODM_SUPPORT_TYPE == ODM_CE)
 void
 odm_dtc(struct dm_struct *dm);
