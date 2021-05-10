@@ -141,35 +141,6 @@ void phydm_cck_lna_bit_num_chk(struct dm_struct *dm)
 		  dm->cck_agc_report_type);
 }
 
-void phydm_init_cck_setting(struct dm_struct *dm)
-{
-	u32 reg_tmp = 0;
-	u32 mask_tmp = 0;
-
-	phydm_cck_new_agc_chk(dm);
-
-	if (dm->support_ic_type & ODM_IC_JGR3_SERIES)
-		return;
-
-	reg_tmp = ODM_REG(CCK_RPT_FORMAT, dm);
-	mask_tmp = ODM_BIT(CCK_RPT_FORMAT, dm);
-	dm->is_cck_high_power = (boolean)odm_get_bb_reg(dm, reg_tmp, mask_tmp);
-
-	PHYDM_DBG(dm, ODM_COMP_INIT, "ext_lna_gain=((%d))\n", dm->ext_lna_gain);
-
-	phydm_config_cck_rx_antenna_init(dm);
-
-	if (dm->support_ic_type & ODM_RTL8192F)
-		phydm_config_cck_rx_path(dm, BB_PATH_AB);
-	else if (dm->valid_path_set == BB_PATH_A)
-		phydm_config_cck_rx_path(dm, BB_PATH_A);
-	else if (dm->valid_path_set == BB_PATH_B)
-		phydm_config_cck_rx_path(dm, BB_PATH_B);
-
-	phydm_cck_lna_bit_num_chk(dm);
-	phydm_get_cck_rssi_table_from_reg(dm);
-}
-
 #ifdef CONFIG_RFE_BY_HW_INFO
 void phydm_init_hw_info_by_rfe(struct dm_struct *dm)
 {
@@ -188,8 +159,6 @@ void phydm_common_info_self_init(struct dm_struct *dm)
 
 	/*@BB phy-status Generation*/
 	dm->ic_phy_sts_type = PHYDM_PHYSTS_TYPE_3;
-
-	phydm_init_cck_setting(dm);
 
 	reg_tmp = ODM_REG(BB_RX_PATH, dm);
 	mask_tmp = ODM_BIT(BB_RX_PATH, dm);

@@ -367,9 +367,6 @@ void halrf_iqk_psd(
 		i++;
 		j++;
 	}
-
-	if (dm->support_ic_type & (ODM_RTL8814B | ODM_RTL8198F | ODM_RTL8197G))
-		odm_set_bb_reg(dm, R_0x1b1c, 0x000e0000, reg_tmp);
 }
 
 
