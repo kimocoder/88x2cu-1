@@ -1518,9 +1518,6 @@ void *
 phydm_get_structure(struct dm_struct *dm, u8 structure_type);
 
 void
-phydm_dc_cancellation(struct dm_struct *dm);
-
-void
 phydm_receiver_blocking(void *dm_void);
 
 void
