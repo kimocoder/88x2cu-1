@@ -3636,56 +3636,6 @@ s8 phydm_get_multi_thermal_offset(void *dm_void, u8 path)
 		return 0;
 }
 
-void phydm_do_kfree(void *dm_void, u8 channel_to_sw)
-{
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-	struct odm_power_trim_data *pwrtrim = &dm->power_trim_data;
-	u8 channel_idx = 0, rfpath = 0, max_path = 0, kfree_band_num = 0;
-	u8 i, j;
-	s8 bb_gain;
-
-
-	if (*dm->band_type == ODM_BAND_2_4G &&
-	    pwrtrim->flag & KFREE_FLAG_ON_2G) {
-		if (channel_to_sw >= 1 && channel_to_sw <= 14)
-			channel_idx = PHYDM_2G;
-		for (rfpath = RF_PATH_A; rfpath < max_path; rfpath++) {
-			RF_DBG(dm, DBG_RF_MP,
-			       "[kfree] %s:chnl=%d PATH=%d gain:0x%X\n",
-			       __func__, channel_to_sw, rfpath,
-			       pwrtrim->bb_gain[channel_idx][rfpath]);
-			bb_gain = pwrtrim->bb_gain[channel_idx][rfpath];
-			phydm_set_kfree_to_rf(dm, rfpath, bb_gain);
-		}
-	} else if (*dm->band_type == ODM_BAND_5G &&
-		   pwrtrim->flag & KFREE_FLAG_ON_5G) {
-		if (channel_to_sw >= 36 && channel_to_sw <= 48)
-			channel_idx = PHYDM_5GLB1;
-		if (channel_to_sw >= 52 && channel_to_sw <= 64)
-			channel_idx = PHYDM_5GLB2;
-		if (channel_to_sw >= 100 && channel_to_sw <= 120)
-			channel_idx = PHYDM_5GMB1;
-		if (channel_to_sw >= 122 && channel_to_sw <= 144)
-			channel_idx = PHYDM_5GMB2;
-		if (channel_to_sw >= 149 && channel_to_sw <= 177)
-			channel_idx = PHYDM_5GHB;
-
-		for (rfpath = RF_PATH_A; rfpath < max_path; rfpath++) {
-			RF_DBG(dm, DBG_RF_MP,
-			       "[kfree] %s: channel=%d PATH=%d bb_gain:0x%X\n",
-			       __func__, channel_to_sw, rfpath,
-			       pwrtrim->bb_gain[channel_idx][rfpath]);
-			bb_gain = pwrtrim->bb_gain[channel_idx][rfpath];
-			phydm_set_kfree_to_rf(dm, rfpath, bb_gain);
-		}
-	} else {
-		RF_DBG(dm, DBG_RF_MP, "[kfree] Set default Register\n");
-		for (rfpath = RF_PATH_A; rfpath < max_path; rfpath++) {
-			bb_gain = pwrtrim->bb_gain[channel_idx][rfpath];
-			phydm_clear_kfree_to_rf(dm, rfpath, bb_gain);
-		}
-	}
-}
 
 void phydm_config_new_kfree(void *dm_void)
 {
@@ -3704,35 +3654,6 @@ void phydm_config_new_kfree(void *dm_void)
 	
 		phydm_do_new_kfree(dm);
 	}
-}
-
-void phydm_config_kfree(void *dm_void, u8 channel_to_sw)
-{
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-	struct dm_rf_calibration_struct *cali_info = &dm->rf_calibrate_info;
-	struct odm_power_trim_data *pwrtrim = &dm->power_trim_data;
-
-	RF_DBG(dm, DBG_RF_MP, "===>[kfree] phy_ConfigKFree()\n");
-
-	if (cali_info->reg_rf_kfree_enable == 2) {
-		RF_DBG(dm, DBG_RF_MP,
-		       "[kfree] %s: reg_rf_kfree_enable == 2, Disable\n",
-		       __func__);
-		return;
-	} else if (cali_info->reg_rf_kfree_enable == 1 ||
-			cali_info->reg_rf_kfree_enable == 0) {
-		RF_DBG(dm, DBG_RF_MP,
-		       "[kfree] %s: reg_rf_kfree_enable == true\n", __func__);
-		/*Make sure the targetval is defined*/
-		if (!(pwrtrim->flag & KFREE_FLAG_ON)) {
-			RF_DBG(dm, DBG_RF_MP,
-			       "[kfree] %s: efuse is 0xff, KFree not work\n",
-			       __func__);
-			return;
-		}
-		phydm_do_kfree(dm, channel_to_sw);
-	}
-	RF_DBG(dm, DBG_RF_MP, "<===[kfree] phy_ConfigKFree()\n");
 }
 
 void phydm_set_lna_trim_offset (void *dm_void, u8 path, u8 cg_cs, u8 enable)

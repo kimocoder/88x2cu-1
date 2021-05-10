@@ -289,8 +289,6 @@ void phydm_config_new_kfree(void *dm_void);
 
 s8 phydm_get_tssi_trim_de(void *dm_void, u8 path);
 
-void phydm_config_kfree(void *dm_void, u8 channel_to_sw);
-
 void phydm_set_lna_trim_offset (void *dm_void, u8 path, u8 cg_cs, u8 enable);
 
 #endif /*__HALRF_KFREE_H__*/

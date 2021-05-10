@@ -1039,8 +1039,6 @@ void rtl8822c_switch_chnl_and_set_bw(PADAPTER adapter)
 #endif /* CONFIG_BT_COEXIST */
 	}
 
-	phydm_config_kfree(p_dm_odm, hal->current_channel);
-
 	/* TX Power Setting */
 	odm_clear_txpowertracking_state(p_dm_odm);
 	rtw_hal_set_tx_power_level(adapter, hal->current_channel);
