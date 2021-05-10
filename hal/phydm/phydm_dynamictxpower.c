@@ -226,13 +226,9 @@ void phydm_dtp_init_2nd(void *dm_void)
 	if (!(dm->support_ability & ODM_BB_DYNAMIC_TXPWR))
 		return;
 
-	#if (RTL8822C_SUPPORT || RTL8812F_SUPPORT)
-	if (dm->support_ic_type & (ODM_RTL8822C | ODM_RTL8812F)) {
-		phydm_rst_ram_pwr(dm);
-		/* rsp tx use type 0*/
-		odm_set_mac_reg(dm, R_0x6d8, BIT(19) | BIT(18), RAM_PWR_OFST0);
-	}
-	#endif
+	phydm_rst_ram_pwr(dm);
+	/* rsp tx use type 0*/
+	odm_set_mac_reg(dm, R_0x6d8, BIT(19) | BIT(18), RAM_PWR_OFST0);
 };
 #endif
 
@@ -245,48 +241,6 @@ phydm_check_rates(void *dm_void, u8 rate_idx)
 	u32 check_rate_bitmap2 = 0x00080200; /* @check VHT3SS M9, VHT4SS M9*/
 	u32 bitmap_result;
 
-#if (RTL8822B_SUPPORT)
-	if (dm->support_ic_type & ODM_RTL8822B) {
-		check_rate_bitmap2 &= 0;
-		check_rate_bitmap1 &= 0xfffff000;
-		check_rate_bitmap0 &= 0x0fffffff;
-	}
-#endif
-#if (RTL8197F_SUPPORT)
-	if (dm->support_ic_type & ODM_RTL8197F) {
-		check_rate_bitmap2 &= 0;
-		check_rate_bitmap1 &= 0;
-		check_rate_bitmap0 &= 0x0fffffff;
-	}
-#endif
-#if (RTL8192E_SUPPORT)
-	if (dm->support_ic_type & ODM_RTL8192E) {
-		check_rate_bitmap2 &= 0;
-		check_rate_bitmap1 &= 0;
-		check_rate_bitmap0 &= 0x0fffffff;
-	}
-#endif
-#if (RTL8192F_SUPPORT)
-	if (dm->support_ic_type & ODM_RTL8192F) {
-		check_rate_bitmap2 &= 0;
-		check_rate_bitmap1 &= 0;
-		check_rate_bitmap0 &= 0x0fffffff;
-	}
-#endif
-#if (RTL8721D_SUPPORT)
-	if (dm->support_ic_type & ODM_RTL8721D) {
-		check_rate_bitmap2 &= 0;
-		check_rate_bitmap1 &= 0;
-		check_rate_bitmap0 &= 0x000fffff;
-	}
-#endif
-#if (RTL8821C_SUPPORT)
-	if (dm->support_ic_type & ODM_RTL8821C) {
-		check_rate_bitmap2 &= 0;
-		check_rate_bitmap1 &= 0x003ff000;
-		check_rate_bitmap0 &= 0x000fffff;
-	}
-#endif
 	if (rate_idx >= 64)
 		bitmap_result = BIT(rate_idx - 64) & check_rate_bitmap2;
 	else if (rate_idx >= 32)
@@ -345,17 +299,7 @@ u8 phydm_search_min_power_index(void *dm_void)
 		for (i = 0; i < 84; i++)
 			if (phydm_check_rates(dm, i)) {
 
-				if (dm->support_ic_type & PHYDM_COMMON_API_IC) {
-				#ifdef PHYDM_COMMON_API_SUPPORT
-				/*97F,8822B,92F,8821C*/
 				gain_index = phydm_api_get_txagc(dm, path, i);
-				#endif
-				} else {
-				/*92E*/
-				#ifdef PHYDM_COMMON_API_NOT_SUPPORT
-				gain_index = phydm_dtp_get_txagc(dm, path, i);
-				#endif
-				}
 
 				if (gain_index == 0xff) {
 					min_gain_index = 0x20;
@@ -429,30 +373,21 @@ u8 phydm_pwr_lvl_check(void *dm_void, u8 input_rssi, u8 last_pwr_lv)
 	u8 th[DTP_POWER_LEVEL_SIZE];
 	u8 i;
 
-	if (dm->support_ic_type & ODM_IC_JGR3_SERIES) {
-		for (i = 0; i < DTP_POWER_LEVEL_SIZE; i++)
-			th[i] = dm->set_pwr_th[i];
+	for (i = 0; i < DTP_POWER_LEVEL_SIZE; i++)
+		th[i] = dm->set_pwr_th[i];
 
-		PHYDM_DBG(dm, DBG_DYN_TXPWR,
-			  "Ori-DTP th: Lv1_th = %d, Lv2_th = %d, Lv3_th = %d\n",
-			  th[0], th[1], th[2]);
+	PHYDM_DBG(dm, DBG_DYN_TXPWR,
+		  "Ori-DTP th: Lv1_th = %d, Lv2_th = %d, Lv3_th = %d\n",
+		  th[0], th[1], th[2]);
 
-		for (i = 0; i < DTP_POWER_LEVEL_SIZE; i++) {
-			if (i >= (last_pwr_lv))
-				th[i] += DTP_FLOOR_UP_GAP;
-		}
-
-		PHYDM_DBG(dm, DBG_DYN_TXPWR,
-			  "Mod-DTP th: Lv1_th = %d, Lv2_th = %d, Lv3_th = %d\n",
-			  th[0], th[1], th[2]);
-	} else {
-		for (i = 0; i < DTP_POWER_LEVEL_SIZE; i++)
-			th[i] = dm->enhance_pwr_th[i];
-		for (i = 0; i < DTP_POWER_LEVEL_SIZE; i++) {
-			if (i >= (last_pwr_lv))
-				th[i] += DTP_FLOOR_UP_GAP;
-		}
+	for (i = 0; i < DTP_POWER_LEVEL_SIZE; i++) {
+		if (i >= (last_pwr_lv))
+			th[i] += DTP_FLOOR_UP_GAP;
 	}
+
+	PHYDM_DBG(dm, DBG_DYN_TXPWR,
+		  "Mod-DTP th: Lv1_th = %d, Lv2_th = %d, Lv3_th = %d\n",
+		  th[0], th[1], th[2]);
 
 	if (input_rssi >= th[2])
 		return tx_high_pwr_level_level3;
@@ -724,72 +659,16 @@ void phydm_dynamic_tx_power(void *dm_void)
 	if (!(dm->support_ability & ODM_BB_DYNAMIC_TXPWR))
 		return;
 
-	if (!(dm->support_ic_type & ODM_IC_JGR3_SERIES)) {
-		PHYDM_DBG(dm, DBG_DYN_TXPWR,
-			  "[%s] RSSI_min = %d, Noisy_dec = %d\n", __func__,
-			  rssi_min, dm->noisy_decision);
-		phydm_noisy_enhance_hp_th(dm, dm->noisy_decision);
-		/* Response Power */
-		dm->dynamic_tx_high_power_lvl = phydm_pwr_lvl_check(dm,
-								    rssi_min,
-							    dm->last_dtp_lvl);
-		phydm_dynamic_response_power(dm);
-	}
+	PHYDM_DBG(dm, DBG_DYN_TXPWR,
+		  "[%s] RSSI_min = %d, Noisy_dec = %d\n", __func__,
+		  rssi_min, dm->noisy_decision);
+	phydm_noisy_enhance_hp_th(dm, dm->noisy_decision);
+	/* Response Power */
+	dm->dynamic_tx_high_power_lvl = phydm_pwr_lvl_check(dm,
+							    rssi_min,
+						    dm->last_dtp_lvl);
+	phydm_dynamic_response_power(dm);
 	/* Per STA Tx power */
 	phydm_dtp_per_sta(dm);
 }
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-
-void phydm_dynamic_tx_power_init_win(void *dm_void)
-{
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-	void *adapter = dm->adapter;
-	PMGNT_INFO mgnt_info = &((PADAPTER)adapter)->MgntInfo;
-	HAL_DATA_TYPE *hal_data = GET_HAL_DATA((PADAPTER)adapter);
-
-	mgnt_info->bDynamicTxPowerEnable = false;
-	#if DEV_BUS_TYPE == RT_USB_INTERFACE
-	if (RT_GetInterfaceSelection((PADAPTER)adapter) ==
-	    INTF_SEL1_USB_High_Power) {
-		mgnt_info->bDynamicTxPowerEnable = true;
-	}
-	#endif
-
-	hal_data->LastDTPLvl = tx_high_pwr_level_normal;
-	hal_data->DynamicTxHighPowerLvl = tx_high_pwr_level_normal;
-
-	PHYDM_DBG(dm, DBG_DYN_TXPWR, "[%s] DTP=%d\n", __func__,
-		  mgnt_info->bDynamicTxPowerEnable);
-}
-
-void phydm_dynamic_tx_power_win(void *dm_void)
-{
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-
-	if (!(dm->support_ability & ODM_BB_DYNAMIC_TXPWR))
-		return;
-
-	#if (RTL8814A_SUPPORT)
-	if (dm->support_ic_type == ODM_RTL8814A)
-		odm_dynamic_tx_power_8814a(dm);
-	#endif
-
-	#if (RTL8821A_SUPPORT)
-	if (dm->support_ic_type & ODM_RTL8821) {
-		void *adapter = dm->adapter;
-		PMGNT_INFO mgnt_info = GetDefaultMgntInfo((PADAPTER)adapter);
-
-		if (mgnt_info->RegRspPwr == 1) {
-			if (dm->rssi_min > 60) {
-				/*Resp TXAGC offset = -3dB*/
-				odm_set_mac_reg(dm, R_0x6d8, 0x1C0000, 1);
-			} else if (dm->rssi_min < 55) {
-				/*Resp TXAGC offset = 0dB*/
-				odm_set_mac_reg(dm, R_0x6d8, 0x1C0000, 0);
-			}
-		}
-	}
-	#endif
-}
-#endif /*@#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)*/
 #endif /* @#ifdef CONFIG_DYNAMIC_TX_TWR */
