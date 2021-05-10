@@ -74,104 +74,23 @@ void phydm_trx_antenna_setting_init(void *dm_void, u8 num_rf_path)
 	if (num_rf_path == PDM_1SS)
 		return;
 
-	#if (defined(PHYDM_COMPILE_ABOVE_2SS))
-	if (dm->support_ic_type &
-		   (ODM_RTL8192F | ODM_RTL8192E | ODM_RTL8197F)) {
-		dm->rx_ant_status = (u8)odm_get_bb_reg(dm, R_0xc04, 0x3);
-		dm->tx_ant_status = (u8)odm_get_bb_reg(dm, R_0x90c, 0x3);
-	} else if (dm->support_ic_type & (ODM_RTL8812 | ODM_RTL8814A)) {
-		dm->rx_ant_status = (u8)odm_get_bb_reg(dm, R_0x808, 0xf);
-		dm->tx_ant_status = (u8)odm_get_bb_reg(dm, R_0x80c, 0xf);
-	}
-	#endif
-	/* @trx_ant_status are already updated in trx mode API in JGR3 ICs */
-
 	PHYDM_DBG(dm, ODM_COMP_INIT, "[%s]ant_status{tx,rx}={0x%x, 0x%x}\n",
 		  __func__, dm->tx_ant_status, dm->rx_ant_status);
 }
 
 void phydm_config_ofdm_tx_path(void *dm_void, enum bb_path path)
 {
-#if (RTL8192E_SUPPORT || RTL8192F_SUPPORT || RTL8812A_SUPPORT)
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-	u8 ofdm_tx_path = 0x33;
-
-	if (dm->num_rf_path == PDM_1SS)
-		return;
-
-	switch (dm->support_ic_type) {
-	#if (RTL8192E_SUPPORT || RTL8192F_SUPPORT)
-	case ODM_RTL8192E:
-	case ODM_RTL8192F:
-		if (path == BB_PATH_A)
-			odm_set_bb_reg(dm, R_0x90c, MASKDWORD, 0x81121313);
-		else if (path == BB_PATH_B)
-			odm_set_bb_reg(dm, R_0x90c, MASKDWORD, 0x82221323);
-		else if (path == BB_PATH_AB)
-			odm_set_bb_reg(dm, R_0x90c, MASKDWORD, 0x83321333);
-
-		break;
-	#endif
-
-	#if (RTL8812A_SUPPORT)
-	case ODM_RTL8812:
-		if (path == BB_PATH_A)
-			ofdm_tx_path = 0x11;
-		else if (path == BB_PATH_B)
-			ofdm_tx_path = 0x22;
-		else if (path == BB_PATH_AB)
-			ofdm_tx_path = 0x33;
-
-		odm_set_bb_reg(dm, R_0x80c, 0xff00, ofdm_tx_path);
-
-		break;
-	#endif
-
-	default:
-		break;
-	}
-#endif
 }
 
 void phydm_config_ofdm_rx_path(void *dm_void, enum bb_path path)
 {
 	struct dm_struct *dm = (struct dm_struct *)dm_void;
 	u8 val = 0;
-
-	if (dm->support_ic_type & (ODM_RTL8192E | ODM_RTL8192F)) {
-#if (RTL8192E_SUPPORT || RTL8192F_SUPPORT)
-		if (path == BB_PATH_A)
-			val = 1;
-		else if (path == BB_PATH_B)
-			val = 2;
-		else if (path == BB_PATH_AB)
-			val = 3;
-
-		odm_set_bb_reg(dm, R_0xc04, 0xff, ((val << 4) | val));
-		odm_set_bb_reg(dm, R_0xd04, 0xf, val);
-#endif
-	}
-#if (RTL8812A_SUPPORT || RTL8822B_SUPPORT)
-	else if (dm->support_ic_type & (ODM_RTL8812 | ODM_RTL8822B)) {
-		if (path == BB_PATH_A)
-			val = 1;
-		else if (path == BB_PATH_B)
-			val = 2;
-		else if (path == BB_PATH_AB)
-			val = 3;
-
-		odm_set_bb_reg(dm, R_0x808, MASKBYTE0, ((val << 4) | val));
-	}
-#endif
 }
 
 void phydm_config_cck_rx_antenna_init(void *dm_void)
 {
 	struct dm_struct *dm = (struct dm_struct *)dm_void;
-
-#if (defined(PHYDM_COMPILE_ABOVE_2SS))
-	if (dm->support_ic_type & ODM_IC_1SS)
-		return;
 
 	/*@CCK 2R CCA parameters*/
 	odm_set_bb_reg(dm, R_0xa00, BIT(15), 0x0); /*@Disable Ant diversity*/
@@ -179,12 +98,6 @@ void phydm_config_cck_rx_antenna_init(void *dm_void)
 	odm_set_bb_reg(dm, R_0xa74, BIT(8), 0); /*RX path diversity enable*/
 	odm_set_bb_reg(dm, R_0xa14, BIT(7), 0); /*r_en_mrc_antsel*/
 	odm_set_bb_reg(dm, R_0xa20, (BIT(5) | BIT(4)), 1); /*@MBC weighting*/
-
-	if (dm->support_ic_type & (ODM_RTL8192E | ODM_RTL8197F | ODM_RTL8192F))
-		odm_set_bb_reg(dm, R_0xa08, BIT(28), 1); /*r_cck_2nd_sel_eco*/
-	else if (dm->support_ic_type & ODM_RTL8814A)
-		odm_set_bb_reg(dm, R_0xa84, BIT(28), 1); /*@2R CCA only*/
-#endif
 }
 
 void phydm_config_cck_rx_path(void *dm_void, enum bb_path path)
@@ -198,9 +111,6 @@ void phydm_config_cck_rx_path(void *dm_void, enum bb_path path)
 	u8 i = 0, j = 0;
 	u8 num_enable_path = 0;
 	u8 cck_mrc_max_path = 2;
-
-	if (dm->support_ic_type & ODM_IC_1SS)
-		return;
 
 	for (i = 0; i < 4; i++) {
 		if (path & BIT(i)) { /*@ex: PHYDM_ABCD*/
@@ -231,36 +141,6 @@ void phydm_config_cck_rx_path(void *dm_void, enum bb_path path)
 	odm_set_bb_reg(dm, R_0xa2c, BIT(18), en_2R_path);
 	/*@enable 2R MRC*/
 	odm_set_bb_reg(dm, R_0xa2c, BIT(22), en_2R_mrc);
-	if (dm->support_ic_type & (ODM_RTL8192F | ODM_RTL8197F)) {
-		if (path == BB_PATH_A) {
-			odm_set_bb_reg(dm, R_0xa04, (BIT(27) | BIT(26)), 0);
-			odm_set_bb_reg(dm, R_0xa04, (BIT(25) | BIT(24)), 0);
-			odm_set_bb_reg(dm, R_0xa74, BIT(8), 0);
-			odm_set_bb_reg(dm, R_0xa2c, (BIT(18) | BIT(17)), 0);
-			odm_set_bb_reg(dm, R_0xa2c, (BIT(22) | BIT(21)), 0);
-		} else if (path == BB_PATH_B) {/*@for DC cancellation*/
-			odm_set_bb_reg(dm, R_0xa04, (BIT(27) | BIT(26)), 1);
-			odm_set_bb_reg(dm, R_0xa04, (BIT(25) | BIT(24)), 1);
-			odm_set_bb_reg(dm, R_0xa74, BIT(8), 0);
-			odm_set_bb_reg(dm, R_0xa2c, (BIT(18) | BIT(17)), 0);
-			odm_set_bb_reg(dm, R_0xa2c, (BIT(22) | BIT(21)), 0);
-		} else if (path == BB_PATH_AB) {
-			odm_set_bb_reg(dm, R_0xa04, (BIT(27) | BIT(26)), 0);
-			odm_set_bb_reg(dm, R_0xa04, (BIT(25) | BIT(24)), 1);
-			odm_set_bb_reg(dm, R_0xa74, BIT(8), 1);
-			odm_set_bb_reg(dm, R_0xa2c, (BIT(18) | BIT(17)), 1);
-			odm_set_bb_reg(dm, R_0xa2c, (BIT(22) | BIT(21)), 1);
-		}
-	} else if (dm->support_ic_type & ODM_RTL8822B) {
-		if (path == BB_PATH_A) {
-			odm_set_bb_reg(dm, R_0xa04, (BIT(27) | BIT(26)), 0);
-			odm_set_bb_reg(dm, R_0xa04, (BIT(25) | BIT(24)), 0);
-		} else {
-			odm_set_bb_reg(dm, R_0xa04, (BIT(27) | BIT(26)), 1);
-			odm_set_bb_reg(dm, R_0xa04, (BIT(25) | BIT(24)), 1);
-		}
-	}
-
 #endif
 }
 
@@ -293,11 +173,6 @@ void phydm_config_trx_path_v2(void *dm_void, char input[][16], u32 *_used,
 	enum bb_path tx_path, rx_path, tx_path_ctrl;
 	boolean dbg_mode_en;
 
-	if (!(dm->support_ic_type &
-	    (ODM_RTL8822B | ODM_RTL8197F | ODM_RTL8192F | ODM_RTL8822C |
-	     ODM_RTL8814B | ODM_RTL8812F | ODM_RTL8197G | ODM_RTL8198F)))
-		return;
-
 	for (i = 0; i < 5; i++) {
 		PHYDM_SSCANF(input[i + 1], DCMD_HEX, &val[i]);
 		input_idx++;
@@ -312,16 +187,9 @@ void phydm_config_trx_path_v2(void *dm_void, char input[][16], u32 *_used,
 	tx_path_ctrl = (enum bb_path)val[3];
 
 	if ((strcmp(input[1], help) == 0)) {
-		if (dm->support_ic_type & (ODM_RTL8822C | ODM_RTL8822B |
-					   ODM_RTL8192F)) {
 			PDM_SNPF(out_len, used, output + used, out_len - used,
 				 "{en} {tx_path} {rx_path} {ff:auto, else:1ss_tx_path}\n"
 				 );
-		} else {
-			PDM_SNPF(out_len, used, output + used, out_len - used,
-				 "{en} {tx_path} {rx_path} {is_tx_2_path}\n");
-		}
-
 	} else if (dbg_mode_en) {
 		dm->is_disable_phy_api = false;
 		phydm_api_trx_mode(dm, tx_path, rx_path, tx_path_ctrl);
@@ -344,75 +212,6 @@ void phydm_config_trx_path_v2(void *dm_void, char input[][16], u32 *_used,
 void phydm_config_trx_path_v1(void *dm_void, char input[][16], u32 *_used,
 			      char *output, u32 *_out_len)
 {
-#if (RTL8192E_SUPPORT || RTL8812A_SUPPORT)
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-	u32 used = *_used;
-	u32 out_len = *_out_len;
-	u32 val[10] = {0};
-	char help[] = "-h";
-	u8 i = 0, input_idx = 0;
-
-	if (!(dm->support_ic_type & (ODM_RTL8192E | ODM_RTL8812)))
-		return;
-
-	for (i = 0; i < 5; i++) {
-		if (input[i + 1]) {
-			PHYDM_SSCANF(input[i + 1], DCMD_HEX, &val[i]);
-			input_idx++;
-		}
-	}
-
-	if (input_idx == 0)
-		return;
-
-	if ((strcmp(input[1], help) == 0)) {
-		PDM_SNPF(out_len, used, output + used, out_len - used,
-			 "{0:CCK, 1:OFDM} {1:TX, 2:RX} {1:path_A, 2:path_B, 3:path_AB}\n");
-
-		*_used = used;
-		*_out_len = out_len;
-		return;
-
-	} else if (val[0] == 0) {
-	/* @CCK */
-		if (val[1] == 1) { /*TX*/
-			if (val[2] == 1)
-				phydm_config_cck_tx_path(dm, BB_PATH_A);
-			else if (val[2] == 2)
-				phydm_config_cck_tx_path(dm, BB_PATH_B);
-			else if (val[2] == 3)
-				phydm_config_cck_tx_path(dm, BB_PATH_AB);
-		} else if (val[1] == 2) { /*RX*/
-
-			phydm_config_cck_rx_antenna_init(dm);
-
-			if (val[2] == 1)
-				phydm_config_cck_rx_path(dm, BB_PATH_A);
-			else if (val[2] == 2)
-				phydm_config_cck_rx_path(dm, BB_PATH_B);
-			else if (val[2] == 3)
-				phydm_config_cck_rx_path(dm, BB_PATH_AB);
-			}
-		}
-	/* OFDM */
-	else if (val[0] == 1) {
-		if (val[1] == 1) /*TX*/
-			phydm_config_ofdm_tx_path(dm, val[2]);
-		else if (val[1] == 2) /*RX*/
-			phydm_config_ofdm_rx_path(dm, val[2]);
-	}
-
-	PDM_SNPF(out_len, used, output + used, out_len - used,
-		 "PHYDM Set path [%s] [%s] = [%s%s%s%s]\n",
-		 (val[0] == 1) ? "OFDM" : "CCK",
-		 (val[1] == 1) ? "TX" : "RX",
-		 (val[2] & 0x1) ? "A" : "", (val[2] & 0x2) ? "B" : "",
-		 (val[2] & 0x4) ? "C" : "",
-		 (val[2] & 0x8) ? "D" : "");
-
-	*_used = used;
-	*_out_len = out_len;
-#endif
 }
 
 void phydm_config_trx_path(void *dm_void, char input[][16], u32 *_used,
@@ -420,48 +219,18 @@ void phydm_config_trx_path(void *dm_void, char input[][16], u32 *_used,
 {
 	struct dm_struct *dm = (struct dm_struct *)dm_void;
 
-	if (dm->support_ic_type & (ODM_RTL8192E | ODM_RTL8812)) {
-		#if (RTL8192E_SUPPORT || RTL8812A_SUPPORT)
-		phydm_config_trx_path_v1(dm, input, _used, output, _out_len);
-		#endif
-	} else if (dm->support_ic_type & (ODM_RTL8822B | ODM_RTL8197F |
-		   ODM_RTL8192F | ODM_RTL8822C | ODM_RTL8812F |
-		   ODM_RTL8197G | ODM_RTL8814B | ODM_RTL8198F)) {
-		#if (RTL8822B_SUPPORT || RTL8197F_SUPPORT ||\
-		     RTL8192F_SUPPORT || RTL8822C_SUPPORT ||\
-		     RTL8814B_SUPPORT || RTL8812F_SUPPORT ||\
-		     RTL8197G_SUPPORT || RTL8198F_SUPPORT)
-		phydm_config_trx_path_v2(dm, input, _used, output, _out_len);
-		#endif
-	}
+	phydm_config_trx_path_v2(dm, input, _used, output, _out_len);
 }
 
 void phydm_tx_2path(void *dm_void)
 {
-#if (defined(PHYDM_COMPILE_IC_2SS))
 	struct dm_struct *dm = (struct dm_struct *)dm_void;
 	enum bb_path rx_path = (enum bb_path)dm->rx_ant_status;
 
 	PHYDM_DBG(dm, ODM_COMP_API, "%s ======>\n", __func__);
 
 
-	if (!(dm->support_ic_type & ODM_IC_2SS))
-		return;
-
-	#if (RTL8822B_SUPPORT || RTL8192F_SUPPORT || RTL8197F_SUPPORT ||\
-	     RTL8822C_SUPPORT || RTL8812F_SUPPORT || RTL8197G_SUPPORT)
-	if (dm->support_ic_type & (ODM_RTL8822B | ODM_RTL8197F | ODM_RTL8192F |
-	    ODM_RTL8822C | ODM_RTL8812F | ODM_RTL8197G))
-		phydm_api_trx_mode(dm, BB_PATH_AB, rx_path, BB_PATH_AB);
-	#endif
-
-	#if (RTL8812A_SUPPORT || RTL8192E_SUPPORT)
-	if (dm->support_ic_type & (ODM_RTL8812 | ODM_RTL8192E)) {
-		phydm_config_cck_tx_path(dm, BB_PATH_AB);
-		phydm_config_ofdm_tx_path(dm, BB_PATH_AB);
-	}
-	#endif
-#endif
+	phydm_api_trx_mode(dm, BB_PATH_AB, rx_path, BB_PATH_AB);
 }
 
 void phydm_stop_3_wire(void *dm_void, u8 set_type)
