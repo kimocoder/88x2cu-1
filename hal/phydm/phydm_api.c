@@ -795,35 +795,6 @@ void phydm_bw_fixed_setting(void *dm_void)
 #endif
 }
 
-void phydm_set_ext_switch(void *dm_void, u32 ext_ant_switch)
-{
-#if (RTL8821A_SUPPORT || RTL8881A_SUPPORT)
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-
-	if (!(dm->support_ic_type & (ODM_RTL8821 | ODM_RTL8881A)))
-		return;
-
-	/*Output Pin Settings*/
-
-	/*select DPDT_P and DPDT_N as output pin*/
-	odm_set_mac_reg(dm, R_0x4c, BIT(23), 0);
-
-	/*@by WLAN control*/
-	odm_set_mac_reg(dm, R_0x4c, BIT(24), 1);
-
-	/*@DPDT_N = 1b'0*/ /*@DPDT_P = 1b'0*/
-	odm_set_bb_reg(dm, R_0xcb4, 0xFF, 77);
-
-	if (ext_ant_switch == 1) { /*@2b'01*/
-		odm_set_bb_reg(dm, R_0xcb4, (BIT(29) | BIT(28)), 1);
-		PHYDM_DBG(dm, ODM_COMP_API, "8821A ant swh=2b'01\n");
-	} else if (ext_ant_switch == 2) { /*@2b'10*/
-		odm_set_bb_reg(dm, R_0xcb4, BIT(29) | BIT(28), 2);
-		PHYDM_DBG(dm, ODM_COMP_API, "*8821A ant swh=2b'10\n");
-	}
-#endif
-}
-
 void phydm_csi_mask_enable(void *dm_void, u32 enable)
 {
 	struct dm_struct *dm = (struct dm_struct *)dm_void;

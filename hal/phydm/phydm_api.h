@@ -135,8 +135,6 @@ void phydm_bw_fixed_enable(void *dm_void, u8 enable);
 
 void phydm_bw_fixed_setting(void *dm_void);
 
-void phydm_set_ext_switch(void *dm_void, u32 ext_ant_switch);
-
 void phydm_nbi_enable(void *dm_void, u32 enable);
 
 u8 phydm_csi_mask_setting(void *dm_void, u32 enable, u32 ch, u32 bw, u32 f_intf,

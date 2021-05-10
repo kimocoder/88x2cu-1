@@ -4523,26 +4523,6 @@ out:
 	*_out_len = out_len;
 }
 
-void phydm_ext_rf_element_ctrl(void *dm_void, char input[][16], u32 *_used,
-			       char *output, u32 *_out_len)
-{
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-	u32 val[10] = {0};
-	u8 i = 0, input_idx = 0;
-
-	for (i = 0; i < 5; i++) {
-		PHYDM_SSCANF(input[i + 1], DCMD_DECIMAL, &val[i]);
-		input_idx++;
-	}
-
-	if (input_idx == 0)
-		return;
-
-	if (val[0] == 1) /*@ext switch*/ {
-		phydm_set_ext_switch(dm, val[1]);
-	}
-}
-
 void phydm_print_dbgport(void *dm_void, char input[][16], u32 *_used,
 			 char *output, u32 *_out_len)
 {
@@ -5579,7 +5559,8 @@ void phydm_cmd_parser(struct dm_struct *dm, char input[][MAX_ARGV],
 		break;
 
 	case PHYDM_EXT_RF_E_CTRL:
-		phydm_ext_rf_element_ctrl(dm, input, &used, output, &out_len);
+		//NEO
+		//phydm_ext_rf_element_ctrl(dm, input, &used, output, &out_len);
 		break;
 
 	case PHYDM_ADAPTIVE_SOML:
