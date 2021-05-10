@@ -29,148 +29,7 @@
 #include "mp_precomp.h"
 #include "phydm_precomp.h"
 
-#if (DM_ODM_SUPPORT_TYPE & ODM_WIN)
-	#if WPP_SOFTWARE_TRACE
-		#include "PhyDM_Adaptivity.tmh"
-	#endif
-#endif
 #ifdef PHYDM_SUPPORT_ADAPTIVITY
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-boolean
-phydm_check_channel_plan(void *dm_void)
-{
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-	struct phydm_adaptivity_struct *adapt = &dm->adaptivity;
-	void *adapter = dm->adapter;
-	PMGNT_INFO mgnt_info = &((PADAPTER)adapter)->MgntInfo;
-
-	if (mgnt_info->RegEnableAdaptivity != 2)
-		return false;
-
-	if (!dm->carrier_sense_enable) { /*@check domain Code for adaptivity or CarrierSense*/
-		if ((*dm->band_type == ODM_BAND_5G) &&
-		    !(adapt->regulation_5g == REGULATION_ETSI || adapt->regulation_5g == REGULATION_WW)) {
-			PHYDM_DBG(dm, DBG_ADPTVTY,
-				  "adaptivity skip 5G domain code : %d\n",
-				  adapt->regulation_5g);
-			return true;
-		} else if ((*dm->band_type == ODM_BAND_2_4G) &&
-			   !(adapt->regulation_2g == REGULATION_ETSI || adapt->regulation_2g == REGULATION_WW)) {
-			PHYDM_DBG(dm, DBG_ADPTVTY,
-				  "adaptivity skip 2.4G domain code : %d\n",
-				  adapt->regulation_2g);
-			return true;
-		} else if ((*dm->band_type != ODM_BAND_2_4G) && (*dm->band_type != ODM_BAND_5G)) {
-			PHYDM_DBG(dm, DBG_ADPTVTY,
-				  "adaptivity neither 2G nor 5G band, return\n");
-			return true;
-		}
-	} else {
-		if ((*dm->band_type == ODM_BAND_5G) &&
-		    !(adapt->regulation_5g == REGULATION_MKK || adapt->regulation_5g == REGULATION_WW)) {
-			PHYDM_DBG(dm, DBG_ADPTVTY,
-				  "CarrierSense skip 5G domain code : %d\n",
-				  adapt->regulation_5g);
-			return true;
-		} else if ((*dm->band_type == ODM_BAND_2_4G) &&
-			   !(adapt->regulation_2g == REGULATION_MKK || adapt->regulation_2g == REGULATION_WW)) {
-			PHYDM_DBG(dm, DBG_ADPTVTY,
-				  "CarrierSense skip 2.4G domain code : %d\n",
-				  adapt->regulation_2g);
-			return true;
-		} else if ((*dm->band_type != ODM_BAND_2_4G) && (*dm->band_type != ODM_BAND_5G)) {
-			PHYDM_DBG(dm, DBG_ADPTVTY,
-				  "CarrierSense neither 2G nor 5G band, return\n");
-			return true;
-		}
-	}
-
-	return false;
-}
-
-boolean
-phydm_soft_ap_special_set(void *dm_void)
-{
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-	struct phydm_adaptivity_struct *adapt = &dm->adaptivity;
-	boolean disable_ap_adapt_setting = false;
-
-	if (dm->soft_ap_mode != NULL) {
-		if (*dm->soft_ap_mode != 0 &&
-		    (dm->soft_ap_special_setting & BIT(0)))
-			disable_ap_adapt_setting = true;
-		else
-			disable_ap_adapt_setting = false;
-		PHYDM_DBG(dm, DBG_ADPTVTY,
-			  "soft_ap_setting = %x, soft_ap = %d, dis_ap_adapt = %d\n",
-			  dm->soft_ap_special_setting, *dm->soft_ap_mode,
-			  disable_ap_adapt_setting);
-	}
-
-	return disable_ap_adapt_setting;
-}
-
-boolean
-phydm_ap_num_check(void *dm_void)
-{
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-	struct phydm_adaptivity_struct *adapt = &dm->adaptivity;
-	boolean dis_adapt = false;
-
-	if  (dm->ap_total_num > adapt->ap_num_th)
-		dis_adapt = true;
-	else
-		dis_adapt = false;
-
-	PHYDM_DBG(dm, DBG_ADPTVTY, "AP total num = %d, AP num threshold = %d\n",
-		  dm->ap_total_num, adapt->ap_num_th);
-	return dis_adapt;
-}
-
-void phydm_check_adaptivity(void *dm_void)
-{
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-	struct phydm_adaptivity_struct *adapt = &dm->adaptivity;
-	boolean disable_adapt = false;
-
-	if (!adapt->mode_cvrt_en)
-		return;
-
-	if (phydm_check_channel_plan(dm) || phydm_ap_num_check(dm) ||
-	    phydm_soft_ap_special_set(dm))
-		disable_adapt = true;
-
-	if (*dm->edcca_mode == PHYDM_EDCCA_ADAPT_MODE && disable_adapt)
-		*dm->edcca_mode = PHYDM_EDCCA_NORMAL_MODE;
-	else if (*dm->edcca_mode == PHYDM_EDCCA_NORMAL_MODE && !disable_adapt)
-		*dm->edcca_mode = PHYDM_EDCCA_ADAPT_MODE;
-}
-
-void phydm_set_l2h_th_ini_win(void *dm_void)
-{
-	struct dm_struct *dm = (struct dm_struct *)dm_void;
-
-	 /*@ [New Format: JGR3]IGI-idx:45 = RSSI:35 = -65dBm*/
-	if (dm->support_ic_type & ODM_IC_JGR3_SERIES) {
-		if (dm->support_ic_type & (ODM_RTL8822C | ODM_RTL8723F))
-			dm->th_l2h_ini = 45;
-		else if (dm->support_ic_type & ODM_RTL8814B)
-			dm->th_l2h_ini = 49;
-	} else if (dm->support_ic_type & ODM_IC_11AC_SERIES) {
-	 /*@ [Old Format] -11+base(50) = IGI_idx:39 = RSSI:29 = -71dBm*/
-		if (dm->support_ic_type & (ODM_RTL8821 | ODM_RTL8812)) {
-			dm->th_l2h_ini = -17;
-		} else {
-			if (*dm->band_type == ODM_BAND_5G)
-				dm->th_l2h_ini = -14;
-			else if (*dm->band_type == ODM_BAND_2_4G)
-				dm->th_l2h_ini = -9;
-		}
-	} else { /*ODM_IC_11N_SERIES*/
-		dm->th_l2h_ini = -9;
-	}
-}
-#endif
 
 void phydm_dig_up_bound_lmt_en(void *dm_void)
 {
@@ -204,16 +63,8 @@ void phydm_set_edcca_threshold(void *dm_void, s8 H2L, s8 L2H)
 {
 	struct dm_struct *dm = (struct dm_struct *)dm_void;
 
-	if (dm->support_ic_type & ODM_IC_JGR3_SERIES) {
-		odm_set_bb_reg(dm, R_0x84c, MASKBYTE2, (u8)L2H + 0x80);
-		odm_set_bb_reg(dm, R_0x84c, MASKBYTE3, (u8)H2L + 0x80);
-	} else if (dm->support_ic_type & ODM_IC_11N_SERIES) {
-		odm_set_bb_reg(dm, R_0xc4c, MASKBYTE0, (u8)L2H);
-		odm_set_bb_reg(dm, R_0xc4c, MASKBYTE2, (u8)H2L);
-	} else if (dm->support_ic_type & ODM_IC_11AC_SERIES) {
-		odm_set_bb_reg(dm, R_0x8a4, MASKBYTE0, (u8)L2H);
-		odm_set_bb_reg(dm, R_0x8a4, MASKBYTE1, (u8)H2L);
-	}
+	odm_set_bb_reg(dm, R_0x84c, MASKBYTE2, (u8)L2H + 0x80);
+	odm_set_bb_reg(dm, R_0x84c, MASKBYTE3, (u8)H2L + 0x80);
 }
 
 void phydm_mac_edcca_state(void *dm_void, enum phydm_mac_edcca_type state)
@@ -279,10 +130,7 @@ void phydm_search_pwdb_lower_bound(void *dm_void)
 				phydm_release_bb_dbg_port(dm);
 			}
 
-			if (value32 & BIT(30) && dm->support_ic_type &
-						 (ODM_RTL8723B | ODM_RTL8188E))
-				tx_edcca1 = tx_edcca1 + 1;
-			else if (value32 & BIT(29))
+			if (value32 & BIT(29))
 				tx_edcca1 = tx_edcca1 + 1;
 		}
 
@@ -327,34 +175,14 @@ void phydm_set_l2h_th_ini(void *dm_void)
 {
 	struct dm_struct *dm = (struct dm_struct *)dm_void;
 
-	 /*@ [New Format: JGR3]IGI-idx:45 = RSSI:35 = -65dBm*/
-	if (dm->support_ic_type & ODM_IC_JGR3_SERIES) {
-		if (dm->support_ic_type & (ODM_RTL8822C | ODM_RTL8723F))
-			dm->th_l2h_ini = 45;
-		else if (dm->support_ic_type & ODM_RTL8814B)
-			dm->th_l2h_ini = 49;
-	} else if (dm->support_ic_type & ODM_IC_11AC_SERIES) {
-	 /*@ [Old Format] -11+base(50) = IGI_idx:39 = RSSI:29 = -71dBm*/
-		if (dm->support_ic_type & (ODM_RTL8821 | ODM_RTL8812))
-			dm->th_l2h_ini = -17;
-		else
-			dm->th_l2h_ini = -14;
-	} else { /*ODM_IC_11N_SERIES*/
-		if (dm->support_ic_type & ODM_RTL8721D)
-			dm->th_l2h_ini = -14;
-		else
-			dm->th_l2h_ini = -11;
-	}
+	dm->th_l2h_ini = 45;
 }
 
 void phydm_set_l2h_th_ini_carrier_sense(void *dm_void)
 {
 	struct dm_struct *dm = (struct dm_struct *)dm_void;
 
-	if (dm->support_ic_type & ODM_IC_JGR3_SERIES)
-		dm->th_l2h_ini = 60; /*@ -50dBm*/
-	else
-		dm->th_l2h_ini = 10; /*@ -50dBm*/
+	dm->th_l2h_ini = 60; /*@ -50dBm*/
 }
 
 void phydm_set_forgetting_factor(void *dm_void)
@@ -364,9 +192,7 @@ void phydm_set_forgetting_factor(void *dm_void)
 	if (*dm->edcca_mode != PHYDM_EDCCA_ADAPT_MODE)
 		return;
 
-	if (dm->support_ic_type & (ODM_RTL8821C | ODM_RTL8822B | ODM_RTL8814A |
-				  ODM_RTL8195B))
-		odm_set_bb_reg(dm, R_0x8a0, BIT(1) | BIT(0), 0);
+	odm_set_bb_reg(dm, R_0x8a0, BIT(1) | BIT(0), 0);
 }
 
 void phydm_edcca_decision_opt(void *dm_void)
@@ -376,12 +202,7 @@ void phydm_edcca_decision_opt(void *dm_void)
 	if (*dm->edcca_mode != PHYDM_EDCCA_ADAPT_MODE)
 		return;
 
-	if (dm->support_ic_type & ODM_RTL8822B)
-		odm_set_bb_reg(dm, R_0x8dc, BIT(5), 0x1);
-	else if (dm->support_ic_type & (ODM_RTL8197F | ODM_RTL8192F))
-		odm_set_bb_reg(dm, R_0xce8, BIT(13), 0x1);
-	else if (dm->support_ic_type & ODM_IC_JGR3_SERIES)
-		odm_set_bb_reg(dm, R_0x844, BIT(30) | BIT(29), 0x0);
+	odm_set_bb_reg(dm, R_0x844, BIT(30) | BIT(29), 0x0);
 }
 
 void phydm_adaptivity_debug(void *dm_void, char input[][16], u32 *_used,
@@ -432,19 +253,9 @@ void phydm_adaptivity_debug(void *dm_void, char input[][16], u32 *_used,
 			 "debug_mode = %s, th_l2h_ini = %d\n",
 			 (adaptivity->debug_mode ? "TRUE" : "FALSE"),
 			 dm->th_l2h_ini);
-		if (dm->support_ic_type & ODM_IC_JGR3_SERIES) {
-			reg_value32 = odm_get_bb_reg(dm, R_0x84c, MASKDWORD);
-			h2l_diff = (s8)((0x00ff0000 & reg_value32) >> 16) -
-				   (s8)((0xff000000 & reg_value32) >> 24);
-		} else if (dm->support_ic_type & ODM_IC_11N_SERIES) {
-			reg_value32 = odm_get_bb_reg(dm, R_0xc4c, MASKDWORD);
-			h2l_diff = (s8)(0x000000ff & reg_value32) -
-				   (s8)((0x00ff0000 & reg_value32) >> 16);
-		} else if (dm->support_ic_type & ODM_IC_11AC_SERIES) {
-			reg_value32 = odm_get_bb_reg(dm, R_0x8a4, MASKDWORD);
-			h2l_diff = (s8)(0x000000ff & reg_value32) -
-				   (s8)((0x0000ff00 & reg_value32) >> 8);
-		}
+		reg_value32 = odm_get_bb_reg(dm, R_0x84c, MASKDWORD);
+		h2l_diff = (s8)((0x00ff0000 & reg_value32) >> 16) -
+			   (s8)((0xff000000 & reg_value32) >> 24);
 
 		if (h2l_diff == 7)
 			PDM_SNPF(out_len, used, output + used, out_len - used,
@@ -541,53 +352,19 @@ void phydm_edcca_thre_calc(void *dm_void)
 	s8 th_l2h = 0, th_h2l = 0;
 	s8 diff = 0, igi_target = adapt->igi_base;
 
-	if (dm->support_ic_type & ODM_IC_PWDB_EDCCA) {
-		/*@fix EDCCA hang issue*/
-		if (dm->support_ic_type & ODM_RTL8812) {
-			/*@ADC_mask disable*/
-			odm_set_bb_reg(dm, R_0x800, BIT(10), 1);
-			/*@ADC_mask enable*/
-			odm_set_bb_reg(dm, R_0x800, BIT(10), 0);
-		}
+	if (*dm->edcca_mode == PHYDM_EDCCA_ADAPT_MODE) {
+		/*need to consider PwdB upper bound for 8814 later IC*/
+		adapt->l2h_dyn_min = (u8)(dm->th_l2h_ini + igi_target);
 
-		if (*dm->edcca_mode == PHYDM_EDCCA_ADAPT_MODE) {
-			/*@Limit IGI upper bound for adaptivity*/
-			phydm_dig_up_bound_lmt_en(dm);
-			diff = igi_target - (s8)igi;
-			th_l2h = dm->th_l2h_ini + diff;
-			if (th_l2h > 10)
-				th_l2h = 10;
+		if (igi < adapt->l2h_dyn_min)
+			th_l2h = igi;
+		else
+			th_l2h = adapt->l2h_dyn_min;
 
-			th_h2l = th_l2h - dm->th_edcca_hl_diff;
-		} else {
-			th_l2h = 70 - igi;
-			th_h2l = th_l2h - EDCCA_HL_DIFF_NORMAL;
-		}
-		/*replace lower bound to prevent EDCCA always equal 1*/
-		if (th_h2l < adapt->h2l_lb)
-			th_h2l = adapt->h2l_lb;
-		if (th_l2h < adapt->l2h_lb)
-			th_l2h = adapt->l2h_lb;
-		PHYDM_DBG(dm, DBG_ADPTVTY,
-			  "adapt_igi_up=0x%x, l2h_lb = %d dBm, h2l_lb = %d dBm\n",
-			  adapt->adapt_igi_up,
-			  IGI_2_DBM(adapt->l2h_lb + adapt->adapt_igi_up),
-			  IGI_2_DBM(adapt->h2l_lb + adapt->adapt_igi_up));
-	} else { /* < JGR2 & N*/
-		if (*dm->edcca_mode == PHYDM_EDCCA_ADAPT_MODE) {
-			/*need to consider PwdB upper bound for 8814 later IC*/
-			adapt->l2h_dyn_min = (u8)(dm->th_l2h_ini + igi_target);
-
-			if (igi < adapt->l2h_dyn_min)
-				th_l2h = igi;
-			else
-				th_l2h = adapt->l2h_dyn_min;
-
-			th_h2l = th_l2h - dm->th_edcca_hl_diff;
-		} else {
-			th_l2h = MAX_2(igi + TH_L2H_DIFF_IGI, EDCCA_TH_L2H_LB);
-			th_h2l = th_l2h - EDCCA_HL_DIFF_NORMAL;
-		}
+		th_h2l = th_l2h - dm->th_edcca_hl_diff;
+	} else {
+		th_l2h = MAX_2(igi + TH_L2H_DIFF_IGI, EDCCA_TH_L2H_LB);
+		th_h2l = th_l2h - EDCCA_HL_DIFF_NORMAL;
 	}
 
 	adapt->th_l2h = th_l2h;
@@ -606,10 +383,7 @@ void phydm_set_edcca_threshold_api(void *dm_void)
 	if (*dm->edcca_mode != PHYDM_EDCCA_ADAPT_MODE)
 		return;
 
-	if (dm->support_ic_type & ODM_IC_JGR3_SERIES)
-		phydm_edcca_thre_calc_jgr3(dm);
-	else
-		phydm_edcca_thre_calc(dm);
+	phydm_edcca_thre_calc_jgr3(dm);
 
 	PHYDM_DBG(dm, DBG_ADPTVTY,
 		  "API :IGI = 0x%x, th_l2h = %d, th_h2l = %d\n",
@@ -740,37 +514,13 @@ void phydm_adaptivity_init(void *dm_void)
 	adaptivity->th_l2h = 0x7f;
 	adaptivity->th_h2l = 0x7f;
 
-	if (dm->support_ic_type & ODM_IC_11N_SERIES)
-		adaptivity->adaptivity_dbg_port = 0x208;
-	else if (dm->support_ic_type & ODM_IC_11AC_SERIES)
-		adaptivity->adaptivity_dbg_port = 0x209;
+	adaptivity->adaptivity_dbg_port = 0x209;
 
-	if (dm->support_ic_type & ODM_IC_11N_SERIES &&
-	    !(dm->support_ic_type & ODM_IC_PWDB_EDCCA)) {
-		if (dm->support_ic_type & (ODM_RTL8197F | ODM_RTL8192F)) {
-			/*set to page B1*/
-			odm_set_bb_reg(dm, R_0xe28, BIT(30), 0x1);
-			/*@0:rx_dfir, 1: dcnf_out, 2 :rx_iq, 3: rx_nbi_nf_out*/
-			odm_set_bb_reg(dm, R_0xbc0, BIT(27) | BIT(26), 0x1);
-			odm_set_bb_reg(dm, R_0xe28, BIT(30), 0x0);
-		} else {
-			/*@0:rx_dfir, 1: dcnf_out, 2 :rx_iq, 3: rx_nbi_nf_out*/
-			odm_set_bb_reg(dm, R_0xe24, BIT(21) | BIT(20), 0x1);
-		}
-	} else if (dm->support_ic_type & ODM_IC_11AC_SERIES &&
-		   !(dm->support_ic_type & ODM_IC_PWDB_EDCCA)) {
-		/*@0:rx_dfir, 1: dcnf_out, 2 :rx_iq, 3: rx_nbi_nf_out*/
-		odm_set_bb_reg(dm, R_0x944, BIT(29) | BIT(28), 0x1);
-	}
+	/*@0:rx_dfir, 1: dcnf_out, 2 :rx_iq, 3: rx_nbi_nf_out*/
+	odm_set_bb_reg(dm, R_0x944, BIT(29) | BIT(28), 0x1);
 
-	if (dm->support_ic_type & ODM_IC_PWDB_EDCCA) {
-		phydm_search_pwdb_lower_bound(dm);
-		if (phydm_re_search_condition(dm))
-			phydm_search_pwdb_lower_bound(dm);
-	} else {
-		/*resume to no link state*/
-		phydm_set_edcca_threshold(dm, 0x7f, 0x7f);
-	}
+	/*resume to no link state*/
+	phydm_set_edcca_threshold(dm, 0x7f, 0x7f);
 
 	/*@whether to ignore EDCCA*/
 	phydm_mac_edcca_state(dm, PHYDM_DONT_IGNORE_EDCCA);
@@ -801,15 +551,6 @@ void phydm_adaptivity(void *dm_void)
 	if (phydm_edcca_abort(dm))
 		return;
 
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-	phydm_check_adaptivity(dm); /*@Check adaptivity enable*/
-
-	if (!dm->carrier_sense_enable &&
-	    !adapt->debug_mode &&
-	    adapt->switch_th_l2h_ini_in_band)
-		phydm_set_l2h_th_ini_win(dm);
-#endif
-
 	PHYDM_DBG(dm, DBG_ADPTVTY, "%s ====>\n", __func__);
 	PHYDM_DBG(dm, DBG_ADPTVTY, "mode = %s, debug_mode = %d\n",
 		  (*dm->edcca_mode ?
@@ -819,27 +560,17 @@ void phydm_adaptivity(void *dm_void)
 		  "NORMAL"),
 		  adapt->debug_mode);
 
-	if (dm->support_ic_type & ODM_IC_JGR3_SERIES)
-		phydm_edcca_thre_calc_jgr3(dm);
-	else
-		phydm_edcca_thre_calc(dm);
+	phydm_edcca_thre_calc_jgr3(dm);
 
 	if (*dm->edcca_mode == PHYDM_EDCCA_ADAPT_MODE)
 		PHYDM_DBG(dm, DBG_ADPTVTY,
 			  "th_l2h_ini = %d, th_edcca_hl_diff = %d\n",
 			  dm->th_l2h_ini, dm->th_edcca_hl_diff);
-	if (dm->support_ic_type & ODM_IC_PWDB_EDCCA)
-		PHYDM_DBG(dm, DBG_ADPTVTY,
-			  "IGI = 0x%x, th_l2h = %d dBm, th_h2l = %d dBm\n",
-			  dig_t->cur_ig_value,
-			  IGI_2_DBM(adapt->th_l2h + dig_t->cur_ig_value),
-			  IGI_2_DBM(adapt->th_h2l + dig_t->cur_ig_value));
-	else
-		PHYDM_DBG(dm, DBG_ADPTVTY,
-			  "IGI = 0x%x, th_l2h = %d dBm, th_h2l = %d dBm\n",
-			  dig_t->cur_ig_value,
-			  IGI_2_DBM(adapt->th_l2h),
-			  IGI_2_DBM(adapt->th_h2l));
+	PHYDM_DBG(dm, DBG_ADPTVTY,
+		  "IGI = 0x%x, th_l2h = %d dBm, th_h2l = %d dBm\n",
+		  dig_t->cur_ig_value,
+		  IGI_2_DBM(adapt->th_l2h),
+		  IGI_2_DBM(adapt->th_h2l));
 #endif
 }
 
