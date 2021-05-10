@@ -774,162 +774,33 @@ u8 phydm_trans_h2c_id(struct dm_struct *dm, u8 phydm_h2c_id)
 	switch (phydm_h2c_id) {
 	/* @1 [0] */
 	case ODM_H2C_RSSI_REPORT:
-
-#if (DM_ODM_SUPPORT_TYPE & ODM_WIN)
-		#if (RTL8188E_SUPPORT == 1)
-		if (dm->support_ic_type == ODM_RTL8188E)
-			platform_h2c_id = H2C_88E_RSSI_REPORT;
-		else
-		#endif
-			platform_h2c_id = H2C_RSSI_REPORT;
-
-#elif (DM_ODM_SUPPORT_TYPE & ODM_CE) && defined(DM_ODM_CE_MAC80211)
-#elif (DM_ODM_SUPPORT_TYPE & ODM_CE) && defined(DM_ODM_CE_MAC80211_V2)
-#elif (DM_ODM_SUPPORT_TYPE & ODM_CE)
 		platform_h2c_id = H2C_RSSI_SETTING;
-
-#elif (DM_ODM_SUPPORT_TYPE & ODM_AP)
-#if ((RTL8881A_SUPPORT == 1) || (RTL8192E_SUPPORT == 1) || (RTL8814A_SUPPORT == 1) || (RTL8822B_SUPPORT == 1) || (RTL8197F_SUPPORT == 1) || (RTL8192F_SUPPORT == 1)) /*@jj add 20170822*/
-		if (dm->support_ic_type & (ODM_RTL8881A | ODM_RTL8192E | ODM_RTL8192F | PHYDM_IC_3081_SERIES))
-			platform_h2c_id = H2C_88XX_RSSI_REPORT;
-		else
-#endif
-#if (RTL8812A_SUPPORT == 1)
-			if (dm->support_ic_type == ODM_RTL8812)
-			platform_h2c_id = H2C_8812_RSSI_REPORT;
-		else
-#endif
-		{
-		}
-#endif
-
 		break;
 
 	/* @1 [3] */
 	case ODM_H2C_WIFI_CALIBRATION:
-#if (DM_ODM_SUPPORT_TYPE & ODM_WIN)
-		platform_h2c_id = H2C_WIFI_CALIBRATION;
-
-#elif (DM_ODM_SUPPORT_TYPE & ODM_CE)
-#if (RTL8723B_SUPPORT == 1)
-		platform_h2c_id = H2C_8723B_BT_WLAN_CALIBRATION;
-#endif
-
-#elif (DM_ODM_SUPPORT_TYPE & ODM_AP)
-#endif
 		break;
 
 	/* @1 [4] */
 	case ODM_H2C_IQ_CALIBRATION:
-#if (DM_ODM_SUPPORT_TYPE & ODM_WIN)
-		platform_h2c_id = H2C_IQ_CALIBRATION;
-
-#elif (DM_ODM_SUPPORT_TYPE & ODM_CE)
-#if ((RTL8812A_SUPPORT == 1) || (RTL8821A_SUPPORT == 1))
-		platform_h2c_id = H2C_8812_IQ_CALIBRATION;
-#endif
-#elif (DM_ODM_SUPPORT_TYPE & ODM_AP)
-#endif
-
 		break;
 	/* @1 [5] */
 	case ODM_H2C_RA_PARA_ADJUST:
-
-#if (DM_ODM_SUPPORT_TYPE & ODM_WIN)
-		platform_h2c_id = H2C_RA_PARA_ADJUST;
-#elif (DM_ODM_SUPPORT_TYPE & ODM_CE) && defined(DM_ODM_CE_MAC80211)
-#elif (DM_ODM_SUPPORT_TYPE & ODM_CE) && defined(DM_ODM_CE_MAC80211_V2)
-#elif (DM_ODM_SUPPORT_TYPE & ODM_CE)
-#if ((RTL8812A_SUPPORT == 1) || (RTL8821A_SUPPORT == 1))
-		platform_h2c_id = H2C_8812_RA_PARA_ADJUST;
-#elif ((RTL8814A_SUPPORT == 1) || (RTL8822B_SUPPORT == 1))
-		platform_h2c_id = H2C_RA_PARA_ADJUST;
-#elif (RTL8192E_SUPPORT == 1)
-		platform_h2c_id = H2C_8192E_RA_PARA_ADJUST;
-#elif (RTL8723B_SUPPORT == 1)
-		platform_h2c_id = H2C_8723B_RA_PARA_ADJUST;
-#endif
-
-#elif (DM_ODM_SUPPORT_TYPE & ODM_AP)
-#if ((RTL8881A_SUPPORT == 1) || (RTL8192E_SUPPORT == 1) || (RTL8814A_SUPPORT == 1) || (RTL8822B_SUPPORT == 1) || (RTL8197F_SUPPORT == 1) || (RTL8192F_SUPPORT == 1)) /*@jj add 20170822*/
-		if (dm->support_ic_type & (ODM_RTL8881A | ODM_RTL8192E | ODM_RTL8192F | PHYDM_IC_3081_SERIES))
-			platform_h2c_id = H2C_88XX_RA_PARA_ADJUST;
-		else
-#endif
-#if (RTL8812A_SUPPORT == 1)
-			if (dm->support_ic_type == ODM_RTL8812)
-			platform_h2c_id = H2C_8812_RA_PARA_ADJUST;
-		else
-#endif
-		{
-		}
-#endif
-
 		break;
 
 	/* @1 [6] */
 	case PHYDM_H2C_DYNAMIC_TX_PATH:
-
-#if (DM_ODM_SUPPORT_TYPE & ODM_WIN)
-	#if (RTL8814A_SUPPORT == 1)
-		if (dm->support_ic_type == ODM_RTL8814A)
-			platform_h2c_id = H2C_8814A_DYNAMIC_TX_PATH;
-	#endif
-#elif (DM_ODM_SUPPORT_TYPE & ODM_CE)
-#if (RTL8814A_SUPPORT == 1)
-		if (dm->support_ic_type == ODM_RTL8814A)
-			platform_h2c_id = H2C_DYNAMIC_TX_PATH;
-#endif
-#elif (DM_ODM_SUPPORT_TYPE & ODM_AP)
-#if (RTL8814A_SUPPORT == 1)
-		if (dm->support_ic_type == ODM_RTL8814A)
-			platform_h2c_id = H2C_88XX_DYNAMIC_TX_PATH;
-#endif
-
-#endif
-
 		break;
 
 	/* @[7]*/
 	case PHYDM_H2C_FW_TRACE_EN:
-
-#if (DM_ODM_SUPPORT_TYPE & ODM_WIN)
-
-		platform_h2c_id = H2C_FW_TRACE_EN;
-
-#elif (DM_ODM_SUPPORT_TYPE & ODM_CE)
-
 		platform_h2c_id = 0x49;
-
-#elif (DM_ODM_SUPPORT_TYPE & ODM_AP)
-#if ((RTL8881A_SUPPORT == 1) || (RTL8192E_SUPPORT == 1) || (RTL8814A_SUPPORT == 1) || (RTL8822B_SUPPORT == 1) || (RTL8197F_SUPPORT == 1) || (RTL8192F_SUPPORT == 1)) /*@jj add 20170822*/
-		if (dm->support_ic_type & (ODM_RTL8881A | ODM_RTL8192E | ODM_RTL8192F | PHYDM_IC_3081_SERIES))
-			platform_h2c_id = H2C_88XX_FW_TRACE_EN;
-		else
-#endif
-#if (RTL8812A_SUPPORT == 1)
-		if (dm->support_ic_type == ODM_RTL8812)
-			platform_h2c_id = H2C_8812_FW_TRACE_EN;
-		else
-#endif
-		{
-		}
-
-#endif
-
 		break;
 
 	case PHYDM_H2C_TXBF:
-#if ((RTL8192E_SUPPORT == 1) || (RTL8812A_SUPPORT == 1))
-		if (dm->support_ic_type & (ODM_RTL8192E | ODM_RTL8812))
-			platform_h2c_id = 0x41; /*@H2C_TxBF*/
-#endif
 		break;
 
 	case PHYDM_H2C_MU:
-#if (RTL8822B_SUPPORT == 1)
-		platform_h2c_id = 0x4a; /*@H2C_MU*/
-#endif
 		break;
 
 	default:
@@ -958,19 +829,6 @@ void odm_fill_h2c_cmd(struct dm_struct *dm, u8 phydm_h2c_id, u32 cmd_len,
 
 	PHYDM_DBG(dm, DBG_RA, "[H2C]  h2c_id=((0x%x))\n", h2c_id);
 
-#if (DM_ODM_SUPPORT_TYPE & ODM_WIN)
-	if (dm->support_ic_type == ODM_RTL8188E) {
-		if (!dm->ra_support88e)
-			FillH2CCmd88E(adapter, h2c_id, cmd_len, cmd_buf);
-	} else if (dm->support_ic_type == ODM_RTL8814A)
-		FillH2CCmd8814A(adapter, h2c_id, cmd_len, cmd_buf);
-	else if (dm->support_ic_type == ODM_RTL8822B)
-		FillH2CCmd8822B(adapter, h2c_id, cmd_len, cmd_buf);
-	else
-		FillH2CCmd(adapter, h2c_id, cmd_len, cmd_buf);
-
-#elif (DM_ODM_SUPPORT_TYPE & ODM_CE)
-
 	#ifdef DM_ODM_CE_MAC80211
 	rtlpriv->cfg->ops->fill_h2c_cmd(rtlpriv->hw, h2c_id, cmd_len, cmd_buf);
 	#elif defined(DM_ODM_CE_MAC80211_V2)
@@ -983,22 +841,6 @@ void odm_fill_h2c_cmd(struct dm_struct *dm, u8 phydm_h2c_id, u32 cmd_len,
 	#else
 	rtw_hal_fill_h2c_cmd(adapter, h2c_id, cmd_len, cmd_buf);
 	#endif
-
-#elif (DM_ODM_SUPPORT_TYPE & ODM_AP)
-
-	#if (RTL8812A_SUPPORT == 1)
-	if (dm->support_ic_type == ODM_RTL8812) {
-		fill_h2c_cmd8812(dm->priv, h2c_id, cmd_len, cmd_buf);
-	} else
-	#endif
-	{
-		GET_HAL_INTERFACE(dm->priv)->fill_h2c_cmd_handler(dm->priv, h2c_id, cmd_len, cmd_buf);
-	}
-
-#elif (DM_ODM_SUPPORT_TYPE & ODM_IOT)
-	rtw_hal_fill_h2c_cmd(adapter, h2c_id, cmd_len, cmd_buf);
-
-#endif
 }
 
 u8 phydm_c2H_content_parsing(void *dm_void, u8 c2h_cmd_id, u8 c2h_cmd_len,
@@ -1033,24 +875,10 @@ u8 phydm_c2H_content_parsing(void *dm_void, u8 c2h_cmd_id, u8 c2h_cmd_len,
 		break;
 #ifdef CONFIG_PATH_DIVERSITY
 	case PHYDM_C2H_DYNAMIC_TX_PATH_RPT:
-		if (dm->support_ic_type & (ODM_RTL8814A))
-			phydm_c2h_dtp_handler(dm, tmp_buf, c2h_cmd_len);
 		break;
 #endif
 
 	case PHYDM_C2H_IQK_FINISH:
-#if (DM_ODM_SUPPORT_TYPE == ODM_WIN)
-
-		if (dm->support_ic_type & (ODM_RTL8812 | ODM_RTL8821)) {
-			RT_TRACE(COMP_MP, DBG_LOUD, ("== FW IQK Finish ==\n"));
-			odm_acquire_spin_lock(dm, RT_IQK_SPINLOCK);
-			dm->rf_calibrate_info.is_iqk_in_progress = false;
-			odm_release_spin_lock(dm, RT_IQK_SPINLOCK);
-			dm->rf_calibrate_info.iqk_progressing_time = 0;
-			dm->rf_calibrate_info.iqk_progressing_time = odm_get_progressing_time(dm, dm->rf_calibrate_info.iqk_start_time);
-		}
-
-#endif
 		break;
 
 	case PHYDM_C2H_CLM_MONITOR:

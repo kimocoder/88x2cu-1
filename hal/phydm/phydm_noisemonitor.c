@@ -264,123 +264,7 @@ s16 odm_inband_noise_monitor_ac(struct dm_struct *dm, u8 pause_dig, u8 igi,
 	s16 rpt = 0;
 	u8 val_u8 = 0;
 
-	if (dm->support_ic_type & (ODM_RTL8822B | ODM_RTL8821C)) {
-		rpt = phydm_idle_noise_measure_ac(dm, pause_dig, igi, max_time);
-		return rpt;
-	}
-
-	if (!(dm->support_ic_type & (ODM_RTL8812 | ODM_RTL8821 | ODM_RTL8814A)))
-		return 0;
-
-	func_start = odm_get_current_time(dm);
-	dm->noise_level.noise_all = 0;
-
-	PHYDM_DBG(dm, DBG_ENV_MNTR, "%s ==>\n", __func__);
-
-	/* step 1. Disable DIG && Set initial gain. */
-	if (pause_dig)
-		odm_pause_dig(dm, PHYDM_PAUSE, PHYDM_PAUSE_LEVEL_1, igi);
-
-	/* step 3. Get noise power level */
-	start = odm_get_current_time(dm);
-
-	/* step 3. Get noise power level */
-	while (1) {
-		/*Set IGI=0x1C */
-		odm_write_dig(dm, 0x1C);
-		/*stop CK320&CK88 */
-		odm_set_bb_reg(dm, R_0x8b4, BIT(6), 1);
-		/*Read path-A */
-		/*set debug port*/
-		odm_set_bb_reg(dm, R_0x8fc, MASKDWORD, 0x200);
-		/*read debug port*/
-		value32 = odm_get_bb_reg(dm, R_0xfa0, MASKDWORD);
-		/*rxi_buf_anta=RegFA0[19:10]*/
-		rxi_buf_anta = (value32 & 0xFFC00) >> 10;
-		rxq_buf_anta = value32 & 0x3FF; /*rxq_buf_anta=RegFA0[19:10]*/
-
-		pd_flag = (boolean)((value32 & BIT(31)) >> 31);
-
-		/*Not in packet detection period or Tx state */
-		if (!pd_flag || rxi_buf_anta != 0x200) {
-			/*sign conversion*/
-			rxi_buf_anta = odm_sign_conversion(rxi_buf_anta, 10);
-			rxq_buf_anta = odm_sign_conversion(rxq_buf_anta, 10);
-
-			val_s32 = rxi_buf_anta * rxi_buf_anta +
-				  rxq_buf_anta * rxq_buf_anta;
-			/*S(10,9)*S(10,9)=S(20,18)*/
-			pwdb_A = odm_pwdb_conversion(val_s32, 20, 18);
-
-			PHYDM_DBG(dm, DBG_ENV_MNTR,
-				  "pwdb_A= %d dB, rxi_buf_anta= 0x%x, rxq_buf_anta= 0x%x\n",
-				  pwdb_A, rxi_buf_anta & 0x3FF,
-				  rxq_buf_anta & 0x3FF);
-		}
-		/*Start CK320&CK88*/
-		odm_set_bb_reg(dm, R_0x8b4, BIT(6), 0);
-		/*@BB Reset*/
-		val_u8 = odm_read_1byte(dm, 0x02) & (~BIT(0));
-		odm_write_1byte(dm, 0x02, val_u8);
-		val_u8 = odm_read_1byte(dm, 0x02) | BIT(0);
-		odm_write_1byte(dm, 0x02, val_u8);
-		/*PMAC Reset*/
-		val_u8 = odm_read_1byte(dm, 0xB03) & (~BIT(0));
-		odm_write_1byte(dm, 0xB03, val_u8);
-		val_u8 = odm_read_1byte(dm, 0xB03) | BIT(0);
-		odm_write_1byte(dm, 0xB03, val_u8);
-		/*@CCK Reset*/
-		if (odm_read_1byte(dm, 0x80B) & BIT(4)) {
-			val_u8 = odm_read_1byte(dm, 0x80B) & (~BIT(4));
-			odm_write_1byte(dm, 0x80B, val_u8);
-			val_u8 = odm_read_1byte(dm, 0x80B) | BIT(4);
-			odm_write_1byte(dm, 0x80B, val_u8);
-		}
-
-		sval = pwdb_A;
-
-		if ((sval < 0 && sval >= -27) && valid_cnt < VALID_CNT) {
-			valid_cnt++;
-			sum += sval;
-			PHYDM_DBG(dm, DBG_ENV_MNTR, "Valid sval = %d\n", sval);
-			PHYDM_DBG(dm, DBG_ENV_MNTR, "Sum of sval = %d,\n", sum);
-			if (valid_cnt >= VALID_CNT ||
-			    (odm_get_progressing_time(dm, start) > max_time)) {
-				sum /= VALID_CNT;
-				PHYDM_DBG(dm, DBG_ENV_MNTR,
-					  "After divided, sum = %d\n", sum);
-				break;
-			}
-		} else {
-			/*Invalid sval and return -110 dBm*/
-			invalid_cnt++;
-			PHYDM_DBG(dm, DBG_ENV_MNTR, "Invalid sval\n");
-			if (invalid_cnt >= VALID_CNT + 5) {
-				PHYDM_DBG(dm, DBG_ENV_MNTR,
-					  "Invalid count > TH, Return -110, Break!!\n");
-				return -110;
-			}
-		}
-	}
-
-	/*@ADC backoff is 12dB,*/
-	/*Ptarget=0x1C-110=-82dBm*/
-	noise = sum + 12 + 0x1C - 110;
-
-	/*Offset*/
-	noise = noise - 3;
-	PHYDM_DBG(dm, DBG_ENV_MNTR, "noise = %d\n", noise);
-	dm->noise_level.noise_all = (s16)noise;
-
-	/* step 4. Recover the Dig*/
-	if (pause_dig)
-		odm_pause_dig(dm, PHYDM_RESUME, PHYDM_PAUSE_LEVEL_1, igi);
-
-	func_end = odm_get_progressing_time(dm, func_start);
-
-	PHYDM_DBG(dm, DBG_ENV_MNTR, "%s <==\n", __func__);
-
-	return dm->noise_level.noise_all;
+	return 0;
 }
 #endif
 
@@ -395,15 +279,6 @@ s16 odm_inband_noise_monitor(void *dm_void, u8 pause_dig, u8 igi,
 	/* since HW ability is about +15~-35,
 	 * we fix IGI = -60 for maximum coverage
 	 */
-	#if (ODM_IC_11AC_SERIES_SUPPORT)
-	if (dm->support_ic_type & ODM_IC_11AC_SERIES)
-		val = odm_inband_noise_monitor_ac(dm, pause_dig, igi, max_time);
-	#endif
-
-	#if (ODM_IC_11N_SERIES_SUPPORT)
-	if (dm->support_ic_type & ODM_IC_11N_SERIES)
-		val = odm_inband_noise_monitor_n(dm, pause_dig, igi, max_time);
-	#endif
 
 	return val;
 }
