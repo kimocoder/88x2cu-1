@@ -15,14 +15,11 @@
 #define _HAL_API_RF_C_
 #include "hal_headers.h"
 
-#if 0
 #include "phy/rf/halrf_api.h"
 #include "phy/rf/halrf_export_fun.h"
-#endif
 
 #ifdef USE_TRUE_PHY
 
-#if 0 // NEO TODO 
 
 enum rtw_hal_status
 rtw_hal_rf_init(struct rtw_phl_com_t *phl_com,
@@ -31,7 +28,7 @@ rtw_hal_rf_init(struct rtw_phl_com_t *phl_com,
 	struct rtw_hal_com_t *hal_com = hal_info->hal_com;
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
 
-	hal_status = halrf_init(phl_com, hal_com, &(hal_info->rf));
+	hal_status = g6_halrf_init(phl_com, hal_com, &(hal_info->rf));
 
 	if ((hal_status != RTW_HAL_STATUS_SUCCESS) ||
 		(hal_info->rf == NULL)) {
@@ -47,9 +44,10 @@ void rtw_hal_rf_deinit(struct rtw_phl_com_t *phl_com,
 {
 	struct rtw_hal_com_t *hal_com = hal_info->hal_com;
 
-	halrf_deinit(phl_com, hal_com, hal_info->rf);
+	g6_halrf_deinit(phl_com, hal_com, hal_info->rf);
 }
 
+#if 0 // NEO TODO 
 void rtw_hal_init_rf_reg(struct rtw_phl_com_t *phl_com, void *hal)
 {
 	struct hal_info_t *hal_info = (struct hal_info_t *)hal;

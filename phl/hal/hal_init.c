@@ -1022,13 +1022,13 @@ enum rtw_hal_status rtw_hal_init(void *drv_priv,
 		goto error_bb_init;
 	}
 
-#if 0 // NEO
 	hal_status = rtw_hal_rf_init(phl_com, hal_info);
 	if (hal_status != RTW_HAL_STATUS_SUCCESS) {
 		PHL_ERR("rtw_hal_rf_init failed\n");
 		goto error_rf_init;
 	}
 
+#if 0 // NEO
 	hal_status = rtw_hal_btc_init(phl_com, hal_info);
 	if (hal_status != RTW_HAL_STATUS_SUCCESS){
 		PHL_ERR("rtw_hal_btc_init failed\n");
@@ -1051,11 +1051,11 @@ enum rtw_hal_status rtw_hal_init(void *drv_priv,
 error_bcn_init:
 	rtw_hal_btc_deinit(phl_com, hal_info);
 #endif
+#endif // if 0 NEO
 
 error_btc_init:
 	rtw_hal_rf_deinit(phl_com, hal_info);
 
-#endif // if 0 NEO
 error_rf_init:
 	rtw_hal_bb_deinit(phl_com, hal_info);
 
@@ -1111,8 +1111,8 @@ void rtw_hal_deinit(struct rtw_phl_com_t *phl_com, void *hal)
 	hal_bcn_deinit(hal_info);
 #endif
 	rtw_hal_btc_deinit(phl_com, hal_info);
-	rtw_hal_rf_deinit(phl_com, hal_info);
 #endif // NEO if 0
+	rtw_hal_rf_deinit(phl_com, hal_info);
 	rtw_hal_bb_deinit(phl_com, hal_info);
 	rtw_hal_efuse_deinit(phl_com, hal_info);
 	rtw_hal_mac_deinit(phl_com, hal_info);
