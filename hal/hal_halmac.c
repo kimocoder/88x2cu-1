@@ -2831,8 +2831,9 @@ static int _send_general_info_by_reg(struct dvobj_priv *d,
 	a = dvobj_get_primary_adapter(d);
 	hal = GET_HAL_DATA(a);
 	rftype = _rf_type_halmac2drv(info->rf_type);
-	cut_drv = GET_CVID_CUT_VERSION(hal->version_id);
-	cut_phydm = _cut_version_drv2phydm(cut_drv);
+	//NEO
+	//cut_drv = GET_CVID_CUT_VERSION(hal->version_id);
+	//cut_phydm = _cut_version_drv2phydm(cut_drv);
 
 #define CLASS_GENERAL_INFO_REG				0x02
 #define CMD_ID_GENERAL_INFO_REG				0x0C
@@ -2848,7 +2849,7 @@ static int _send_general_info_by_reg(struct dvobj_priv *d,
 	GENERAL_INFO_REG_SET_CLASS(h2c, CLASS_GENERAL_INFO_REG);
 	GENERAL_INFO_REG_SET_RFE_TYPE(h2c, info->rfe_type);
 	GENERAL_INFO_REG_SET_RF_TYPE(h2c, rftype);
-	GENERAL_INFO_REG_SET_CUT_VERSION(h2c, cut_phydm);
+	//GENERAL_INFO_REG_SET_CUT_VERSION(h2c, cut_phydm);
 	GENERAL_INFO_REG_SET_RX_ANT_STATUS(h2c, info->rx_ant_status);
 	GENERAL_INFO_REG_SET_TX_ANT_STATUS(h2c, info->tx_ant_status);
 

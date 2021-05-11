@@ -1924,10 +1924,6 @@ void do_dpk_8822c(
 		return;
 	}
 
-	RF_DBG(dm, DBG_RF_DPK,
-	       "[DPK] ****** DPK Start (Ver: %s), Cv: %d ******\n",
-	       DPK_VER_8822C, dm->cut_version);
-
 	_dpk_information_8822c(dm);
 
 	_backup_mac_bb_registers_8822c(dm, bb_reg, bb_reg_backup,

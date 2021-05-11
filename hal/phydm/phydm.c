@@ -1299,11 +1299,9 @@ void odm_cmn_info_init(struct dm_struct *dm, enum odm_cmninfo cmn_info,
 		break;
 
 	case ODM_CMNINFO_CUT_VER:
-		dm->cut_version = (u8)value;
 		break;
 
 	case ODM_CMNINFO_FAB_VER:
-		dm->fab_version = (u8)value;
 		break;
 	case ODM_CMNINFO_FW_VER:
 		dm->fw_version = (u8)value;

@@ -306,10 +306,6 @@ struct txpwr_lmt_ent {
 #endif /* CONFIG_TXPWR_LIMIT */
 
 typedef struct hal_com_data {
-	HAL_VERSION			version_id;
-	RT_MULTI_FUNC		MultiFunc; /* For multi-function consideration. */
-	RT_POLARITY_CTL		PolarityCtl; /* For Wifi PDn Polarity control. */
-	RT_REGULATOR_MODE	RegulatorMode; /* switching regulator or LDO */
 	u8	hw_init_completed;
 	/****** FW related ******/
 	u32 firmware_size;

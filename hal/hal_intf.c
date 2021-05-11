@@ -199,32 +199,8 @@ enum rf_type rtw_chip_rftype_to_hal_rftype(_adapter *adapter, u8 limit)
 	PHAL_DATA_TYPE hal_data = GET_HAL_DATA(adapter);
 	u8 tx_num = 0, rx_num = 0;
 
-	/*get RF PATH from version_id.RF_TYPE */
-	if (IS_1T1R(hal_data->version_id)) {
-		tx_num = 1;
-		rx_num = 1;
-	} else if (IS_1T2R(hal_data->version_id)) {
-		tx_num = 1;
-		rx_num = 2;
-	} else if (IS_2T2R(hal_data->version_id)) {
-		tx_num = 2;
-		rx_num = 2;
-	} else if (IS_2T3R(hal_data->version_id)) {
-		tx_num = 2;
-		rx_num = 3;
-	} else if (IS_2T4R(hal_data->version_id)) {
-		tx_num = 2;
-		rx_num = 4;
-	} else if (IS_3T3R(hal_data->version_id)) {
-		tx_num = 3;
-		rx_num = 3;
-	} else if (IS_3T4R(hal_data->version_id)) {
-		tx_num = 3;
-		rx_num = 4;
-	} else if (IS_4T4R(hal_data->version_id)) {
-		tx_num = 4;
-		rx_num = 4;
-	}
+	tx_num = 2;
+	rx_num = 2;
 
 	if (limit) {
 		tx_num = rtw_min(tx_num, limit);

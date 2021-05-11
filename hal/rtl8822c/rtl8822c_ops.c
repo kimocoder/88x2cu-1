@@ -20,7 +20,7 @@
 #include <rtw_sreset.h>
 #endif /* DBG_CONFIG_ERROR_DETECT */
 #include <hal_data.h>		/* PHAL_DATA_TYPE, GET_HAL_DATA() */
-#include <hal_com.h>		/* dump_chip_info() and etc. */
+#include <hal_com.h>
 #include "../hal_halmac.h"	/* GET_RX_DESC_XXX_8822C() */
 #include "rtl8822c.h"
 #include "rtl8822c_hal.h"
@@ -170,50 +170,6 @@ static void hw_bcn_ctrl_clr(_adapter *adapter, u8 hw_port, u8 bcn_ctl_val)
 
 static void read_chip_version(PADAPTER adapter)
 {
-	PHAL_DATA_TYPE hal;
-	u32 value32;
-
-
-	hal = GET_HAL_DATA(adapter);
-
-	//value32 = rtw_read32(adapter, REG_SYS_CFG1_8822C);
-	value32 = rtw_phl_read32(adapter_to_dvobj(adapter)->phl, REG_SYS_CFG1_8822C);
-	RTW_INFO("%s NEO val32=0x%x\n", __func__, value32);
-
-	hal->version_id.ICType = CHIP_8822C;
-	hal->version_id.ChipType = ((value32 & BIT_RTL_ID_8822C) ? TEST_CHIP : NORMAL_CHIP);
-	hal->version_id.CUTVersion = BIT_GET_CHIP_VER_8822C(value32);
-	pr_info("%s NEO cut version: 0x%x\n", __func__, hal->version_id.CUTVersion);
-	hal->version_id.VendorType = BIT_GET_VENDOR_ID_8822C(value32);
-	hal->version_id.VendorType >>= 2;
-	switch (hal->version_id.VendorType) {
-	case 0:
-		hal->version_id.VendorType = CHIP_VENDOR_TSMC;
-		break;
-	case 1:
-		hal->version_id.VendorType = CHIP_VENDOR_SMIC;
-		break;
-	case 2:
-		hal->version_id.VendorType = CHIP_VENDOR_UMC;
-		break;
-	}
-
-	hal->version_id.RFType = ((value32 & BIT_RF_TYPE_ID_8822C) ? RF_TYPE_2T2R : RF_TYPE_1T1R);
-
-	/* refer to sd7 code base*/
-	hal->RegulatorMode = ((value32 & BIT_INTERNAL_EXTERNAL_SWR_8822C) ? RT_LDO_REGULATOR : RT_SWITCHING_REGULATOR);
-
-	value32 = rtw_read32(adapter, REG_SYS_STATUS1_8822C);
-	hal->version_id.ROMVer = BIT_GET_RF_RL_ID_8822C(value32);
-
-	/* For multi-function consideration. */
-	hal->MultiFunc = RT_MULTI_FUNC_NONE;
-	value32 = rtw_read32(adapter, REG_WL_BT_PWR_CTRL_8822C);
-	hal->MultiFunc |= ((value32 & BIT_WL_FUNC_EN_8822C) ? RT_MULTI_FUNC_WIFI : 0);
-	hal->MultiFunc |= ((value32 & BIT_BT_FUNC_EN_8822C) ? RT_MULTI_FUNC_BT : 0);
-	hal->PolarityCtl = ((value32 & BIT_WL_HWPDN_SL_8822C) ? RT_POLARITY_HIGH_ACT : RT_POLARITY_LOW_ACT);
-
-	dump_chip_info(hal->version_id);
 }
 
 /*

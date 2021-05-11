@@ -67,8 +67,6 @@ _iqk_check_cal_8822c(
 	odm_write_1byte(dm, 0x1b10, 0x0);
 	// disable slef-mixer for rx mode
 	//odm_set_rf_reg(dm, (enum rf_path)path, 0x0, 0xf0000, 0x1);
-	if(dm->cut_version == ODM_CUT_E)
-		odm_set_rf_reg(dm, (enum rf_path)path, 0x8f, BIT(14), 0x0);
 	halrf_delay_10us(1);
 	odm_write_4byte(dm, 0x1b00, 0x8 | path << 1);
 	if(!fail)
@@ -3545,10 +3543,6 @@ _iqk_rx_iqk_gain_search_fail_8822c(
 		RF_DBG(dm, DBG_RF_IQK, "[IQK]S%d GS%d_Trigger = 0x%x\n", path,
 	       	       step, IQK_CMD);
 		
-		if(dm->cut_version == ODM_CUT_E) {
-			odm_set_rf_reg(dm, (enum rf_path)path, 0x0, 0xf0000, 0x4);
-			odm_set_rf_reg(dm, (enum rf_path)path, 0x8f, BIT(14), 0x1);
-		}
 		halrf_delay_10us(1);
 		odm_write_4byte(dm, 0x1b00, IQK_CMD);
 		odm_write_4byte(dm, 0x1b00, IQK_CMD + 0x1);
@@ -3568,10 +3562,6 @@ _iqk_rx_iqk_gain_search_fail_8822c(
 		RF_DBG(dm, DBG_RF_IQK, "[IQK]S%d GS%d_Trigger = 0x%x\n", path,
 		       step, IQK_CMD);
 		
-		if(dm->cut_version == ODM_CUT_E) {
-			odm_set_rf_reg(dm, (enum rf_path)path, 0x0, 0xf0000, 0x7);
-			odm_set_rf_reg(dm, (enum rf_path)path, 0x8f, BIT(14), 0x0);
-		}
 		halrf_delay_10us(1);
 		odm_write_4byte(dm, 0x1b00, IQK_CMD);
 		odm_write_4byte(dm, 0x1b00, IQK_CMD + 0x1);
@@ -3671,26 +3661,12 @@ _lok_one_shot_8822c(
 		RF_DBG(dm, DBG_RF_IQK,
 			"[IQK]======S%d LOK for RXK======\n", path);
 		IQK_CMD = 0x8 | (1 << (4 + path)) | (path << 1);
-		if(dm->cut_version == ODM_CUT_E) {
-			odm_set_rf_reg(dm, (enum rf_path)path, 0x0, 0xf0000, 0x6);
-			odm_set_rf_reg(dm, (enum rf_path)path, 0x8f, BIT(14), 0x1);
-			RF_DBG(dm, DBG_RF_IQK, "[IQK]0x00 =%x, 0x8f = 0x%x\n", odm_get_rf_reg(dm, path, 0x0, 0xfffff), odm_get_rf_reg(dm, path, 0x8f, 0xfffff));
-			RF_DBG(dm, DBG_RF_IQK, "[IQK]0x38 =%x, 0x8f = 0x%x\n", _iqk_btc_read_indirect_reg_8822c(dm, 0x38), odm_get_bb_reg(dm, 0x70, 0xff000000));
-
-		}
 		halrf_delay_10us(1);
 	} else { 
 		RF_DBG(dm, DBG_RF_IQK,
 			"[IQK]======S%d LOK======\n", path);
 		IQK_CMD = 0x8 | (1 << (4 + path)) | (path << 1);
 		
-		if(dm->cut_version == ODM_CUT_E) {
-			odm_set_rf_reg(dm, (enum rf_path)path, 0x0, 0xf0000, 0x4);
-			odm_set_rf_reg(dm, (enum rf_path)path, 0x8f, BIT(14), 0x1);
-			RF_DBG(dm, DBG_RF_IQK, "[IQK]0x00 =%x, 0x8f = 0x%x\n", odm_get_rf_reg(dm, path, 0x0, 0xfffff), odm_get_rf_reg(dm, path, 0x8f, 0xfffff));
-			RF_DBG(dm, DBG_RF_IQK, "[IQK]0x38 =%x, 0x8f = 0x%x\n", _iqk_btc_read_indirect_reg_8822c(dm, 0x38), odm_get_bb_reg(dm, 0x70, 0xff000000));
-
-	}
 		halrf_delay_10us(1);
 	}
 	RF_DBG(dm, DBG_RF_IQK, "[IQK]LOK_Trigger = 0x%x\n", IQK_CMD);
@@ -3762,10 +3738,6 @@ _iqk_one_shot_8822c(
 		iqk_cmd = 0x8 | temp;
 		RF_DBG(dm, DBG_RF_IQK, "[IQK]TXK_Trigger = 0x%x\n", iqk_cmd);
 		
-		if(dm->cut_version == ODM_CUT_E){
-			odm_set_rf_reg(dm, (enum rf_path)path, 0x0, 0xf0000, 0x4);
-			odm_set_rf_reg(dm, (enum rf_path)path, 0x8f, BIT(14), 0x1);
-		}
 		halrf_delay_10us(1);
 		/*{0xf8000118, 0xf800012a} ==> NB TXK   (CMD = 1)*/
 		/*{0xf8000418, 0xf800042a} ==> 20 WBTXK (CMD = 3)*/
@@ -3779,10 +3751,6 @@ _iqk_one_shot_8822c(
 		iqk_cmd = 0x8 | temp;
 		RF_DBG(dm, DBG_RF_IQK, "[IQK]RXK1_Trigger = 0x%x\n", iqk_cmd);
 		
-		if(dm->cut_version == ODM_CUT_E){
-			odm_set_rf_reg(dm, (enum rf_path)path, 0x0, 0xf0000, 0x6);
-			odm_set_rf_reg(dm, (enum rf_path)path, 0x8f, BIT(14), 0x1);
-		}
 		halrf_delay_10us(1);
 		/*{0xf8000218, 0xf800021a} ==> NB RXK1   (CMD = 1)*/
 		/*{0xf8000718, 0xf800071a} ==> 20 WBRXK1 (CMD = 7)*/
@@ -3796,10 +3764,6 @@ _iqk_one_shot_8822c(
 		iqk_cmd = 0x8 | temp;
 		RF_DBG(dm, DBG_RF_IQK, "[IQK]RXK2_Trigger = 0x%x\n", iqk_cmd);
 		
-		if(dm->cut_version == ODM_CUT_E) {
-			odm_set_rf_reg(dm, (enum rf_path)path, 0x0, 0xf0000, 0x7);
-			odm_set_rf_reg(dm, (enum rf_path)path, 0x8f, BIT(14), 0x0);
-		}
 		halrf_delay_10us(1);
 		/*{0xf8000318, 0xf800031a} ==> NB RXK2   (CMD = 3)*/
 		/*{0xf8000918, 0xf8000a1a} ==> 20 WBRXK2 (CMD = a)*/
@@ -4710,7 +4674,6 @@ void _phy_iq_calibrate_8822c(
 
 	RF_DBG(dm, DBG_RF_IQK, "[IQK]==========IQK strat!!!!!==========\n");
 	RF_DBG(dm, DBG_RF_IQK, "[IQK]band_type = %s, band_width = %d, ExtPA2G = %d, ext_pa_5g = %d\n", (*dm->band_type == ODM_BAND_5G) ? "5G" : "2G", *dm->band_width, dm->ext_pa, dm->ext_pa_5g);
-	RF_DBG(dm, DBG_RF_IQK, "[IQK]Interface = %d, Cv = %x\n", dm->support_interface, dm->cut_version);
 	RF_DBG(dm, DBG_RF_IQK, "[IQK] Test V15 \n");
 	iqk_info->iqk_times++;
 	iqk_info->kcount = 0;

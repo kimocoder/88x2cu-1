@@ -42,7 +42,9 @@ halbb_sel_headline(struct dm_struct *dm, u32 *array, u32 array_len,
 				  u8 *headline_size, u8 *headline_idx)
 {
 	boolean case_match = false;
-	u32 cut_drv = (u32)dm->cut_version;
+	//NEO
+	//u32 cut_drv = (u32)dm->cut_version;
+	u32 cut_drv = 2;
 	u32 rfe_drv = (u32)dm->rfe_type;
 	u32 cut_para = 0, rfe_para = 0;
 	u32 compare_target = 0;

@@ -1181,11 +1181,6 @@ Current IOREG MAP
  * General definitions
  * ******************************************************** */
 
-#ifdef CONFIG_USB_HCI
-	#define LAST_ENTRY_OF_TX_PKT_BUFFER_8188E(__Adapter)	(175)
-#else
-	#define LAST_ENTRY_OF_TX_PKT_BUFFER_8188E(__Adapter)	(IS_VENDOR_8188E_I_CUT_SERIES(__Adapter) ? 255 : 175)
-#endif
 #define LAST_ENTRY_OF_TX_PKT_BUFFER_8812			255
 #define LAST_ENTRY_OF_TX_PKT_BUFFER_8723B		255
 #define LAST_ENTRY_OF_TX_PKT_BUFFER_8192C		255

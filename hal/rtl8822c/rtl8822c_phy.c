@@ -446,9 +446,6 @@ static void init_phydm_cominfo(PADAPTER adapter)
 
 	odm_cmn_info_init(p_dm_odm, ODM_CMNINFO_PACKAGE_TYPE, hal->PackageType);
 
-	RTW_INFO("%s: Fv=%d Cv=%d\n", __FUNCTION__, hal->version_id.VendorType, hal->version_id.CUTVersion);
-	odm_cmn_info_init(p_dm_odm, ODM_CMNINFO_FAB_VER, hal->version_id.VendorType);
-	odm_cmn_info_init(p_dm_odm, ODM_CMNINFO_CUT_VER, hal->version_id.CUTVersion);
 	odm_cmn_info_init(p_dm_odm, ODM_CMNINFO_DIS_DPD
 		, hal->txpwr_pg_mode == TXPWR_PG_WITH_PWR_IDX ? _TRUE : _FALSE);
 	odm_cmn_info_init(p_dm_odm, ODM_CMNINFO_TSSI_ENABLE

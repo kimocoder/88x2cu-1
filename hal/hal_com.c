@@ -231,97 +231,6 @@ void rtw_hal_read_sta_dk_key(_adapter *adapter, u8 key_id)
 	char	rtw_phy_para_file_path[PATH_LENGTH_MAX];
 #endif
 
-void dump_chip_info(HAL_VERSION	ChipVersion)
-{
-	int cnt = 0;
-	u8 buf[128] = {0};
-
-	if (IS_8188E(ChipVersion))
-		cnt += sprintf((buf + cnt), "Chip Version Info: CHIP_8188E_");
-	else if (IS_8188F(ChipVersion))
-		cnt += sprintf((buf + cnt), "Chip Version Info: CHIP_8188F_");
-	else if (IS_8188GTV(ChipVersion))
-		cnt += sprintf((buf + cnt), "Chip Version Info: CHIP_8188GTV_");
-	else if (IS_8812_SERIES(ChipVersion))
-		cnt += sprintf((buf + cnt), "Chip Version Info: CHIP_8812_");
-	else if (IS_8192E(ChipVersion))
-		cnt += sprintf((buf + cnt), "Chip Version Info: CHIP_8192E_");
-	else if (IS_8821_SERIES(ChipVersion))
-		cnt += sprintf((buf + cnt), "Chip Version Info: CHIP_8821_");
-	else if (IS_8723B_SERIES(ChipVersion))
-		cnt += sprintf((buf + cnt), "Chip Version Info: CHIP_8723B_");
-	else if (IS_8703B_SERIES(ChipVersion))
-		cnt += sprintf((buf + cnt), "Chip Version Info: CHIP_8703B_");
-	else if (IS_8723D_SERIES(ChipVersion))
-		cnt += sprintf((buf + cnt), "Chip Version Info: CHIP_8723D_");
-	else if (IS_8814A_SERIES(ChipVersion))
-		cnt += sprintf((buf + cnt), "Chip Version Info: CHIP_8814A_");
-	else if (IS_8822B_SERIES(ChipVersion))
-		cnt += sprintf((buf + cnt), "Chip Version Info: CHIP_8822B_");
-	else if (IS_8821C_SERIES(ChipVersion))
-		cnt += sprintf((buf + cnt), "Chip Version Info: CHIP_8821C_");
-	else if (IS_8710B_SERIES(ChipVersion))
-		cnt += sprintf((buf + cnt), "Chip Version Info: CHIP_8710B_");
-	else if (IS_8192F_SERIES(ChipVersion))
-		cnt += sprintf((buf + cnt), "Chip Version Info: CHIP_8192F_");
-	else if (IS_8822C_SERIES(ChipVersion))
-		cnt += sprintf((buf + cnt), "Chip Version Info: CHIP_8822C_");
-	else if (IS_8814B_SERIES(ChipVersion))
-		cnt += sprintf((buf + cnt), "Chip Version Info: CHIP_8814B_");
-	else if (IS_8723F_SERIES(ChipVersion))
-		cnt += sprintf((buf + cnt), "Chip Version Info: CHIP_8723F_");
-	else
-		cnt += sprintf((buf + cnt), "Chip Version Info: CHIP_UNKNOWN_");
-
-	cnt += sprintf((buf + cnt), "%s", IS_NORMAL_CHIP(ChipVersion) ? "" : "T_");
-	
-	if (IS_CHIP_VENDOR_TSMC(ChipVersion))
-		cnt += sprintf((buf + cnt), "%s", "T");
-	else if (IS_CHIP_VENDOR_UMC(ChipVersion))
-		cnt += sprintf((buf + cnt), "%s", "U");
-	else if (IS_CHIP_VENDOR_SMIC(ChipVersion))
-		cnt += sprintf((buf + cnt), "%s", "S");
-
-	if (IS_A_CUT(ChipVersion))
-		cnt += sprintf((buf + cnt), "1_");
-	else if (IS_B_CUT(ChipVersion))
-		cnt += sprintf((buf + cnt), "2_");
-	else if (IS_C_CUT(ChipVersion))
-		cnt += sprintf((buf + cnt), "3_");
-	else if (IS_D_CUT(ChipVersion))
-		cnt += sprintf((buf + cnt), "4_");
-	else if (IS_E_CUT(ChipVersion))
-		cnt += sprintf((buf + cnt), "5_");
-	else if (IS_F_CUT(ChipVersion))
-		cnt += sprintf((buf + cnt), "6_");
-	else if (IS_I_CUT(ChipVersion))
-		cnt += sprintf((buf + cnt), "9_");
-	else if (IS_J_CUT(ChipVersion))
-		cnt += sprintf((buf + cnt), "10_");
-	else if (IS_K_CUT(ChipVersion))
-		cnt += sprintf((buf + cnt), "11_");
-	else
-		cnt += sprintf((buf + cnt), "UNKNOWN_Cv(%d)_", ChipVersion.CUTVersion);
-
-	if (IS_1T1R(ChipVersion))
-		cnt += sprintf((buf + cnt), "1T1R_");
-	else if (IS_1T2R(ChipVersion))
-		cnt += sprintf((buf + cnt), "1T2R_");
-	else if (IS_2T2R(ChipVersion))
-		cnt += sprintf((buf + cnt), "2T2R_");
-	else if (IS_3T3R(ChipVersion))
-		cnt += sprintf((buf + cnt), "3T3R_");
-	else if (IS_3T4R(ChipVersion))
-		cnt += sprintf((buf + cnt), "3T4R_");
-	else if (IS_4T4R(ChipVersion))
-		cnt += sprintf((buf + cnt), "4T4R_");
-	else
-		cnt += sprintf((buf + cnt), "UNKNOWN_RFTYPE(%d)_", ChipVersion.RFType);
-
-	cnt += sprintf((buf + cnt), "RomVer(%d)\n", ChipVersion.ROMVer);
-
-	RTW_INFO("%s", buf);
-}
 
 u8 rtw_hal_get_port(_adapter *adapter)
 {
@@ -1367,27 +1276,19 @@ int c2h_mac_hidden_rpt_hdl(_adapter *adapter, u8 *data, u8 len)
 		RTW_PRINT("nic:0x%x\n", nic);
 	}
 
-#if defined(CONFIG_RTL8822C) || defined(CONFIG_RTL8814B)
-	if (IS_8822C_SERIES(hal_data->version_id) || IS_8814B_SERIES(hal_data->version_id)) {
-		#define GET_C2H_MAC_HIDDEN_RPT_SS_NUM(_data)	LE_BITS_TO_1BYTE(((u8 *)(_data)) + 6, 3, 2)
-		ss_num = GET_C2H_MAC_HIDDEN_RPT_SS_NUM(data);
+	#define GET_C2H_MAC_HIDDEN_RPT_SS_NUM(_data)	LE_BITS_TO_1BYTE(((u8 *)(_data)) + 6, 3, 2)
+	ss_num = GET_C2H_MAC_HIDDEN_RPT_SS_NUM(data);
 
-		if (DBG_C2H_MAC_HIDDEN_RPT_HANDLE)
-			RTW_PRINT("ss_num:0x%x\n", ss_num);
+	if (DBG_C2H_MAC_HIDDEN_RPT_HANDLE)
+		RTW_PRINT("ss_num:0x%x\n", ss_num);
 
-		if (ss_num == 0x03)
-			ss_num = 4;
-	}
-#endif
+	if (ss_num == 0x03)
+		ss_num = 4;
 
-#if defined(CONFIG_RTL8822C)
-	if (IS_8822C_SERIES(hal_data->version_id)) {
-		if (ant_num == 1)
-			hal_spec->rf_reg_trx_path_bmp = 0x22; /* 1T1R pathB */
-		if (hw_stype == 0xE)
-			hal_spec->max_tx_cnt = rtw_min(hal_spec->max_tx_cnt, 1); /* limit 1TX only */
-	}
-#endif
+	if (ant_num == 1)
+		hal_spec->rf_reg_trx_path_bmp = 0x22; /* 1T1R pathB */
+	if (hw_stype == 0xE)
+		hal_spec->max_tx_cnt = rtw_min(hal_spec->max_tx_cnt, 1); /* limit 1TX only */
 	hal_data->PackageType = package_type;
 	hal_spec->hci_type = hci_type;
 	hal_spec->wl_func &= mac_hidden_wl_func_to_hal_wl_func(wl_func);
@@ -4387,10 +4288,7 @@ void rtw_hal_switch_gpio_wl_ctrl(_adapter *padapter, u8 index, u8 enable)
 {
 	PHAL_DATA_TYPE pHalData = GET_HAL_DATA(padapter);
 
-	if (IS_8723D_SERIES(pHalData->version_id) || IS_8192F_SERIES(pHalData->version_id)
-		|| IS_8822B_SERIES(pHalData->version_id) || IS_8821C_SERIES(pHalData->version_id)
-		|| IS_8822C_SERIES(pHalData->version_id))
-		rtw_hal_set_hwreg(padapter, HW_SET_GPIO_WL_CTRL, (u8 *)(&enable));
+	rtw_hal_set_hwreg(padapter, HW_SET_GPIO_WL_CTRL, (u8 *)(&enable));
 	/*
 	* Switch GPIO_13, GPIO_14 to wlan control, or pull GPIO_13,14 MUST fail.
 	* It happended at 8723B/8192E/8821A. New IC will check multi function GPIO,
@@ -5870,9 +5768,7 @@ static void rtw_hal_ap_wow_enable(_adapter *padapter)
 #if defined(CONFIG_USB_HCI) || defined(CONFIG_PCI_HCI)
 	/* Invoid SE0 reset signal during suspending*/
 	rtw_write8(padapter, REG_RSV_CTRL, 0x20);
-	if (IS_8188F(pHalData->version_id) == FALSE
-		&& IS_8188GTV(pHalData->version_id) == FALSE)
-		rtw_write8(padapter, REG_RSV_CTRL, 0x60);
+	rtw_write8(padapter, REG_RSV_CTRL, 0x60);
 #endif
 }
 
@@ -9790,9 +9686,7 @@ static void rtw_hal_wow_enable(_adapter *adapter)
 #if defined(CONFIG_USB_HCI) || defined(CONFIG_PCI_HCI)
 	/* Invoid SE0 reset signal during suspending*/
 	rtw_write8(adapter, REG_RSV_CTRL, 0x20);
-	if (IS_8188F(pHalData->version_id) == FALSE
-		&& IS_8188GTV(pHalData->version_id) == FALSE)
-		rtw_write8(adapter, REG_RSV_CTRL, 0x60);
+	rtw_write8(adapter, REG_RSV_CTRL, 0x60);
 #endif
 
 	rtw_hal_gate_bb(adapter, _FALSE);
@@ -10944,7 +10838,7 @@ static void rtw_lps_pg_set_rsvd_page(_adapter *adapter, u8 *frame, u16 *index
 	pos = only_get_page_num ? NULL : frame + *index;
 
 #ifdef CONFIG_RTL8822C
-	if (IS_8822C_SERIES(hal_data->version_id)) {
+	{
 		/* LPSPG_DPK_INFO */
 		cache = &pwrctl->lpspg_dpk_info;
 		if (rsvd) {
@@ -11117,32 +11011,10 @@ void rtw_hal_lps_pg_handler(_adapter *adapter, enum lps_pg_hdl_id hdl_id)
 		rtw_hal_set_lps_pg_info(adapter);
 		break;
 	case LPS_PG_REDLEMEM:
-		if (IS_8822C_SERIES(GET_HAL_DATA(adapter)->version_id))
-			break;
-
-		/*set xmit_block*/
-		rtw_set_xmit_block(adapter, XMIT_BLOCK_REDLMEM);
-		if (_FAIL == rtw_hal_fw_mem_dl(adapter, FW_EMEM))
-			rtw_warn_on(1);
-		/*clearn xmit_block*/
-		rtw_clr_xmit_block(adapter, XMIT_BLOCK_REDLMEM);
 		break;
 	case LPS_PG_PHYDM_DIS:/*Disable RA and PT by H2C*/
-		if (IS_8822C_SERIES(GET_HAL_DATA(adapter)->version_id))
-			break;
-
-		if (sta)
-			rtw_phydm_lps_pg_hdl(adapter, sta, _TRUE);
 		break;
 	case LPS_PG_PHYDM_EN:/*Enable RA and PT by H2C*/
-		if (IS_8822C_SERIES(GET_HAL_DATA(adapter)->version_id))
-			break;
-
-		if (sta) {
-			rtw_hal_lps_pg_rssi_lv_decide(adapter, sta);
-			rtw_phydm_lps_pg_hdl(adapter, sta, _FALSE);
-			sta->lps_pg_rssi_lv = 0;
-		}
 		break;
 
 	default:
@@ -11834,14 +11706,6 @@ static void hw_var_set_mlme_sitesurvey(_adapter *adapter, u8 enable)
 		hal_data->RegRRSR &= 0x000FFFFF;
 		#endif
 
-		#if defined(CONFIG_BEAMFORMING) && (defined(CONFIG_RTL8812A) || defined(CONFIG_RTL8821A))
-		if (IS_8812_SERIES(hal_data->version_id) || IS_8821_SERIES(hal_data->version_id)) {
-			/* set 718[1:0]=2'b00 to avoid BF scan hang */
-			hal_data->backup_snd_ptcl_ctrl = rtw_read8(adapter, REG_SND_PTCL_CTRL_8812A);
-			rtw_write8(adapter, REG_SND_PTCL_CTRL_8812A, (hal_data->backup_snd_ptcl_ctrl & 0xfc));
-		}
-		#endif
-
 		if (rtw_mi_get_ap_num(adapter) || rtw_mi_get_mesh_num(adapter))
 			StopTxBeacon(adapter);
 	} else { /* sitesurvey done */
@@ -11861,13 +11725,6 @@ static void hw_var_set_mlme_sitesurvey(_adapter *adapter, u8 enable)
 		/* Restore orignal RRSR setting,only 8812 set RRSR after set ch/bw/band */
 		#if defined (CONFIG_RTL8812A) || defined(CONFIG_RTL8821A)
 			rtw_phydm_set_rrsr(adapter, hal_data->RegRRSR, TRUE);
-		#endif
-
-		#if defined(CONFIG_BEAMFORMING) && (defined(CONFIG_RTL8812A) || defined(CONFIG_RTL8821A))
-		if (IS_8812_SERIES(hal_data->version_id) || IS_8821_SERIES(hal_data->version_id)) {
-			/* Restore orignal 0x718 setting*/
-			rtw_write8(adapter, REG_SND_PTCL_CTRL_8812A, hal_data->backup_snd_ptcl_ctrl);
-		}
 		#endif
 
 		#ifdef CONFIG_AP_MODE
@@ -12659,19 +12516,7 @@ u8 SetHwReg(_adapter *adapter, u8 variable, u8 *val)
 		hw_var_port_switch(adapter);
 		break;
 	case HW_VAR_INIT_RTS_RATE: {
-		u16 brate_cfg = *((u16 *)val);
-		u8 rate_index = 0;
-		HAL_VERSION *hal_ver = &hal_data->version_id;
-
-		if (IS_8188E(*hal_ver)) {
-
-			while (brate_cfg > 0x1) {
-				brate_cfg = (brate_cfg >> 1);
-				rate_index++;
-			}
-			rtw_write8(adapter, REG_INIRTS_RATE_SEL, rate_index);
-		} else
-			rtw_warn_on(1);
+		rtw_warn_on(1);
 	}
 		break;
 	case HW_VAR_SEC_CFG: {
@@ -13408,23 +13253,8 @@ void rtw_hal_check_rxfifo_full(_adapter *adapter)
 
 	if (regsty->check_hw_status == 1) {
 		/* switch counter to RX fifo */
-		if (IS_8188E(pHalData->version_id) ||
-		    IS_8188F(pHalData->version_id) ||
-		    IS_8188GTV(pHalData->version_id) ||
-		    IS_8812_SERIES(pHalData->version_id) ||
-		    IS_8821_SERIES(pHalData->version_id) ||
-		    IS_8723B_SERIES(pHalData->version_id) ||
-		    IS_8192E(pHalData->version_id) ||
-		    IS_8703B_SERIES(pHalData->version_id) ||
-		    IS_8723D_SERIES(pHalData->version_id) ||
-		    IS_8192F_SERIES(pHalData->version_id) ||
-		    IS_8822C_SERIES(pHalData->version_id)) {
-			rtw_write8(adapter, REG_RXERR_RPT + 3, rtw_read8(adapter, REG_RXERR_RPT + 3) | 0xa0);
-			save_cnt = _TRUE;
-		} else {
-			/* todo: other chips */
-		}
-
+		rtw_write8(adapter, REG_RXERR_RPT + 3, rtw_read8(adapter, REG_RXERR_RPT + 3) | 0xa0);
+		save_cnt = _TRUE;
 
 		if (save_cnt) {
 			pdbgpriv->dbg_rx_fifo_last_overflow = pdbgpriv->dbg_rx_fifo_curr_overflow;

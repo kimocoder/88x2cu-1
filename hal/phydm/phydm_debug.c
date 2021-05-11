@@ -2216,40 +2216,7 @@ void phydm_basic_profile(void *dm_void, u32 *_used, char *output, u32 *_out_len)
 		 "  %-35s: %s (MP Chip: %s)\n", "IC type", ic_type,
 		 dm->is_mp_chip ? "Yes" : "No");
 
-	if (dm->cut_version == ODM_CUT_A)
-		cut = "A";
-	else if (dm->cut_version == ODM_CUT_B)
-		cut = "B";
-	else if (dm->cut_version == ODM_CUT_C)
-		cut = "C";
-	else if (dm->cut_version == ODM_CUT_D)
-		cut = "D";
-	else if (dm->cut_version == ODM_CUT_E)
-		cut = "E";
-	else if (dm->cut_version == ODM_CUT_F)
-		cut = "F";
-	else if (dm->cut_version == ODM_CUT_G)
-		cut = "G";
-	else if (dm->cut_version == ODM_CUT_H)
-		cut = "H";
-	else if (dm->cut_version == ODM_CUT_I)
-		cut = "I";
-	else if (dm->cut_version == ODM_CUT_J)
-		cut = "J";
-	else if (dm->cut_version == ODM_CUT_K)
-		cut = "K";
-	else if (dm->cut_version == ODM_CUT_L)
-		cut = "L";
-	else if (dm->cut_version == ODM_CUT_M)
-		cut = "M";
-	else if (dm->cut_version == ODM_CUT_N)
-		cut = "N";
-	else if (dm->cut_version == ODM_CUT_O)
-		cut = "O";
-	else if (dm->cut_version == ODM_CUT_TEST)
-		cut = "TEST";
-	else
-		cut = "UNKNOWN";
+	cut = "C";
 
 	PDM_SNPF(out_len, used, output + used, out_len - used, "  %-35s: %d\n",
 		 "RFE type", dm->rfe_type);
