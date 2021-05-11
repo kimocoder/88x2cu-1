@@ -79,15 +79,16 @@ enum rtw_hal_status hal_get_efuse_8852au(struct rtw_phl_com_t *phl_com,
 
 	return hal_get_efuse_8852a(phl_com, hal_info, &init_52au);
 }
+#endif // if 0 NEO
 
-enum rtw_hal_status hal_init_8852au(struct rtw_phl_com_t *phl_com,
+enum rtw_hal_status hal_init_8822cu(struct rtw_phl_com_t *phl_com,
 				    struct hal_info_t *hal_info)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
 
 	/* allocate memory for hal */
 	hal_info->rpr_cfg = _os_mem_alloc(phlcom_to_drvpriv(phl_com),
-					  sizeof(struct mac_ax_host_rpr_cfg));
+					  sizeof(struct mac_host_rpr_cfg));
 	if (hal_info->rpr_cfg == NULL) {
 		hal_status = RTW_HAL_STATUS_RESOURCE;
 		PHL_ERR("%s: alloc rpr_cfg failed\n", __func__);
@@ -100,15 +101,14 @@ error_rpr_cfg:
 	return hal_status;
 }
 
-void hal_deinit_8852au(struct rtw_phl_com_t *phl_com,
+void hal_deinit_8822cu(struct rtw_phl_com_t *phl_com,
 		       struct hal_info_t *hal_info)
 {
 	/* free memory for hal */
 	_os_mem_free(phlcom_to_drvpriv(phl_com),
 		     hal_info->rpr_cfg,
-		     sizeof(struct mac_ax_host_rpr_cfg));
+		     sizeof(struct mac_host_rpr_cfg));
 }
-#endif // if 0 NEO
 
 enum rtw_hal_status hal_start_8822cu(struct rtw_phl_com_t *phl_com,
 				    struct hal_info_t *hal_info)

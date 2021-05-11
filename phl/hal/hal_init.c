@@ -442,6 +442,7 @@ static enum rtw_hal_status hal_ops_check(struct hal_info_t *hal)
 		hal_error_msg("read_chip_version");
 		status = RTW_HAL_STATUS_FAILURE;
 	}
+#endif //NEO
 
 	if (!ops->hal_init) {
 		hal_error_msg("hal_init");
@@ -452,6 +453,7 @@ static enum rtw_hal_status hal_ops_check(struct hal_info_t *hal)
 		status = RTW_HAL_STATUS_FAILURE;
 	}
 
+#if 0 // NEO TODO
 	if (!ops->hal_start) {
 		hal_error_msg("hal_start");
 		status = RTW_HAL_STATUS_FAILURE;
@@ -996,13 +998,11 @@ enum rtw_hal_status rtw_hal_init(void *drv_priv,
 		goto error_hal_ops;
 	}
 
-#if 0 // NEO
 	hal_status = hal_info->hal_ops.hal_init(phl_com, hal_info);
 	if (hal_status != RTW_HAL_STATUS_SUCCESS) {
 		PHL_ERR("hal_ops.hal_init failed\n");
 		goto error_hal_init;
 	}
-#endif // if 0 NEO
 
 	hal_status = rtw_hal_mac_init(phl_com, hal_info);
 	if ((hal_status != RTW_HAL_STATUS_SUCCESS) || (hal_info->mac == NULL)) {
@@ -1067,9 +1067,7 @@ error_efuse_init:
 
 
 error_mac_init:
-	//NEO
-	//hal_info->hal_ops.hal_deinit(phl_com, hal_info);
-
+	hal_info->hal_ops.hal_deinit(phl_com, hal_info);
 
 error_hal_init:
 error_hal_ops:
@@ -1118,8 +1116,7 @@ void rtw_hal_deinit(struct rtw_phl_com_t *phl_com, void *hal)
 	rtw_hal_efuse_deinit(phl_com, hal_info);
 #endif // NEO if 0
 	rtw_hal_mac_deinit(phl_com, hal_info);
-	//NEO
-	//hal_info->hal_ops.hal_deinit(phl_com, hal_info);
+	hal_info->hal_ops.hal_deinit(phl_com, hal_info);
 	hal_deinit_io_priv(hal_info->hal_com);
 
 	#ifdef DBG_HAL_MEM_MOINTOR

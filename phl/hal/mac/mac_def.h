@@ -930,34 +930,35 @@ enum mac_ax_efuse_feature_id {
 	MAC_AX_DUMP_LOGICAL_EFUSE_MASK, /* Support */
 };
 
-/*--------------------Define TRX PKT INFO/RPT related enum--------------------*/
-enum mac_ax_trx_mode {
-	MAC_AX_TRX_NORMAL,
-	MAC_AX_TRX_LOOPBACK,
-
-	/* keep last */
-	MAC_AX_TRX_LAST,
-	MAC_AX_TRX_MAX = MAC_AX_TRX_LAST,
-	MAC_AX_TRX_INVALID = MAC_AX_TRX_LAST,
-};
-
-enum mac_ax_qta_mode {
-	MAC_AX_QTA_SCC,
-	MAC_AX_QTA_DBCC,
-	MAC_AX_QTA_SCC_STF,
-	MAC_AX_QTA_DBCC_STF,
-	MAC_AX_QTA_SU_TP,
-	MAC_AX_QTA_DLFW,
-	MAC_AX_QTA_BCN_TEST,
-	MAC_AX_QTA_LAMODE,
-
-	/* keep last */
-	MAC_AX_QTA_LAST,
-	MAC_AX_QTA_MAX = MAC_AX_QTA_LAST,
-	MAC_AX_QTA_INVALID = MAC_AX_QTA_LAST,
-};
-
 #endif // if 0 NEO
+
+/*--------------------Define TRX PKT INFO/RPT related enum--------------------*/
+enum mac_trx_mode {
+	MAC_TRX_NORMAL,
+	MAC_TRX_LOOPBACK,
+
+	/* keep last */
+	MAC_TRX_LAST,
+	MAC_TRX_MAX = MAC_TRX_LAST,
+	MAC_TRX_INVALID = MAC_TRX_LAST,
+};
+
+enum mac_qta_mode {
+	MAC_QTA_SCC,
+	MAC_QTA_DBCC,
+	MAC_QTA_SCC_STF,
+	MAC_QTA_DBCC_STF,
+	MAC_QTA_SU_TP,
+	MAC_QTA_DLFW,
+	MAC_QTA_BCN_TEST,
+	MAC_QTA_LAMODE,
+
+	/* keep last */
+	MAC_QTA_LAST,
+	MAC_QTA_MAX = MAC_QTA_LAST,
+	MAC_QTA_INVALID = MAC_QTA_LAST,
+};
+
 
 enum mac_pkt_t {
 	MAC_PKT_DATA,
@@ -1228,11 +1229,15 @@ enum mac_ax_ch_busy_cnt_ctrl {
 	MAC_AX_CH_BUSY_CNT_CTRL_INVALID = MAC_AX_CH_BUSY_CNT_CTRL_LAST,
 };
 
-enum mac_ax_func_sw {
-	MAC_AX_FUNC_DIS = 0,
-	MAC_AX_FUNC_EN,
-	MAC_AX_FUNC_DEF
+#endif // NEO
+
+enum mac_func_sw {
+	MAC_FUNC_DIS = 0,
+	MAC_FUNC_EN,
+	MAC_FUNC_DEF
 };
+
+#if 0 //NEO
 
 enum mac_ax_twt_nego_tp {
 	MAC_AX_TWT_NEGO_TP_IND,
@@ -1445,13 +1450,16 @@ enum mac_ax_upd_mode {
 	MAC_AX_ROLE_CON_DISCONN
 };
 
-enum mac_ax_host_rpr_mode {
-	MAC_AX_RPR_MODE_POH = 0,
-	MAC_AX_RPR_MODE_STF
+#endif // NEO
+
+enum mac_host_rpr_mode {
+	MAC_RPR_MODE_POH = 0,
+	MAC_RPR_MODE_STF
 };
 
+
 /*--------------------Define Struct-------------------------------------*/
-struct mac_ax_sch_tx_en {
+struct mac_sch_tx_en {
 	u8 be0:1;
 	u8 bk0:1;
 	u8 vi0:1;
@@ -1470,7 +1478,6 @@ struct mac_ax_sch_tx_en {
 	u8 twt1:1;
 };
 
-#endif // if 0 NEO
 
 struct mac_hw_info {
 	u8 done;
@@ -1579,9 +1586,9 @@ struct mac_ax_gpio_info {
 #endif // if 0 NEO
 
 struct mac_trx_info {
-//	enum mac_trx_mode trx_mode;
-//	enum mac_qta_mode qta_mode;
-//	struct mac_ax_host_rpr_cfg *rpr_cfg;
+	enum mac_trx_mode trx_mode;
+	enum mac_qta_mode qta_mode;
+	struct mac_host_rpr_cfg *rpr_cfg;
 };
 
 #if 0 // NEO
@@ -3822,17 +3829,21 @@ struct mac_ax_edcca_param {
 	enum mac_ax_edcca_sel sel;
 };
 
-struct mac_ax_host_rpr_cfg {
+#endif // NEO
+
+struct mac_host_rpr_cfg {
 	u8 agg;
 	u8 tmr;
 	u8 agg_def:1;
 	u8 tmr_def:1;
 	u8 rsvd:5;
-	enum mac_ax_func_sw txok_en;
-	enum mac_ax_func_sw rty_lmt_en;
-	enum mac_ax_func_sw lft_drop_en;
-	enum mac_ax_func_sw macid_drop_en;
+	enum mac_func_sw txok_en;
+	enum mac_func_sw rty_lmt_en;
+	enum mac_func_sw lft_drop_en;
+	enum mac_func_sw macid_drop_en;
 };
+
+#if 0 //NEO
 
 struct mac_ax_macid_pause_cfg {
 	u8 macid;
