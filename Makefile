@@ -105,6 +105,8 @@ CONFIG_CMD_DISP = y
 RTW_PHL_RX = y
 RTW_PHL_TX = y
 
+USE_TRUE_PHY = y
+
 ########################## Android ###########################
 # CONFIG_RTW_ANDROID - 0: no Android, 4/5/6/7/8/9/10/11 : Android version
 CONFIG_RTW_ANDROID = 0
@@ -2386,6 +2388,10 @@ endif
 
 ifeq ($(RTW_PHL_TX), y)
 EXTRA_CFLAGS += -DRTW_PHL_TX
+endif
+
+ifeq ($(USE_TRUE_PHY), y)
+EXTRA_CFLAGS += -DUSE_TRUE_PHY
 endif
 
 include $(src)/phl/phl.mk

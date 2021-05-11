@@ -1016,13 +1016,13 @@ enum rtw_hal_status rtw_hal_init(void *drv_priv,
 		goto error_efuse_init;
 	}
 
-#if 0 // NEO
 	hal_status = rtw_hal_bb_init(phl_com, hal_info);
 	if (hal_status != RTW_HAL_STATUS_SUCCESS) {
 		PHL_ERR("rtw_hal_bb_init failed\n");
 		goto error_bb_init;
 	}
 
+#if 0 // NEO
 	hal_status = rtw_hal_rf_init(phl_com, hal_info);
 	if (hal_status != RTW_HAL_STATUS_SUCCESS) {
 		PHL_ERR("rtw_hal_rf_init failed\n");
@@ -1055,13 +1055,13 @@ error_bcn_init:
 error_btc_init:
 	rtw_hal_rf_deinit(phl_com, hal_info);
 
+#endif // if 0 NEO
 error_rf_init:
 	rtw_hal_bb_deinit(phl_com, hal_info);
 
 error_bb_init:
 	rtw_hal_efuse_deinit(phl_com, hal_info);
 
-#endif // if 0 NEO
 error_efuse_init:
 	rtw_hal_mac_deinit(phl_com, hal_info);
 
@@ -1112,9 +1112,9 @@ void rtw_hal_deinit(struct rtw_phl_com_t *phl_com, void *hal)
 #endif
 	rtw_hal_btc_deinit(phl_com, hal_info);
 	rtw_hal_rf_deinit(phl_com, hal_info);
+#endif // NEO if 0
 	rtw_hal_bb_deinit(phl_com, hal_info);
 	rtw_hal_efuse_deinit(phl_com, hal_info);
-#endif // NEO if 0
 	rtw_hal_mac_deinit(phl_com, hal_info);
 	hal_info->hal_ops.hal_deinit(phl_com, hal_info);
 	hal_deinit_io_priv(hal_info->hal_com);
@@ -1480,6 +1480,8 @@ rtw_hal_watchdog(void *hal)
 	struct hal_info_t *hal_info = (struct hal_info_t *)hal;
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
 
+	RTW_ERR("%s NEO TODO\n", __func__);
+#if 0 //NEO
 	hal_status = rtw_hal_bb_watchdog(hal_info, false);
 	if(hal_status != RTW_HAL_STATUS_SUCCESS){
 		PHL_INFO("%s fail (%x)\n",
@@ -1493,7 +1495,7 @@ rtw_hal_watchdog(void *hal)
 			 __FUNCTION__, hal_status);
 		goto exit;
 	}
-
+#endif //NEO
 exit:
 	return hal_status;
 }
@@ -1505,6 +1507,7 @@ rtw_hal_cfg_trx_path(void *hal, enum rf_path tx, u8 tx_nss,
 	struct hal_info_t *hal_info = (struct hal_info_t *)hal;
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
 
+#if 0 //NEO
 	if (tx < RF_PATH_AB) {
 		/* forced tx nss = 1*/
 		tx_nss = 1;
@@ -1522,6 +1525,8 @@ rtw_hal_cfg_trx_path(void *hal, enum rf_path tx, u8 tx_nss,
 			rx,
 			((rx_nss > hal_info->hal_com->rfpath_rx_num) ?
 			  hal_info->hal_com->rfpath_rx_num : rx_nss));
+
+#endif //NEO
 	return hal_status;
 }
 

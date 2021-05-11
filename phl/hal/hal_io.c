@@ -337,7 +337,10 @@ u32 hal_read_bbreg(struct hal_info_t *hal,
 		u32 offset, u32 bit_mask)
 {
 	u32 val32 = 0;
-	val32 = rtw_hal_read_bb_reg(hal->hal_com, offset, bit_mask);
+
+	RTW_ERR("%s NEO TODO\n", __func__);
+	//NEO
+	//val32 = rtw_hal_read_bb_reg(hal->hal_com, offset, bit_mask);
 	
 	return val32;
 }
@@ -345,13 +348,16 @@ u32 hal_read_bbreg(struct hal_info_t *hal,
 void hal_write_bbreg(struct hal_info_t *hal,
 		u32 offset, u32 bit_mask, u32 data)
 {
-	rtw_hal_write_bb_reg(hal->hal_com, offset, bit_mask, data);
+	RTW_ERR("%s NEO TODO\n", __func__);
+	//rtw_hal_write_bb_reg(hal->hal_com, offset, bit_mask, data);
 }
 
 u32 hal_read_rfreg(struct hal_info_t *hal,
 		enum rf_path path, u32 offset, u32 bit_mask)
 {
 	u32 val32 = 0;
+	RTW_ERR("%s NEO TODO\n", __func__);
+#if 0 //NEO
 	val32 = rtw_hal_read_rf_reg(hal->hal_com, path, offset, bit_mask);
 #ifdef DBG_IO
 	if (match_rf_read_sniff_ranges(hal->hal_com, path, offset, bit_mask)) {
@@ -359,12 +365,14 @@ u32 hal_read_rfreg(struct hal_info_t *hal,
 			, path, offset, bit_mask, (val32 << _bit_shift(bit_mask)), val32);
 	}
 #endif
-
+#endif //NEO
 	return val32;
 }
 void hal_write_rfreg(struct hal_info_t *hal,
 		enum rf_path path, u32 offset, u32 bit_mask, u32 data)
 {
+	RTW_ERR("%s NEO TODO\n", __func__);
+#if 0 //NEO
 	rtw_hal_write_rf_reg(hal->hal_com, path, offset, bit_mask, data);
 #ifdef DBG_IO
 	if (match_rf_write_sniff_ranges(hal->hal_com, path, offset, bit_mask)) {
@@ -372,6 +380,7 @@ void hal_write_rfreg(struct hal_info_t *hal,
 			, path, offset, bit_mask, (data << _bit_shift(bit_mask)), data);
 	}
 #endif
+#endif //NEO
 }
 
 static u32 _cal_bit_shift(u32 bit_mask)

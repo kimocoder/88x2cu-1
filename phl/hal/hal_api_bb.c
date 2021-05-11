@@ -16,9 +16,9 @@
 #include "hal_headers.h"
 
 
-#if 0 // NEO TODO
 #include "phy/bb/halbb_export_fun.h"
 
+#if 0 // NEO TODO
 //kevin-cmd
 #include "phy/bb/halbb_hw_cfg_ex.h"
 #endif // if 0 NEO
@@ -117,6 +117,8 @@ enum rtw_hal_status rtw_hal_bb_cfg_dbcc(struct hal_info_t *hal_info, bool dbcc_e
 	return RTW_HAL_STATUS_SUCCESS;
 }
 
+#endif //NEO
+
 u32 rtw_hal_bb_init(struct rtw_phl_com_t *phl_com, struct hal_info_t *hal_info)
 {
 	struct rtw_hal_com_t *hal_com = hal_info->hal_com;
@@ -131,14 +133,16 @@ u32 rtw_hal_bb_init(struct rtw_phl_com_t *phl_com, struct hal_info_t *hal_info)
 	return hal_status;
 }
 
+
 void rtw_hal_bb_deinit(struct rtw_phl_com_t *phl_com,
 						struct hal_info_t *hal_info)
 {
 	struct rtw_hal_com_t *hal_com = hal_info->hal_com;
 
-	halbb_deinit(phl_com, hal_com, hal_info->bb);
+	halbb_buffer_deinit(phl_com, hal_com, hal_info->bb);
 }
 
+#if 0 //NEO
 void rtw_hal_bb_init_reg_by_hdr(struct hal_info_t *hal_info,
 		u32 *folder_array, u32 folder_len, u8 is_form_folder,
 		enum phl_phy_idx phy_idx)
@@ -214,6 +218,8 @@ bool rtw_hal_bb_write_cr(struct rtw_hal_com_t *hal_com,
 	return halbb_rf_set_bb_reg(hal->bb, addr, mask, data);
 }
 
+#endif //NEO
+
 enum rtw_hal_status
 rtw_hal_bb_stainfo_init(struct hal_info_t *hal_info,
 				struct rtw_phl_stainfo_t *sta)
@@ -243,6 +249,8 @@ rtw_hal_bb_stainfo_deinit(struct hal_info_t *hal_info,
 
 	return hal_status;
 }
+
+#if 0 //NEO
 
 enum rtw_hal_status
 rtw_hal_bb_stainfo_add(struct hal_info_t *hal_info,

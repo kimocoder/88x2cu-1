@@ -67,6 +67,9 @@ phl_radar_detect_hdl(struct phl_info_t *phl_info,
 	enum rtw_phl_status rst = RTW_PHL_STATUS_FAILURE;
 	bool overlap_radar_range;
 
+	RTW_ERR("%s NEO TODO\n", __func__);
+
+#if 0 // NEO
 	overlap_radar_range = rtw_hal_in_radar_domain(phl_info->hal,
 						channel, bwmode);
 	if (overlap_radar_range)
@@ -76,7 +79,6 @@ phl_radar_detect_hdl(struct phl_info_t *phl_info,
 	if (overlap_radar_range && !dfs_info->dfs_enabled) {
 		/*radar_detect_enable*/
 		RTW_INFO("%s NEO TODO rtw_hal_radar_detect_cfg\n", __func__);
-#if 0 // NEO
 		if (rtw_hal_radar_detect_cfg(phl_info->hal, true) ==
 			RTW_HAL_STATUS_SUCCESS) {
 			dfs_info->dfs_enabled = true;
@@ -88,11 +90,9 @@ phl_radar_detect_hdl(struct phl_info_t *phl_info,
 			PHL_ERR("[DFS] chan(%d) in radar range, enable dfs failed\n",
 				channel);
 		}
-#endif // if 0 NEO
 	} else if (!overlap_radar_range && dfs_info->dfs_enabled) {
 		/*radar_detect_disable*/
 		RTW_INFO("%s NEO TODO rtw_hal_radar_detect_cfg\n", __func__);
-#if 0 // NEO
 		if (rtw_hal_radar_detect_cfg(phl_info->hal, false) ==
 			RTW_HAL_STATUS_SUCCESS) {
 			dfs_info->dfs_enabled = false;
@@ -104,8 +104,8 @@ phl_radar_detect_hdl(struct phl_info_t *phl_info,
 			PHL_ERR("[DFS] chan(%d) not in radar range, disable dfs failed\n",
 				channel);
 		}
-#endif // if 0 NEO
 	}
+#endif // if 0 NEO
 	return rst;
 }
 #endif /*CONFIG_PHL_DFS*/

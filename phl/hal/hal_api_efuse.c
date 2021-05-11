@@ -207,7 +207,6 @@ enum rtw_hal_status rtw_hal_efuse_init(struct rtw_phl_com_t *phl_com,
 	return status;
 }
 
-#if 0 // NEO : TODO : mark off first
 
 void rtw_hal_efuse_deinit(struct rtw_phl_com_t *phl_com,
 					struct hal_info_t *hal_info)
@@ -217,6 +216,7 @@ void rtw_hal_efuse_deinit(struct rtw_phl_com_t *phl_com,
 	rtw_efuse_deinit(hal_com, hal_info->efuse);
 }
 
+#if 0 // NEO : TODO : mark off first
 
 enum rtw_hal_status
 rtw_hal_efuse_bt_shadow_load(struct hal_info_t *hal_info)

@@ -783,8 +783,6 @@ u32 rtw_efuse_init(struct rtw_phl_com_t *phl_com,
 		goto error_efuse_shadow_init;
 	}
 
-	RTW_INFO("%s NEO TODO log_efuse_size:%d\n", __func__, efuse_info->log_efuse_size);
-#if 0 //NEO
 	efuse_info->shadow_map = _os_mem_alloc(hal_com->drv_priv,
 					       efuse_info->log_efuse_size);
 
@@ -794,6 +792,7 @@ u32 rtw_efuse_init(struct rtw_phl_com_t *phl_com,
 		goto error_efuse_shadow_init;
 	}
 
+#if 0 //NEO
 	hal_status = rtw_hal_mac_get_log_efuse_size(hal_com,
 						    &(efuse_info->limit_efuse_size),
 						    true);
@@ -883,7 +882,7 @@ u32 rtw_efuse_init(struct rtw_phl_com_t *phl_com,
 		PHL_ERR("%s Allocate efuse mask fail!\n", __FUNCTION__);
 		goto error_efuse_bt_mask_init;
 	}
-
+#endif // NEO
 
 	efuse_info->phl_com = phl_com;
 	efuse_info->hal_com = hal_com;
@@ -893,6 +892,7 @@ u32 rtw_efuse_init(struct rtw_phl_com_t *phl_com,
 	hal_status = RTW_HAL_STATUS_SUCCESS;
 	return hal_status;
 
+#if 0 //NEO
 error_efuse_bt_mask_init:
 	_os_mem_free(hal_com->drv_priv, efuse_info->bt_shadow_map,
 		     efuse_info->bt_log_efuse_size);
@@ -954,12 +954,12 @@ void rtw_efuse_deinit(struct rtw_hal_com_t *hal_com, void *efuse)
 		 				efuse_info->version_len);
 		 efuse_info->mask_version = NULL;
 	}
+#endif //NEO
 	if(efuse_info->shadow_map) {
 		_os_mem_free(hal_com->drv_priv, efuse_info->shadow_map,
 					 efuse_info->log_efuse_size);
 		efuse_info->shadow_map = NULL;
 	}
-#endif //NEO
 
 	if (efuse_info) {
 		_os_mem_free(hal_com->drv_priv, efuse_info, sizeof(struct efuse_t));
