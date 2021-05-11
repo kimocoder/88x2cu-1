@@ -1512,9 +1512,32 @@ struct mac_hw_info {
 	struct sec_cam_table_t *sec_cam_table;
 	u8 ple_rsvd_space;
 	u8 payload_desc_size;
+	u8 efuse_version_size;
+	u32 dav_full_efuse_size;
+	u32 dav_efuse_size;
+	u32 dav_hidden_efuse_size;
+	u32 dav_log_efuse_size;
+	u32 wl_efuse_start_addr;
+	u32 dav_efuse_start_addr;
+	u32 bt_efuse_start_addr;
 	u8 wd_checksum_en;
 	u32 sw_amsdu_max_size;
-	//mac_ax_mutex ind_access_lock;
+	u32 (*pwr_on)(void *vadapter);
+	u32 (*pwr_off)(void *vadapter);
+	u32 ind_aces_cnt;
+	u32 dbg_port_cnt;
+	u8 core_swr_volt;
+/*
+	enum mac_ax_core_swr_volt core_swr_volt_sel;
+	mac_ax_mutex ind_access_lock;
+	mac_ax_mutex lte_rlock;
+	mac_ax_mutex lte_wlock;
+	mac_ax_mutex dbg_port_lock;
+	mac_ax_mutex err_set_lock;
+	mac_ax_mutex err_get_lock;
+	mac_ax_mutex dbi_lock;
+	mac_ax_mutex mdio_lock;
+*/
 };
 
 #if 0 // NEO

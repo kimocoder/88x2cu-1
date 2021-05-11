@@ -23,7 +23,11 @@
 #include "../init.h"
 #include "../trxcfg.h"
 #include "pwr_seq_8852a.h"
+#endif // if 0 NEO
+
 #include "../hw.h"
+
+#if 0 // NEO
 #include "../security_cam.h"
 #include "../../feature_cfg.h"
 #endif // if 0 NEO
@@ -341,7 +345,9 @@ static struct mac_ops mac8822c_ops = {
 	NULL, /* mac_set_gpio_func_8852a, */ /* set_gpio_func */
 	NULL, /* mac_get_hw_info, */ /* get_hw_info */
 	NULL, /* mac_set_hw_value, */ /* set_hw_value */
+#endif // NEO
 	mac_get_hw_value, /* get_hw_value */
+#if 0 //NEO
 	NULL, /* mac_get_err_status, */ /* get_err_status */
 	NULL, /* mac_set_err_status, */ /* set_err_status */
 	NULL, /* mac_general_pkt_ids, */ /*general_pkt_ids */
@@ -424,7 +430,7 @@ static struct mac_hw_info mac8822c_hw_info = {
 	20, /* bssid_num */
 	1536, /* wl_efuse_size */
 	1216, /* wl_zone2_efuse_size */
-	1536, /* log_efuse_size */
+	768, /* log_efuse_size */
 	1152, /* limit_efuse_size_PCIE */
 	1152, /* limit_efuse_size_USB */
 	1184, /* limit_efuse_size_SDIO */
@@ -436,6 +442,22 @@ static struct mac_hw_info mac8822c_hw_info = {
 	NULL, /* sec_cam_table_t pointer */
 	32, /* ple_rsvd_space */
 	24, /* payload_desc_size */
+	6, /* efuse_version_size */
+	0, /* wl_efuse_size_DAV */
+	0, /* wl_zone2_efuse_size_DAV */
+	0, /* hidden_efuse_size_DAV */
+	0, /* log_efuse_size_DAV */
+	0, /* wl_efuse_start_addr */
+	0, /* wl_efuse_start_addr_DAV */
+	0, /* bt_efuse_start_addr */
+	0, /* wd_checksum_en */
+	0, /* sw_amsdu_max_size */
+	NULL, /* pwr_on */
+	NULL, /* pwr_off */
+	0, /* ind_aces_cnt */
+	0, /* dbg_port_cnt */
+	0, /* core_swr_volt */
+	0, /* core_swr_volt_sel */
 };
 
 #if 0 // NEO

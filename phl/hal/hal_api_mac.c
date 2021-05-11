@@ -4767,6 +4767,12 @@ rtw_hal_mac_get_log_efuse_size(struct rtw_hal_com_t *hal_com, u32 *val,
 {
 	struct hal_info_t *hal_info = hal_com->hal_priv;
 	struct mac_adapter *mac = hal_to_mac(hal_info);
+
+	if (!mac->ops->get_hw_value) {
+		RTW_ERR("%s mac ops get_hw_value is NULL\n", __func__);
+		return RTW_HAL_STATUS_FAILURE;
+	}
+
 	if(is_limited == true) {
 		if(mac->ops->get_hw_value(mac,
 				MAC_HW_GET_LIMIT_LOG_EFUSE_SIZE, val) != MACSUCCESS){

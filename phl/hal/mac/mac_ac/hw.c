@@ -14,11 +14,13 @@
  ******************************************************************************/
 
 #include "hw.h"
+
+#if 0 //NEO
+
 #include "coex.h"
 #include "twt.h"
 #include "fwofld.h"
 
-#if 0 //NEO
 
 static struct mac_ax_host_rpr_cfg rpr_cfg_poh = {
 	121, /* agg */
@@ -1343,11 +1345,11 @@ u32 mac_get_hw_value(struct mac_adapter *adapter,
 		*(u32 *)val = adapter->hw_info->efuse_size +
 			      adapter->hw_info->dav_efuse_size;
 		break;
-	case MAC_AX_HW_GET_LOGICAL_EFUSE_SIZE:
+#endif //NEO
+	case MAC_HW_GET_LOGICAL_EFUSE_SIZE:
 		*(u32 *)val = adapter->hw_info->log_efuse_size +
 			      adapter->hw_info->dav_log_efuse_size;
 		break;
-#endif //NEO
 	case MAC_HW_GET_LIMIT_LOG_EFUSE_SIZE:
 		switch (adapter->hw_info->intf) {
 		case MAC_INTF_PCIE:

@@ -765,9 +765,7 @@ u32 rtw_efuse_init(struct rtw_phl_com_t *phl_com,
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
 	struct efuse_t *efuse_info = NULL;
 
-	RTW_INFO("%s NEO TODO\n", __func__);
 
-#if 0 //NEO
 	efuse_info = _os_mem_alloc(hal_com->drv_priv, sizeof(struct efuse_t));
 
 	if(efuse_info == NULL) {
@@ -785,6 +783,8 @@ u32 rtw_efuse_init(struct rtw_phl_com_t *phl_com,
 		goto error_efuse_shadow_init;
 	}
 
+	RTW_INFO("%s NEO TODO log_efuse_size:%d\n", __func__, efuse_info->log_efuse_size);
+#if 0 //NEO
 	efuse_info->shadow_map = _os_mem_alloc(hal_com->drv_priv,
 					       efuse_info->log_efuse_size);
 
@@ -913,12 +913,12 @@ error_efuse_mask_init:
 	_os_mem_free(hal_com->drv_priv, efuse_info->shadow_map,
 		     efuse_info->log_efuse_size);
 
+#endif //NEO
 error_efuse_shadow_init:
 	_os_mem_free(hal_com->drv_priv, efuse_info, sizeof(struct efuse_t));
 
 error_efuse_init:
 
-#endif //NEO
 	return hal_status;
 }
 
@@ -959,12 +959,12 @@ void rtw_efuse_deinit(struct rtw_hal_com_t *hal_com, void *efuse)
 					 efuse_info->log_efuse_size);
 		efuse_info->shadow_map = NULL;
 	}
+#endif //NEO
 
 	if (efuse_info) {
 		_os_mem_free(hal_com->drv_priv, efuse_info, sizeof(struct efuse_t));
 		efuse_info = NULL;
 	}
-#endif //NEO
 }
 
 #if 0 //NEO
