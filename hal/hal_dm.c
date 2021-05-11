@@ -282,7 +282,6 @@ void Init_ODM_ComInfo(_adapter *adapter)
 
 	/*phydm_op_mode could be change for different scenarios: ex: SoftAP - PHYDM_BALANCE_MODE*/
 	pHalData->phydm_op_mode = PHYDM_PERFORMANCE_MODE;/*Service one device*/
-	rtw_odm_init_ic_type(adapter);
 
 	if (rtw_get_intf_type(adapter) == RTW_GSPI)
 		odm_cmn_info_init(pDM_Odm, ODM_CMNINFO_INTERFACE, ODM_ITRF_SDIO);

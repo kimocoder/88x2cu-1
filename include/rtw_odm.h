@@ -70,9 +70,6 @@ static inline u32 rtw_phydm_ability_get(_adapter *adapter)
 	return rtw_phydm_ability_ops(adapter, HAL_PHYDM_ABILITY_GET, 0);
 }
 
-
-void rtw_odm_init_ic_type(_adapter *adapter);
-
 void rtw_odm_adaptivity_config_msg(void *sel, _adapter *adapter);
 
 bool rtw_odm_adaptivity_needed(_adapter *adapter);

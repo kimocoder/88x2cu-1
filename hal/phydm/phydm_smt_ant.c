@@ -236,45 +236,11 @@ void phydm_cumitek_smt_rx_default_ant_update(
 
 	/*path-A*/
 	if (cumi_smtant_table->rx_default_ant_idx[0] != rx_ant_idx_path_a) {
-		#if (RTL8822B_SUPPORT == 1)
-		if (dm->support_ic_type == ODM_RTL8822B) {
-			odm_set_bb_reg(dm, R_0xc08, BIT(21) | BIT(20) | BIT(19), rx_ant_idx_path_a); /*@default RX antenna*/
-			odm_set_mac_reg(dm, R_0x6d8, BIT(2) | BIT(1) | BIT(0), rx_ant_idx_path_a); /*@default response TX antenna*/
-		}
-		#endif
-
-		#if (RTL8197F_SUPPORT == 1)
-		if (dm->support_ic_type == ODM_RTL8197F) {
-		}
-		#endif
-
-		/*@jj add 20170822*/
-		#if (RTL8192F_SUPPORT == 1)
-		if (dm->support_ic_type == ODM_RTL8192F) {
-		}
-		#endif
 		cumi_smtant_table->rx_default_ant_idx[0] = rx_ant_idx_path_a;
 	}
 
 	/*path-B*/
 	if (cumi_smtant_table->rx_default_ant_idx[1] != rx_ant_idx_path_b) {
-		#if (RTL8822B_SUPPORT == 1)
-		if (dm->support_ic_type == ODM_RTL8822B) {
-			odm_set_bb_reg(dm, R_0xe08, BIT(21) | BIT(20) | BIT(19), rx_ant_idx_path_b); /*@default antenna*/
-			odm_set_mac_reg(dm, R_0x6d8, BIT(5) | BIT(4) | BIT(3), rx_ant_idx_path_b); /*@default response TX antenna*/
-		}
-		#endif
-
-		#if (RTL8197F_SUPPORT == 1)
-		if (dm->support_ic_type == ODM_RTL8197F) {
-		}
-		#endif
-
-		/*@jj add 20170822*/
-		#if (RTL8192F_SUPPORT == 1)
-		if (dm->support_ic_type == ODM_RTL8192F) {
-		}
-		#endif
 		cumi_smtant_table->rx_default_ant_idx[1] = rx_ant_idx_path_b;
 	}
 }
@@ -547,16 +513,12 @@ void phydm_update_beam_pattern_type2(
 
 	reg44_ori = odm_get_mac_reg(dm, R_0x44, MASKDWORD);
 	reg44_tmp_p = reg44_ori;
-#if 0
-	/*PHYDM_DBG(dm, DBG_ANT_DIV, "reg44_ori =0x%x\n", reg44_ori);*/
-#endif
 
 	/*@devide_num = (sat_tab->rfu_protocol_type == 2) ? 8 : 4;*/
 
 	for (i = 0; i <= (codeword_length - 1); i++) {
 		beam_ctrl_signal = (boolean)((codeword & BIT(i)) >> i);
 
-		#if 1
 		if (dm->debug_components & DBG_ANT_DIV) {
 			if (i == (codeword_length - 1))
 				pr_debug("%d ]\n", beam_ctrl_signal);
@@ -567,50 +529,6 @@ void phydm_update_beam_pattern_type2(
 			else
 				pr_debug("%d ", beam_ctrl_signal);
 		}
-		#endif
-
-		if (dm->support_ic_type == ODM_RTL8821) {
-			#if (RTL8821A_SUPPORT == 1)
-			reg44_tmp_p = reg44_ori & (~(BIT(11) | BIT(10))); /*@clean bit 10 & 11*/
-			reg44_tmp_p |= ((1 << 11) | (beam_ctrl_signal << 10));
-			reg44_tmp_n = reg44_ori & (~(BIT(11) | BIT(10)));
-
-#if 0
-			/*PHYDM_DBG(dm, DBG_ANT_DIV, "reg44_tmp_p =(( 0x%x )), reg44_tmp_n = (( 0x%x ))\n", reg44_tmp_p, reg44_tmp_n);*/
-#endif
-			odm_set_mac_reg(dm, R_0x44, MASKDWORD, reg44_tmp_p);
-			odm_set_mac_reg(dm, R_0x44, MASKDWORD, reg44_tmp_n);
-			#endif
-		}
-		#if (RTL8822B_SUPPORT == 1)
-		else if (dm->support_ic_type == ODM_RTL8822B) {
-			if (sat_tab->rfu_protocol_type == 2) {
-				reg44_tmp_p = reg44_tmp_p & ~(BIT(8)); /*@clean bit 8*/
-				reg44_tmp_p = reg44_tmp_p ^ BIT(9); /*@get new clk high/low, exclusive-or*/
-
-				reg44_tmp_p |= (beam_ctrl_signal << 8);
-
-				odm_set_mac_reg(dm, R_0x44, MASKDWORD, reg44_tmp_p);
-				ODM_delay_us(sat_tab->rfu_protocol_delay_time);
-#if 0
-				/*PHYDM_DBG(dm, DBG_ANT_DIV, "reg44 =(( 0x%x )), reg44[9:8] = ((%x)), beam_ctrl_signal =((%x))\n", reg44_tmp_p, ((reg44_tmp_p & 0x300)>>8), beam_ctrl_signal);*/
-#endif
-
-			} else {
-				reg44_tmp_p = reg44_ori & (~(BIT(9) | BIT(8))); /*@clean bit 9 & 8*/
-				reg44_tmp_p |= ((1 << 9) | (beam_ctrl_signal << 8));
-				reg44_tmp_n = reg44_ori & (~(BIT(9) | BIT(8)));
-
-#if 0
-				/*PHYDM_DBG(dm, DBG_ANT_DIV, "reg44_tmp_p =(( 0x%x )), reg44_tmp_n = (( 0x%x ))\n", reg44_tmp_p, reg44_tmp_n); */
-#endif
-				odm_set_mac_reg(dm, R_0x44, MASKDWORD, reg44_tmp_p);
-				ODM_delay_us(10);
-				odm_set_mac_reg(dm, R_0x44, MASKDWORD, reg44_tmp_n);
-				ODM_delay_us(10);
-			}
-		}
-		#endif
 	}
 }
 
@@ -1564,48 +1482,6 @@ void phydm_update_beam_pattern(
 				pr_debug("%d ", beam_ctrl_signal);
 		}
 
-		if (dm->support_ic_type == ODM_RTL8821) {
-			#if (RTL8821A_SUPPORT == 1)
-			reg44_tmp_p = reg44_ori & (~(BIT(11) | BIT(10))); /*@clean bit 10 & 11*/
-			reg44_tmp_p |= ((1 << 11) | (beam_ctrl_signal << 10));
-			reg44_tmp_n = reg44_ori & (~(BIT(11) | BIT(10)));
-
-#if 0
-			/*PHYDM_DBG(dm, DBG_ANT_DIV, "reg44_tmp_p =(( 0x%x )), reg44_tmp_n = (( 0x%x ))\n", reg44_tmp_p, reg44_tmp_n);*/
-#endif
-			odm_set_mac_reg(dm, R_0x44, MASKDWORD, reg44_tmp_p);
-			odm_set_mac_reg(dm, R_0x44, MASKDWORD, reg44_tmp_n);
-			#endif
-		}
-		#if (RTL8822B_SUPPORT == 1)
-		else if (dm->support_ic_type == ODM_RTL8822B) {
-			if (sat_tab->rfu_protocol_type == 2) {
-				reg44_tmp_p = reg44_tmp_p & ~(BIT(8)); /*@clean bit 8*/
-				reg44_tmp_p = reg44_tmp_p ^ BIT(9); /*@get new clk high/low, exclusive-or*/
-
-				reg44_tmp_p |= (beam_ctrl_signal << 8);
-
-				odm_set_mac_reg(dm, R_0x44, MASKDWORD, reg44_tmp_p);
-				ODM_delay_us(10);
-#if 0
-				/*PHYDM_DBG(dm, DBG_ANT_DIV, "reg44 =(( 0x%x )), reg44[9:8] = ((%x)), beam_ctrl_signal =((%x))\n", reg44_tmp_p, ((reg44_tmp_p & 0x300)>>8), beam_ctrl_signal);*/
-#endif
-
-			} else {
-				reg44_tmp_p = reg44_ori & (~(BIT(9) | BIT(8))); /*@clean bit 9 & 8*/
-				reg44_tmp_p |= ((1 << 9) | (beam_ctrl_signal << 8));
-				reg44_tmp_n = reg44_ori & (~(BIT(9) | BIT(8)));
-
-#if 0
-				/*PHYDM_DBG(dm, DBG_ANT_DIV, "reg44_tmp_p =(( 0x%x )), reg44_tmp_n = (( 0x%x ))\n", reg44_tmp_p, reg44_tmp_n); */
-#endif
-				odm_set_mac_reg(dm, R_0x44, MASKDWORD, reg44_tmp_p);
-				ODM_delay_us(10);
-				odm_set_mac_reg(dm, R_0x44, MASKDWORD, reg44_tmp_n);
-				ODM_delay_us(10);
-			}
-		}
-		#endif
 	}
 }
 
@@ -2241,37 +2117,5 @@ void phydm_smt_ant_init(void *dm_void)
 	struct smt_ant *smtant_table = &dm->smtant_table;
 
 	phydm_smt_ant_config(dm);
-
-	if (smtant_table->smt_ant_vendor == SMTANT_CUMITEK) {
-#if (defined(CONFIG_CUMITEK_SMART_ANTENNA))
-#if (RTL8822B_SUPPORT == 1)
-		if (dm->support_ic_type == ODM_RTL8822B)
-			phydm_cumitek_smt_ant_init_8822b(dm);
-#endif
-
-#if (RTL8197F_SUPPORT == 1)
-		if (dm->support_ic_type == ODM_RTL8197F)
-			phydm_cumitek_smt_ant_init_8197f(dm);
-#endif
-/*@jj add 20170822*/
-#if (RTL8192F_SUPPORT == 1)
-		if (dm->support_ic_type == ODM_RTL8192F)
-			phydm_cumitek_smt_ant_init_8192f(dm);
-#endif
-#endif /*@#if (defined(CONFIG_CUMITEK_SMART_ANTENNA))*/
-
-	} else if (smtant_table->smt_ant_vendor == SMTANT_HON_BO) {
-#if (defined(CONFIG_HL_SMART_ANTENNA))
-#ifdef CONFIG_HL_SMART_ANTENNA_TYPE1
-		if (dm->support_ic_type == ODM_RTL8821)
-			phydm_hl_smart_ant_type1_init_8821a(dm);
-#endif
-
-#ifdef CONFIG_HL_SMART_ANTENNA_TYPE2
-		if (dm->support_ic_type == ODM_RTL8822B)
-			phydm_hl_smart_ant_type2_init_8822b(dm);
-#endif
-#endif /*@#if (defined(CONFIG_HL_SMART_ANTENNA))*/
-	}
 }
 #endif

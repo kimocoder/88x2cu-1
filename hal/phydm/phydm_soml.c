@@ -37,36 +37,6 @@ void phydm_dynamicsoftmletting(void *dm_void)
 	struct dm_struct *dm = (struct dm_struct *)dm_void;
 	u32 ret_val;
 
-#if (RTL8822B_SUPPORT == 1)
-	if (!*dm->mp_mode) {
-		if (dm->support_ic_type & ODM_RTL8822B) {
-			if (!dm->is_linked | dm->iot_table.is_linked_cmw500)
-				return;
-
-			if (dm->bsomlenabled) {
-				PHYDM_DBG(dm, ODM_COMP_API,
-					  "PHYDM_DynamicSoftMLSetting(): SoML has been enable, skip dynamic SoML switch\n");
-				return;
-			}
-
-			ret_val = odm_get_bb_reg(dm, R_0xf8c, MASKBYTE0);
-			PHYDM_DBG(dm, ODM_COMP_API,
-				  "PHYDM_DynamicSoftMLSetting(): Read 0xF8C = 0x%08X\n",
-				  ret_val);
-
-			if (ret_val < 0x16) {
-				PHYDM_DBG(dm, ODM_COMP_API,
-					  "PHYDM_DynamicSoftMLSetting(): 0xF8C(== 0x%08X) < 0x16, enable SoML\n",
-					  ret_val);
-				phydm_somlrxhp_setting(dm, true);
-#if 0
-			/*odm_set_bb_reg(dm, R_0x19a8, MASKDWORD, 0xc10a0000);*/
-#endif
-				dm->bsomlenabled = true;
-			}
-		}
-	}
-#endif
 }
 
 void phydm_soml_on_off(void *dm_void, u8 swch)
@@ -76,23 +46,8 @@ void phydm_soml_on_off(void *dm_void, u8 swch)
 
 	if (swch == SOML_ON) {
 		PHYDM_DBG(dm, DBG_ADPTV_SOML, "(( Turn on )) SOML\n");
-
-		if (dm->support_ic_type & (ODM_RTL8197F | ODM_RTL8192F))
-			odm_set_bb_reg(dm, R_0x998, BIT(6), swch);
-#if (RTL8822B_SUPPORT == 1)
-		else if (dm->support_ic_type == ODM_RTL8822B)
-			phydm_somlrxhp_setting(dm, true);
-#endif
-
 	} else if (swch == SOML_OFF) {
 		PHYDM_DBG(dm, DBG_ADPTV_SOML, "(( Turn off )) SOML\n");
-
-		if (dm->support_ic_type & (ODM_RTL8197F | ODM_RTL8192F))
-			odm_set_bb_reg(dm, R_0x998, BIT(6), swch);
-#if (RTL8822B_SUPPORT == 1)
-		else if (dm->support_ic_type == ODM_RTL8822B)
-			phydm_somlrxhp_setting(dm, false);
-#endif
 	}
 	soml_tab->soml_on_off = swch;
 }
@@ -517,13 +472,9 @@ void phydm_soml_statistics(void *dm_void, u8 on_off_state)
 	if (on_off_state == SOML_ON) {
 		if (*dm->channel <= 14)
 			phydm_soml_stats_ht_on(dm);
-		if (dm->support_ic_type == ODM_RTL8822B)
-			phydm_soml_stats_vht_on(dm);
 	} else if (on_off_state == SOML_OFF) {
 		if (*dm->channel <= 14)
 			phydm_soml_stats_ht_off(dm);
-		if (dm->support_ic_type == ODM_RTL8822B)
-			phydm_soml_stats_vht_off(dm);
 	}
 }
 
@@ -549,18 +500,6 @@ void phydm_adsl_init_state(void *dm_void)
 			VHT_RATE_IDX * size);
 	odm_move_memory(dm, soml_tab->vht_byte_off, vht_reset,
 			VHT_RATE_IDX * size);
-	if (dm->support_ic_type == ODM_RTL8822B) {
-		soml_tab->cfo_cnt++;
-		phydm_soml_cfo_process(dm,
-				       &soml_tab->cfo_diff_a,
-				       &soml_tab->cfo_diff_b);
-		PHYDM_DBG(dm, DBG_ADPTV_SOML,
-			  "[ (%d) cfo_diff_a = %d KHz; cfo_diff_b = %d KHz ]\n",
-			  soml_tab->cfo_cnt, soml_tab->cfo_diff_a,
-			  soml_tab->cfo_diff_b);
-		soml_tab->cfo_diff_sum_a += soml_tab->cfo_diff_a;
-		soml_tab->cfo_diff_sum_b += soml_tab->cfo_diff_b;
-	}
 
 	soml_tab->is_soml_method_enable = 1;
 	soml_tab->get_stats = false;
@@ -589,18 +528,6 @@ void phydm_adsl_odd_state(void *dm_void)
 	odm_move_memory(dm, soml_tab->pre_vht_byte, soml_tab->vht_byte,
 			VHT_RATE_IDX * size);
 
-	if (dm->support_ic_type == ODM_RTL8822B) {
-		soml_tab->cfo_cnt++;
-		phydm_soml_cfo_process(dm,
-				       &soml_tab->cfo_diff_a,
-				       &soml_tab->cfo_diff_b);
-		PHYDM_DBG(dm, DBG_ADPTV_SOML,
-			  "[ (%d) cfo_diff_a = %d KHz; cfo_diff_b = %d KHz ]\n",
-			  soml_tab->cfo_cnt, soml_tab->cfo_diff_a,
-			  soml_tab->cfo_diff_b);
-		soml_tab->cfo_diff_sum_a += soml_tab->cfo_diff_a;
-		soml_tab->cfo_diff_sum_b += soml_tab->cfo_diff_b;
-	}
 	odm_set_timer(dm, &soml_tab->phydm_adaptive_soml_timer,
 		      soml_tab->soml_intvl); /*@ms*/
 }
@@ -612,18 +539,6 @@ void phydm_adsl_even_state(void *dm_void)
 	u8 next_on_off;
 
 	soml_tab->get_stats = false;
-	if (dm->support_ic_type == ODM_RTL8822B) {
-		soml_tab->cfo_cnt++;
-		phydm_soml_cfo_process(dm,
-				       &soml_tab->cfo_diff_a,
-				       &soml_tab->cfo_diff_b);
-		PHYDM_DBG(dm, DBG_ADPTV_SOML,
-			  "[ (%d) cfo_diff_a = %d KHz; cfo_diff_b = %d KHz ]\n",
-			  soml_tab->cfo_cnt, soml_tab->cfo_diff_a,
-			  soml_tab->cfo_diff_b);
-		soml_tab->cfo_diff_sum_a += soml_tab->cfo_diff_a;
-		soml_tab->cfo_diff_sum_b += soml_tab->cfo_diff_b;
-	}
 	soml_tab->soml_state_cnt++;
 	phydm_soml_statistics(dm, soml_tab->soml_on_off);
 	next_on_off = (soml_tab->soml_on_off == SOML_ON) ? SOML_OFF : SOML_ON;
@@ -660,23 +575,7 @@ void phydm_adsl_decision_state(void *dm_void)
 		13, 26, 39, 52, 78, 104, 117, 130, 156, 180 /*@2SSMCS0~9*/
 	};
 
-	if (dm->support_ic_type & ODM_IC_1SS)
-		rate_num = 1;
-	#ifdef PHYDM_COMPILE_ABOVE_2SS
-	else if (dm->support_ic_type & ODM_IC_2SS)
-		rate_num = 2;
-	#endif
-	#ifdef PHYDM_COMPILE_ABOVE_3SS
-	else if (dm->support_ic_type & ODM_IC_3SS)
-		rate_num = 3;
-	#endif
-	#ifdef PHYDM_COMPILE_ABOVE_4SS
-	else if (dm->support_ic_type & ODM_IC_4SS)
-		rate_num = 4;
-	#endif
-	else
-		pr_debug("%s: mismatch IC type %x\n", __func__,
-			 dm->support_ic_type);
+	rate_num = 2;
 	soml_tab->get_stats = false;
 	PHYDM_DBG(dm, DBG_ADPTV_SOML, "[Decisoin state ]\n");
 	phydm_soml_statistics(dm, soml_tab->soml_on_off);
@@ -837,240 +736,6 @@ void phydm_adsl_decision_state(void *dm_void)
 				    SOML_OFF);
 		}
 		#endif
-	} else if (dm->support_ic_type == ODM_RTL8822B) {
-		cfo_diff_avg_a = soml_tab->cfo_diff_sum_a / soml_tab->cfo_cnt;
-		cfo_diff_avg_b = soml_tab->cfo_diff_sum_b / soml_tab->cfo_cnt;
-		soml_tab->cfo_diff_avg_a = (soml_tab->cfo_cnt != 0) ?
-					   cfo_diff_avg_a : 0;
-		soml_tab->cfo_diff_avg_b = (soml_tab->cfo_cnt != 0) ?
-					   cfo_diff_avg_b : 0;
-		PHYDM_DBG(dm, DBG_ADPTV_SOML,
-			  "[ cfo_diff_avg_a = %d KHz; cfo_diff_avg_b = %d KHz]\n",
-			  soml_tab->cfo_diff_avg_a,
-			  soml_tab->cfo_diff_avg_b);
-		for (i = 0; i < VHT_ORDER_TYPE; i++)
-			num_total_qam += soml_tab->num_vht_qam[i];
-
-		PHYDM_DBG(dm, DBG_ADPTV_SOML,
-			  "[ ((2SS)) BPSK_QPSK_count = %d ; 16QAM_count = %d ; 64QAM_count = %d ; 256QAM_count = %d ; num_total_qam = %d]\n",
-			  soml_tab->num_vht_qam[BPSK_QPSK],
-			  soml_tab->num_vht_qam[QAM16],
-			  soml_tab->num_vht_qam[QAM64],
-			  soml_tab->num_vht_qam[QAM256],
-			  num_total_qam);
-		if (((soml_tab->num_vht_qam[QAM256] * 100) >
-		    (num_total_qam * soml_tab->qam256_dist_th)) &&
-		    cfo_diff_avg_a > soml_tab->cfo_qam256_th &&
-		    cfo_diff_avg_b > soml_tab->cfo_qam256_th) {
-			PHYDM_DBG(dm, DBG_ADPTV_SOML,
-				  "[  QAM256_ratio > %d ; cfo_diff_avg_a > %d KHz ==> SOML_OFF]\n",
-				  soml_tab->qam256_dist_th,
-				  soml_tab->cfo_qam256_th);
-			PHYDM_DBG(dm, DBG_ADPTV_SOML, "[ Final decisoin ] : ");
-			phydm_soml_on_off(dm, SOML_OFF);
-			return;
-		} else if (((soml_tab->num_vht_qam[QAM64] * 100) >
-			   (num_total_qam * soml_tab->qam64_dist_th)) &&
-			   (cfo_diff_avg_a > soml_tab->cfo_qam64_th) &&
-			   (cfo_diff_avg_b > soml_tab->cfo_qam64_th)) {
-			PHYDM_DBG(dm, DBG_ADPTV_SOML,
-				  "[  QAM64_ratio > %d ; cfo_diff_avg_a > %d KHz ==> SOML_OFF]\n",
-				  soml_tab->qam64_dist_th,
-				  soml_tab->cfo_qam64_th);
-			PHYDM_DBG(dm, DBG_ADPTV_SOML, "[ Final decisoin ] : ");
-			phydm_soml_on_off(dm, SOML_OFF);
-			return;
-		} else if (((soml_tab->num_vht_qam[QAM16] * 100) >
-			   (num_total_qam * soml_tab->qam16_dist_th)) &&
-			   (cfo_diff_avg_a > soml_tab->cfo_qam16_th) &&
-			   (cfo_diff_avg_b > soml_tab->cfo_qam16_th)) {
-			PHYDM_DBG(dm, DBG_ADPTV_SOML,
-				  "[  QAM16_ratio > %d ; cfo_diff_avg_a > %d KHz ==> SOML_OFF]\n",
-				  soml_tab->qam16_dist_th,
-				  soml_tab->cfo_qam16_th);
-			PHYDM_DBG(dm, DBG_ADPTV_SOML, "[ Final decisoin ] : ");
-			phydm_soml_on_off(dm, SOML_OFF);
-			return;
-		} else if (((soml_tab->num_vht_qam[BPSK_QPSK] * 100) >
-			   (num_total_qam * soml_tab->bpsk_qpsk_dist_th)) &&
-			   (cfo_diff_avg_a > soml_tab->cfo_qpsk_th) &&
-			   (cfo_diff_avg_b > soml_tab->cfo_qpsk_th)) {
-			PHYDM_DBG(dm, DBG_ADPTV_SOML,
-				  "[  BPSK_QPSK_ratio > %d ; cfo_diff_avg_a > %d KHz ==> SOML_OFF]\n",
-				  soml_tab->bpsk_qpsk_dist_th,
-				  soml_tab->cfo_qpsk_th);
-			PHYDM_DBG(dm, DBG_ADPTV_SOML, "[ Final decisoin ] : ");
-			phydm_soml_on_off(dm, SOML_OFF);
-			return;
-		}
-
-		for (i = 0; i < rate_num; i++) {
-			ss_shift = 10 * i;
-			PHYDM_DBG(dm, DBG_ADPTV_SOML,
-				  "[  vht_cnt_on  VHT-%d ss MCS[0:9] = {%d, %d, %d, %d, %d, %d, %d, %d, %d, %d} ]\n",
-				  (i + 1),
-				  soml_tab->vht_cnt_on[ss_shift + 0],
-				  soml_tab->vht_cnt_on[ss_shift + 1],
-				  soml_tab->vht_cnt_on[ss_shift + 2],
-				  soml_tab->vht_cnt_on[ss_shift + 3],
-				  soml_tab->vht_cnt_on[ss_shift + 4],
-				  soml_tab->vht_cnt_on[ss_shift + 5],
-				  soml_tab->vht_cnt_on[ss_shift + 6],
-				  soml_tab->vht_cnt_on[ss_shift + 7],
-				  soml_tab->vht_cnt_on[ss_shift + 8],
-				  soml_tab->vht_cnt_on[ss_shift + 9]);
-		}
-
-		for (i = 0; i < rate_num; i++) {
-			ss_shift = 10 * i;
-			PHYDM_DBG(dm, DBG_ADPTV_SOML,
-				  "[  vht_cnt_off  VHT-%d ss MCS[0:9] = {%d, %d, %d, %d, %d, %d, %d, %d, %d, %d} ]\n",
-				  (i + 1),
-				  soml_tab->vht_cnt_off[ss_shift + 0],
-				  soml_tab->vht_cnt_off[ss_shift + 1],
-				  soml_tab->vht_cnt_off[ss_shift + 2],
-				  soml_tab->vht_cnt_off[ss_shift + 3],
-				  soml_tab->vht_cnt_off[ss_shift + 4],
-				  soml_tab->vht_cnt_off[ss_shift + 5],
-				  soml_tab->vht_cnt_off[ss_shift + 6],
-				  soml_tab->vht_cnt_off[ss_shift + 7],
-				  soml_tab->vht_cnt_off[ss_shift + 8],
-				  soml_tab->vht_cnt_off[ss_shift + 9]);
-		}
-
-		for (i = 0; i < rate_num; i++) {
-			ss_shift = 10 * i;
-			PHYDM_DBG(dm, DBG_ADPTV_SOML,
-				  "*vht_crc_ok_cnt_on  VHT-%d ss MCS[0:9] = {%d, %d, %d, %d, %d, %d, %d, %d, %d, %d}\n",
-				  (i + 1),
-				  soml_tab->vht_crc_ok_cnt_on[ss_shift + 0],
-				  soml_tab->vht_crc_ok_cnt_on[ss_shift + 1],
-				  soml_tab->vht_crc_ok_cnt_on[ss_shift + 2],
-				  soml_tab->vht_crc_ok_cnt_on[ss_shift + 3],
-				  soml_tab->vht_crc_ok_cnt_on[ss_shift + 4],
-				  soml_tab->vht_crc_ok_cnt_on[ss_shift + 5],
-				  soml_tab->vht_crc_ok_cnt_on[ss_shift + 6],
-				  soml_tab->vht_crc_ok_cnt_on[ss_shift + 7],
-				  soml_tab->vht_crc_ok_cnt_on[ss_shift + 8],
-				  soml_tab->vht_crc_ok_cnt_on[ss_shift + 9]);
-		}
-		for (i = 0; i < rate_num; i++) {
-			ss_shift = 10 * i;
-			PHYDM_DBG(dm, DBG_ADPTV_SOML,
-				  "*vht_crc_fail_cnt_on  VHT-%d ss MCS[0:9] = {%d, %d, %d, %d, %d, %d, %d, %d, %d, %d}\n",
-				  (i + 1),
-				  soml_tab->vht_crc_fail_cnt_on[ss_shift + 0],
-				  soml_tab->vht_crc_fail_cnt_on[ss_shift + 1],
-				  soml_tab->vht_crc_fail_cnt_on[ss_shift + 2],
-				  soml_tab->vht_crc_fail_cnt_on[ss_shift + 3],
-				  soml_tab->vht_crc_fail_cnt_on[ss_shift + 4],
-				  soml_tab->vht_crc_fail_cnt_on[ss_shift + 5],
-				  soml_tab->vht_crc_fail_cnt_on[ss_shift + 6],
-				  soml_tab->vht_crc_fail_cnt_on[ss_shift + 7],
-				  soml_tab->vht_crc_fail_cnt_on[ss_shift + 8],
-				  soml_tab->vht_crc_fail_cnt_on[ss_shift + 9]);
-		}
-		for (i = 0; i < rate_num; i++) {
-			ss_shift = 10 * i;
-			PHYDM_DBG(dm, DBG_ADPTV_SOML,
-				  "*vht_crc_ok_cnt_off  VHT-%d ss MCS[0:9] = {%d, %d, %d, %d, %d, %d, %d, %d, %d, %d}\n",
-				  (i + 1),
-				  soml_tab->vht_crc_ok_cnt_off[ss_shift + 0],
-				  soml_tab->vht_crc_ok_cnt_off[ss_shift + 1],
-				  soml_tab->vht_crc_ok_cnt_off[ss_shift + 2],
-				  soml_tab->vht_crc_ok_cnt_off[ss_shift + 3],
-				  soml_tab->vht_crc_ok_cnt_off[ss_shift + 4],
-				  soml_tab->vht_crc_ok_cnt_off[ss_shift + 5],
-				  soml_tab->vht_crc_ok_cnt_off[ss_shift + 6],
-				  soml_tab->vht_crc_ok_cnt_off[ss_shift + 7],
-				  soml_tab->vht_crc_ok_cnt_off[ss_shift + 8],
-				  soml_tab->vht_crc_ok_cnt_off[ss_shift + 9]);
-		}
-		for (i = 0; i < rate_num; i++) {
-			ss_shift = 10 * i;
-			PHYDM_DBG(dm, DBG_ADPTV_SOML,
-				  "*vht_crc_fail_cnt_off  VHT-%d ss MCS[0:9] = {%d, %d, %d, %d, %d, %d, %d, %d, %d, %d}\n",
-				  (i + 1),
-				  soml_tab->vht_crc_fail_cnt_off[ss_shift + 0],
-				  soml_tab->vht_crc_fail_cnt_off[ss_shift + 1],
-				  soml_tab->vht_crc_fail_cnt_off[ss_shift + 2],
-				  soml_tab->vht_crc_fail_cnt_off[ss_shift + 3],
-				  soml_tab->vht_crc_fail_cnt_off[ss_shift + 4],
-				  soml_tab->vht_crc_fail_cnt_off[ss_shift + 5],
-				  soml_tab->vht_crc_fail_cnt_off[ss_shift + 6],
-				  soml_tab->vht_crc_fail_cnt_off[ss_shift + 7],
-				  soml_tab->vht_crc_fail_cnt_off[ss_shift + 8],
-				  soml_tab->vht_crc_fail_cnt_off[ss_shift + 9]);
-		}
-
-		for (i = ODM_RATEVHTSS2MCS0; i <= ODM_RATEVHTSS2MCS9; i++) {
-			vht_total_cnt_on += soml_tab->vht_cnt_on[i - vht0];
-			vht_total_cnt_off += soml_tab->vht_cnt_off[i - vht0];
-			total_vht_rate_on += (soml_tab->vht_cnt_on[i - vht0] *
-					     vht_phy_rate_table[i - vht0]);
-			total_vht_rate_off += (soml_tab->vht_cnt_off[i - vht0] *
-					      vht_phy_rate_table[i - vht0]);
-
-			if (soml_tab->vht_cnt_on[i - vht0] > cnt_max_on) {
-				cnt_max_on = soml_tab->vht_cnt_on[i - vht0];
-				max_idx_on = i - vht0;
-			}
-
-			if (soml_tab->vht_cnt_off[i - vht0] > cnt_max_off) {
-				cnt_max_off = soml_tab->vht_cnt_off[i - vht0];
-				max_idx_off = i - vht0;
-			}
-		}
-		total_vht_rate_on = total_vht_rate_on << 3;
-		total_vht_rate_off = total_vht_rate_off << 3;
-		rate_per_pkt_on = (vht_total_cnt_on != 0) ?
-				  (total_vht_rate_on / vht_total_cnt_on) : 0;
-		rate_per_pkt_off = (vht_total_cnt_off != 0) ?
-				   (total_vht_rate_off / vht_total_cnt_off) : 0;
-		#if (DM_ODM_SUPPORT_TYPE == ODM_AP)
-		vht_ok_max_on = soml_tab->vht_crc_ok_cnt_on[max_idx_on];
-		vht_fail_max_on = soml_tab->vht_crc_fail_cnt_on[max_idx_on];
-		vht_ok_max_off = soml_tab->vht_crc_ok_cnt_off[max_idx_off];
-		vht_fail_max_off = soml_tab->vht_crc_fail_cnt_off[max_idx_off];
-
-		if (vht_fail_max_on == 0)
-			vht_fail_max_on = 1;
-
-		if (vht_fail_max_off == 0)
-			vht_fail_max_off = 1;
-
-		if (vht_ok_max_on > vht_fail_max_on)
-			on_above = true;
-
-		if (vht_ok_max_off > vht_fail_max_off)
-			off_above = true;
-
-		if (on_above && !off_above) {
-			crc_taget = SOML_ON;
-		} else if (!on_above && off_above) {
-			crc_taget = SOML_OFF;
-		} else if (on_above && off_above) {
-			utility_on = (vht_ok_max_on << 7) / vht_fail_max_on;
-			utility_off = (vht_ok_max_off << 7) / vht_fail_max_off;
-			crc_taget = (utility_on == utility_off) ?
-				    (soml_tab->soml_last_state) :
-				    ((utility_on > utility_off) ? SOML_ON :
-				    SOML_OFF);
-
-		} else if (!on_above && !off_above) {
-			if (vht_ok_max_on == 0)
-				vht_ok_max_on = 1;
-			if (vht_ok_max_off == 0)
-				vht_ok_max_off = 1;
-			utility_on = (vht_fail_max_on << 7) / vht_ok_max_on;
-			utility_off = (vht_fail_max_off << 7) / vht_ok_max_off;
-			crc_taget = (utility_on == utility_off) ?
-				    (soml_tab->soml_last_state) :
-				    ((utility_on < utility_off) ? SOML_ON :
-				    SOML_OFF);
-		}
-		#endif
-
 	}
 
 	/* @[Decision] */
@@ -1112,22 +777,6 @@ void phydm_adsl(void *dm_void)
 	struct dm_struct *dm = (struct dm_struct *)dm_void;
 	struct adaptive_soml *soml_tab = &dm->dm_soml_table;
 
-	if (dm->support_ic_type & PHYDM_ADAPTIVE_SOML_IC) {
-		PHYDM_DBG(dm, DBG_ADPTV_SOML, "soml_state_cnt =((%d))\n",
-			  soml_tab->soml_state_cnt);
-		/*Traning state: 0(alt) 1(ori) 2(alt) 3(ori)===============*/
-		if (soml_tab->soml_state_cnt <
-		    (soml_tab->soml_train_num << 1)) {
-			if (soml_tab->soml_state_cnt == 0)
-				phydm_adsl_init_state(dm);
-			else if ((soml_tab->soml_state_cnt % 2) != 0)
-				phydm_adsl_odd_state(dm);
-			else if ((soml_tab->soml_state_cnt % 2) == 0)
-				phydm_adsl_even_state(dm);
-		} else {
-			phydm_adsl_decision_state(dm);
-		}
-	}
 }
 
 void phydm_adaptive_soml_reset(void *dm_void)
@@ -1273,74 +922,13 @@ void phydm_adaptive_soml_timers(void *dm_void, u8 state)
 	struct dm_struct *dm = (struct dm_struct *)dm_void;
 	struct adaptive_soml *soml_tab = &dm->dm_soml_table;
 
-	if (!(dm->support_ic_type & PHYDM_ADAPTIVE_SOML_IC))
-		return;
-
-#if defined(CONFIG_RTL_TRIBAND_SUPPORT) && defined(CONFIG_USB_HCI)
-	struct rtl8192cd_priv *priv = dm->priv;
-
-	if (priv->hci_type == RTL_HCI_USB) {
-		phydm_adaptive_soml_timers_usb(dm_void, state);
-	} else
-#endif /* defined(CONFIG_RTL_TRIBAND_SUPPORT) && defined(CONFIG_USB_HCI) */
-	{
-	if (state == INIT_SOML_TIMMER) {
-		odm_initialize_timer(dm, &soml_tab->phydm_adaptive_soml_timer,
-				     (void *)phydm_adaptive_soml_callback, NULL,
-				     "phydm_adaptive_soml_timer");
-	} else if (state == CANCEL_SOML_TIMMER) {
-		odm_cancel_timer(dm, &soml_tab->phydm_adaptive_soml_timer);
-	} else if (state == RELEASE_SOML_TIMMER) {
-		odm_release_timer(dm, &soml_tab->phydm_adaptive_soml_timer);
-	}
-	}
 }
 
 void phydm_adaptive_soml_init(void *dm_void)
 {
 	struct dm_struct *dm = (struct dm_struct *)dm_void;
 	struct adaptive_soml *soml_tab = &dm->dm_soml_table;
-#if 0
-	if (!(dm->support_ability & ODM_BB_ADAPTIVE_SOML)) {
-		PHYDM_DBG(dm, DBG_ADPTV_SOML,
-			  "[Return]   Not Support Adaptive SOML\n");
-		return;
-	}
-#endif
 
-	if (!(dm->support_ic_type & PHYDM_ADAPTIVE_SOML_IC))
-		return;
-
-	PHYDM_DBG(dm, DBG_ADPTV_SOML, "%s\n", __func__);
-
-	soml_tab->soml_state_cnt = 0;
-	soml_tab->soml_delay_time = 40;
-	soml_tab->soml_intvl = 150;
-	soml_tab->soml_train_num = 4;
-	soml_tab->is_soml_method_enable = 0;
-	soml_tab->soml_counter = 0;
-#if (DM_ODM_SUPPORT_TYPE & (ODM_WIN | ODM_CE))
-	soml_tab->soml_period = 1;
-#else
-	soml_tab->soml_period = 4;
-#endif
-	soml_tab->soml_select = 0;
-	soml_tab->cfo_cnt = 0;
-	soml_tab->cfo_diff_sum_a = 0;
-	soml_tab->cfo_diff_sum_b = 0;
-
-	soml_tab->cfo_qpsk_th = 94;
-	soml_tab->cfo_qam16_th = 38;
-	soml_tab->cfo_qam64_th = 17;
-	soml_tab->cfo_qam256_th = 7;
-
-	soml_tab->bpsk_qpsk_dist_th = 20;
-	soml_tab->qam16_dist_th = 20;
-	soml_tab->qam64_dist_th = 20;
-	soml_tab->qam256_dist_th = 20;
-
-	if (dm->support_ic_type & (ODM_RTL8197F | ODM_RTL8192F))
-		odm_set_bb_reg(dm, 0x988, BIT(25), 1);
 }
 
 void phydm_adaptive_soml(void *dm_void)
@@ -1384,9 +972,6 @@ void phydm_adaptive_soml(void *dm_void)
 		phydm_soml_on_off(dm, SOML_OFF);
 		return;
 	}
-
-	if (dm->support_ic_type & PHYDM_ADAPTIVE_SOML_IC)
-		phydm_adsl(dm);
 }
 
 void phydm_enable_adaptive_soml(void *dm_void)
@@ -1425,27 +1010,4 @@ void phydm_init_soft_ml_setting(void *dm_void)
 	struct dm_struct *dm = (struct dm_struct *)dm_void;
 	u32 soml_mask = BIT(31) | BIT(30) | BIT(29) | BIT(28);
 
-#if (RTL8822B_SUPPORT == 1)
-	if (!*dm->mp_mode) {
-		if (dm->support_ic_type & ODM_RTL8822B) {
-#if 0
-			/*odm_set_bb_reg(dm, R_0x19a8, MASKDWORD, 0xd10a0000);*/
-#endif
-			phydm_somlrxhp_setting(dm, true);
-			dm->bsomlenabled = true;
-		}
-	}
-#endif
-#if (RTL8821C_SUPPORT == 1)
-	if (!*dm->mp_mode) {
-		if (dm->support_ic_type & ODM_RTL8821C)
-			odm_set_bb_reg(dm, R_0x19a8, soml_mask, 0xd);
-	}
-#endif
-#if (RTL8195B_SUPPORT == 1)
-	if (!*dm->mp_mode) {
-		if (dm->support_ic_type & ODM_RTL8195B)
-			odm_set_bb_reg(dm, R_0x19a8, soml_mask, 0xd);
-	}
-#endif
 }

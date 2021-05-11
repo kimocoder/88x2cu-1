@@ -1298,10 +1298,6 @@ void odm_cmn_info_init(struct dm_struct *dm, enum odm_cmninfo cmn_info,
 		dm->is_mp_chip = (u8)value;
 		break;
 
-	case ODM_CMNINFO_IC_TYPE:
-		dm->support_ic_type = (u32)value;
-		break;
-
 	case ODM_CMNINFO_CUT_VER:
 		dm->cut_version = (u8)value;
 		break;

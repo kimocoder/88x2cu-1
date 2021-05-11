@@ -78,7 +78,6 @@ u8 rtw_hal_read_chip_info(_adapter *padapter)
 void rtw_hal_read_chip_version(_adapter *padapter)
 {
 	padapter->hal_func.read_chip_version(padapter);
-	rtw_odm_init_ic_type(padapter);
 }
 
 static void rtw_init_wireless_mode(_adapter *padapter)

@@ -754,18 +754,8 @@ void MPT_PwrCtlDM(PADAPTER padapter, u32 trk_type)
 		configure_txpower_track(pDM_Odm, &c);
 		odm_clear_txpowertracking_state(pDM_Odm);
 		if (*c.odm_tx_pwr_track_set_pwr) {
-			if (pDM_Odm->support_ic_type == ODM_RTL8188F)
-				(*c.odm_tx_pwr_track_set_pwr)(pDM_Odm, MIX_MODE, RF_PATH_A, chnl);
-			else if (pDM_Odm->support_ic_type == ODM_RTL8723D) {
-				(*c.odm_tx_pwr_track_set_pwr)(pDM_Odm, BBSWING, RF_PATH_A, chnl);
-				SetTxPower(padapter);
-			} else if (pDM_Odm->support_ic_type == ODM_RTL8192F) {
-				(*c.odm_tx_pwr_track_set_pwr)(pDM_Odm, MIX_MODE, RF_PATH_A, chnl);
-				(*c.odm_tx_pwr_track_set_pwr)(pDM_Odm, MIX_MODE, RF_PATH_B, chnl);
-			} else {
-				(*c.odm_tx_pwr_track_set_pwr)(pDM_Odm, BBSWING, RF_PATH_A, chnl);
-				(*c.odm_tx_pwr_track_set_pwr)(pDM_Odm, BBSWING, RF_PATH_B, chnl);
-			}
+			(*c.odm_tx_pwr_track_set_pwr)(pDM_Odm, BBSWING, RF_PATH_A, chnl);
+			(*c.odm_tx_pwr_track_set_pwr)(pDM_Odm, BBSWING, RF_PATH_B, chnl);
 		}
 		return ;
 	}

@@ -445,7 +445,6 @@ static void init_phydm_cominfo(PADAPTER adapter)
 	Init_ODM_ComInfo(adapter);
 
 	odm_cmn_info_init(p_dm_odm, ODM_CMNINFO_PACKAGE_TYPE, hal->PackageType);
-	odm_cmn_info_init(p_dm_odm, ODM_CMNINFO_IC_TYPE, ODM_RTL8822C);
 
 	RTW_INFO("%s: Fv=%d Cv=%d\n", __FUNCTION__, hal->version_id.VendorType, hal->version_id.CUTVersion);
 	odm_cmn_info_init(p_dm_odm, ODM_CMNINFO_FAB_VER, hal->version_id.VendorType);

@@ -815,7 +815,7 @@ struct dm_struct {
 	u8			valid_path_set;	/*@use for single rx path only*/
 	boolean			brxagcswitch;		/* @for rx AGC table switch in Microsoft case */
 	u8			support_interface;	/*@PHYDM PCIE/USB/SDIO = 1/2/3*/
-	u32			support_ic_type;	/*@PHYDM supported IC*/
+	//u32			support_ic_type;	/*@PHYDM supported IC*/
 	enum phydm_api_host	run_in_drv_fw;		/*@PHYDM API is using in FW or Driver*/
 	u8			ic_ip_series;		/*N/AC/JGR3*/
 	enum phydm_phy_sts_type	ic_phy_sts_type;	/*@Type1/type2/type3*/
