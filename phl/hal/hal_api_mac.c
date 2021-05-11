@@ -4756,6 +4756,7 @@ u4Byte hal_mac_ax_compare_h2c_c2h(RT_HAL_MAC_INFO *hm_info,
 #endif
 //====================================================================
 
+#endif // NEO
 /*
  * halmac wrapper API for hal and proto type is at hal_api_mac.h
  * Efuse part.
@@ -4768,7 +4769,7 @@ rtw_hal_mac_get_log_efuse_size(struct rtw_hal_com_t *hal_com, u32 *val,
 	struct mac_adapter *mac = hal_to_mac(hal_info);
 	if(is_limited == true) {
 		if(mac->ops->get_hw_value(mac,
-				MAC_AX_HW_GET_LIMIT_LOG_EFUSE_SIZE, val) != MACSUCCESS){
+				MAC_HW_GET_LIMIT_LOG_EFUSE_SIZE, val) != MACSUCCESS){
 				PHL_ERR("%s: Get limited logical efuse size fail!\n",
 						__FUNCTION__);
 				return RTW_HAL_STATUS_FAILURE;
@@ -4776,7 +4777,7 @@ rtw_hal_mac_get_log_efuse_size(struct rtw_hal_com_t *hal_com, u32 *val,
 	}
 	else {
 		if(mac->ops->get_hw_value(mac,
-				MAC_AX_HW_GET_LOGICAL_EFUSE_SIZE, val) != MACSUCCESS){
+				MAC_HW_GET_LOGICAL_EFUSE_SIZE, val) != MACSUCCESS){
 				PHL_ERR("%s: Get logical efuse size fail!\n", __FUNCTION__);
 				return RTW_HAL_STATUS_FAILURE;
 		}
@@ -4785,6 +4786,8 @@ rtw_hal_mac_get_log_efuse_size(struct rtw_hal_com_t *hal_com, u32 *val,
 
 	return RTW_HAL_STATUS_SUCCESS;
 }
+
+#if 0 //NEO
 
 enum rtw_hal_status
 rtw_hal_mac_read_log_efuse_map(struct rtw_hal_com_t *hal_com, u8 *map,

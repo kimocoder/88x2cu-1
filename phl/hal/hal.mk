@@ -52,7 +52,7 @@ _HAL_FILES += $(phl_path)$(HAL)/test/mp/hal_test_mp_tx.o
 _HAL_FILES += $(phl_path)$(HAL)/test/mp/hal_test_mp_txpwr.o
 endif
 
-#_HAL_FILES += $(phl_path)$(HAL)/efuse/hal_efuse.o
+_HAL_FILES += $(phl_path)$(HAL)/efuse/hal_efuse.o
 include $(phl_path_d1)/mac/mac.mk
 
 ifeq ($(USE_TRUE_PHY), y)

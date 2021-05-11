@@ -1010,13 +1010,13 @@ enum rtw_hal_status rtw_hal_init(void *drv_priv,
 		goto error_mac_init;
 	}
 
-#if 0 // NEO
 	hal_status = rtw_hal_efuse_init(phl_com, hal_info);
 	if (hal_status != RTW_HAL_STATUS_SUCCESS) {
 		PHL_ERR("rtw_hal_efuse_init failed\n");
 		goto error_efuse_init;
 	}
 
+#if 0 // NEO
 	hal_status = rtw_hal_bb_init(phl_com, hal_info);
 	if (hal_status != RTW_HAL_STATUS_SUCCESS) {
 		PHL_ERR("rtw_hal_bb_init failed\n");
