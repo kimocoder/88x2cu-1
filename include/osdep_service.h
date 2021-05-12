@@ -15,8 +15,6 @@
 #ifndef __OSDEP_SERVICE_H_
 #define __OSDEP_SERVICE_H_
 
-#define _FAIL					0
-#define _SUCCESS				1
 #define RTW_RX_HANDLED			2
 #define RTW_RFRAME_UNAVAIL		3
 #define RTW_RFRAME_PKT_UNAVAIL	4
@@ -33,11 +31,6 @@
 
 /* #define RTW_STATUS_TIMEDOUT -110 */
 
-#undef _TRUE
-#define _TRUE		1
-
-#undef _FALSE
-#define _FALSE		0
 
 
 #ifdef PLATFORM_FREEBSD
