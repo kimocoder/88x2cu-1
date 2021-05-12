@@ -678,11 +678,6 @@ u32	rtw_free_stainfo(_adapter *padapter , struct sta_info *psta)
 	rtw_free_xmitframe_queue(pxmitpriv, &psta->sleep_q);
 	psta->sleepq_len = 0;
 
-#ifdef CONFIG_RTW_MGMT_QUEUE
-	rtw_free_mgmt_xmitframe_queue(pxmitpriv, &psta->mgmt_sleep_q);
-	psta->mgmt_sleepq_len = 0;
-#endif
-
 	/* vo */
 	rtw_free_xmitframe_queue(pxmitpriv, &pstaxmitpriv->vo_q.sta_pending);
 	rtw_list_delete(&(pstaxmitpriv->vo_q.tx_pending));
@@ -714,15 +709,6 @@ u32	rtw_free_stainfo(_adapter *padapter , struct sta_info *psta)
 	phwxmit->accnt -= pstaxmitpriv->bk_q.qcnt;
 	pending_qcnt[3] = pstaxmitpriv->bk_q.qcnt;
 	pstaxmitpriv->bk_q.qcnt = 0;
-
-#ifdef CONFIG_RTW_MGMT_QUEUE
-	/* mgmt */
-	rtw_free_xmitframe_queue(pxmitpriv, &pstaxmitpriv->mgmt_q.sta_pending);
-	rtw_list_delete(&(pstaxmitpriv->mgmt_q.tx_pending));
-	phwxmit = pxmitpriv->hwxmits + 4;
-	phwxmit->accnt -= pstaxmitpriv->mgmt_q.qcnt;
-	pstaxmitpriv->mgmt_q.qcnt = 0;
-#endif
 
 	rtw_os_wake_queue_at_free_stainfo(padapter, pending_qcnt);
 

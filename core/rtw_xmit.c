@@ -2614,9 +2614,6 @@ s32 rtw_txframes_pending(_adapter *padapter)
 		(_rtw_queue_empty(&pxmitpriv->bk_pending) == _FALSE) ||
 		(_rtw_queue_empty(&pxmitpriv->vi_pending) == _FALSE) ||
 		(_rtw_queue_empty(&pxmitpriv->vo_pending) == _FALSE)
-#ifdef CONFIG_RTW_MGMT_QUEUE
-		|| (_rtw_queue_empty(&pxmitpriv->mgmt_pending) == _FALSE)
-#endif
 		);
 }
 
@@ -4498,75 +4495,6 @@ exit:
 	return _SUCCESS;
 }
 
-#ifdef CONFIG_RTW_MGMT_QUEUE
-void rtw_free_mgmt_xmitframe_queue(struct xmit_priv *pxmitpriv, _queue *mgmt_queue)
-{
-	_list	*plist, *phead;
-	struct xmit_frame *pxmitframe;
-
-	_rtw_spinlock_bh(&(mgmt_queue->lock));
-
-	phead = get_list_head(mgmt_queue);
-	plist = get_next(phead);
-
-	while (rtw_end_of_queue_search(phead, plist) == _FALSE) {
-
-		pxmitframe = LIST_CONTAINOR(plist, struct xmit_frame, list);
-		plist = get_next(plist);
-
-		#ifdef DBG_MGMT_QUEUE
-		RTW_INFO("%s seq_num = %u\n", __func__, pxmitframe->attrib.seqnum);
-		#endif
-
-		rtw_free_xmitbuf_ext(pxmitpriv, pxmitframe->pxmitbuf);
-		rtw_free_xmitframe(pxmitpriv, pxmitframe);
-	}
-	_rtw_spinunlock_bh(&(mgmt_queue->lock));
-}
-
-u8 rtw_mgmt_xmitframe_enqueue(_adapter *padapter, struct xmit_frame *pxmitframe)
-{
-	struct sta_info *psta;
-	struct tx_servq *ptxservq;
-	struct pkt_attrib *pattrib = &(pxmitframe->attrib);
-	struct xmit_priv *pxmitpriv = &(padapter->xmitpriv);
-	struct hw_xmit *phwxmits = pxmitpriv->hwxmits;
-	u8 mgmt_idx = pxmitpriv->hwxmit_entry - 1;
-
-	DBG_COUNTER(padapter->tx_logs.core_tx_enqueue_class);
-
-	psta = rtw_get_stainfo(&padapter->stapriv, pattrib->ra);
-	if (pattrib->psta != psta) {
-		DBG_COUNTER(padapter->tx_logs.core_tx_enqueue_class_err_sta);
-		RTW_INFO("%s, pattrib->psta(%p) != psta(%p)\n", __func__, pattrib->psta, psta);
-		return _FAIL;
-	}
-
-	if (psta == NULL) {
-		DBG_COUNTER(padapter->tx_logs.core_tx_enqueue_class_err_nosta);
-		RTW_INFO("rtw_xmit_classifier: psta == NULL\n");
-		return _FAIL;
-	}
-
-	if (!(psta->state & WIFI_ASOC_STATE)) {
-		DBG_COUNTER(padapter->tx_logs.core_tx_enqueue_class_err_fwlink);
-		RTW_INFO("%s, psta->state(0x%x) != WIFI_ASOC_STATE\n", __func__, psta->state);
-		return _FAIL;
-	}
-
-	ptxservq = &(psta->sta_xmitpriv.mgmt_q);
-
-	if (rtw_is_list_empty(&ptxservq->tx_pending))
-		rtw_list_insert_tail(&ptxservq->tx_pending, get_list_head(phwxmits[mgmt_idx].sta_queue));
-
-	rtw_list_insert_tail(&pxmitframe->list, get_list_head(&ptxservq->sta_pending));
-	ptxservq->qcnt++;
-	phwxmits[mgmt_idx].accnt++;
-
-	return _SUCCESS;
-}
-#endif
-
 void rtw_free_xmitframe_queue(struct xmit_priv *pxmitpriv, _queue *pframequeue)
 {
 	_list	*plist, *phead;
@@ -4664,13 +4592,7 @@ struct xmit_frame *rtw_get_xframe(struct xmit_priv *pxmitpriv, int *num_frame)
 {
 	_list *sta_plist, *sta_phead;
 	struct hw_xmit *phwxmit_i = pxmitpriv->hwxmits;
-#ifdef CONFIG_RTW_MGMT_QUEUE
-	/* This function gets xmit_frame from AC queue. */
-	/* When mgmt queue is used, AC queue index is (hwxmit_entry - 1) */
-	sint entry = pxmitpriv->hwxmit_entry - 1;
-#else
 	sint entry = pxmitpriv->hwxmit_entry;
-#endif
 	struct hw_xmit *phwxmit;
 	struct tx_servq *ptxservq = NULL;
 	_queue *pframe_queue = NULL;
@@ -4721,54 +4643,6 @@ exit:
 	return pxmitframe;
 }
 
-#ifdef CONFIG_RTW_MGMT_QUEUE
-struct xmit_frame *rtw_dequeue_mgmt_xframe(struct xmit_priv *pxmitpriv)
-{
-	_list *sta_plist, *sta_phead;
-	struct hw_xmit *mgmt_hwxmit;
-	struct tx_servq *ptxservq = NULL;
-	_queue *pframe_queue = NULL;
-	struct xmit_frame *pxmitframe = NULL;
-	u8 mgmt_entry = pxmitpriv->hwxmit_entry - 1;
-
-	_rtw_spinlock_bh(&pxmitpriv->lock);
-
-	/* management queue */
-	mgmt_hwxmit = (pxmitpriv->hwxmits) + mgmt_entry;
-
-	sta_phead = get_list_head(mgmt_hwxmit->sta_queue);
-	sta_plist = get_next(sta_phead);
-
-	while ((rtw_end_of_queue_search(sta_phead, sta_plist)) == _FALSE) {
-
-		ptxservq = LIST_CONTAINOR(sta_plist, struct tx_servq, tx_pending);
-
-		pframe_queue = &ptxservq->sta_pending;
-
-		pxmitframe = dequeue_one_xmitframe(pxmitpriv, mgmt_hwxmit, ptxservq, pframe_queue);
-
-		#ifdef DBG_MGMT_QUEUE
-		RTW_INFO("%s dequeue mgmt frame (seq_num = %u) to TX\n", __func__, pxmitframe->attrib.seqnum);
-		#endif
-
-		if (pxmitframe) {
-			mgmt_hwxmit->accnt--;
-
-			/* Remove sta node when there is no pending packets. */
-			if (_rtw_queue_empty(pframe_queue)) /* must be done after get_next and before break */
-				rtw_list_delete(&ptxservq->tx_pending);
-
-			goto exit;
-		}
-		sta_plist = get_next(sta_plist);
-	}
-exit:
-	_rtw_spinunlock_bh(&pxmitpriv->lock);
-
-	return pxmitframe;
-}
-#endif
-
 struct xmit_frame *rtw_dequeue_xframe(struct xmit_priv *pxmitpriv, struct hw_xmit *phwxmit_i, sint entry)
 {
 	_list *sta_plist, *sta_phead;
@@ -4779,11 +4653,6 @@ struct xmit_frame *rtw_dequeue_xframe(struct xmit_priv *pxmitpriv, struct hw_xmi
 	_adapter *padapter = pxmitpriv->adapter;
 	struct registry_priv *pregpriv = &padapter->registrypriv;
 	int i, inx[4];
-#ifdef CONFIG_RTW_MGMT_QUEUE
-	/* This function gets xmit_frame from AC queue. */
-	/* When mgmt queue is used, AC queue index is (hwxmit_entry - 1) */
-	entry--;
-#endif
 	inx[0] = 0;
 	inx[1] = 1;
 	inx[2] = 2;
@@ -4983,11 +4852,6 @@ void rtw_alloc_hwxmits(_adapter *padapter)
 	/* pxmitpriv->bk_txqueue.head = 0; */
 	/* hwxmits[3] .phwtxqueue = &pxmitpriv->bk_txqueue; */
 	hwxmits[3].sta_queue = &pxmitpriv->bk_pending;
-
-#ifdef CONFIG_RTW_MGMT_QUEUE
-	hwxmits[4].sta_queue = &pxmitpriv->mgmt_pending;
-#endif
-
 }
 
 void rtw_free_hwxmits(_adapter *padapter)
@@ -7518,96 +7382,6 @@ inline bool xmitframe_hiq_filter(struct xmit_frame *xmitframe)
 }
 
 #if defined(CONFIG_AP_MODE) || defined(CONFIG_TDLS)
-#ifdef CONFIG_RTW_MGMT_QUEUE
-u8 mgmt_xmitframe_enqueue_for_sleeping_sta(_adapter *padapter, struct xmit_frame *pxmitframe)
-{
-	struct pkt_attrib *pattrib = &pxmitframe->attrib;
-	struct sta_info *psta = pattrib->psta;
-	struct sta_priv *pstapriv = &padapter->stapriv;
-	bool update_tim = _FALSE;
-	u8 ret = _TRUE;
-
-	if (is_broadcast_mac_addr(pattrib->ra) || pattrib->ps_dontq)
-		return _FALSE;
-
-	if (psta == NULL) {
-		RTW_INFO("%s, psta==NUL, pattrib->ra:"MAC_FMT"\n",
-				    __func__, MAC_ARG(pattrib->ra));
-		return _FALSE;
-	}
-
-	if (!(psta->state & WIFI_ASOC_STATE)) {
-		DBG_COUNTER(padapter->tx_logs.core_tx_ap_enqueue_warn_link);
-		RTW_INFO("%s, psta->state(0x%x) != WIFI_ASOC_STATE\n", __func__, psta->state);
-		return _FALSE;
-	}
-
-	_rtw_spinlock_bh(&psta->mgmt_sleep_q.lock);
-
-	if (psta->state & WIFI_SLEEP_STATE &&
-		rtw_tim_map_is_set(padapter, pstapriv->sta_dz_bitmap, psta->cmn.aid)) {
-
-		rtw_list_delete(&pxmitframe->list);
-		rtw_list_insert_tail(&pxmitframe->list, get_list_head(&psta->mgmt_sleep_q));
-		psta->mgmt_sleepq_len++;
-
-		#ifdef DBG_MGMT_QUEUE
-			RTW_INFO("%s attrib->ra:"MAC_FMT" seq_num = %u, subtype = 0x%x\n",
-			__func__, MAC_ARG(pattrib->ra), pattrib->seqnum, pattrib->subtype);
-		#endif
-
-		if (!(rtw_tim_map_is_set(padapter, pstapriv->tim_bitmap, psta->cmn.aid)))
-			update_tim = _TRUE;
-
-		rtw_tim_map_set(padapter, pstapriv->tim_bitmap, psta->cmn.aid);
-
-		/* upate BCN for TIM IE */
-		if (update_tim == _TRUE)
-			_update_beacon(padapter, _TIM_IE_, NULL, _TRUE, 0, "buffer mgmt frame");
-
-		ret = RTW_QUEUE_MGMT;
-		DBG_COUNTER(padapter->tx_logs.core_tx_ap_enqueue_ucast);
-	}
-
-	_rtw_spinunlock_bh(&psta->mgmt_sleep_q.lock);
-
-	return ret;
-}
-
-static void dequeue_mgmt_xmitframe_to_sleepq(_adapter *padapter, struct sta_info *psta, _queue *pframequeue)
-{
-	sint ret;
-	_list	*plist, *phead;
-	struct tx_servq *ptxservq;
-	struct pkt_attrib *pattrib;
-	struct xmit_frame *pxmitframe;
-	struct xmit_priv *pxmitpriv = &(padapter->xmitpriv);
-	struct hw_xmit *phwxmits = pxmitpriv->hwxmits;
-	u8 mgmt_idx = pxmitpriv->hwxmit_entry - 1;
-
-	phead = get_list_head(pframequeue);
-	plist = get_next(phead);
-
-	while (rtw_end_of_queue_search(phead, plist) == _FALSE) {
-		pxmitframe = LIST_CONTAINOR(plist, struct xmit_frame, list);
-		plist = get_next(plist);
-
-		pattrib = &pxmitframe->attrib;
-		pattrib->triggered = 0;
-
-		ret = mgmt_xmitframe_enqueue_for_sleeping_sta(padapter, pxmitframe);
-
-		if (ret == RTW_QUEUE_MGMT) {
-			ptxservq = &(psta->sta_xmitpriv.mgmt_q);
-			ptxservq->qcnt--;
-			phwxmits[mgmt_idx].accnt--;
-		} else {
-			/* RTW_INFO("xmitframe_enqueue_for_sleeping_sta return _FALSE\n"); */
-		}
-	}
-}
-#endif
-
 sint xmitframe_enqueue_for_sleeping_sta(_adapter *padapter, struct xmit_frame *pxmitframe)
 {
 	sint ret = _FALSE;
@@ -7832,11 +7606,6 @@ void stop_sta_xmit(_adapter *padapter, struct sta_info *psta)
 #endif /* CONFIG_TDLS */
 		rtw_tim_map_set(padapter, pstapriv->sta_dz_bitmap, psta->cmn.aid);
 
-#ifdef CONFIG_RTW_MGMT_QUEUE
-	dequeue_mgmt_xmitframe_to_sleepq(padapter, psta, &pstaxmitpriv->mgmt_q.sta_pending);
-	rtw_list_delete(&(pstaxmitpriv->mgmt_q.tx_pending));
-#endif
-
 	dequeue_xmitframes_to_sleeping_queue(padapter, psta, &pstaxmitpriv->vo_q.sta_pending);
 	rtw_list_delete(&(pstaxmitpriv->vo_q.tx_pending));
 	dequeue_xmitframes_to_sleeping_queue(padapter, psta, &pstaxmitpriv->vi_q.sta_pending);
@@ -7881,31 +7650,6 @@ void wakeup_sta_to_xmit(_adapter *padapter, struct sta_info *psta)
 
 
 	_rtw_spinlock_bh(&pxmitpriv->lock);
-
-#ifdef CONFIG_RTW_MGMT_QUEUE
-	/* management queue */
-	xmitframe_phead = get_list_head(&psta->mgmt_sleep_q);
-	xmitframe_plist = get_next(xmitframe_phead);
-
-	while ((rtw_end_of_queue_search(xmitframe_phead, xmitframe_plist)) == _FALSE) {
-		pxmitframe = LIST_CONTAINOR(xmitframe_plist, struct xmit_frame, list);
-
-		xmitframe_plist = get_next(xmitframe_plist);
-
-		rtw_list_delete(&pxmitframe->list);
-
-		#ifdef DBG_MGMT_QUEUE
-		RTW_INFO("%s seq_num = %u, subtype = 0x%x\n",
-				__func__, pxmitframe->attrib.seqnum, pxmitframe->attrib.subtype);
-		#endif
-
-		psta->mgmt_sleepq_len--;
-
-		pxmitframe->attrib.triggered = 1;
-
-		rtw_hal_mgmt_xmitframe_enqueue(padapter, pxmitframe);
-	}
-#endif /* CONFIG_RTW_MGMT_QUEUE */
 
 	/* AC queue */
 	xmitframe_phead = get_list_head(&psta->sleep_q);
@@ -7963,9 +7707,6 @@ void wakeup_sta_to_xmit(_adapter *padapter, struct sta_info *psta)
 	}
 
 	if (psta->sleepq_len == 0
-#ifdef CONFIG_RTW_MGMT_QUEUE
-		&& psta->mgmt_sleepq_len == 0
-#endif
 	) {
 #ifdef CONFIG_TDLS
 		if (psta->tdls_sta_state & TDLS_LINKED_STATE) {

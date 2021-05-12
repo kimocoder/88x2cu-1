@@ -145,11 +145,7 @@
 #define IS_AMSDU_AMPDU_VALID(pattrib)\
 	 !((pattrib->ampdu_en == _TRUE) && (pattrib->amsdu_ampdu_en == _FALSE))
 
-#ifdef CONFIG_RTW_MGMT_QUEUE
-#define HWXMIT_ENTRY 5
-#else
 #define HWXMIT_ENTRY 4
-#endif
 
 /* For Buffer Descriptor ring architecture */
 #if defined(BUF_DESC_ARCH) || defined(CONFIG_TRX_BD_ARCH)
@@ -474,9 +470,6 @@ struct pkt_attrib {
 	u8 bf_pkt_type;
 #endif
 
-#ifdef CONFIG_RTW_MGMT_QUEUE
-	u8 ps_dontq; /* 1: this frame can't be queued at PS state */
-#endif
 	u8 wdinfo_en;/*FPGA_test*/
 	u8 dma_ch;/*FPGA_test*/
 };
@@ -583,9 +576,6 @@ struct pkt_attrib {
 	u8 bf_pkt_type;
 #endif
 
-#ifdef CONFIG_RTW_MGMT_QUEUE
-	u8 ps_dontq; /* 1: this frame can't be queued at PS state */
-#endif
 };
 #endif // if 0
 
@@ -819,9 +809,6 @@ struct sta_xmit_priv {
 	struct tx_servq	bk_q;			/* priority == 1,2 */
 	struct tx_servq	vi_q;			/* priority == 4,5 */
 	struct tx_servq	vo_q;			/* priority == 6,7 */
-#ifdef CONFIG_RTW_MGMT_QUEUE
-	struct tx_servq	mgmt_q;
-#endif
 
 	_list	legacy_dz;
 	_list  apsd;
@@ -1083,12 +1070,6 @@ s32 core_tx_free_xmitframe(_adapter *padapter, struct xmit_frame *pxframe);
 struct tx_servq *rtw_get_sta_pending(_adapter *padapter, struct sta_info *psta, sint up, u8 *ac);
 extern s32 rtw_xmitframe_enqueue(_adapter *padapter, struct xmit_frame *pxmitframe);
 
-#ifdef CONFIG_RTW_MGMT_QUEUE
-void rtw_free_mgmt_xmitframe_queue(struct xmit_priv *pxmitpriv, _queue *mgmt_queue);
-u8 rtw_mgmt_xmitframe_enqueue(_adapter *padapter, struct xmit_frame *pxmitframe);
-struct xmit_frame *rtw_dequeue_mgmt_xframe(struct xmit_priv *pxmitpriv);
-#endif /* CONFIG_RTW_MGMT_QUEUE */
-
 extern struct xmit_frame *rtw_dequeue_xframe(struct xmit_priv *pxmitpriv, struct hw_xmit *phwxmit_i, sint entry);
 
 extern s32 rtw_xmit_classifier(_adapter *padapter, struct xmit_frame *pxmitframe);
@@ -1130,9 +1111,6 @@ s32 rtw_xmit_posthandle(_adapter *padapter, struct xmit_frame *pxmitframe, struc
 s32 rtw_xmit(_adapter *padapter, struct sk_buff **pkt, u16 os_qid);
 bool xmitframe_hiq_filter(struct xmit_frame *xmitframe);
 #if defined(CONFIG_AP_MODE) || defined(CONFIG_TDLS)
-#ifdef CONFIG_RTW_MGMT_QUEUE
-u8 mgmt_xmitframe_enqueue_for_sleeping_sta(_adapter *padapter, struct xmit_frame *pxmitframe);
-#endif
 sint xmitframe_enqueue_for_sleeping_sta(_adapter *padapter, struct xmit_frame *pxmitframe);
 void stop_sta_xmit(_adapter *padapter, struct sta_info *psta);
 void wakeup_sta_to_xmit(_adapter *padapter, struct sta_info *psta);

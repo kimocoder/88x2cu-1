@@ -7442,28 +7442,6 @@ void update_monitor_frame_attrib(_adapter *padapter, struct pkt_attrib *pattrib)
 
 }
 
-#ifdef CONFIG_RTW_MGMT_QUEUE
-void update_mgntframe_subtype(_adapter *padapter, struct xmit_frame *pmgntframe)
-{
-	struct pkt_attrib *pattrib = &pmgntframe->attrib;
-	u8 *pframe;
-	u8 subtype, category ,action;
-
-	pframe = (u8 *)(pmgntframe->buf_addr) + TXDESC_OFFSET;
-	subtype = get_frame_sub_type(pframe); /* bit(7)~bit(2) */
-	pattrib->subtype = subtype;
-
-	rtw_action_frame_parse(pframe, pattrib->pktlen, &category, &action);
-
-	if ((subtype == WIFI_ACTION && !(action == ACT_PUBLIC_FTM_REQ || action == ACT_PUBLIC_FTM)) ||
-		subtype == WIFI_DISASSOC || subtype == WIFI_DEAUTH ||
-		(subtype == WIFI_PROBERSP && MLME_IS_ADHOC(padapter)))
-		pattrib->ps_dontq = 0;
-	else
-		pattrib->ps_dontq = 1;
-}
-#endif
-
 void update_mgntframe_attrib(_adapter *padapter, struct pkt_attrib *pattrib)
 {
 	u8	wireless_mode;
@@ -7536,9 +7514,6 @@ void update_mgntframe_attrib(_adapter *padapter, struct pkt_attrib *pattrib)
 
 	pattrib->mbssid = 0;
 	pattrib->hw_ssn_sel = pxmitpriv->hw_ssn_seq_no;
-#ifdef CONFIG_RTW_MGMT_QUEUE
-	pattrib->ps_dontq = 1;
-#endif
 }
 
 void update_mgntframe_attrib_addr(_adapter *padapter, struct xmit_frame *pmgntframe)
@@ -7595,11 +7570,7 @@ s32 dump_mgntframe_and_wait(_adapter *padapter, struct xmit_frame *pmgntframe, i
 
 	ret = rtw_hal_mgnt_xmit(padapter, pmgntframe);
 
-	if (ret == _SUCCESS
-#ifdef CONFIG_RTW_MGMT_QUEUE
-	|| ret == RTW_QUEUE_MGMT
-#endif
-	)
+	if (ret == _SUCCESS)
 		ret = rtw_sctx_wait(&sctx, __func__);
 
 	_rtw_spinlock_irq(&pxmitpriv->lock_sctx, &sp_flags);
@@ -7630,11 +7601,7 @@ s32 dump_mgntframe_and_wait_ack_timeout(_adapter *padapter, struct xmit_frame *p
 
 	ret = rtw_hal_mgnt_xmit(padapter, pmgntframe);
 
-	if (ret == _SUCCESS
-#ifdef CONFIG_RTW_MGMT_QUEUE
-	|| ret == RTW_QUEUE_MGMT
-#endif
-	)
+	if (ret == _SUCCESS)
 		ret = rtw_sctx_wait(&(pxmitpriv->ack_tx_ops), __func__);
 
 	pxmitpriv->ack_tx = _FALSE;

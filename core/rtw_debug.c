@@ -2646,11 +2646,6 @@ int proc_get_trx_info(struct seq_file *m, void *v)
 
 	for (i = 0; i < pxmitpriv->hwxmit_entry; i++) {
 		phwxmit = pxmitpriv->hwxmits + i;
-#ifdef CONFIG_RTW_MGMT_QUEUE
-		if (i == pxmitpriv->hwxmit_entry - 1)
-			RTW_PRINT_SEL(m, "%d, hw_mgmt_q.accnt=%d\n", i, phwxmit->accnt);
-		else
-#endif
 			RTW_PRINT_SEL(m, "%d, hwq.accnt=%d\n", i, phwxmit->accnt);
 	}
 
@@ -4669,11 +4664,6 @@ int proc_get_all_sta_info(struct seq_file *m, void *v)
 				RTW_PRINT_SEL(m, "sta_xmitpriv.vi_q_qcnt=%d\n", psta->sta_xmitpriv.vi_q.qcnt);
 				RTW_PRINT_SEL(m, "sta_xmitpriv.be_q_qcnt=%d\n", psta->sta_xmitpriv.be_q.qcnt);
 				RTW_PRINT_SEL(m, "sta_xmitpriv.bk_q_qcnt=%d\n", psta->sta_xmitpriv.bk_q.qcnt);
-
-#ifdef CONFIG_RTW_MGMT_QUEUE
-				RTW_PRINT_SEL(m, "management sleepq_len=%d\n", psta->mgmt_sleepq_len);
-				RTW_PRINT_SEL(m, "sta_xmitpriv.mgmt_q_qcnt=%d\n", psta->sta_xmitpriv.mgmt_q.qcnt);
-#endif
 
 				RTW_PRINT_SEL(m, "capability=0x%x\n", psta->capability);
 				RTW_PRINT_SEL(m, "flags=0x%x\n", psta->flags);

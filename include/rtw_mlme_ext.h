@@ -851,9 +851,6 @@ extern u8 set_tx_beacon_cmd(_adapter *padapter, u8 flags);
 unsigned int setup_beacon_frame(_adapter *padapter, unsigned char *beacon_frame);
 void update_mgnt_tx_rate(_adapter *padapter, u8 rate);
 void update_monitor_frame_attrib(_adapter *padapter, struct pkt_attrib *pattrib);
-#ifdef CONFIG_RTW_MGMT_QUEUE
-void update_mgntframe_subtype(_adapter *padapter, struct xmit_frame *pmgntframe);
-#endif
 void update_mgntframe_attrib(_adapter *padapter, struct pkt_attrib *pattrib);
 void update_mgntframe_attrib_addr(_adapter *padapter, struct xmit_frame *pmgntframe);
 void dump_mgntframe(_adapter *padapter, struct xmit_frame *pmgntframe);

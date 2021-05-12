@@ -302,9 +302,6 @@ struct hal_ops {
 	 * mgnt_xmit should be implemented to run in interrupt context
 	 */
 	s32(*mgnt_xmit)(_adapter *padapter, struct xmit_frame *pmgntframe);
-#ifdef CONFIG_RTW_MGMT_QUEUE
-	s32(*hal_mgmt_xmitframe_enqueue)(_adapter *padapter, struct xmit_frame *pxmitframe);
-#endif
 	#if defined (CONFIG_CONCURRENT_MODE)  && defined (CONFIG_TSF_SYNC)
 	void(*tsf_sync)(_adapter *Adapter);
 	#endif
@@ -744,9 +741,6 @@ u8	rtw_hal_pci_l1off_capability(_adapter *padapter);
 
 u8	rtw_hal_intf_ps_func(_adapter *padapter, HAL_INTF_PS_FUNC efunc_id, u8 *val);
 
-#ifdef CONFIG_RTW_MGMT_QUEUE
-s32	rtw_hal_mgmt_xmitframe_enqueue(_adapter *padapter, struct xmit_frame *pxmitframe);
-#endif
 s32	rtw_hal_mgnt_xmit(_adapter *padapter, struct xmit_frame *pmgntframe);
 
 s32	rtw_hal_init_xmit_priv(_adapter *padapter);

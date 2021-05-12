@@ -48,9 +48,6 @@ void rtl8822cu_deinitswleds(PADAPTER);
 s32 rtl8822cu_init_xmit_priv(PADAPTER);
 void rtl8822cu_free_xmit_priv(PADAPTER);
 s32 rtl8822cu_mgnt_xmit(PADAPTER, struct xmit_frame *);
-#ifdef CONFIG_RTW_MGMT_QUEUE
-s32 rtl8822cu_hal_mgmt_xmitframe_enqueue(PADAPTER, struct xmit_frame *);
-#endif
 s32 rtl8822cu_hostap_mgnt_xmit_entry(PADAPTER, struct sk_buff *);
 
 #if 0 //NEO

@@ -635,15 +635,6 @@ static s32 rtl8822cu_xmitframe_complete(PADAPTER padapter, struct xmit_priv *pxm
 	phwxmits = pxmitpriv->hwxmits;
 	hwentry = pxmitpriv->hwxmit_entry;
 
-#ifdef CONFIG_RTW_MGMT_QUEUE
-	/* dump management frame directly */
-	pxmitframe = rtw_dequeue_mgmt_xframe(pxmitpriv);
-	if (pxmitframe) {
-		rtw_dump_xframe(padapter, pxmitframe);
-		return _TRUE;
-	}
-#endif
-
 	if (pxmitbuf == NULL) {
 		pxmitbuf = rtw_alloc_xmitbuf(pxmitpriv);
 		if (!pxmitbuf)
@@ -744,25 +735,6 @@ s32 rtl8822cu_mgnt_xmit(PADAPTER padapter, struct xmit_frame *pmgntframe)
 {
 	return rtw_dump_xframe(padapter, pmgntframe);
 }
-
-#ifdef CONFIG_RTW_MGMT_QUEUE
-s32 rtl8822cu_hal_mgmt_xmitframe_enqueue(PADAPTER padapter, struct xmit_frame *pxmitframe)
-{
-	struct xmit_priv *pxmitpriv = &padapter->xmitpriv;
-	s32 err;
-
-	err = rtw_mgmt_xmitframe_enqueue(padapter, pxmitframe);
-	if (err != _SUCCESS) {
-		rtw_free_xmitframe(pxmitpriv, pxmitframe);
-		pxmitpriv->tx_drop++;
-	} else {
-#ifdef PLATFORM_LINUX
-		tasklet_hi_schedule(&pxmitpriv->xmit_tasklet);
-#endif
-	}
-	return err;
-}
-#endif
 
 #ifdef CONFIG_HOSTAPD_MLME
 
