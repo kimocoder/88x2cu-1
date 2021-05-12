@@ -53,13 +53,12 @@ struct cmd_priv {
 	u8	*rsp_buf;	/* shall be non-paged, and 4 bytes aligned		 */
 	u8	*rsp_allocated_buf;
 	u32	cmd_issued_cnt;
-	u32	cmd_done_cnt;
-	u32	rsp_cnt;
-	/* u8 cmdthd_running; */
 
 	_adapter *padapter;
 	struct dvobj_priv *dvobj;
 	_mutex sctx_mutex;
+	ATOMIC_T event_seq;
+	u32 evt_done_cnt;
 
 	#ifdef CONFIG_CORE_CMD_THREAD
 	_queue	cmd_queue;
@@ -182,7 +181,6 @@ thread_return rtw_cmd_thread(thread_context context);
 u32 rtw_init_cmd_priv(struct dvobj_priv *dvobj);
 void rtw_free_cmd_priv(struct dvobj_priv *dvobj);
 
-extern void rtw_cmd_clr_isr(struct cmd_priv *pcmdpriv);
 extern void rtw_evt_notify_isr(struct evt_priv *pevtpriv);
 #ifdef CONFIG_P2P
 u8 p2p_protocol_wk_cmd(_adapter *padapter, int intCmdType);

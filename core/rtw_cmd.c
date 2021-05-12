@@ -61,12 +61,13 @@ u32	rtw_init_cmd_priv(struct dvobj_priv *dvobj)
 
 	pcmdpriv->rsp_buf = pcmdpriv->rsp_allocated_buf  +  4 - ((SIZE_PTR)(pcmdpriv->rsp_allocated_buf) & 3);
 
-	pcmdpriv->cmd_issued_cnt = pcmdpriv->cmd_done_cnt = pcmdpriv->rsp_cnt = 0;
+	pcmdpriv->cmd_issued_cnt = 0;
 
 	_rtw_mutex_init(&pcmdpriv->sctx_mutex);
+
+	ATOMIC_SET(&pcmdpriv->event_seq, 0);
+	pcmdpriv->evt_done_cnt = 0;
 exit:
-
-
 	return res;
 
 }
@@ -406,12 +407,6 @@ u32 rtw_enqueue_cmd(struct cmd_priv *pcmdpriv, struct cmd_obj *cmd_obj)
 
 exit:
 	return res;
-}
-
-void rtw_cmd_clr_isr(struct	cmd_priv *pcmdpriv)
-{
-	pcmdpriv->cmd_done_cnt++;
-	/* _rtw_up_sema(&(pcmdpriv->cmd_done_sema)); */
 }
 
 void rtw_free_cmd_obj(struct cmd_obj *pcmd)
