@@ -664,14 +664,12 @@ u8 rtw_hw_init(struct dvobj_priv *dvobj)
 	/* sw & hw cap*/
 	rtw_phl_cap_pre_config(dvobj->phl);
 
-#if 0 // NEO : TODO : mark off first
 	#ifdef CONFIG_RX_PSTS_PER_PKT
 	rtw_phl_init_ppdu_sts_para(dvobj->phl_com,
 		_TRUE, _FALSE,
 		RTW_PHL_PSTS_FLTR_MGNT | RTW_PHL_PSTS_FLTR_DATA /*| RTW_PHL_PSTS_FLTR_CTRL*/
 		);
 	#endif
-#endif
 
 	/*init datapath section*/
 	rtw_phl_trx_alloc(dvobj->phl);
