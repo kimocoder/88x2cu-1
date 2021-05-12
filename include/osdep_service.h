@@ -152,6 +152,10 @@ gro_result_t dbg_rtw_napi_gro_receive(struct napi_struct *napi, struct sk_buff *
 #endif
 #endif /* CONFIG_RTW_NAPI */
 void dbg_rtw_skb_queue_purge(struct sk_buff_head *list, enum mstat_f flags, const char *func, int line);
+#ifdef CONFIG_USB_HCI
+void *dbg_rtw_usb_buffer_alloc(struct usb_device *dev, size_t size, dma_addr_t *dma, const enum mstat_f flags, const char *func, const int line);
+void dbg_rtw_usb_buffer_free(struct usb_device *dev, size_t size, void *addr, dma_addr_t dma, const enum mstat_f flags, const char 8func, const int line);
+#endif /* CONFIG_USB_HCI */
 
 #ifdef CONFIG_USE_VMALLOC
 #define rtw_vmalloc(sz)			dbg_rtw_vmalloc((sz), MSTAT_TYPE_VIR, __FUNCTION__, __LINE__)
@@ -220,10 +224,6 @@ gro_result_t _rtw_napi_gro_receive(struct napi_struct *napi, struct sk_buff *skb
 #endif /* CONFIG_RTW_NAPI */
 void _rtw_skb_queue_purge(struct sk_buff_head *list);
 
-#ifdef CONFIG_USB_HCI
-void *_rtw_usb_buffer_alloc(struct usb_device *dev, size_t size, dma_addr_t *dma);
-void _rtw_usb_buffer_free(struct usb_device *dev, size_t size, void *addr, dma_addr_t dma);
-#endif /* CONFIG_USB_HCI */
 
 #ifdef CONFIG_USE_VMALLOC
 #define rtw_vmalloc(sz)			_rtw_vmalloc((sz))
@@ -367,35 +367,6 @@ __inline static unsigned char _cancel_timer_ex(_timer *ptimer)
 	return bcancelled;
 }
 
-#ifdef PLATFORM_LINUX
-#define rtw_warn_on(condition) WARN_ON(condition)
-#else
-#define rtw_warn_on(condition) do {} while (0)
-#endif
-
-__inline static int rtw_bug_check(void *parg1, void *parg2, void *parg3, void *parg4)
-{
-	int ret = _TRUE;
-
-#ifdef PLATFORM_WINDOWS
-	if (((uint)parg1) <= 0x7fffffff ||
-	    ((uint)parg2) <= 0x7fffffff ||
-	    ((uint)parg3) <= 0x7fffffff ||
-	    ((uint)parg4) <= 0x7fffffff) {
-		ret = _FALSE;
-		KeBugCheckEx(0x87110000, (ULONG_PTR)parg1, (ULONG_PTR)parg2, (ULONG_PTR)parg3, (ULONG_PTR)parg4);
-	}
-#endif
-
-	return ret;
-
-}
-#ifdef PLATFORM_LINUX
-#define RTW_DIV_ROUND_UP(n, d)	DIV_ROUND_UP(n, d)
-#else /* !PLATFORM_LINUX */
-#define RTW_DIV_ROUND_UP(n, d)	(((n) + (d - 1)) / d)
-#endif /* !PLATFORM_LINUX */
-
 #define _RND(sz, r) ((((sz)+((r)-1))/(r))*(r))
 #define RND4(x)	(((x >> 2) + (((x & 3) == 0) ? 0 : 1)) << 2)
 
@@ -502,17 +473,17 @@ static inline int largest_bit_64(u64 bitmask)
 
 bool rtw_macaddr_is_larger(const u8 *a, const u8 *b);
 
-extern void rtw_suspend_lock_init(void);
-extern void rtw_suspend_lock_uninit(void);
-extern void rtw_lock_suspend(void);
-extern void rtw_unlock_suspend(void);
-extern void rtw_lock_suspend_timeout(u32 timeout_ms);
-extern void rtw_lock_traffic_suspend_timeout(u32 timeout_ms);
-extern void rtw_resume_lock_suspend(void);
-extern void rtw_resume_unlock_suspend(void);
+void rtw_suspend_lock_init(void);
+void rtw_suspend_lock_uninit(void);
+void rtw_lock_suspend(void);
+void rtw_unlock_suspend(void);
+void rtw_lock_suspend_timeout(u32 timeout_ms);
+void rtw_lock_traffic_suspend_timeout(u32 timeout_ms);
+void rtw_resume_lock_suspend(void);
+void rtw_resume_unlock_suspend(void);
 #ifdef CONFIG_AP_WOWLAN
-extern void rtw_softap_lock_suspend(void);
-extern void rtw_softap_unlock_suspend(void);
+void rtw_softap_lock_suspend(void);
+void rtw_softap_unlock_suspend(void);
 #endif
 
 void rtw_set_bit(int nr, unsigned long *addr);
@@ -520,34 +491,20 @@ void rtw_clear_bit(int nr, unsigned long *addr);
 int rtw_test_and_clear_bit(int nr, unsigned long *addr);
 int rtw_test_and_set_bit(int nr, unsigned long *addr);
 
-extern void ATOMIC_SET(ATOMIC_T *v, int i);
-extern int ATOMIC_READ(ATOMIC_T *v);
-extern void ATOMIC_ADD(ATOMIC_T *v, int i);
-extern void ATOMIC_SUB(ATOMIC_T *v, int i);
-extern void ATOMIC_INC(ATOMIC_T *v);
-extern void ATOMIC_DEC(ATOMIC_T *v);
-extern int ATOMIC_ADD_RETURN(ATOMIC_T *v, int i);
-extern int ATOMIC_SUB_RETURN(ATOMIC_T *v, int i);
-extern int ATOMIC_INC_RETURN(ATOMIC_T *v);
-extern int ATOMIC_DEC_RETURN(ATOMIC_T *v);
-extern bool ATOMIC_INC_UNLESS(ATOMIC_T *v, int u);
-
 /* File operation APIs, just for linux now */
-extern int rtw_is_dir_readable(const char *path);
-extern int rtw_is_file_readable(const char *path);
-extern int rtw_is_file_readable_with_size(const char *path, u32 *sz);
-extern int rtw_readable_file_sz_chk(const char *path, u32 sz);
-extern int rtw_retrieve_from_file(const char *path, u8 *buf, u32 sz);
+#ifndef CONFIG_RTW_ANDROID
+int rtw_is_dir_readable(const char *path);
+int rtw_store_to_file(const char *path, u8 *buf, u32 sz);
+#endif /* CONFIG_RTW_ANDROID */
+int rtw_is_file_readable(const char *path);
+int rtw_is_file_readable_with_size(const char *path, u32 *sz);
+int rtw_readable_file_sz_chk(const char *path, u32 sz);
+int rtw_retrieve_from_file(const char *path, u8 *buf, u32 sz);
+void rtw_free_netdev(struct net_device *netdev);
 
-
-#ifndef PLATFORM_FREEBSD
-extern void rtw_free_netdev(struct net_device *netdev);
-#endif /* PLATFORM_FREEBSD */
-
-
-extern u64 rtw_modular64(u64 x, u64 y);
-extern u64 rtw_division64(u64 x, u64 y);
-extern u32 rtw_random32(void);
+u64 rtw_modular64(u64 x, u64 y);
+u64 rtw_division64(u64 x, u64 y);
+u32 rtw_random32(void);
 
 /* Macros for handling unaligned memory accesses */
 
@@ -674,13 +631,11 @@ struct blacklist_ent {
 	systime exp_time;
 };
 
-#ifdef CONFIG_RTW_MESH
 int rtw_blacklist_add(_queue *blist, const u8 *addr, u32 timeout_ms);
 int rtw_blacklist_del(_queue *blist, const u8 *addr);
 int rtw_blacklist_search(_queue *blist, const u8 *addr);
 void rtw_blacklist_flush(_queue *blist);
 void dump_blacklist(void *sel, _queue *blist, const char *title);
-#endif
 
 /* String handler */
 
@@ -696,17 +651,8 @@ int hex2num_i(char c);
 int hex2byte_i(const char *hex);
 int hexstr2bin(const char *hex, u8 *buf, size_t len);
 
-int hwaddr_aton_i(const char *txt, u8 *addr);
-
 /*
  * Write formatted output to sized buffer
  */
-#ifdef PLATFORM_LINUX
-#define rtw_sprintf(buf, size, format, arg...)	snprintf(buf, size, format, ##arg)
-#else /* !PLATFORM_LINUX */
-#error "NOT DEFINE \"rtw_sprintf\"!!"
-#endif /* !PLATFORM_LINUX */
-
-// NEO need to take off
 
 #endif

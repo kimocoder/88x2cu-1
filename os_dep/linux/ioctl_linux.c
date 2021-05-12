@@ -69,7 +69,7 @@ u32 rtw_rates[] = {1000000, 2000000, 5500000, 11000000,
  * @addr: Buffer for the MAC address (ETH_ALEN = 6 bytes)
  * Returns: 0 on success, -1 on failure (e.g., string not a MAC address)
  */
-int hwaddr_aton_i(const char *txt, u8 *addr)
+static int hwaddr_aton_i(const char *txt, u8 *addr)
 {
 	int i;
 
