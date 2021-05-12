@@ -955,7 +955,7 @@ u8 rtw_get_tx_bw_bmp_of_vht_rate(struct dvobj_priv *dvobj, u8 rate, u8 max_bw)
 		goto exit;
 	}
 
-	rate_bmp = BIT_ULL(rate - MGN_VHT1SS_MCS0);
+	rate_bmp = 1ULL << (rate - MGN_VHT1SS_MCS0);
 
 	if (max_bw > CHANNEL_WIDTH_160)
 		max_bw = CHANNEL_WIDTH_160;

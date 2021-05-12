@@ -42,23 +42,10 @@
 	#include <osdep_service_linux.h>
 #endif
 
-#ifdef PLATFORM_OS_XP
-	#include <osdep_service_xp.h>
-	#include <drv_types_xp.h>
-#endif
-
-#ifdef PLATFORM_OS_CE
-	#include <osdep_service_ce.h>
-	#include <drv_types_ce.h>
-#endif
-
 /* #include <rtw_byteorder.h> */
 
 #ifndef BIT
 	#define BIT(x)	(1 << (x))
-#endif
-#ifndef BIT_ULL
-#define BIT_ULL(x)	(1ULL << (x))
 #endif
 
 #define CHECK_BIT(a, b) (!!((a) & (b)))
@@ -165,10 +152,6 @@ gro_result_t dbg_rtw_napi_gro_receive(struct napi_struct *napi, struct sk_buff *
 #endif
 #endif /* CONFIG_RTW_NAPI */
 void dbg_rtw_skb_queue_purge(struct sk_buff_head *list, enum mstat_f flags, const char *func, int line);
-#ifdef CONFIG_USB_HCI
-void *dbg_rtw_usb_buffer_alloc(struct usb_device *dev, size_t size, dma_addr_t *dma, const enum mstat_f flags, const char *func, const int line);
-void dbg_rtw_usb_buffer_free(struct usb_device *dev, size_t size, void *addr, dma_addr_t dma, const enum mstat_f flags, const char *func, const int line);
-#endif /* CONFIG_USB_HCI */
 
 #ifdef CONFIG_USE_VMALLOC
 #define rtw_vmalloc(sz)			dbg_rtw_vmalloc((sz), MSTAT_TYPE_VIR, __FUNCTION__, __LINE__)
@@ -229,9 +212,6 @@ void _rtw_mfree(void *pbuf, u32 sz);
 
 struct sk_buff *_rtw_skb_alloc(u32 sz);
 void _rtw_skb_free(struct sk_buff *skb);
-struct sk_buff *_rtw_skb_copy(const struct sk_buff *skb);
-struct sk_buff *_rtw_skb_clone(struct sk_buff *skb);
-int _rtw_netif_rx(_nic_hdl ndev, struct sk_buff *skb);
 #ifdef CONFIG_RTW_NAPI
 int _rtw_netif_receive_skb(_nic_hdl ndev, struct sk_buff *skb);
 #ifdef CONFIG_RTW_GRO
@@ -292,48 +272,30 @@ void _rtw_usb_buffer_free(struct usb_device *dev, size_t size, void *addr, dma_a
 #endif /* CONFIG_USB_HCI */
 #endif /* DBG_MEM_ALLOC */
 
-extern void	*rtw_malloc2d(int h, int w, size_t size);
-extern void	rtw_mfree2d(void *pbuf, int h, int w, int size);
+void	*rtw_malloc2d(int h, int w, size_t size);
+void	rtw_mfree2d(void *pbuf, int h, int w, int size);
 
-extern void	_rtw_memcpy(void *dec, const void *sour, u32 sz);
-extern void _rtw_memmove(void *dst, const void *src, u32 sz);
-extern int	_rtw_memcmp(const void *dst, const void *src, u32 sz);
-extern int _rtw_memcmp2(const void *dst, const void *src, u32 sz);
-extern void	_rtw_memset(void *pbuf, int c, u32 sz);
+void	_rtw_memcpy(void *dec, const void *sour, u32 sz);
+void _rtw_memmove(void *dst, const void *src, u32 sz);
+int	_rtw_memcmp(const void *dst, const void *src, u32 sz);
+int _rtw_memcmp2(const void *dst, const void *src, u32 sz);
+void	_rtw_memset(void *pbuf, int c, u32 sz);
 
-extern void	_rtw_init_listhead(_list *list);
-extern u32	rtw_is_list_empty(_list *phead);
-extern void	rtw_list_insert_head(_list *plist, _list *phead);
-extern void	rtw_list_insert_tail(_list *plist, _list *phead);
+void	_rtw_init_listhead(_list *list);
+u32	rtw_is_list_empty(_list *phead);
+void	rtw_list_insert_head(_list *plist, _list *phead);
+void	rtw_list_insert_tail(_list *plist, _list *phead);
 void rtw_list_splice(_list *list, _list *head);
 void rtw_list_splice_init(_list *list, _list *head);
 void rtw_list_splice_tail(_list *list, _list *head);
 
-#ifndef PLATFORM_FREEBSD
-extern void	rtw_list_delete(_list *plist);
-#endif /* PLATFORM_FREEBSD */
+void	rtw_list_delete(_list *plist);
 
 void rtw_hlist_head_init(rtw_hlist_head *h);
 void rtw_hlist_add_head(rtw_hlist_node *n, rtw_hlist_head *h);
 void rtw_hlist_del(rtw_hlist_node *n);
 void rtw_hlist_add_head_rcu(rtw_hlist_node *n, rtw_hlist_head *h);
 void rtw_hlist_del_rcu(rtw_hlist_node *n);
-
-extern void	_rtw_init_sema(_sema *sema, int init_val);
-extern void	_rtw_free_sema(_sema	*sema);
-extern void	_rtw_up_sema(_sema	*sema);
-extern u32	_rtw_down_sema(_sema *sema);
-extern void	_rtw_mutex_init(_mutex *pmutex);
-extern void	_rtw_mutex_free(_mutex *pmutex);
-#ifndef PLATFORM_FREEBSD
-extern void	_rtw_spinlock_init(_lock *plock);
-#endif /* PLATFORM_FREEBSD */
-extern void	_rtw_spinlock_free(_lock *plock);
-extern void	_rtw_spinlock(_lock	*plock);
-extern void	_rtw_spinunlock(_lock	*plock);
-extern void	_rtw_spinlock_ex(_lock	*plock);
-extern void	_rtw_spinunlock_ex(_lock	*plock);
-
 
 void _rtw_init_queue(_queue *pqueue);
 void _rtw_deinit_queue(_queue *pqueue);
@@ -374,58 +336,24 @@ bool _rtw_time_after(systime a, systime b);
 #define rtw_time_before(a,b) _rtw_time_after(b,a)
 #endif
 
-extern void	rtw_sleep_schedulable(int ms);
+void	rtw_sleep_schedulable(int ms);
 
-extern void	rtw_msleep_os(int ms);
-extern void	rtw_usleep_os(int us);
+void	rtw_msleep_os(int ms);
+void	rtw_usleep_os(int us);
 
-extern u32	rtw_atoi(u8 *s);
+u32	rtw_atoi(u8 *s);
 
 #ifdef DBG_DELAY_OS
 #define rtw_mdelay_os(ms) _rtw_mdelay_os((ms), __FUNCTION__, __LINE__)
 #define rtw_udelay_os(ms) _rtw_udelay_os((ms), __FUNCTION__, __LINE__)
-extern void _rtw_mdelay_os(int ms, const char *func, const int line);
-extern void _rtw_udelay_os(int us, const char *func, const int line);
+void _rtw_mdelay_os(int ms, const char *func, const int line);
+void _rtw_udelay_os(int us, const char *func, const int line);
 #else
-extern void	rtw_mdelay_os(int ms);
-extern void	rtw_udelay_os(int us);
+void	rtw_mdelay_os(int ms);
+void	rtw_udelay_os(int us);
 #endif
 
-extern void rtw_yield_os(void);
-
-enum rtw_pwait_type {
-	RTW_PWAIT_TYPE_MSLEEP,
-	RTW_PWAIT_TYPE_USLEEP,
-	RTW_PWAIT_TYPE_YIELD,
-	RTW_PWAIT_TYPE_MDELAY,
-	RTW_PWAIT_TYPE_UDELAY,
-
-	RTW_PWAIT_TYPE_NUM,
-};
-
-#define RTW_PWAIT_TYPE_VALID(type) (type < RTW_PWAIT_TYPE_NUM)
-
-struct rtw_pwait_conf {
-	enum rtw_pwait_type type;
-	s32 wait_time;
-	s32 wait_cnt_lmt;
-};
-
-struct rtw_pwait_ctx {
-	struct rtw_pwait_conf conf;
-	s32 wait_cnt;
-	void (*wait_hdl)(int us);
-};
-
-extern const char *_rtw_pwait_type_str[];
-#define rtw_pwait_type_str(type) (RTW_PWAIT_TYPE_VALID(type) ? _rtw_pwait_type_str[type] : _rtw_pwait_type_str[RTW_PWAIT_TYPE_NUM])
-
-#define rtw_pwctx_reset(pwctx) (pwctx)->wait_cnt = 0
-#define rtw_pwctx_wait(pwctx) do { (pwctx)->wait_hdl((pwctx)->conf.wait_time); (pwctx)->wait_cnt++; } while(0)
-#define rtw_pwctx_waited(pwctx) ((pwctx)->wait_cnt)
-#define rtw_pwctx_exceed(pwctx) ((pwctx)->conf.wait_cnt_lmt >= 0 && (pwctx)->wait_cnt >= (pwctx)->conf.wait_cnt_lmt)
-
-int rtw_pwctx_config(struct rtw_pwait_ctx *pwctx, enum rtw_pwait_type type, s32 time, s32 cnt_lmt);
+void rtw_yield_os(void);
 
 void rtw_init_timer(_timer *ptimer, void *pfunc, void *ctx);
 
@@ -437,16 +365,6 @@ __inline static unsigned char _cancel_timer_ex(_timer *ptimer)
 	_cancel_timer(ptimer, &bcancelled);
 
 	return bcancelled;
-}
-
-static __inline void thread_enter(char *name)
-{
-#ifdef PLATFORM_LINUX
-	allow_signal(SIGTERM);
-#endif
-#ifdef PLATFORM_FREEBSD
-	printf("%s", "RTKTHREAD_enter");
-#endif
 }
 
 #ifdef PLATFORM_LINUX

@@ -4653,7 +4653,7 @@ thread_return rtw_recv_thread(thread_context context)
 	sched_setscheduler(current, SCHED_FIFO, &param);
 #endif /* PLATFORM_LINUX */
 #endif /*RTW_RECV_THREAD_HIGH_PRIORITY*/
-	thread_enter("RTW_RECV_THREAD");
+	rtw_thread_enter("RTW_RECV_THREAD");
 
 	RTW_INFO(FUNC_ADPT_FMT" enter\n", FUNC_ADPT_ARG(adapter));
 

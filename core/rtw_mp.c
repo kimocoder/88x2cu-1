@@ -1254,7 +1254,7 @@ static thread_return mp_xmit_packet_thread(thread_context context)
 	padapter = pmp_priv->papdater;
 	pxmitpriv = &(padapter->xmitpriv);
 
-	thread_enter("RTW_MP_THREAD");
+	rtw_thread_enter("RTW_MP_THREAD");
 
 	RTW_INFO("%s:pkTx Start\n", __func__);
 	while (1) {

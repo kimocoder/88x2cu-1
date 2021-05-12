@@ -537,7 +537,7 @@ thread_return rtw_cmd_thread(thread_context context)
 	struct drvextra_cmd_parm *extra_parm = NULL;
 	unsigned long sp_flags;
 
-	thread_enter("RTW_CMD_THREAD");
+	rtw_thread_enter("RTW_CMD_THREAD");
 
 	pcmdbuf = pcmdpriv->cmd_buf;
 	prspbuf = pcmdpriv->rsp_buf;
