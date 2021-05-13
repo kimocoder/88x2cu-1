@@ -1172,9 +1172,7 @@ u32 rtw_hal_g6_read_chip_info(struct rtw_phl_com_t *phl_com, void *hal)
 	struct hal_info_t *hal_info = (struct hal_info_t *)hal;
 	struct hal_ops_t *hal_ops = hal_get_ops(hal_info);
 
-	/*get cut version*/
-	RTW_INFO("%s : NEO TODO read_chip_version \n", __func__);
-	//hal_ops->read_chip_version(phl_com, hal_info);
+	hal_ops->read_chip_version(phl_com, hal_info);
 
 	/*get mac,bb,rf capability*/
 	hal_ops->init_hal_spec(phl_com, hal_info);

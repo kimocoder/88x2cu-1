@@ -51,10 +51,14 @@ static void get_delay_tx_cfg(struct mac_ax_adapter *adapter,
 static void set_delay_tx_cfg(struct mac_ax_adapter *adapter,
 			     struct mac_ax_delay_tx_cfg *cfg);
 
-struct mac_ax_hw_info *mac_get_hw_info(struct mac_ax_adapter *adapter)
+#endif //NEO
+
+struct mac_hw_info *mac_get_hw_info(struct mac_adapter *adapter)
 {
 	return adapter->hw_info->done ? adapter->hw_info : NULL;
 }
+
+#if 0 //NEO
 
 u32 get_block_tx_sel_msk(enum mac_ax_block_tx_sel src, u32 *msk)
 {

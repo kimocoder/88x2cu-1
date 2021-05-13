@@ -19,9 +19,7 @@
 #include "mac/mac_ax/fwcmd.h"
 #endif
 
-#if 0 // NEO
 
-#define RTL8852A_FPGA_VERIFICATION 1
 
 u16 hal_mac_get_macid_num(struct hal_info_t *hal)
 {
@@ -32,16 +30,16 @@ u16 hal_mac_get_macid_num(struct hal_info_t *hal)
 void hal_mac_get_hwinfo(struct hal_info_t *hal, struct hal_spec_t *hal_spec)
 {
 	struct mac_adapter *mac = hal_to_mac(hal);
-	struct mac_ax_hw_info *mac_info = mac->hw_info;
-	struct mac_ax_ops *ops = mac->ops;
+	struct mac_hw_info *mac_info = mac->hw_info;
+	struct mac_ops *ops = mac->ops;
 	/*struct mac_ax_hw_info* (*get_hw_info)(struct mac_adapter *adapter);*/
 
 	mac_info = ops->get_hw_info(mac);
 
 	hal_spec->macid_num = mac_info->macid_num;
 
-	hal->hal_com->cut_version = mac_info->chip_cut;
-	PHL_INFO("[MAC-INFO]- CUT : %d\n", mac_info->chip_cut);
+	hal->hal_com->cv = mac_info->cv;
+	PHL_INFO("[MAC-INFO]- CV : %d\n", mac_info->cv);
 	PHL_INFO("[MAC-INFO]- tx_ch_num: %d\n", mac_info->tx_ch_num);
 
 	PHL_INFO("[MAC-INFO]- tx_data_ch_num: %d\n", mac_info->tx_data_ch_num);
@@ -61,6 +59,8 @@ void hal_mac_get_hwinfo(struct hal_info_t *hal, struct hal_spec_t *hal_spec)
 	PHL_INFO("[MAC-INFO]- sec_data_efuse_size: %d\n", mac_info->sec_data_efuse_size);
 
 }
+
+#if 0 // NEO
 #ifdef CONFIG_PCI_HCI
 enum rtw_hal_status rtw_hal_mac_set_pcicfg(struct hal_info_t *hal_info,
 					struct mac_ax_pcie_cfgspc_param *pci_cfgspc)
@@ -572,25 +572,25 @@ static void hal_mac_mdelay(void *h, u32 ms)
 	_os_delay_ms(hal->drv_priv, ms);
 }
 
-static void hal_mac_mutex_init(void *h, mac_ax_mutex *mutex)
+static void hal_mac_mutex_init(void *h, mac_mutex *mutex)
 {
 	struct rtw_hal_com_t *hal = (struct rtw_hal_com_t *)h;
 
 	_os_mutex_init(hal->drv_priv, mutex);
 }
-static void hal_mac_mutex_deinit(void *h, mac_ax_mutex *mutex)
+static void hal_mac_mutex_deinit(void *h, mac_mutex *mutex)
 {
 	struct rtw_hal_com_t *hal = (struct rtw_hal_com_t *)h;
 
 	_os_mutex_deinit(hal->drv_priv, mutex);
 }
-static void hal_mac_mutex_lock(void *h, mac_ax_mutex *mutex)
+static void hal_mac_mutex_lock(void *h, mac_mutex *mutex)
 {
 	struct rtw_hal_com_t *hal = (struct rtw_hal_com_t *)h;
 
 	_os_mutex_lock(hal->drv_priv, mutex);
 }
-static void hal_mac_mutex_unlock(void *h, mac_ax_mutex *mutex)
+static void hal_mac_mutex_unlock(void *h, mac_mutex *mutex)
 {
 	struct rtw_hal_com_t *hal = (struct rtw_hal_com_t *)h;
 

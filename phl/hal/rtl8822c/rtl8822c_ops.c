@@ -16,7 +16,6 @@
 #include "../hal_headers.h"
 #include "rtl8822c_hal.h"
 
-#if 0 // NEO TODO
 static void read_chip_version_8822c(struct rtw_phl_com_t *phl_com,
 				    struct hal_info_t *hal)
 {
@@ -25,6 +24,7 @@ static void read_chip_version_8822c(struct rtw_phl_com_t *phl_com,
 }
 
 
+#if 0 // NEO TODO
 enum rtw_hal_status
 hal_write_reg_post_cfg_8822c(struct hal_info_t *hal_info, u32 offset, u32 value)
 {
@@ -58,9 +58,9 @@ void hal_set_ops_8822c(struct rtw_phl_com_t *phl_com,
 
 	RTW_INFO("%s NEO TODO: phl_com=%p, hal=%p\n", __func__, phl_com, hal);
 
-#if 0 // NEO TODO
 	/*** initialize section ***/
 	ops->read_chip_version = read_chip_version_8822c;
+#if 0 // NEO TODO
 	ops->hal_cfg_fw = hal_cfg_fw_8822c;
 #endif // if 0 NEO
 

@@ -1535,15 +1535,15 @@ struct mac_hw_info {
 	u8 core_swr_volt;
 /*
 	enum mac_ax_core_swr_volt core_swr_volt_sel;
-	mac_ax_mutex ind_access_lock;
-	mac_ax_mutex lte_rlock;
-	mac_ax_mutex lte_wlock;
-	mac_ax_mutex dbg_port_lock;
-	mac_ax_mutex err_set_lock;
-	mac_ax_mutex err_get_lock;
-	mac_ax_mutex dbi_lock;
-	mac_ax_mutex mdio_lock;
 */
+	mac_mutex ind_access_lock;
+	mac_mutex lte_rlock;
+	mac_mutex lte_wlock;
+	mac_mutex dbg_port_lock;
+	mac_mutex err_set_lock;
+	mac_mutex err_get_lock;
+	mac_mutex dbi_lock;
+	mac_mutex mdio_lock;
 };
 
 #if 0 // NEO
@@ -1559,7 +1559,7 @@ struct mac_ax_fw_info {
 	u16 build_min;
 	u8 h2c_seq;
 	u8 rec_seq;
-	mac_ax_mutex seq_lock;
+	mac_mutex seq_lock;
 };
 
 struct mac_ax_mac_pwr_info {
@@ -4290,7 +4290,7 @@ struct mac_role_tbl_head {
 	struct mac_role_tbl *prev;
 	struct mac_role_tbl_head *role_tbl_pool;
 	u32 qlen;
-	mac_ax_mutex lock;
+	mac_mutex lock;
 };
 
 #if 0 //NEO
@@ -4498,10 +4498,10 @@ struct mac_pltfm_cb {
 	void (*rtl_delay_us)(void *drv_adapter, u32 us);
 	void (*rtl_delay_ms)(void *drv_adapter, u32 ms);
 
-	void (*rtl_mutex_init)(void *drv_adapter, mac_ax_mutex *mutex);
-	void (*rtl_mutex_deinit)(void *drv_adapter, mac_ax_mutex *mutex);
-	void (*rtl_mutex_lock)(void *drv_adapter, mac_ax_mutex *mutex);
-	void (*rtl_mutex_unlock)(void *drv_adapter, mac_ax_mutex *mutex);
+	void (*rtl_mutex_init)(void *drv_adapter, mac_mutex *mutex);
+	void (*rtl_mutex_deinit)(void *drv_adapter, mac_mutex *mutex);
+	void (*rtl_mutex_lock)(void *drv_adapter, mac_mutex *mutex);
+	void (*rtl_mutex_unlock)(void *drv_adapter, mac_mutex *mutex);
 
 	void (*msg_print)(void *drv_adapter, s8 *fmt, ...);
 
@@ -4656,7 +4656,7 @@ struct mac_intf_ops {
 
 /**
  * struct mac_ops - callbacks for mac control
- * All callbacks can be used after initializing mac_ax_ops by mac_ax_ops_init.
+ * All callbacks can be used after initializing mac_ops by mac_ops_init.
  * @intf_ops: interface related callbacks, refer struct mac_ax_intf_ops to get
  *	more deatails.
  * @get_hw_info: get mac hardware information
@@ -5059,7 +5059,9 @@ struct mac_ops {
 			       enum mac_ax_uart_rx_pin uart_pin);
 	u32 (*set_gpio_func)(struct mac_adapter *adapter,
 			     enum mac_ax_gfunc func, s8 gpio);
-	struct mac_ax_hw_info* (*get_hw_info)(struct mac_adapter *adapter);
+#endif // NEO
+	struct mac_hw_info* (*get_hw_info)(struct mac_adapter *adapter);
+#if 0 //NEO
 	u32 (*set_hw_value)(struct mac_adapter *adapter,
 			    enum mac_ax_hw_id hw_id, void *value);
 #endif // NEO

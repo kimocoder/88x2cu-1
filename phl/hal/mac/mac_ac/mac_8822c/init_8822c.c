@@ -343,7 +343,9 @@ static struct mac_ops mac8822c_ops = {
 	NULL, /* mac_sel_uart_tx_pin, */ /* sel_uart_tx_pin */
 	NULL, /* mac_sel_uart_rx_pin, */ /* sel_uart_rx_pin */
 	NULL, /* mac_set_gpio_func_8852a, */ /* set_gpio_func */
-	NULL, /* mac_get_hw_info, */ /* get_hw_info */
+#endif // NEO
+	mac_get_hw_info, /* get_hw_info */
+#if 0 //NEO
 	NULL, /* mac_set_hw_value, */ /* set_hw_value */
 #endif // NEO
 	mac_get_hw_value, /* get_hw_value */

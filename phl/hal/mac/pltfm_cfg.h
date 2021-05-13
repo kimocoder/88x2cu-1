@@ -30,7 +30,7 @@
 
 /*[Driver] provide the type mutex*/
 /* Mutex type */
-#define mac_ax_mutex _os_mutex
+#define mac_mutex _os_mutex
 
 #ifndef ARRAY_SIZE
 #define ARRAY_SIZE(arr)		(sizeof(arr) / sizeof((arr)[0]))

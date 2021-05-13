@@ -300,6 +300,8 @@ enum addr_rang_idx {
 
 /*--------------------Function declaration------------------------------*/
 
+#endif //NEO
+
 /**
  * @addtogroup Common
  * @{
@@ -313,11 +315,14 @@ enum addr_rang_idx {
  * @return Please Place Description here.
  * @retval  mac_ax_hw_info
  */
-struct mac_ax_hw_info *mac_get_hw_info(struct mac_ax_adapter *adapter);
+struct mac_hw_info *mac_get_hw_info(struct mac_adapter *adapter);
 /**
  * @}
  * @}
  */
+
+
+#if 0 //NEO
 
 /**
  * @addtogroup Common

@@ -59,7 +59,7 @@
  * Please Place Description here.
  */
 struct mac_efuse_tbl {
-	mac_ax_mutex lock;
+	mac_mutex lock;
 };
 
 /**
