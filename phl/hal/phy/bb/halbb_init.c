@@ -479,15 +479,15 @@ halbb_buffer_init(struct rtw_phl_com_t *phl_com,
 	
 	bb_0->bb_cmn_hooker = bb_cmn;
 
-#if 0 // NEO
 	halbb_dbg_comp_init(bb_0);
+#if 0 // NEO
 	halbb_hw_init(bb_0);
 	halbb_cr_cfg_init(bb_0);
+#endif // NEO
 
 	BB_DBG(bb_0, DBG_INIT, "[%s]\n", __func__);
 	BB_DBG(bb_0, DBG_INIT, "  %-35s: %s\n", "Code Base:", HLABB_CODE_BASE);
 	BB_DBG(bb_0, DBG_INIT, "  %-35s: %s\n", "Code Release Date", HALBB_RELEASE_DATE);
-#endif // NEO
 	return (u32)hal_status;
 }
 

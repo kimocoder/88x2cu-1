@@ -17,7 +17,8 @@ endif
 path_halbb_d1 := $(phl_path)/phy/bb
 
 halbb-y += $(path_halbb_d1)/halbb.o \
-		$(path_halbb_d1)/halbb_init.o
+		$(path_halbb_d1)/halbb_init.o \
+		$(path_halbb_d1)/halbb_dbg.o
 
 #halbb-y += $(path_halbb_d1)/halbb.o \
 			$(path_halbb_d1)/halbb_api.o \
@@ -27,7 +28,6 @@ halbb-y += $(path_halbb_d1)/halbb.o \
 			$(path_halbb_d1)/halbb_ch_info.o \
 			$(path_halbb_d1)/halbb_cmn_rpt.o \
 			$(path_halbb_d1)/halbb_dbcc.o \
-			$(path_halbb_d1)/halbb_dbg.o \
 			$(path_halbb_d1)/halbb_dbg_cmd.o \
 			$(path_halbb_d1)/halbb_dfs.o \
 			$(path_halbb_d1)/halbb_edcca.o \
