@@ -597,7 +597,6 @@ struct mac_adapter *get_mac_8822c_adapter(enum mac_intf intf,
 	adapter->pltfm_cb = pltfm_cb;
 	adapter->hw_info = hw_info;
 	adapter->hw_info->cv = cv;
-	pr_info("%s NEO cv:%x\n", __func__, adapter->hw_info->cv);
 	adapter->hw_info->intf = intf;
 	adapter->hw_info->done = 1;
 

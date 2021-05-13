@@ -58,8 +58,8 @@ u32 mac_ops_init(void *drv_adapter, struct mac_pltfm_cb *pltfm_cb,
 
 #endif
 
-#if MAC_AX_PHL_H2C
-u32 mac_ax_phl_init(void *phl_adapter, struct mac_ax_adapter *mac_adapter);
+#if MAC_PHL_H2C
+u32 mac_phl_init(void *phl_adapter, struct mac_adapter *mac_adapter);
 #endif
 
 u32 mac_ops_exit(struct mac_adapter *adapter);

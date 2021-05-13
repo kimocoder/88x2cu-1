@@ -122,7 +122,7 @@ struct mac_ax_c2hreg_info {
 
 u32 h2cb_init(struct mac_ax_adapter *adapter);
 u32 h2cb_exit(struct mac_ax_adapter *adapter);
-#if MAC_AX_PHL_H2C
+#if MAC_PHL_H2C
 struct rtw_h2c_pkt *h2cb_alloc(struct mac_ax_adapter *adapter,
 			       enum h2c_buf_class buf_class);
 void h2cb_free(struct mac_ax_adapter *adapter, struct rtw_h2c_pkt *h2cb);

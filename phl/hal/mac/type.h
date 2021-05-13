@@ -155,7 +155,7 @@
 #define PLTFM_REG_W32(addr, val)                                               \
 	adapter->pltfm_cb->reg_w32(adapter->drv_adapter, addr, val)
 
-#if MAC_AX_PHL_H2C
+#if MAC_PHL_H2C
 #define PLTFM_TX(buf)                                                          \
 	adapter->pltfm_cb->tx(adapter->phl_adapter, adapter->drv_adapter, buf)
 #define PLTFM_QUERY_H2C(type)                                                  \

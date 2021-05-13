@@ -147,7 +147,7 @@
 #define PLTFM_REG_W32(addr, val)                                               \
 	adapter->pltfm_cb->reg_w32(adapter->drv_adapter, addr, val)
 
-#if MAC_AX_PHL_H2C
+#if MAC_PHL_H2C
 #define PLTFM_TX(buf)                                                          \
 	adapter->pltfm_cb->tx(adapter->phl_adapter, adapter->drv_adapter, buf)
 #define PLTFM_QUERY_H2C(type)                                                  \
@@ -4462,7 +4462,7 @@ struct mac_pltfm_cb {
 	void (*reg_w16)(void *drv_adapter, u32 addr, u16 val);
 	void (*reg_w32)(void *drv_adapter, u32 addr, u32 val);
 #endif
-#if MAC_AX_PHL_H2C
+#if MAC_PHL_H2C
 	enum rtw_hal_status (*tx)(struct rtw_phl_com_t *phl_com,
 				  struct rtw_hal_com_t *hal_com,
 				  struct rtw_h2c_pkt *pkt);

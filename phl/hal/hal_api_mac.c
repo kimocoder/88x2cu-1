@@ -621,7 +621,6 @@ struct rtw_h2c_pkt *hal_query_h2c_pkt(struct rtw_phl_com_t *phl_com,
 	return h2c_pkt;
 }
 
-#if 0 // NEO : TODO : mark off first
 enum rtw_hal_status hal_pltfm_tx(struct rtw_phl_com_t *phl_com,
 								 struct rtw_hal_com_t *hal_com,
 								 struct rtw_h2c_pkt *pkt)
@@ -635,7 +634,6 @@ enum rtw_hal_status hal_pltfm_tx(struct rtw_phl_com_t *phl_com,
 
 	return hstatus;
 }
-#endif
 
 #ifdef DBG_MSG_FILTER
 static u8 is_msg_allowed(uint drv_lv, u8 msg_lv)
@@ -757,7 +755,7 @@ void rtw_plt_cb_init(void)
 	rtw_plt_cb.event_notify = hal_mac_event_notify;
 
 	/*.tx = ;	*/
-#if MAC_AX_PHL_H2C
+#if MAC_PHL_H2C
 	rtw_plt_cb.tx = hal_pltfm_tx;
 	rtw_plt_cb.rtl_query_h2c = hal_query_h2c_pkt;
 #endif
@@ -896,7 +894,7 @@ u32 rtw_hal_mac_init(struct rtw_phl_com_t *phl_com,
 		rtw_plt_cb_init();
 		status = mac_ops_init(hal_com,
 				&rtw_plt_cb, intf, &mac, &mac_ops);
-		#if MAC_AX_PHL_H2C
+		#if MAC_PHL_H2C
 		if (status == MACSUCCESS && mac != NULL)
 			mac_phl_init(phl_com, mac);
 		#endif

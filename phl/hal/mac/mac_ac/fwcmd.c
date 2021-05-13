@@ -119,7 +119,7 @@ static inline struct h2c_buf *h2cb_peek(struct h2c_buf_head *list)
 	return h2cb;
 }
 
-#if MAC_AX_PHL_H2C
+#if MAC_PHL_H2C
 static inline u8 *h2cb_tail_pointer(const struct rtw_h2c_pkt *h2cb)
 {
 	return h2cb->vir_tail;
@@ -326,7 +326,7 @@ u32 h2c_end_flow(struct mac_ax_adapter *adapter)
 	return MACSUCCESS;
 }
 
-#if MAC_AX_PHL_H2C
+#if MAC_PHL_H2C
 struct rtw_h2c_pkt *h2cb_alloc(struct mac_ax_adapter *adapter,
 			       enum h2c_buf_class buf_class)
 {
@@ -1722,7 +1722,7 @@ u32 mac_outsrc_h2c_common(struct mac_ax_adapter *adapter,
 {
 	u32 ret = 0;
 	u8 *buf;
-	#if MAC_AX_PHL_H2C
+	#if MAC_PHL_H2C
 	struct rtw_h2c_pkt *h2cb;
 	#else
 	struct h2c_buf *h2cb;
@@ -1755,7 +1755,7 @@ u32 mac_outsrc_h2c_common(struct mac_ax_adapter *adapter,
 	if (ret)
 		goto fail;
 
-	#if MAC_AX_PHL_H2C
+	#if MAC_PHL_H2C
 	ret = PLTFM_TX(h2cb);
 	#else
 	ret = PLTFM_TX(h2cb->data, h2cb->len);
@@ -1779,7 +1779,7 @@ u32 mac_fw_log_cfg(struct mac_ax_adapter *adapter,
 {
 	u32 ret = 0;
 	u8 *buf;
-	#if MAC_AX_PHL_H2C
+	#if MAC_PHL_H2C
 	struct rtw_h2c_pkt *h2cb;
 	#else
 	struct h2c_buf *h2cb;
@@ -1821,7 +1821,7 @@ u32 mac_fw_log_cfg(struct mac_ax_adapter *adapter,
 	if (ret)
 		goto fail;
 
-	#if MAC_AX_PHL_H2C
+	#if MAC_PHL_H2C
 	ret = PLTFM_TX(h2cb);
 	#else
 	ret = PLTFM_TX(h2cb->data, h2cb->len);
@@ -1843,7 +1843,7 @@ fail:
 u32 mac_send_bcn_h2c(struct mac_ax_adapter *adapter,
 		     struct mac_ax_bcn_info *info)
 {
-	#if MAC_AX_PHL_H2C
+	#if MAC_PHL_H2C
 	struct rtw_h2c_pkt *h2cb;
 	#else
 	struct h2c_buf *h2cb;
@@ -1931,7 +1931,7 @@ u32 mac_send_bcn_h2c(struct mac_ax_adapter *adapter,
 	if (ret)
 		goto fail;
 
-	#if MAC_AX_PHL_H2C
+	#if MAC_PHL_H2C
 	ret = PLTFM_TX(h2cb);
 	#else
 	ret = PLTFM_TX(h2cb->data, h2cb->len);
@@ -1966,7 +1966,7 @@ u32 mac_host_getpkt_h2c(struct mac_ax_adapter *adapter, u8 macid, u8 pkttype)
 	return ret;
 }
 
-#if MAC_AX_PHL_H2C
+#if MAC_PHL_H2C
 u32 __ie_cam_set_cmd(struct mac_ax_adapter *adapter, struct rtw_h2c_pkt *h2cb,
 		     struct mac_ax_ie_cam_cmd_info *info)
 {
@@ -2047,7 +2047,7 @@ u32 __ie_cam_set_cmd(struct mac_ax_adapter *adapter, struct h2c_buf *h2cb,
 u32 mac_ie_cam_upd(struct mac_ax_adapter *adapter,
 		   struct mac_ax_ie_cam_cmd_info *info)
 {
-	#if MAC_AX_PHL_H2C
+	#if MAC_PHL_H2C
 	struct rtw_h2c_pkt *h2cb;
 	#else
 	struct h2c_buf *h2cb;
@@ -2080,7 +2080,7 @@ u32 mac_ie_cam_upd(struct mac_ax_adapter *adapter,
 		goto fail;
 	}
 
-	#if MAC_AX_PHL_H2C
+	#if MAC_PHL_H2C
 	ret = PLTFM_TX(h2cb);
 	#else
 	ret = PLTFM_TX(h2cb->data, h2cb->len);

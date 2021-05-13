@@ -36,7 +36,7 @@
 #define MAC_AX_ASIC_TEMP	0
 
 /* temp for h2c alloc move to phl layer*/
-#define MAC_AX_PHL_H2C		0
+#define MAC_PHL_H2C		1
 
 #ifdef CONFIG_BTCOEX
 #define MAC_AX_COEX_INIT_EN	0
@@ -62,7 +62,7 @@
 #define MAC_AX_ASIC_TEMP	1
 
 /* temp for h2c alloc move to phl layer */
-#define MAC_AX_PHL_H2C		0
+#define MAC_PHL_H2C		0
 
 /* [HV] for SIC command generagor */
 #define MAC_AX_HV_SIC_GEN	0

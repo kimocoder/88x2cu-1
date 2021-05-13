@@ -279,19 +279,18 @@ u32 mac_ops_init(void *drv_adapter, struct mac_pltfm_cb *pltfm_cb,
 	*mac_adapter = adapter;
 	*mac_ops = adapter->ops;
 
-#if 0 // NEO
 #if MAC_AX_FEATURE_HV
 	adapter->hv_ops = get_hv_ax_ops(adapter);
 #endif
 
-#if MAC_AX_PHL_H2C
-
+#if MAC_PHL_H2C
 #else
 	ret = h2cb_init(adapter);
 	if (ret)
 		return ret;
 #endif
 
+#if 0 // NEO
 	ret = role_tbl_init(adapter);
 	if (ret)
 		return ret;
@@ -313,16 +312,17 @@ u32 mac_ops_init(void *drv_adapter, struct mac_pltfm_cb *pltfm_cb,
 }
 #endif /*CONFIG_NEW_HALMAC_INTERFACE*/
 
-#if MAC_AX_PHL_H2C
-u32 mac_ax_phl_init(void *phl_adapter, struct mac_ax_adapter *mac_adapter)
+#if MAC_PHL_H2C
+u32 mac_phl_init(void *phl_adapter, struct mac_adapter *mac_adapter)
 {
-	struct mac_ax_adapter *adapter = mac_adapter;
+	struct mac_adapter *adapter = mac_adapter;
 
 	adapter->phl_adapter = phl_adapter;
 
 	return MACSUCCESS;
 }
 #endif
+
 u32 mac_ops_exit(struct mac_adapter *adapter)
 {
 	u32 ret;

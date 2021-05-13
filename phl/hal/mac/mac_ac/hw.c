@@ -624,7 +624,7 @@ u32 macid_pause(struct mac_ax_adapter *adapter,
 		struct mac_ax_macid_pause_grp *grp)
 {
 	u32 ret, size;
-	#if MAC_AX_PHL_H2C
+	#if MAC_PHL_H2C
 	struct rtw_h2c_pkt *h2cb;
 	#else
 	struct h2c_buf *h2cb;
@@ -663,7 +663,7 @@ u32 macid_pause(struct mac_ax_adapter *adapter,
 	if (ret)
 		goto fail;
 
-	#if MAC_AX_PHL_H2C
+	#if MAC_PHL_H2C
 	ret = PLTFM_TX(h2cb);
 	#else
 	ret = PLTFM_TX(h2cb->data, h2cb->len);
