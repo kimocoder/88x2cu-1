@@ -27,9 +27,8 @@
 #include "mac_8822c/init_8822c.h"
 #endif
 
-#if 0 // NEO
-
 #include "role.h"
+#if 0 // NEO
 #include "fwdl.h"
 #if MAC_PCIE_SUPPORT
 #include "_pcie.h"

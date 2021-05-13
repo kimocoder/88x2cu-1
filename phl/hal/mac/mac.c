@@ -290,11 +290,11 @@ u32 mac_ops_init(void *drv_adapter, struct mac_pltfm_cb *pltfm_cb,
 		return ret;
 #endif
 
-#if 0 // NEO
 	ret = role_tbl_init(adapter);
 	if (ret)
 		return ret;
 
+#if 0 // NEO
 	ret = sec_info_tbl_init(adapter);
 	if (ret)
 		return ret;
@@ -327,6 +327,12 @@ u32 mac_ops_exit(struct mac_adapter *adapter)
 {
 	u32 ret;
 
+	ret = role_tbl_exit(adapter);
+	if (ret) {
+		PLTFM_MSG_ERR("[ERR]role table exit\n");
+		return ret;
+	}
+
 #if 0 // NEO
 	struct mac_ax_efuse_param *efuse_param = &adapter->efuse_param;
 
@@ -339,12 +345,6 @@ u32 mac_ops_exit(struct mac_adapter *adapter)
 	ret = free_sec_info_tbl(adapter);
 	if (ret) {
 		PLTFM_MSG_ERR("[ERR]sec table exit\n");
-		return ret;
-	}
-
-	ret = role_tbl_exit(adapter);
-	if (ret) {
-		PLTFM_MSG_ERR("[ERR]role table exit\n");
 		return ret;
 	}
 

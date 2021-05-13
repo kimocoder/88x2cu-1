@@ -38,7 +38,8 @@ halmac-y +=		$(path_hm_ac)/../mac.o
 halmac-y += $(path_hm_ac)/fwcmd.o \
 		$(path_hm_ac)/init.o \
 		$(path_hm_ac)/trx_desc.o \
-		$(path_hm_ac)/hw.o
+		$(path_hm_ac)/hw.o \
+		$(path_hm_ac)/role.o
 
 #halmac-y +=		$(path_hm_d1)/addr_cam.o \
 			$(path_hm_d1)/cmac_tx.o \
@@ -62,7 +63,6 @@ halmac-y += $(path_hm_ac)/fwcmd.o \
 			$(path_hm_d1)/power_saving.o \
 			$(path_hm_d1)/pwr.o \
 			$(path_hm_d1)/p2p.o \
-			$(path_hm_d1)/role.o \
 			$(path_hm_d1)/rx_filter.o \
 			$(path_hm_d1)/rx_forwarding.o \
 			$(path_hm_d1)/security_cam.o \

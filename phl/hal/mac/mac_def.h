@@ -2102,7 +2102,9 @@ struct mac_ax_hfc_param {
 	struct mac_ax_hfc_prec_cfg *prec_cfg;
 };
 
-struct mac_ax_sdio_tx_info {
+#endif //NEO
+
+struct mac_sdio_tx_info {
 	u32 total_size;
 	u8 dma_txagg_num;
 	u8 ch_dma;
@@ -2112,6 +2114,8 @@ struct mac_ax_sdio_tx_info {
 	u16 wde_rqd_num;
 	u16 ple_rqd_num;
 };
+
+#if 0 //NEO
 
 struct mac_ax_sdio_clk_mon_cfg {
 	enum mac_ax_sdio_clk_mon mon;
@@ -4524,7 +4528,9 @@ struct mac_adapter {
 	struct mac_ax_hfc_param *hfc_param;
 	struct mac_ax_dle_info dle_info;
 	struct mac_ax_gpio_info gpio_info;
+#endif //NEO
 	struct mac_role_tbl_head *role_tbl;
+#if 0 // NEO
 	struct mac_ax_read_ofld_info read_ofld_info;
 	struct mac_ax_read_ofld_value read_ofld_value;
 	struct mac_ax_write_ofld_info write_ofld_info;
@@ -4575,14 +4581,14 @@ struct mac_intf_ops {
 	 * may cause system crash or segmentation fault.
 	 */
 	u32 (*tx_allow_sdio)(struct mac_adapter *adapter,
-			     struct mac_ax_sdio_tx_info *info);
+			     struct mac_sdio_tx_info *info);
 	/**
 	 * @tx_cmd_addr_sdio
 	 * Only support SDIO interface. Using this API in other interface
 	 * may cause system crash or segmentation fault.
 	 */
 	u32 (*tx_cmd_addr_sdio)(struct mac_adapter *adapter,
-				struct mac_ax_sdio_tx_info *info,
+				struct mac_sdio_tx_info *info,
 				u32 *cmd_addr);
 	u32 (*intf_pre_init)(struct mac_adapter *adapter, void *param);
 	u32 (*intf_init)(struct mac_adapter *adapter, void *param);
