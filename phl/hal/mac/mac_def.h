@@ -4748,7 +4748,7 @@ struct mac_ops {
 	u32 (*get_p2p_stat)(struct mac_adapter *adapter);
 	/*Association, de-association related*/
 	u32 (*sta_add_key)(struct mac_adapter *adapter,
-			   struct mac_ax_sec_cam_info *sec_cam_content,
+			   struct mac_sec_cam_info *sec_cam_content,
 			   u8 mac_id, u8 key_id, u8 key_type);
 	u32 (*sta_del_key)(struct mac_adapter *adapter,
 			   u8 mac_id, u8 key_id, u8 key_type);

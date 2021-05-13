@@ -19,10 +19,10 @@
 
 #include "../type.h"
 
-#if 0 //NEO
 #include "fwcmd.h"
 #include "addr_cam.h"
 #include "security_cam.h"
+#if 0 //NEO
 #include "hw.h"
 #include "trxcfg.h"
 #endif //NEO
