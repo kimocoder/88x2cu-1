@@ -437,12 +437,10 @@ static enum rtw_hal_status hal_ops_check(struct hal_info_t *hal)
 		status = RTW_HAL_STATUS_FAILURE;
 	}
 
-#if 0 // NEO TODO
 	if (!ops->read_chip_version) {
 		hal_error_msg("read_chip_version");
 		status = RTW_HAL_STATUS_FAILURE;
 	}
-#endif //NEO
 
 	if (!ops->hal_init) {
 		hal_error_msg("hal_init");

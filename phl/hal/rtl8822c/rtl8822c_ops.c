@@ -56,8 +56,6 @@ void hal_set_ops_8822c(struct rtw_phl_com_t *phl_com,
 {
 	struct hal_ops_t *ops = hal_get_ops(hal);
 
-	RTW_INFO("%s NEO TODO: phl_com=%p, hal=%p\n", __func__, phl_com, hal);
-
 	/*** initialize section ***/
 	ops->read_chip_version = read_chip_version_8822c;
 #if 0 // NEO TODO
@@ -71,20 +69,17 @@ void hal_set_ops_8822c(struct rtw_phl_com_t *phl_com,
 	ops->read_rfreg = hal_read_rfreg;
 	ops->write_rfreg = hal_write_rfreg;
 
-#if 0 // NEO TODO
 #ifdef RTW_PHL_BCN
 	ops->cfg_bcn = hal_config_beacon_8852a;
 	ops->upt_bcn = hal_update_beacon_8852a;
 #endif
-
+#if 0 //NEO
 	ops->pkt_ofld = rtw_hal_mac_pkt_ofld;
 	ops->pkt_update_ids = rtw_hal_mac_pkt_update_ids;
-
+#endif //NEO
 #ifdef RTW_WKARD_ACUT_DAC
 	ops->write_reg_post_cfg = hal_write_reg_post_cfg_8852a;
 #endif
-
-#endif // if 0 NEO
 }
 
 #if 0

@@ -75,11 +75,6 @@ u8 rtw_hal_read_chip_info(_adapter *padapter)
 	return rtn;
 }
 
-void rtw_hal_read_chip_version(_adapter *padapter)
-{
-	padapter->hal_func.read_chip_version(padapter);
-}
-
 static void rtw_init_wireless_mode(_adapter *padapter)
 {
 	u8 proto_wireless_mode = 0;
@@ -1857,10 +1852,6 @@ u8 rtw_hal_ops_check(_adapter *padapter)
 	u8 ret = _SUCCESS;
 #if 1
 	/*** initialize section ***/
-	if (NULL == padapter->hal_func.read_chip_version) {
-		rtw_hal_error_msg("read_chip_version");
-		ret = _FAIL;
-	}
 	if (NULL == padapter->hal_func.init_default_value) {
 		rtw_hal_error_msg("init_default_value");
 		ret = _FAIL;

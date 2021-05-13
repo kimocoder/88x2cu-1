@@ -204,9 +204,6 @@ aa
 
 #define RTW_WKARD_ACUT_DISABLE_CQI_FB	/* 8852A_ACUT BFee reply CQI rpt will cause HW Hang */
 
-/* 8852A_ACUT DAC temp workaround for recover mechanism */
-#define RTW_WKARD_ACUT_DAC
-
 #define RTW_WKARD_STA_BCN_INTERVAL
 
 #define RTW_WKARD_SER_L1_EXPIRE

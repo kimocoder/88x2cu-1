@@ -1194,9 +1194,6 @@ _adapter *rtw_usb_primary_adapter_init(struct dvobj_priv *dvobj,
 	padapter->intf_start = &usb_intf_start;
 	padapter->intf_stop = &usb_intf_stop;
 
-	/* step read_chip_version */
-	rtw_hal_read_chip_version(padapter);
-
 	/* step usb endpoint mapping */
 	rtw_hal_chip_configure(padapter);
 

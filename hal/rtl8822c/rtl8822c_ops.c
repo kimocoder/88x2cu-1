@@ -168,10 +168,6 @@ static void hw_bcn_ctrl_clr(_adapter *adapter, u8 hw_port, u8 bcn_ctl_val)
 	rtw_write8(adapter, bcn_ctl_addr, val8);
 }
 
-static void read_chip_version(PADAPTER adapter)
-{
-}
-
 /*
  * Return:
  *	_TRUE	valid ID
@@ -4054,7 +4050,6 @@ void rtl8822c_set_hal_ops(PADAPTER adapter)
 	 * Initialize operation callback functions
 	 */
 	/*** initialize section ***/
-	ops->read_chip_version = read_chip_version;
 	ops->read_adapter_info = rtl8822c_read_efuse;
 	ops->hal_power_on = rtl8822c_power_on;
 	ops->hal_power_off = rtl8822c_power_off;
