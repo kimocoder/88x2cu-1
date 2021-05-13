@@ -45,6 +45,8 @@ struct rtw_h2c_pkt *rtw_phl_query_h2c_pkt(struct rtw_phl_com_t *phl_com,
 	return h2c_pkt;
 }
 
+#endif
+
 enum rtw_phl_status rtw_phl_pltfm_tx(struct rtw_phl_com_t *phl_com,
 										struct rtw_h2c_pkt *pkt)
 {
@@ -60,6 +62,8 @@ enum rtw_phl_status rtw_phl_pltfm_tx(struct rtw_phl_com_t *phl_com,
 
 	return pstatus;
 }
+
+#if 0 // NEO TODO
 
 void rtw_phl_proc_cmd(void *phl, char proc_cmd,
 		      struct rtw_proc_cmd *incmd,
