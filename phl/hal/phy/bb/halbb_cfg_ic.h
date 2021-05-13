@@ -25,6 +25,10 @@
 #ifndef __HALBB_CFG_IC_H__
 #define __HALBB_CFG_IC_H__
 
+#ifdef CONFIG_RTL8822C
+	#define BB_8822C_SUPPORT
+#endif
+
 #ifdef CONFIG_RTL8852A
 	//#define BB_8852A_CAV_SUPPORT /*CAV*/
 	#define BB_8852A_2_SUPPORT /*> CBV*/

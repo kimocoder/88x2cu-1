@@ -71,9 +71,9 @@
 #include "halbb_physts.h"
 #include "halbb_cmn_rpt_ex.h"
 #include "halbb_cmn_rpt.h"
-#include "halbb_init.h"
-
 #endif // NEO
+
+#include "halbb_init.h"
 #include "halbb_init_ex.h"
 
 #if 0 //NEO

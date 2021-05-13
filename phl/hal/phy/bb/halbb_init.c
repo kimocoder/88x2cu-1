@@ -14,7 +14,6 @@
  *****************************************************************************/
 #include "halbb_precomp.h"
 
-#if 0 //NEO
 bool halbb_chk_bb_rf_pkg_set_valid(struct bb_info *bb)
 {
 	struct rtw_hal_com_t	*hal_i = bb->hal_com;
@@ -55,6 +54,7 @@ bool halbb_chk_bb_rf_pkg_set_valid(struct bb_info *bb)
 	return valid;
 }
 
+#if 0 //NEO
 void halbb_ic_hw_setting_init(struct bb_info *bb)
 {
 	switch (bb->ic_type) {
@@ -115,6 +115,8 @@ void halbb_get_efuse_init(struct bb_info *bb)
 	}
 }
 
+#endif //NEO
+
 void halbb_cmn_info_self_init(struct bb_info *bb)
 {
 	struct rtw_hal_com_t	*hal_i = bb->hal_com;
@@ -133,11 +135,15 @@ void halbb_cmn_info_self_init(struct bb_info *bb)
 	#endif
 	} else if (hal_i->chip_id == CHIP_WIFI6_8834A) {
 		bb->ic_type = BB_RTL8834A;
+	} else if (hal_i->chip_id == CHIP_WIFI5_8822C) {
+		bb->ic_type = BB_RTL8822C;
 	}
 
 	/*[CR type]*/
 	if (bb->ic_type == BB_RTL8852AA)
 		bb->cr_type = BB_52AA;
+	else if (bb->ic_type & BB_IC_AC_AP)
+		bb->cr_type = BB_AP;
 	else if (bb->ic_type & BB_IC_AX_AP)
 		bb->cr_type = BB_AP;
 	else if (bb->ic_type & BB_IC_AX_CLIENT)
@@ -189,6 +195,8 @@ void halbb_cmn_info_self_init(struct bb_info *bb)
 	bb->bb_cmn_hooker->bb_dm_number = sizeof(halbb_func_i) / sizeof(struct halbb_func_info);
 	halbb_cmn_info_self_reset(bb);
 }
+
+#if 0 //NEO
 
 u64 halbb_supportability_default(struct bb_info *bb)
 {
@@ -264,6 +272,8 @@ void halbb_supportability_init(struct bb_info *bb)
 		  bb->ic_type, bb->phl_com->drv_mode, bb->support_ability);
 }
 
+#endif //NEO
+
 void halbb_hw_init(struct bb_info *bb)
 {
 	BB_DBG(bb, DBG_INIT, "[%s] phy_idx=%d\n", __func__, bb->bb_phy_idx);
@@ -275,6 +285,8 @@ void halbb_hw_init(struct bb_info *bb)
 		return;
 	}
 }
+
+#if 0 //NEO
 
 void halbb_dm_deinit(struct rtw_phl_com_t *phl_com, void *bb_phy_0)
 {
@@ -464,7 +476,6 @@ halbb_buffer_init(struct rtw_phl_com_t *phl_com,
 		return RTW_HAL_STATUS_BB_INIT_FAILURE;
 	}
 
-	RTW_INFO("%s NEO TODO\n", __func__);
 	*bb_out_addr = bb_0;
 
 	bb_0->phl_com = phl_com;/*shared memory for all components*/
@@ -480,8 +491,8 @@ halbb_buffer_init(struct rtw_phl_com_t *phl_com,
 	bb_0->bb_cmn_hooker = bb_cmn;
 
 	halbb_dbg_comp_init(bb_0);
-#if 0 // NEO
 	halbb_hw_init(bb_0);
+#if 0 // NEO
 	halbb_cr_cfg_init(bb_0);
 #endif // NEO
 

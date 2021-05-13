@@ -30,7 +30,8 @@ enum bb_ic_t {
 	BB_RTL8852A	=	BIT(1), /*8852A > Bcut*/
 	BB_RTL8852B	=	BIT(2),
 	BB_RTL8852C	=	BIT(3),
-	BB_RTL8834A	=	BIT(4)
+	BB_RTL8834A	=	BIT(4),
+	BB_RTL8822C	=	BIT(5),
 };
 
 enum bb_cr_t {
@@ -45,7 +46,7 @@ enum bb_cr_t {
 #define BB_IC_N_4SS		0
 
 #define BB_IC_AC_1SS		0
-#define BB_IC_AC_2SS		0
+#define BB_IC_AC_2SS		(BB_RTL8822C)
 #define BB_IC_AC_3SS		0
 #define BB_IC_AC_4SS		0
 
@@ -76,6 +77,7 @@ enum bb_cr_t {
 
 #define BB_IC_AX_AP		(BB_RTL8852AA | BB_RTL8852A | BB_RTL8852C | BB_RTL8834A)
 #define BB_IC_AX_CLIENT		(BB_RTL8852B)
+#define BB_IC_AC_AP		(BB_RTL8822C)
 
 /*@==========================================================================*/
 
@@ -96,7 +98,7 @@ enum bb_cr_t {
 	#define HALBB_COMPILE_IC_1SS
 #endif
 
-#if (defined(BB_8852A_CAV_SUPPORT) || defined(BB_8852A_2_SUPPORT) || defined(BB_8852B_SUPPORT)  || defined(BB_8852C_SUPPORT))
+#if (defined(BB_8852A_CAV_SUPPORT) || defined(BB_8852A_2_SUPPORT) || defined(BB_8852B_SUPPORT)  || defined(BB_8852C_SUPPORT)) || defined(BB_8822C_SUPPORT)
 	#define HALBB_COMPILE_IC_2SS
 #endif
 

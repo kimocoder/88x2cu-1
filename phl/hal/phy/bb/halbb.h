@@ -298,10 +298,9 @@ struct bb_info {
 #endif //NEO
 
 	struct bb_link_info	bb_link_i;
-
-#if 0 //NEO
 	struct bb_path_info	bb_path_i;
 	struct bb_ch_info	bb_ch_i;
+#if 0 //NEO
 	struct bb_api_info	bb_api_i;
 	struct bb_iot_info	bb_iot_i;
 	struct bb_dbg_info	bb_dbg_i;

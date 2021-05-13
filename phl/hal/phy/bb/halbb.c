@@ -371,6 +371,8 @@ void halbb_traffic_load_decision(struct bb_info *bb)
 		link->consecutive_idle_time += HALBB_WATCHDOG_PERIOD;
 }
 
+#endif // NEO
+
 void halbb_cmn_info_self_reset(struct bb_info *bb) {
 
 	struct bb_link_info *link = &bb->bb_link_i;
@@ -388,6 +390,8 @@ void halbb_cmn_info_self_reset(struct bb_info *bb) {
 	link->num_linked_client = 0;
 	link->num_active_client = 0;
 }
+
+#if 0 //NEO
 
 void halbb_cmn_info_self_update(struct bb_info *bb)
 {
