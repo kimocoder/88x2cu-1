@@ -336,20 +336,25 @@ enum mac_ax_port_cfg_type {
 	MAC_AX_PCFG_BCN_DRP_EN,
 };
 
-enum mac_ax_band {
+#endif // NEO
+
+enum mac_band {
 	MAC_AX_BAND_0 = 0,
 	MAC_AX_BAND_1 = 1,
 	MAC_AX_BAND_NUM = 2
 };
 
-enum mac_ax_port {
-	MAC_AX_PORT_0 = 0,
-	MAC_AX_PORT_1 = 1,
-	MAC_AX_PORT_2 = 2,
-	MAC_AX_PORT_3 = 3,
-	MAC_AX_PORT_4 = 4,
-	MAC_AX_PORT_NUM
+
+enum mac_port {
+	MAC_PORT_0 = 0,
+	MAC_PORT_1 = 1,
+	MAC_PORT_2 = 2,
+	MAC_PORT_3 = 3,
+	MAC_PORT_4 = 4,
+	MAC_PORT_NUM
 };
+
+#if 0 //NEO
 
 enum mac_ax_mbssid_idx {
 	MAC_AX_P0_ROOT = 0,
@@ -1412,49 +1417,50 @@ enum mac_ax_rx_ppdu_type {
 	MAC_AX_RX_PPDU_INVLAID = MAC_AX_RX_PPDU_LAST,
 };
 
-enum mac_ax_net_type {
-	MAC_AX_NET_TYPE_NO_LINK,
-	MAC_AX_NET_TYPE_ADHOC,
-	MAC_AX_NET_TYPE_INFRA,
-	MAC_AX_NET_TYPE_AP
+#endif //NEO
+
+enum mac_net_type {
+	MAC_NET_TYPE_NO_LINK,
+	MAC_NET_TYPE_ADHOC,
+	MAC_NET_TYPE_INFRA,
+	MAC_NET_TYPE_AP
 };
 
-enum mac_ax_self_role {
-	MAC_AX_SELF_ROLE_CLIENT,
-	MAC_AX_SELF_ROLE_AP,
-	MAC_AX_SELF_ROLE_AP_CLIENT
+enum mac_self_role {
+	MAC_SELF_ROLE_CLIENT,
+	MAC_SELF_ROLE_AP,
+	MAC_SELF_ROLE_AP_CLIENT
 };
 
-enum mac_ax_wifi_role {
-	MAC_AX_WIFI_ROLE_NONE,
-	MAC_AX_WIFI_ROLE_STATION,
-	MAC_AX_WIFI_ROLE_AP,
-	MAC_AX_WIFI_ROLE_VAP,
-	MAC_AX_WIFI_ROLE_ADHOC,
-	MAC_AX_WIFI_ROLE_ADHOC_MASTER,
-	MAC_AX_WIFI_ROLE_MESH,
-	MAC_AX_WIFI_ROLE_MONITOR,
-	MAC_AX_WIFI_ROLE_P2P_DEVICE,
-	MAC_AX_WIFI_ROLE_P2P_GC,
-	MAC_AX_WIFI_ROLE_P2P_GO,
-	MAC_AX_WIFI_ROLE_NAN,
-	MAC_AX_WIFI_ROLE_MLME_MAX
+enum mac_wifi_role {
+	MAC_WIFI_ROLE_NONE,
+	MAC_WIFI_ROLE_STATION,
+	MAC_WIFI_ROLE_AP,
+	MAC_WIFI_ROLE_VAP,
+	MAC_WIFI_ROLE_ADHOC,
+	MAC_WIFI_ROLE_ADHOC_MASTER,
+	MAC_WIFI_ROLE_MESH,
+	MAC_WIFI_ROLE_MONITOR,
+	MAC_WIFI_ROLE_P2P_DEVICE,
+	MAC_WIFI_ROLE_P2P_GC,
+	MAC_WIFI_ROLE_P2P_GO,
+	MAC_WIFI_ROLE_NAN,
+	MAC_WIFI_ROLE_MLME_MAX
 };
 
-enum mac_ax_opmode {
-	MAC_AX_ROLE_CONNECT,
-	MAC_AX_ROLE_DISCONN
+enum mac_opmode {
+	MAC_ROLE_CONNECT,
+	MAC_ROLE_DISCONN
 };
 
-enum mac_ax_upd_mode {
-	MAC_AX_ROLE_CREATE,
-	MAC_AX_ROLE_REMOVE,
-	MAC_AX_ROLE_TYPE_CHANGE,
-	MAC_AX_ROLE_INFO_CHANGE,
-	MAC_AX_ROLE_CON_DISCONN
+enum mac_upd_mode {
+	MAC_ROLE_CREATE,
+	MAC_ROLE_REMOVE,
+	MAC_ROLE_TYPE_CHANGE,
+	MAC_ROLE_INFO_CHANGE,
+	MAC_ROLE_CON_DISCONN
 };
 
-#endif // NEO
 
 enum mac_host_rpr_mode {
 	MAC_RPR_MODE_POH = 0,
@@ -4000,7 +4006,9 @@ struct mac_ax_ie_cam_cmd_info {
 	u32 buf_len;
 };
 
-struct mac_ax_addr_cam_info {
+#endif // NEO
+
+struct mac_addr_cam_info {
 	u8 addr_cam_idx;	/* Addr cam entry index */
 	u8 offset;		/* Offset */
 	u8 len;			/* Length */
@@ -4033,7 +4041,7 @@ struct mac_ax_addr_cam_info {
 	u8 sec_ent[7];
 };
 
-struct mac_ax_bssid_cam_info {
+struct mac_bssid_cam_info {
 	u8 bssid_cam_idx;	/* BSSID cam entry index */
 	u8 offset;		/* Offset */
 	u8 len;			/* Length */
@@ -4043,7 +4051,7 @@ struct mac_ax_bssid_cam_info {
 	u8 bssid[6];
 };
 
-struct mac_ax_sec_cam_info {
+struct mac_sec_cam_info {
 	u8 sec_cam_idx;		/* Security cam entry index */
 	u8 offset;		/* Offset */
 	u8 len;			/* Length */
@@ -4053,11 +4061,11 @@ struct mac_ax_sec_cam_info {
 	u32 key[4];
 };
 
-struct mac_ax_macaddr {
+struct mac_macaddr {
 	u8 macaddr[6];
 };
 
-struct mac_ax_sta_init_info {
+struct mac_sta_init_info {
 	u8 macid;
 	u8 opmode:1;
 	u8 band:1;
@@ -4073,12 +4081,14 @@ struct mac_ax_sta_init_info {
 	u8 self_role:2;
 };
 
-struct mac_ax_fwrole_maintain {
+struct mac_fwrole_maintain {
 	u8 macid;
 	u8 self_role : 2;
 	u8 upd_mode : 3;
 	u8 wifi_role : 4;
 };
+
+#if 0 //NEO
 
 struct mac_ax_cctl_info {
 	/* dword 0 */
@@ -4213,22 +4223,24 @@ struct mac_ax_dctl_info {
 	u32 sec_cam_idx:8;
 };
 
+#endif //NEO
+
 /**
- * struct mac_ax_role_info - role information
+ * struct mac_role_info - role information
  * @macid: MAC ID.
  * @band: Band selection, band0 or band1.
  * @wmm: WMM selection, wmm0 ow wmm1.
  *	There are four sets about band and wmm,
  *	band0+wmm0, band0+wmm1, band1+wmm0,band1+wmm1.
  */
-struct mac_ax_role_info {
-	enum mac_ax_self_role self_role;
-	enum mac_ax_wifi_role wifi_role;
-	enum mac_ax_net_type net_type;
-	enum mac_ax_upd_mode upd_mode;
-	enum mac_ax_opmode opmode;
-	enum mac_ax_band band;
-	enum mac_ax_port port;
+struct mac_role_info {
+	enum mac_self_role self_role;
+	enum mac_wifi_role wifi_role;
+	enum mac_net_type net_type;
+	enum mac_upd_mode upd_mode;
+	enum mac_opmode opmode;
+	enum mac_band band;
+	enum mac_port port;
 	u8 macid;
 	u8 wmm:2;
 	u8 self_mac[6];
@@ -4253,17 +4265,17 @@ struct mac_ax_role_info {
 	u8 tf_mac_padding:2;
 	u8 dl_t_pe: 3;
 	u16 aid;
-	struct mac_ax_addr_cam_info a_info;
-	struct mac_ax_bssid_cam_info b_info;
-	struct mac_ax_sec_cam_info s_info;
-	struct mac_ax_cctl_info c_info;
+	struct mac_addr_cam_info a_info;
+	struct mac_bssid_cam_info b_info;
+	struct mac_sec_cam_info s_info;
+	//struct mac_ax_cctl_info c_info;
 };
 
 struct mac_role_tbl {
 	/* keep first */
 	struct mac_role_tbl *next;
 	struct mac_role_tbl *prev;
-	struct mac_ax_role_info info;
+	struct mac_role_info info;
 	u8 macid;
 	u8 wmm;
 };
@@ -4276,6 +4288,8 @@ struct mac_role_tbl_head {
 	u32 qlen;
 	mac_ax_mutex lock;
 };
+
+#if 0 //NEO
 
 struct mac_ax_coex {
 #define MAC_AX_COEX_RTK_MODE 0
