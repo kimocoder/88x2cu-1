@@ -218,7 +218,7 @@ int usb_write_mem(struct rtw_hal_com_t *hal, u32 addr, u32 length, u8 *pdata)
 
 }
 
-#if 0 // NEO : 8822C doesn't need it
+#ifdef RTW_WKARD_BUS_WRITE 
 static int usb_write_post_cfg(struct rtw_hal_com_t *hal, u32 addr, u32 val)
 {
 	struct hal_info_t	*hal_info = hal->hal_priv;
@@ -249,11 +249,8 @@ static void hal_usb_set_io_ops_gen(struct rtw_hal_com_t *hal, struct hal_io_ops 
 	pops->_write32 = &usb_write32;
 	pops->_write_mem = &usb_write_mem;
 
-#ifdef CONFIG_8852A
+#ifdef RTW_WKARD_BUS_WRITE
 	pops->_write_post_cfg = &usb_write_post_cfg;
-#endif
-#ifdef CONFIG_8822C
-	pops->_write_post_cfg = NULL;
 #endif
 }
 
