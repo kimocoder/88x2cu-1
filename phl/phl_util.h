@@ -40,6 +40,9 @@
 #define MIN(X, Y) (((X) < (Y)) ? (X) : (Y))
 #endif
 
+#ifndef DIFF
+#define DIFF(_x_, _y_) ((_x_ >= _y_) ? (_x_ - _y_) : (_y_ - _x_))
+#endif
 
 #define SET_STATUS_FLAG(_status,_flags)	\
 	((_status) |= (_flags))
@@ -120,7 +123,6 @@ u8 pq_insert(void *d, struct phl_queue *q, enum lock_type type, void *priv, _os_
 		  u8 (*predicate)(void *d, void *priv,_os_list *input, _os_list *obj));
 u32 phl_get_passing_time_us(u32 start);
 u32 phl_get_passing_time_ms(u32 start);
-u32 phl_get_passing_performance_time_us(u32 start);
 
 #endif /*_PHL_UTIL_H_*/
 

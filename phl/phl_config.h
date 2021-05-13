@@ -240,7 +240,8 @@ aa
  * make HW can search correct available Idx0 for TxBF */
 #define RTW_WKARD_BFER_INIT
 
-#define RTW_WKARD_PRELOAD_TRX_RESET
+//NEO
+//#define RTW_WKARD_PRELOAD_TRX_RESET
 
 /* Workaround for cmac table config
  * - This workaround will be removed once fw handles this cfg

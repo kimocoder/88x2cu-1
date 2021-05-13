@@ -1249,7 +1249,6 @@ enum rf_path _get_path_from_ant_num(u8 antnum)
 	return ret;
 }
 
-#if 0 // NEO TODO
 
 static void _hal_send_hal_init_hub_msg(struct rtw_phl_com_t *phl_com, u8 init_ok)
 {
@@ -1272,13 +1271,15 @@ enum rtw_hal_status rtw_hal_preload(struct rtw_phl_com_t *phl_com, void *hal)
 
 	FUNCIN();
 
-	hal_status = hal_ops->hal_get_efuse(phl_com, hal_info);
+	pr_info("%s NEO TODO\n", __func__);
+	//hal_status = hal_ops->hal_get_efuse(phl_com, hal_info);
 	if (hal_status != RTW_HAL_STATUS_SUCCESS)
 		return hal_status;
 
 	return hal_status;
 }
 
+#if 0 // NEO TODO
 enum rtw_hal_status hal_rfe_type_chk(struct rtw_phl_com_t *phl_com,
 				     struct hal_info_t *hal_info)
 {

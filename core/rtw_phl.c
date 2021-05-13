@@ -682,10 +682,14 @@ u8 rtw_hw_init(struct dvobj_priv *dvobj)
 #endif
 	rtw_core_register_phl_msg(dvobj);
 
-#if 0 // NEO : TODO : mark off first
 	/* load wifi feature or capability from efuse*/
-	rtw_phl_preload(dvobj->phl);
+	phl_status = rtw_phl_preload(dvobj->phl);
+	if (phl_status != RTW_PHL_STATUS_SUCCESS) {
+		RTW_ERR("%s - rtw_phl_preload for efuse failed\n", __func__);
+		goto _free_hal;
+	}
 
+#if 0 // NEO : TODO : mark off first
 	rtw_phl_final_cap_decision(dvobj->phl);
 
 	/* after final cap decision */
