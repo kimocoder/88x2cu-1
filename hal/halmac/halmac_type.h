@@ -2153,8 +2153,8 @@ struct halmac_adapter {
 	struct halmac_platform_api *pltfm_api;
 	u32 efuse_end;
 	u32 dlfw_pkt_size;
-	enum halmac_chip_id chip_id;
-	enum halmac_chip_ver chip_ver;
+	//enum halmac_chip_id chip_id;
+	//enum halmac_chip_ver chip_ver;
 	struct halmac_fw_version fw_ver;
 	struct halmac_state halmac_state;
 	enum halmac_interface intf;

@@ -2798,14 +2798,7 @@ super_usb_chk_88xx(struct halmac_adapter *adapter, u8 *super_usb)
 	u8 re_pg;
 	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
 
-	if (adapter->chip_id == HALMAC_CHIP_ID_8822C &&
-	    (adapter->intf == HALMAC_INTERFACE_PCIE ||
-	    adapter->intf == HALMAC_INTERFACE_USB)) {
-		*super_usb = 1;
-	} else {
-		*super_usb = 0;
-		return HALMAC_RET_SUCCESS;
-	}
+	*super_usb = 1;
 
 	if (adapter->efuse_map_valid == 0) {
 		efuse_size = adapter->hw_cfg_info.efuse_size;

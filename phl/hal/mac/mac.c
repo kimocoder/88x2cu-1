@@ -119,18 +119,12 @@ static u32 get_chip_info(struct mac_ax_adapter *adapter,
 		return MACNPTR;
 
 	switch (intf) {
-#if MAC_AX_SDIO_SUPPORT
-	case MAC_AX_INTF_SDIO:
-		cur_id = r8_indir_cmd52_sdio(adapter, R_AX_SYS_CHIPINFO);
-		*cv = r8_indir_cmd52_sdio(adapter, R_AX_SYS_CFG1 + 1) >> 4;
+	case MAC_INTF_SDIO:
 		break;
-#endif
-#if (MAC_AX_USB_SUPPORT || MAC_AX_PCIE_SUPPORT)
-	case MAC_AX_INTF_USB:
-	case MAC_AX_INTF_PCIE:
-		*cut = PLTFM_REG_R8(REG_SYS_CFG1_8822C + 3);
+	case MAC_INTF_USB:
+	case MAC_INTF_PCIE:
+		*cv = pltfm_cb->reg_r8(drv_adapter, REG_SYS_CFG1_8822C + 1) >> 4;
 		break;
-#endif
 	default:
 		return MACINTF;
 	}

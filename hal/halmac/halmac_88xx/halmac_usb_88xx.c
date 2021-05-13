@@ -445,11 +445,6 @@ set_usb_mode_88xx(struct halmac_adapter *adapter, enum halmac_usb_mode mode)
 		return HALMAC_RET_USB_MODE_UNCHANGE;
 	}
 
-	/* Enable IO wrapper timeout */
-	if (adapter->chip_id == HALMAC_CHIP_ID_8822B ||
-	    adapter->chip_id == HALMAC_CHIP_ID_8821C)
-		HALMAC_REG_W8_CLR(REG_SW_MDIO + 3, BIT(0));
-
 	usb_tmp &= ~(BIT_USB23_SW_MODE_V1(0x3));
 
 	if (mode == HALMAC_USB_MODE_U2)

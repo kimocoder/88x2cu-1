@@ -391,7 +391,7 @@ get_hw_value_88xx(struct halmac_adapter *adapter, enum halmac_hw_id hw_id,
 		get_efuse_available_size_88xx(adapter, (u32 *)value);
 		break;
 	case HALMAC_HW_IC_VERSION:
-		*(u8 *)value = adapter->chip_ver;
+		*(u8 *)value = HALMAC_CHIP_VER_C_CUT;
 		break;
 	case HALMAC_HW_PAGE_SIZE:
 		*(u32 *)value = adapter->hw_cfg_info.page_size;
@@ -2488,32 +2488,7 @@ pwr_seq_parser_88xx(struct halmac_adapter *adapter,
 	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
 	struct halmac_wlan_pwr_cfg *cmd;
 
-	switch (adapter->chip_ver) {
-	case HALMAC_CHIP_VER_A_CUT:
-		cut = HALMAC_PWR_CUT_A_MSK;
-		break;
-	case HALMAC_CHIP_VER_B_CUT:
-		cut = HALMAC_PWR_CUT_B_MSK;
-		break;
-	case HALMAC_CHIP_VER_C_CUT:
-		cut = HALMAC_PWR_CUT_C_MSK;
-		break;
-	case HALMAC_CHIP_VER_D_CUT:
-		cut = HALMAC_PWR_CUT_D_MSK;
-		break;
-	case HALMAC_CHIP_VER_E_CUT:
-		cut = HALMAC_PWR_CUT_E_MSK;
-		break;
-	case HALMAC_CHIP_VER_F_CUT:
-		cut = HALMAC_PWR_CUT_F_MSK;
-		break;
-	case HALMAC_CHIP_VER_TEST:
-		cut = HALMAC_PWR_CUT_TESTCHIP_MSK;
-		break;
-	default:
-		PLTFM_MSG_ERR("[ERR]chip info!!\n");
-		return HALMAC_RET_SWITCH_CASE_ERROR;
-	}
+	cut = HALMAC_PWR_CUT_C_MSK;
 
 	switch (adapter->intf) {
 	case HALMAC_INTERFACE_PCIE:
@@ -2680,31 +2655,7 @@ parse_intf_phy_88xx(struct halmac_adapter *adapter,
 	struct halmac_api *api = (struct halmac_api *)adapter->halmac_api;
 	enum halmac_ret_status result = HALMAC_RET_SUCCESS;
 
-	switch (adapter->chip_ver) {
-	case HALMAC_CHIP_VER_A_CUT:
-		cur_cut = (u16)HALMAC_INTF_PHY_CUT_A;
-		break;
-	case HALMAC_CHIP_VER_B_CUT:
-		cur_cut = (u16)HALMAC_INTF_PHY_CUT_B;
-		break;
-	case HALMAC_CHIP_VER_C_CUT:
-		cur_cut = (u16)HALMAC_INTF_PHY_CUT_C;
-		break;
-	case HALMAC_CHIP_VER_D_CUT:
-		cur_cut = (u16)HALMAC_INTF_PHY_CUT_D;
-		break;
-	case HALMAC_CHIP_VER_E_CUT:
-		cur_cut = (u16)HALMAC_INTF_PHY_CUT_E;
-		break;
-	case HALMAC_CHIP_VER_F_CUT:
-		cur_cut = (u16)HALMAC_INTF_PHY_CUT_F;
-		break;
-	case HALMAC_CHIP_VER_TEST:
-		cur_cut = (u16)HALMAC_INTF_PHY_CUT_TESTCHIP;
-		break;
-	default:
-		return HALMAC_RET_FAIL;
-	}
+	cur_cut = (u16)HALMAC_INTF_PHY_CUT_C;
 
 	cur_param = param;
 

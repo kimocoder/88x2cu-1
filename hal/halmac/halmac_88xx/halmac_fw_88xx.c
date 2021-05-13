@@ -390,21 +390,9 @@ pltfm_reset_88xx(struct halmac_adapter *adapter)
 	value8 = HALMAC_REG_R8(REG_CPU_DMEM_CON + 2) & ~BIT(0);
 	HALMAC_REG_W8(REG_CPU_DMEM_CON + 2, value8);
 
-	/* For 8822B & 8821C clock sync issue */
-	if (adapter->chip_id == HALMAC_CHIP_ID_8821C ||
-	    adapter->chip_id == HALMAC_CHIP_ID_8822B) {
-		value8 = HALMAC_REG_R8(REG_SYS_CLK_CTRL + 1) & ~BIT(6);
-		HALMAC_REG_W8(REG_SYS_CLK_CTRL + 1, value8);
-	}
-
 	value8 = HALMAC_REG_R8(REG_CPU_DMEM_CON + 2) | BIT(0);
 	HALMAC_REG_W8(REG_CPU_DMEM_CON + 2, value8);
 
-	if (adapter->chip_id == HALMAC_CHIP_ID_8821C ||
-	    adapter->chip_id == HALMAC_CHIP_ID_8822B) {
-		value8 = HALMAC_REG_R8(REG_SYS_CLK_CTRL + 1) | BIT(6);
-		HALMAC_REG_W8(REG_SYS_CLK_CTRL + 1, value8);
-	}
 }
 
 /**
@@ -1152,7 +1140,7 @@ proc_send_phydm_info_88xx(struct halmac_adapter *adapter,
 
 	PHYDM_INFO_SET_REF_TYPE(h2c_buf, info->rfe_type);
 	PHYDM_INFO_SET_RF_TYPE(h2c_buf, info->rf_type);
-	PHYDM_INFO_SET_CUT_VER(h2c_buf, adapter->chip_ver);
+	PHYDM_INFO_SET_CUT_VER(h2c_buf, 2); //suppose to C-cut first
 	PHYDM_INFO_SET_RX_ANT_STATUS(h2c_buf, info->rx_ant_status);
 	PHYDM_INFO_SET_TX_ANT_STATUS(h2c_buf, info->tx_ant_status);
 	PHYDM_INFO_SET_EXT_PA(h2c_buf, info->ext_pa);

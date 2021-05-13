@@ -372,7 +372,7 @@ mount_api_8822c(struct halmac_adapter *adapter)
 {
 	struct halmac_api *api = (struct halmac_api *)adapter->halmac_api;
 
-	adapter->chip_id = HALMAC_CHIP_ID_8822C;
+	//adapter->chip_id = HALMAC_CHIP_ID_8822C;
 	adapter->hw_cfg_info.efuse_size = EFUSE_SIZE_8822C;
 	adapter->hw_cfg_info.eeprom_size = EEPROM_SIZE_8822C;
 	adapter->hw_cfg_info.bt_efuse_size = BT_EFUSE_SIZE_8822C;
@@ -802,12 +802,6 @@ init_system_cfg_8822c(struct halmac_adapter *adapter)
 		HALMAC_REG_W32(REG_MCUFW_CTRL, tmp & (~BIT_BOOT_FSPI_EN));
 		value32 = HALMAC_REG_R32(REG_GPIO_MUXCFG) & (~BIT_FSPI_EN);
 		HALMAC_REG_W32(REG_GPIO_MUXCFG, value32);
-	}
-
-	if (adapter->chip_ver == HALMAC_CHIP_VER_B_CUT) {
-		value8 = HALMAC_REG_R8(REG_ANAPAR_MAC_0);
-		value8 = value8 & ~(BITS_LDO_VSEL);
-		HALMAC_REG_W8(REG_ANAPAR_MAC_0, value8);
 	}
 
 	PLTFM_MSG_TRACE("[TRACE]%s <===\n", __func__);

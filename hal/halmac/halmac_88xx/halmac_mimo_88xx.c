@@ -254,16 +254,9 @@ cfg_sounding_88xx(struct halmac_adapter *adapter, enum halmac_snd_role role,
 		HALMAC_REG_W8(REG_SND_PTCL_CTRL + 3, 0x3A);
 		HALMAC_REG_W8_CLR(REG_RXFLTMAP1, BIT(4));
 		HALMAC_REG_W8_CLR(REG_RXFLTMAP4, BIT(4));
-		#if (HALMAC_8822C_SUPPORT || HALMAC_8812F_SUPPORT)
-		if (adapter->chip_id == HALMAC_CHIP_ID_8822C)
-			HALMAC_REG_W32(REG_CSI_RRSR,
-				       BIT_CSI_RRSC_BITMAP(CSI_RATE_MAP) |
-				       BIT_OFDM_LEN_TH(0));
-		else if (adapter->chip_id == HALMAC_CHIP_ID_8812F)
-			HALMAC_REG_W32(REG_CSI_RRSR,
-				       BIT_CSI_RRSC_BITMAP(CSI_RATE_MAP) |
-				       BIT_OFDM_LEN_TH(3));
-		#endif
+		HALMAC_REG_W32(REG_CSI_RRSR,
+			       BIT_CSI_RRSC_BITMAP(CSI_RATE_MAP) |
+			       BIT_OFDM_LEN_TH(0));
 		break;
 	default:
 		return HALMAC_RET_INVALID_SOUNDING_SETTING;
@@ -333,11 +326,7 @@ su_bfee_entry_init_88xx(struct halmac_adapter *adapter, u8 userid, u16 paid)
 				BIT_R_TXBF0_40M | BIT_R_TXBF0_80M);
 		HALMAC_REG_W16(REG_TXBF_CTRL, tmp42c | paid);
 		HALMAC_REG_W16(REG_ASSOCIATED_BFMEE_SEL, paid);
-		#if HALMAC_8822C_SUPPORT
-		if (adapter->chip_id == HALMAC_CHIP_ID_8822C)
-			HALMAC_REG_W16(REG_ASSOCIATED_BFMEE_SEL, paid | BIT(9));
-		#endif
-		break;
+		HALMAC_REG_W16(REG_ASSOCIATED_BFMEE_SEL, paid | BIT(9));
 	case 1:
 		tmp42c = HALMAC_REG_R16(REG_TXBF_CTRL + 2) &
 				~(BIT_MASK_R_TXBF1_AID | BIT_R_TXBF0_20M |
@@ -629,27 +618,9 @@ cfg_csi_rate_88xx(struct halmac_adapter *adapter, u8 rssi, u8 cur_rate,
 
 	*bmp_ofdm54 = 0xFF;
 
-#if HALMAC_8821C_SUPPORT
-	if (adapter->chip_id == HALMAC_CHIP_ID_8821C && fixrate_en) {
-		csi_cfg = HALMAC_REG_R32(REG_BBPSF_CTRL) & ~BITS_WMAC_CSI_RATE;
-		HALMAC_REG_W32(REG_BBPSF_CTRL,
-			       csi_cfg | BIT_CSI_FORCE_RATE_EN |
-			       BIT_CSI_RSC(1) |
-			       BIT_WMAC_CSI_RATE(HALMAC_VHT_NSS1_MCS3));
-		*new_rate = HALMAC_VHT_NSS1_MCS3;
-		return HALMAC_RET_SUCCESS;
-	}
-	csi_cfg = HALMAC_REG_R32(REG_BBPSF_CTRL) & ~BITS_WMAC_CSI_RATE &
-							~BIT_CSI_FORCE_RATE_EN;
-#else
 	csi_cfg = HALMAC_REG_R32(REG_BBPSF_CTRL) & ~BITS_WMAC_CSI_RATE;
-#endif
 
-#if (HALMAC_8822C_SUPPORT || HALMAC_8812F_SUPPORT)
-	if (adapter->chip_id == HALMAC_CHIP_ID_8822C ||
-	    adapter->chip_id == HALMAC_CHIP_ID_8812F)
-		HALMAC_REG_W32_SET(REG_BBPSF_CTRL, BIT(15));
-#endif
+	HALMAC_REG_W32_SET(REG_BBPSF_CTRL, BIT(15));
 
 	if (rssi >= 40) {
 		if (cur_rate != HALMAC_OFDM54) {

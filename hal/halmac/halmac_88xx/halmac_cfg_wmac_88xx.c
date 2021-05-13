@@ -678,33 +678,6 @@ board_rf_fine_tune_88xx(struct halmac_adapter *adapter)
 	u32 size = adapter->hw_cfg_info.eeprom_size;
 	struct halmac_api *api = (struct halmac_api *)adapter->halmac_api;
 
-	if (adapter->chip_id == HALMAC_CHIP_ID_8822B) {
-		if (!adapter->efuse_map_valid || !adapter->efuse_map) {
-			PLTFM_MSG_ERR("[ERR]efuse map invalid!!\n");
-			return HALMAC_RET_EFUSE_R_FAIL;
-		}
-
-		map = (u8 *)PLTFM_MALLOC(size);
-		if (!map) {
-			PLTFM_MSG_ERR("[ERR]malloc map\n");
-			return HALMAC_RET_MALLOC_FAIL;
-		}
-
-		PLTFM_MEMSET(map, 0xFF, size);
-
-		if (eeprom_parser_88xx(adapter, adapter->efuse_map, map) !=
-		    HALMAC_RET_SUCCESS) {
-			PLTFM_FREE(map, size);
-			return HALMAC_RET_EEPROM_PARSING_FAIL;
-		}
-
-		/* Fine-tune XTAL voltage for 2L PCB board */
-		if (*(map + EFUSE_PCB_INFO_OFFSET) == 0x0C)
-			HALMAC_REG_W8_SET(REG_AFE_CTRL1 + 1, BIT(1));
-
-		PLTFM_FREE(map, size);
-	}
-
 	return HALMAC_RET_SUCCESS;
 }
 
@@ -813,9 +786,6 @@ config_security_88xx(struct halmac_adapter *adapter,
 	HALMAC_REG_W8(REG_SECCFG, sec_cfg);
 
 	if (setting->bip_enable == 1) {
-		if (adapter->chip_id == HALMAC_CHIP_ID_8822B)
-			return HALMAC_RET_BIP_NO_SUPPORT;
-#if (HALMAC_8821C_SUPPORT || HALMAC_8822C_SUPPORT || HALMAC_8812F_SUPPORT)
 		sec_cfg = HALMAC_REG_R8(REG_WSEC_OPTION + 2);
 
 		if (setting->tx_encryption == 1)
@@ -829,7 +799,6 @@ config_security_88xx(struct halmac_adapter *adapter,
 			sec_cfg &= ~(BIT(4) | BIT(6));
 
 		HALMAC_REG_W8(REG_WSEC_OPTION + 2, sec_cfg);
-#endif
 	}
 
 	PLTFM_MSG_TRACE("[TRACE]%s <===\n", __func__);

@@ -173,69 +173,11 @@ halmac_init_adapter(void *drv_adapter, struct halmac_platform_api *pltfm_api,
 	PLTFM_MUTEX_INIT(&adapter->h2c_seq_mutex);
 	PLTFM_MUTEX_INIT(&adapter->sdio_indir_mutex);
 
-#if (HALMAC_PLATFORM_WINDOWS == 0)
-
 #if HALMAC_88XX_SUPPORT
-	if (adapter->chip_id == HALMAC_CHIP_ID_8822B ||
-	    adapter->chip_id == HALMAC_CHIP_ID_8821C ||
-	    adapter->chip_id == HALMAC_CHIP_ID_8822C ||
-	    adapter->chip_id == HALMAC_CHIP_ID_8812F) {
-		init_adapter_param_88xx(adapter);
-		status = mount_api_88xx(adapter);
-	}
+	init_adapter_param_88xx(adapter);
+	status = mount_api_88xx(adapter);
 #endif
 
-#if HALMAC_88XX_V1_SUPPORT
-	if (adapter->chip_id == HALMAC_CHIP_ID_8814B) {
-		init_adapter_param_88xx_v1(adapter);
-		status = mount_api_88xx_v1(adapter);
-	}
-#if defined(HALMAC_DATA_CPU_EN)
-	if (adapter->chip_id == HALMAC_CHIP_ID_8814B) {
-		init_adapter_param_88xxd_v1(adapter);
-		status = mount_api_88xxd_v1(adapter);
-	}
-#endif
-#endif
-
-#else
-
-#if HALMAC_8822B_SUPPORT
-	if (adapter->chip_id == HALMAC_CHIP_ID_8822B) {
-		init_adapter_param_win8822b(adapter);
-		status = mount_api_win8822b(adapter);
-	}
-#endif
-
-#if HALMAC_8821C_SUPPORT
-	if (adapter->chip_id == HALMAC_CHIP_ID_8821C) {
-		init_adapter_param_win8821c(adapter);
-		status = mount_api_win8821c(adapter);
-	}
-#endif
-
-#if HALMAC_8814B_SUPPORT
-	if (adapter->chip_id == HALMAC_CHIP_ID_8814B) {
-		init_adapter_param_win8814b_v1(adapter);
-		status = mount_api_win8814b_v1(adapter);
-	}
-#endif
-
-#if HALMAC_8822C_SUPPORT
-	if (adapter->chip_id == HALMAC_CHIP_ID_8822C) {
-		init_adapter_param_win8822c(adapter);
-		status = mount_api_win8822c(adapter);
-	}
-#endif
-
-#if HALMAC_8812F_SUPPORT
-	if (adapter->chip_id == HALMAC_CHIP_ID_8812F) {
-		init_adapter_param_win8812f(adapter);
-		status = mount_api_win8812f(adapter);
-	}
-#endif
-
-#endif
 	*halmac_api = (struct halmac_api *)adapter->halmac_api;
 
 #if HALMAC_DBG_MONITOR_IO
@@ -492,54 +434,6 @@ static enum halmac_ret_status
 get_chip_info(void *drv_adapter, struct halmac_platform_api *pltfm_api,
 	      enum halmac_interface intf, struct halmac_adapter *adapter)
 {
-	u8 chip_id;
-	u8 chip_ver;
-	u32 cnt;
-
-	if (adapter->intf == HALMAC_INTERFACE_SDIO) {
-		pltfm_reg_w8_sdio(drv_adapter, pltfm_api, REG_SDIO_HSUS_CTRL,
-				  pltfm_reg_r8_sdio(drv_adapter, pltfm_api,
-						    REG_SDIO_HSUS_CTRL) &
-						    ~(BIT(0)));
-
-		cnt = 10000;
-		while (!(pltfm_reg_r8_sdio(drv_adapter, pltfm_api,
-					   REG_SDIO_HSUS_CTRL) & BIT(1))) {
-			cnt--;
-			if (cnt == 0)
-				return HALMAC_RET_SDIO_LEAVE_SUSPEND_FAIL;
-		}
-
-		chip_id = pltfm_reg_r_indir_sdio(drv_adapter, pltfm_api,
-						 REG_SYS_CFG2);
-		chip_ver = pltfm_reg_r_indir_sdio(drv_adapter, pltfm_api,
-						  REG_SYS_CFG1 + 1) >> 4;
-	} else {
-		chip_id = pltfm_api->REG_READ_8(drv_adapter, REG_SYS_CFG2);
-		chip_ver = pltfm_api->REG_READ_8(drv_adapter,
-						 REG_SYS_CFG1 + 1) >> 4;
-	}
-
-	adapter->chip_ver = (enum halmac_chip_ver)chip_ver;
-
-	if (chip_id == CHIP_ID_HW_DEF_8822B) {
-		adapter->chip_id = HALMAC_CHIP_ID_8822B;
-	} else if (chip_id == CHIP_ID_HW_DEF_8821C) {
-		adapter->chip_id = HALMAC_CHIP_ID_8821C;
-	} else if (chip_id == CHIP_ID_HW_DEF_8814B) {
-		adapter->chip_id = HALMAC_CHIP_ID_8814B;
-	} else if (chip_id == CHIP_ID_HW_DEF_8197F) {
-		adapter->chip_id = HALMAC_CHIP_ID_8197F;
-	} else if (chip_id == CHIP_ID_HW_DEF_8822C) {
-		adapter->chip_id = HALMAC_CHIP_ID_8822C;
-	} else if (chip_id == CHIP_ID_HW_DEF_8812F) {
-		adapter->chip_id = HALMAC_CHIP_ID_8812F;
-	} else {
-		adapter->chip_id = HALMAC_CHIP_ID_UNDEFINE;
-		PLTFM_MSG_ERR("[ERR]Chip id is undefined\n");
-		return HALMAC_RET_CHIP_NOT_SUPPORT;
-	}
-
 	return HALMAC_RET_SUCCESS;
 }
 

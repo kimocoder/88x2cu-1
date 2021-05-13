@@ -360,30 +360,7 @@ mount_api_88xx(struct halmac_adapter *adapter)
 		PLTFM_MSG_ERR("[ERR]Set halmac io function Error!!\n");
 	}
 
-	if (adapter->chip_id == HALMAC_CHIP_ID_8822B) {
-#if HALMAC_8822B_SUPPORT
-		mount_api_8822b(adapter);
-#endif
-	} else if (adapter->chip_id == HALMAC_CHIP_ID_8821C) {
-#if HALMAC_8821C_SUPPORT
-		mount_api_8821c(adapter);
-#endif
-	} else if (adapter->chip_id == HALMAC_CHIP_ID_8822C) {
-#if HALMAC_8822C_SUPPORT
-		mount_api_8822c(adapter);
-#endif
-	} else if (adapter->chip_id == HALMAC_CHIP_ID_8812F) {
-#if HALMAC_8812F_SUPPORT
-		mount_api_8812f(adapter);
-#endif
-	} else {
-		PLTFM_MSG_ERR("[ERR]Chip ID undefine!!\n");
-		return HALMAC_RET_CHIP_NOT_SUPPORT;
-	}
-
-#if HALMAC_PLATFORM_TESTPROGRAM
-	halmac_mount_misc_api_88xx(adapter);
-#endif
+	mount_api_8822c(adapter);
 
 	return HALMAC_RET_SUCCESS;
 }
