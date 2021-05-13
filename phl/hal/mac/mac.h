@@ -19,10 +19,9 @@
 #include "mac_def.h"
 #include "mac_ac/init.h"
 
-#if 0 //NEO
-#include "mac_ax/fwcmd.h"
-#include "mac_ax/security_cam.h"
-#include "mac_ax/efuse.h"
+#include "mac_ac/fwcmd.h"
+#include "mac_ac/security_cam.h"
+#include "mac_ac/efuse.h"
 #if MAC_AX_SDIO_SUPPORT
 #include "mac_ax/_sdio.h"
 #endif
@@ -34,7 +33,6 @@
 #if MAC_AX_FEATURE_HV
 #include "hv_type.h"
 #endif
-#endif // if 0 NEO
 
 #define MAC_MAJOR_VER	0	/*Software Architcture Modify*/
 #define MAC_PROTOTYPE_VER	20	/*New Feature;Regular Release*/

@@ -40,7 +40,8 @@ halmac-y += $(path_hm_ac)/fwcmd.o \
 		$(path_hm_ac)/trx_desc.o \
 		$(path_hm_ac)/hw.o \
 		$(path_hm_ac)/role.o \
-		$(path_hm_ac)/security_cam.o
+		$(path_hm_ac)/security_cam.o \
+		$(path_hm_ac)/efuse.o
 
 #halmac-y +=		$(path_hm_d1)/addr_cam.o \
 			$(path_hm_d1)/cmac_tx.o \
@@ -48,7 +49,6 @@ halmac-y += $(path_hm_ac)/fwcmd.o \
 			$(path_hm_d1)/cpuio.o \
 			$(path_hm_d1)/dbgpkg.o \
 			$(path_hm_d1)/dle.o \
-			$(path_hm_d1)/efuse.o \
 			$(path_hm_d1)/fwcmd.o \
 			$(path_hm_d1)/fwdl.o \
 			$(path_hm_d1)/fwofld.o \

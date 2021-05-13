@@ -298,7 +298,6 @@ u32 mac_ops_init(void *drv_adapter, struct mac_pltfm_cb *pltfm_cb,
 	if (ret)
 		return ret;
 
-#if 0 // NEO
 	ret = efuse_tbl_init(adapter);
 	if (ret)
 		return ret;
@@ -307,7 +306,6 @@ u32 mac_ops_init(void *drv_adapter, struct mac_pltfm_cb *pltfm_cb,
 	if (ret)
 		return ret;
 #endif
-#endif // if 0 NEO
 	return MACSUCCESS;
 }
 #endif /*CONFIG_NEW_HALMAC_INTERFACE*/
@@ -339,15 +337,6 @@ u32 mac_ops_exit(struct mac_adapter *adapter)
 		return ret;
 	}
 
-#if 0 // NEO
-	struct mac_ax_efuse_param *efuse_param = &adapter->efuse_param;
-
-	ret = h2cb_exit(adapter);
-	if (ret) {
-		PLTFM_MSG_ERR("[ERR]h2c buffer exit\n");
-		return ret;
-	}
-
 	ret = efuse_tbl_exit(adapter);
 	if (ret) {
 		PLTFM_MSG_ERR("[ERR]efuse table exit\n");
@@ -360,6 +349,15 @@ u32 mac_ops_exit(struct mac_adapter *adapter)
 		return ret;
 	}
 #endif
+#if 0 // NEO
+	struct mac_efuse_param *efuse_param = &adapter->efuse_param;
+
+	ret = h2cb_exit(adapter);
+	if (ret) {
+		PLTFM_MSG_ERR("[ERR]h2c buffer exit\n");
+		return ret;
+	}
+
 	if (efuse_param->efuse_map) {
 		PLTFM_FREE(efuse_param->efuse_map,
 			   adapter->hw_info->efuse_size);
