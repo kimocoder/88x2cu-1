@@ -737,7 +737,6 @@ enum rtw_phl_status _init_precfg(struct phl_info_t *phl_info, u8 band)
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_FAILURE;
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_FAILURE;
 	u8 status = false;
-	u8 dma_ch = 0;
 
 	do {
 		/* 1. stop Tx DMA */
@@ -1087,7 +1086,6 @@ enum rtw_phl_status phl_wow_deinit_precfg(struct phl_wow_info *wow_info)
 	enum rtw_phl_status phl_status = RTW_PHL_STATUS_SUCCESS;
 	struct phl_info_t *phl_info = wow_info->phl_info;
 	struct phl_hci_trx_ops *trx_ops = phl_info->hci_trx_ops;
-	enum rtw_hal_status hstatus = RTW_HAL_STATUS_FAILURE;
 
 	FUNCIN();
 
@@ -1115,6 +1113,7 @@ void phl_reset_wow_info(struct phl_wow_info *wow_info)
 	wow_info->func_en = 0;
 	wow_info->op_mode = RTW_WOW_OP_NONE;
 	wow_info->mac_pwr = RTW_MAC_PWR_NONE;
+	wow_info->ps_pwr_lvl = PS_PWR_LVL_MAX;
 
 	_os_mem_set(d, &wow_info->err, 0, sizeof(struct phl_wow_error));
 	_os_mem_set(d, &wow_info->keep_alive_info, 0, sizeof(struct rtw_keep_alive_info));
@@ -1180,7 +1179,6 @@ u8 phl_wow_nlo_exist(struct phl_wow_info *wow_info)
 enum rtw_phl_status _phl_wow_cfg_pkt_ofld(struct phl_wow_info *wow_info, u8 pkt_type, u8 *pkt_id, void *buf)
 {
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_FAILURE;
-	struct rtw_phl_com_t *phl_com = wow_info->phl_info->phl_com;
 	u16 macid = wow_info->sta->macid;
 	u32 *token;
 
@@ -1411,6 +1409,8 @@ void phl_wow_ps_pctl_cfg(struct phl_wow_info *wow_info, u8 enter_wow)
 {
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_FAILURE;
 	struct phl_info_t *phl_info = wow_info->phl_info;
+	struct ps_cfg cfg = {0};
+	struct rtw_ps_cap_t *ps_cap = _get_ps_cap(phl_info);
 
 	PHL_TRACE(COMP_PHL_WOW, _PHL_INFO_, "[wow] %s : op mode %d.\n.",
 			  __func__, wow_info->op_mode);
@@ -1419,8 +1419,13 @@ void phl_wow_ps_pctl_cfg(struct phl_wow_info *wow_info, u8 enter_wow)
 		/* IPS */
 	} else if (wow_info->op_mode == RTW_WOW_OP_CONNECT_STBY) {
 		/* LPS */
-		pstatus = phl_ps_wow_link_ptcl_cfg(phl_info, enter_wow,
-						wow_info->sta->macid);
+		if (ps_cap->lps_wow_en) {
+			cfg.macid = wow_info->sta->macid;
+			cfg.awake_interval = ps_cap->lps_wow_awake_interval;
+			cfg.listen_bcn_mode = ps_cap->lps_wow_listen_bcn_mode;
+			cfg.smart_ps_mode = ps_cap->lps_wow_smart_ps_mode;
+			pstatus = phl_ps_lps_cfg(phl_info, &cfg, enter_wow);
+		}
 	} else {
 		PHL_ERR("%s : undefined wowlan op mode.\n", __func__);
 	}
@@ -1430,18 +1435,45 @@ void phl_wow_ps_pwr_cfg(struct phl_wow_info *wow_info, u8 enter_wow)
 {
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_FAILURE;
 	struct phl_info_t *phl_info = wow_info->phl_info;
+	struct rtw_ps_cap_t *ps_cap = _get_ps_cap(phl_info);
 
-	PHL_TRACE(COMP_PHL_WOW, _PHL_INFO_, "[wow] %s : op mode %d.\n.",
-			  __func__, wow_info->op_mode);
+	wow_info->ps_pwr_lvl = PS_PWR_LVL_PWRON;
 
 	if (wow_info->op_mode == RTW_WOW_OP_DISCONNECT_STBY) {
 		/* IPS */
 	} else if (wow_info->op_mode == RTW_WOW_OP_CONNECT_STBY) {
-		/* LPS */
-		pstatus = phl_ps_wow_link_pwr_cfg(phl_info);
+		if (ps_cap->lps_wow_en) {
+			wow_info->ps_pwr_lvl = phl_ps_judge_pwr_lvl(ps_cap->lps_wow_cap, PS_MODE_LPS, enter_wow);
+			pstatus = phl_ps_cfg_pwr_lvl(phl_info, PS_PWR_LVL_PWRON, wow_info->ps_pwr_lvl);
+		}
 	} else {
 		PHL_ERR("%s : undefined wowlan op mode.\n", __func__);
 	}
+
+	PHL_TRACE(COMP_PHL_WOW, _PHL_INFO_, "[wow] %s : op mode %d, pwr lvl %s.\n.",
+			  __func__, wow_info->op_mode, phl_ps_pwr_lvl_to_str(wow_info->ps_pwr_lvl));
+}
+
+enum rtw_phl_status phl_wow_leave_low_power(struct phl_wow_info *wow_info)
+{
+	enum rtw_phl_status pstatus = RTW_PHL_STATUS_FAILURE;
+	struct phl_info_t *phl_info = wow_info->phl_info;
+
+	PHL_TRACE(COMP_PHL_WOW, _PHL_INFO_, "[wow] %s : op mode %d, pwr lvl %s.\n.",
+			  __func__, wow_info->op_mode, phl_ps_pwr_lvl_to_str(wow_info->ps_pwr_lvl));
+
+	if (wow_info->ps_pwr_lvl == PS_PWR_LVL_PWRON)
+		return RTW_PHL_STATUS_SUCCESS;
+
+	if (wow_info->op_mode == RTW_WOW_OP_DISCONNECT_STBY) {
+		/* IPS */
+	} else if (wow_info->op_mode == RTW_WOW_OP_CONNECT_STBY) {
+		pstatus = phl_ps_cfg_pwr_lvl(phl_info, wow_info->ps_pwr_lvl, PS_PWR_LVL_PWRON);
+	} else {
+		PHL_ERR("%s : undefined wowlan op mode.\n", __func__);
+	}
+
+	return pstatus;
 }
 
 #define case_rsn(rsn) \
