@@ -13,7 +13,6 @@
  *
  *****************************************************************************/
 #include "phl_headers.h"
-#include "phl_pkt_ofld.h"
 
 #if 0 //NEO
 
@@ -131,6 +130,8 @@ _phl_pkt_ofld_gen_req(struct pkt_ofld_obj *ofld_obj, const char *req_name)
 	return req;
 }
 
+#endif //NEO
+
 static void
 _phl_pkt_ofld_del_req(struct pkt_ofld_obj *ofld_obj, struct pkt_ofld_info *pkt_info,
 			struct pkt_ofld_req *req)
@@ -142,6 +143,8 @@ _phl_pkt_ofld_del_req(struct pkt_ofld_obj *ofld_obj, struct pkt_ofld_info *pkt_i
 	_os_mem_free(d, req->req_name, sizeof(u8)*req->req_name_len);
 	_os_mem_free(d, req, sizeof(*req));
 }
+
+#if 0 //NEO
 
 static struct pkt_ofld_req *
 _phl_pkt_ofld_get_req(struct pkt_ofld_obj *ofld_obj, struct pkt_ofld_info *pkt_info,
@@ -219,8 +222,6 @@ _phl_pkt_ofld_construct_na(struct pkt_ofld_obj *pkt, u8 **pkt_buf,
 	struct rtw_pkt_ofld_na_info *na_info)
 {
 	void *d = phl_to_drvpriv(pkt->phl_info);
-	struct phl_info_t *phl_info = (struct phl_info_t *)pkt->phl_info;
-	struct rtw_wifi_role_t *wrole = phl_sta->wrole;
 	u8* p_na_body;
 	u8 NSLLCHeader[8] = {0xAA, 0xAA, 0x03, 0x00, 0x00, 0x00, 0x86, 0xDD};
 	u8 IPv6HeadInfo[4] = {0x60, 0x00, 0x00, 0x00};
@@ -300,8 +301,6 @@ _phl_pkt_ofld_construct_arp_rsp(struct pkt_ofld_obj *pkt, u8 **pkt_buf,
 	struct rtw_pkt_ofld_arp_rsp_info *arp_rsp_info)
 {
 	void *d = phl_to_drvpriv(pkt->phl_info);
-	struct phl_info_t *phl_info = (struct phl_info_t *)pkt->phl_info;
-	struct rtw_wifi_role_t *wrole = phl_sta->wrole;
 	u8* p_arp_rsp_body;
 	u8 ARPLLCHeader[8] = {0xAA, 0xAA, 0x03, 0x00, 0x00, 0x00, 0x08, 0x06};
 	u8 sec_hdr = arp_rsp_info->sec_hdr;
@@ -438,9 +437,7 @@ _phl_pkt_ofld_construct_sa_query_pkt(struct pkt_ofld_obj *ofld_obj, u8 **pkt_buf
 				struct rtw_pkt_ofld_sa_query_info *sa_query_info)
 {
 	void *d = phl_to_drvpriv(ofld_obj->phl_info);
-	struct rtw_wifi_role_t *wrole = phl_sta->wrole;
 	u8 *pkt = NULL;
-	u8 pairwise_sec_alg = 0;
 	u8 sec_hdr = sa_query_info->sec_hdr;
 
 	*len = MAC_HDR_LEN+sec_hdr+SAQ_ACTION_LEN;
@@ -550,7 +547,6 @@ static u8
 _phl_pkt_ofld_is_entry_exist(struct pkt_ofld_obj *ofld_obj, u16 macid)
 {
 	struct pkt_ofld_entry *pos = NULL;
-	u8 find = false;
 
 	phl_list_for_loop(pos, struct pkt_ofld_entry, &ofld_obj->entry_q, list) {
 		if (pos->macid == macid) {
@@ -564,7 +560,6 @@ _phl_pkt_ofld_is_entry_exist(struct pkt_ofld_obj *ofld_obj, u16 macid)
 	return false;
 }
 
-#if 0 //NEO
 
 static void
 _phl_pkt_ofld_del_all_req(struct pkt_ofld_obj *ofld_obj,
@@ -580,6 +575,7 @@ _phl_pkt_ofld_del_all_req(struct pkt_ofld_obj *ofld_obj,
 	}
 }
 
+#if 0 //NEO
 static void
 _phl_pkt_ofld_del_ofld_type(struct pkt_ofld_obj *ofld_obj,
 				struct pkt_ofld_entry *entry)
@@ -601,6 +597,8 @@ _phl_pkt_ofld_del_ofld_type(struct pkt_ofld_obj *ofld_obj,
 	}
 }
 
+#endif //NEO
+
 static void
 _phl_pkt_ofld_reset_entry(struct pkt_ofld_obj *ofld_obj,
 				struct pkt_ofld_entry *entry)
@@ -612,6 +610,8 @@ _phl_pkt_ofld_reset_entry(struct pkt_ofld_obj *ofld_obj,
 		_phl_pkt_ofld_del_all_req(ofld_obj, &entry->pkt_info[idx]);
 	}
 }
+
+#if 0 //NEO
 
 static void
 _phl_pkt_ofld_add_entry(struct pkt_ofld_obj *ofld_obj,
@@ -774,6 +774,7 @@ void phl_pkt_ofld_deinit(struct phl_info_t *phl_info)
 	phl_list_for_loop_safe(pos, n, struct pkt_ofld_entry,
 				&ofld_obj->entry_q, list) {
 
+		_phl_pkt_ofld_reset_entry(ofld_obj, pos);
 		_phl_pkt_ofld_del_entry(ofld_obj, pos);
 	}
 
