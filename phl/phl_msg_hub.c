@@ -18,7 +18,6 @@
 #define MODL_MASK_LEN (PHL_BK_MDL_END / 8)
 #define MAX_MSG_NUM	(16)
 
-
 enum msg_hub_status {
 	MSG_HUB_INIT = BIT0,
 	MSG_HUB_STARTED = BIT1,
@@ -167,7 +166,7 @@ int msg_thread_hdl(void* param)
 		}
 	}
 	while (hub->idle_msg_q.cnt != MAX_MSG_NUM) {
-		while (pop_front_wait_msg(phl, &ex))
+		while(pop_front_wait_msg(phl, &ex))
 			push_back_idle_msg(phl, ex);
 	}
 	_os_thread_wait_stop(d, &(hub->msg_notify_thread));
@@ -318,7 +317,6 @@ enum rtw_phl_status phl_msg_hub_update_recver_mask(void* phl,
 {
 	struct phl_info_t* phl_info = (struct phl_info_t*)phl;
 	struct phl_msg_hub* hub = (struct phl_msg_hub*)phl_info->msg_hub;
-	void *d = phl_to_drvpriv(phl_info);
 	struct phl_msg_receiver_ex* recver = NULL;
 	if(!TEST_STATUS_FLAG(hub->status, MSG_HUB_INIT) ||
 		layer >= MSG_RECV_MAX)
@@ -343,7 +341,6 @@ enum rtw_phl_status phl_msg_hub_deregister_recver(void* phl,
 {
 	struct phl_info_t* phl_info = (struct phl_info_t*)phl;
 	struct phl_msg_hub* hub = (struct phl_msg_hub*)phl_info->msg_hub;
-	void *d = phl_to_drvpriv(phl_info);
 	struct phl_msg_receiver_ex* recver = NULL;
 	if(!TEST_STATUS_FLAG(hub->status, MSG_HUB_INIT) ||
 		layer >= MSG_RECV_MAX)
@@ -386,43 +383,11 @@ void phl_msg_hub_rx_evt_hdlr(struct phl_info_t* phl, u16 evt_id,
 	switch (evt_id) {
 	case HAL_C2H_EV_BB_MUGRP_DOWN:
 		break;
-	default:
-		break;
-	}
-}
-
-void phl_msg_hub_mrc_evt_hdlr(struct phl_info_t* phl, struct phl_msg *msg)
-{
-	u16 evt_id = MSG_EVT_ID_FIELD(msg->msg_id);
-	void *d = phl_to_drvpriv(phl);
-
-	PHL_INFO("%s : evt_id %d.\n", __func__, evt_id);
-
-	switch (evt_id) {
-	case MSG_EVT_ROLE_NTFY:
-		phl_ps_role_notify(phl, msg->inbuf);
+	case HAL_C2H_EV_MAC_TSF32_TOG:
+		PHL_TRACE(COMP_PHL_P2PPS, _PHL_INFO_, "[NOA]phl_msg_hub_rx_evt_hdlr():toggle happen!!\n");
+		phl_p2pps_tsf32_tog_handler(phl);
 		break;
 	default:
 		break;
 	}
 }
-
-void phl_msg_hub_power_mgnt_evt_hdlr(struct phl_info_t* phl,
-		struct phl_msg *msg)
-{
-	u16 evt_id = MSG_EVT_ID_FIELD(msg->msg_id);
-	void *d = phl_to_drvpriv(phl);
-	enum rtw_phl_status pstatus;
-
-	PHL_INFO("%s : evt_id %d.\n", __func__, evt_id);
-
-	switch (evt_id) {
-	case MSG_EVT_BATTERY_CHG:
-		pstatus = rtw_phl_ps_notify(phl, PHL_PS_NTFY_BATTERY_CHG,
-						msg->inbuf);
-		break;
-	default:
-		break;
-	}
-}
-
