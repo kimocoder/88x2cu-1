@@ -34,6 +34,7 @@ mac_pwr_switch_usb_8822c(struct halmac_adapter *adapter,
 {
 	u8 value8;
 	u8 rpwm;
+	enum halmac_mac_power mac_pwr;
 	struct halmac_api *api = (struct halmac_api *)adapter->halmac_api;
 
 	PLTFM_MSG_TRACE("[TRACE]%s ===>\n", __func__);
@@ -49,17 +50,17 @@ mac_pwr_switch_usb_8822c(struct halmac_adapter *adapter,
 
 	value8 = HALMAC_REG_R8(REG_CR);
 	if (value8 == 0xEA) {
-		adapter->halmac_state.mac_pwr = HALMAC_MAC_POWER_OFF;
+		mac_pwr = HALMAC_MAC_POWER_OFF;
 	} else {
 		if (BIT(0) == (HALMAC_REG_R8(REG_SYS_STATUS1 + 1) & BIT(0)))
-			adapter->halmac_state.mac_pwr = HALMAC_MAC_POWER_OFF;
+			mac_pwr = HALMAC_MAC_POWER_OFF;
 		else
-			adapter->halmac_state.mac_pwr = HALMAC_MAC_POWER_ON;
+			mac_pwr = HALMAC_MAC_POWER_ON;
 	}
 
 	/*Check if power switch is needed*/
 	if (pwr == HALMAC_MAC_POWER_ON &&
-	    adapter->halmac_state.mac_pwr == HALMAC_MAC_POWER_ON) {
+	    mac_pwr == HALMAC_MAC_POWER_ON) {
 		PLTFM_MSG_WARN("[WARN]power state unchange!!\n");
 		return HALMAC_RET_PWR_UNCHANGE;
 	}
@@ -71,7 +72,6 @@ mac_pwr_switch_usb_8822c(struct halmac_adapter *adapter,
 			return HALMAC_RET_POWER_OFF_FAIL;
 		}
 
-		adapter->halmac_state.mac_pwr = HALMAC_MAC_POWER_OFF;
 		adapter->halmac_state.dlfw_state = HALMAC_DLFW_NONE;
 		init_adapter_dynamic_param_88xx(adapter);
 	} else {
@@ -82,8 +82,6 @@ mac_pwr_switch_usb_8822c(struct halmac_adapter *adapter,
 		}
 
 		HALMAC_REG_W8_CLR(REG_SYS_STATUS1 + 1, BIT(0));
-
-		adapter->halmac_state.mac_pwr = HALMAC_MAC_POWER_ON;
 	}
 
 	PLTFM_MSG_TRACE("[TRACE]%s <===\n", __func__);

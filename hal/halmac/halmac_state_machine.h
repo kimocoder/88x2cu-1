@@ -172,7 +172,7 @@ struct halmac_state {
 	struct halmac_psd_state psd_state;
 	struct halmac_fw_snding_state fw_snding_state;
 	enum halmac_api_state api_state;
-	enum halmac_mac_power mac_pwr;
+	//enum halmac_mac_power mac_pwr;
 	enum halmac_dlfw_state dlfw_state;
 	enum halmac_wlcpu_mode wlcpu_mode;
 	enum halmac_gpio_cfg_state gpio_cfg_state;

@@ -375,7 +375,6 @@ init_state_machine_88xx(struct halmac_adapter *adapter)
 	state->api_state = HALMAC_API_STATE_INIT;
 
 	state->dlfw_state = HALMAC_DLFW_NONE;
-	state->mac_pwr = HALMAC_MAC_POWER_OFF;
 	state->gpio_cfg_state = HALMAC_GPIO_CFG_STATE_IDLE;
 	state->rsvd_pg_state = HALMAC_RSVD_PG_STATE_IDLE;
 }

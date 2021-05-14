@@ -121,9 +121,6 @@ download_firmware_88xx(struct halmac_adapter *adapter, u8 *fw_bin, u32 size)
 	enum halmac_ret_status status;
 	struct halmac_api *api = (struct halmac_api *)adapter->halmac_api;
 
-	if (adapter->halmac_state.mac_pwr == HALMAC_MAC_POWER_OFF)
-		return HALMAC_RET_POWER_STATE_INVALID;
-
 	PLTFM_MSG_TRACE("[TRACE]%s ===>\n", __func__);
 
 	status = chk_fw_size_88xx(adapter, fw_bin, size);

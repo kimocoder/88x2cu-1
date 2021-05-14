@@ -158,9 +158,6 @@ dump_efuse_map_88xx(struct halmac_adapter *adapter,
 		return HALMAC_RET_ERROR_STATE;
 	}
 
-	if (adapter->halmac_state.mac_pwr == HALMAC_MAC_POWER_OFF)
-		PLTFM_MSG_ERR("[ERR]Dump efuse in suspend\n");
-
 	*proc_status = HALMAC_CMD_PROCESS_IDLE;
 	adapter->evnt.phy_efuse_map = 1;
 
@@ -553,9 +550,6 @@ dump_log_efuse_map_88xx(struct halmac_adapter *adapter,
 		PLTFM_MSG_WARN("[WARN]Not idle(efuse)\n");
 		return HALMAC_RET_ERROR_STATE;
 	}
-
-	if (adapter->halmac_state.mac_pwr == HALMAC_MAC_POWER_OFF)
-		PLTFM_MSG_ERR("[ERR]Dump efuse in suspend\n");
 
 	*proc_status = HALMAC_CMD_PROCESS_IDLE;
 	adapter->evnt.log_efuse_map = 1;
