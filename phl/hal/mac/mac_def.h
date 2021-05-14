@@ -1624,9 +1624,8 @@ struct mac_trx_info {
 	struct mac_host_rpr_cfg *rpr_cfg;
 };
 
-#if 0 // NEO
 
-struct mac_ax_fwdl_info {
+struct mac_fwdl_info {
 	u8 fw_en;
 	u8 dlrom_en;
 	u8 dlram_en;
@@ -1638,28 +1637,29 @@ struct mac_ax_fwdl_info {
 	u32 ram_size;
 };
 
-struct mac_ax_txdma_ch_map {
-	enum mac_ax_pcie_func_ctrl ch0;
-	enum mac_ax_pcie_func_ctrl ch1;
-	enum mac_ax_pcie_func_ctrl ch2;
-	enum mac_ax_pcie_func_ctrl ch3;
-	enum mac_ax_pcie_func_ctrl ch4;
-	enum mac_ax_pcie_func_ctrl ch5;
-	enum mac_ax_pcie_func_ctrl ch6;
-	enum mac_ax_pcie_func_ctrl ch7;
-	enum mac_ax_pcie_func_ctrl ch8;
-	enum mac_ax_pcie_func_ctrl ch9;
-	enum mac_ax_pcie_func_ctrl ch10;
-	enum mac_ax_pcie_func_ctrl ch11;
-	enum mac_ax_pcie_func_ctrl ch12;
+#if 0 //NEO
+struct mac_txdma_ch_map {
+	enum mac_pcie_func_ctrl ch0;
+	enum mac_pcie_func_ctrl ch1;
+	enum mac_pcie_func_ctrl ch2;
+	enum mac_pcie_func_ctrl ch3;
+	enum mac_pcie_func_ctrl ch4;
+	enum mac_pcie_func_ctrl ch5;
+	enum mac_pcie_func_ctrl ch6;
+	enum mac_pcie_func_ctrl ch7;
+	enum mac_pcie_func_ctrl ch8;
+	enum mac_pcie_func_ctrl ch9;
+	enum mac_pcie_func_ctrl ch10;
+	enum mac_pcie_func_ctrl ch11;
+	enum mac_pcie_func_ctrl ch12;
 };
 
-struct mac_ax_rxdma_ch_map {
-	enum mac_ax_pcie_func_ctrl rxq;
-	enum mac_ax_pcie_func_ctrl rpq;
+struct mac_rxdma_ch_map {
+	enum mac_pcie_func_ctrl rxq;
+	enum mac_pcie_func_ctrl rpq;
 };
+#endif //NEO
 
-#endif // if 0 NEO
 
 struct mac_intf_info {
 #if 0 //NEO
@@ -4666,23 +4666,25 @@ struct mac_intf_ops {
 struct mac_ops {
 	struct mac_intf_ops *intf_ops;
 
-#if 0 // NEO
 	/*System level*/
 	u32 (*hal_init)(struct mac_adapter *adapter,
-			struct mac_ax_trx_info *trx_info,
-			struct mac_ax_fwdl_info *fwdl_info,
-			struct mac_ax_intf_info *intf_info);
+			struct mac_trx_info *trx_info,
+			struct mac_fwdl_info *fwdl_info,
+			struct mac_intf_info *intf_info);
 	u32 (*hal_fast_init)(struct mac_adapter *adapter,
-			     struct mac_ax_trx_info *trx_info,
-			     struct mac_ax_fwdl_info *fwdl_info,
-			     struct mac_ax_intf_info *intf_info);
+			     struct mac_trx_info *trx_info,
+			     struct mac_fwdl_info *fwdl_info,
+			     struct mac_intf_info *intf_info);
+#if 0 // NEO
 	u32 (*hal_deinit)(struct mac_adapter *adapter);
 	u32 (*add_role)(struct mac_adapter *adapter,
 			struct mac_ax_role_info *info);
 	u32 (*remove_role)(struct mac_adapter *adapter, u8 macid);
 	u32 (*change_role)(struct mac_adapter *adapter,
 			   struct mac_ax_role_info *info);
+#endif // if 0 NEO
 	u32 (*pwr_switch)(struct mac_adapter *adapter, u8 on);
+#if 0 // NEO
 	u32 (*sys_init)(struct mac_adapter *adapter);
 	u32 (*trx_init)(struct mac_adapter *adapter,
 			struct mac_ax_trx_info *info);

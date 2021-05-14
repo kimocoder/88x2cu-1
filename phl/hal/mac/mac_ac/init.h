@@ -55,10 +55,12 @@ u32 mac_hal_init(struct mac_ax_adapter *adapter,
 		 struct mac_ax_trx_info *trx_info,
 		 struct mac_ax_fwdl_info *fwdl_info,
 		 struct mac_ax_intf_info *intf_info);
-u32 mac_hal_fast_init(struct mac_ax_adapter *adapter,
-		      struct mac_ax_trx_info *trx_info,
-		      struct mac_ax_fwdl_info *fwdl_info,
-		      struct mac_ax_intf_info *intf_info);
+#endif // if 0 NEO
+u32 mac_hal_fast_init(struct mac_adapter *adapter,
+		      struct mac_trx_info *trx_info,
+		      struct mac_fwdl_info *fwdl_info,
+		      struct mac_intf_info *intf_info);
+#if 0 // NEO
 u32 mac_hal_deinit(struct mac_ax_adapter *adapter);
 u32 mac_ax_init_state(struct mac_ax_adapter *adapter);
 #endif // if 0 NEO

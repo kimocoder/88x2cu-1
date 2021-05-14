@@ -385,18 +385,20 @@ u32 mac_hal_deinit(struct mac_ax_adapter *adapter)
 	return ret;
 }
 
-u32 mac_hal_fast_init(struct mac_ax_adapter *adapter,
-		      struct mac_ax_trx_info *trx_info,
-		      struct mac_ax_fwdl_info *fwdl_info,
-		      struct mac_ax_intf_info *intf_info)
+#endif //NEO
+
+u32 mac_hal_fast_init(struct mac_adapter *adapter,
+		      struct mac_trx_info *trx_info,
+		      struct mac_fwdl_info *fwdl_info,
+		      struct mac_intf_info *intf_info)
 {
-	struct mac_ax_ops *ops = adapter_to_mac_ops(adapter);
-	struct mac_ax_intf_ops *intf_ops = adapter_to_intf_ops(adapter);
-	struct mac_ax_hw_info *hw_info = adapter->hw_info;
+	struct mac_ops *ops = adapter_to_mac_ops(adapter);
+	struct mac_intf_ops *intf_ops = adapter_to_intf_ops(adapter);
+	struct mac_hw_info *hw_info = adapter->hw_info;
 	u32 rom_addr;
 	u32 ret;
 
-	PLTFM_MUTEX_INIT(&adapter->fw_info.seq_lock);
+	pr_info("%s NEO TODO\n", __func__);
 
 	ret = ops->pwr_switch(adapter, 1);
 	if (ret == MACALRDYON) {
@@ -416,6 +418,7 @@ u32 mac_hal_fast_init(struct mac_ax_adapter *adapter,
 		return ret;
 	}
 
+#if 0 //NEO
 	ret = hci_func_en(adapter);
 	if (ret != MACSUCCESS) {
 		PLTFM_MSG_ERR("[ERR]hci_func_en %d\n", ret);
@@ -486,9 +489,11 @@ u32 mac_hal_fast_init(struct mac_ax_adapter *adapter,
 			}
 		}
 	}
-
+#endif //NEO
 	return ret;
 }
+
+#if 0 //NEO
 
 u32 mac_ax_init_state(struct mac_ax_adapter *adapter)
 {

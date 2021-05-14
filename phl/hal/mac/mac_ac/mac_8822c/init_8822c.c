@@ -17,10 +17,12 @@
 #include "init_8822c.h"
 #include "../../mac_def.h"
 
-#if 0 // NEO
 #include "../pwr.h"
+#if 0 // NEO
 #include "../efuse.h"
+#endif // if 0 NEO
 #include "../init.h"
+#if 0 // NEO
 #include "../trxcfg.h"
 #include "pwr_seq_8852a.h"
 #endif // if 0 NEO
@@ -157,15 +159,17 @@ static struct mac_ax_intf_ops mac8852a_pcie_ops = {
 
 static struct mac_ops mac8822c_ops = {
 	NULL, /* intf_ops */
-#if 0 // NEO
 	/*System level*/
-	NULL, /* mac_hal_init, */ /* hal_init */
-	NULL, /* mac_hal_fast_init, *//* hal_fast_init */
+	NULL, /* mac_hal_init, /* hal_init */
+	mac_hal_fast_init, /* hal_fast_init */
+#if 0 // NEO
 	NULL, /* mac_hal_deinit,*/ /* hal_deinit */
 	NULL, /* mac_add_role, *//* add_role */
 	NULL, /* mac_remove_role, *//* remove_role */
 	NULL, /* mac_change_role, */ /* change_role */
-	NULL, /* mac_pwr_switch, */ /* pwr_switch */
+#endif // NEO if 0
+	mac_pwr_switch, /* pwr_switch */
+#if 0 // NEO
 	NULL, /* mac_sys_init, */ /* sys_init */
 	NULL, /* mac_trx_init, */ /* init */
 	NULL, /* mac_romdl, */ /* romdl */

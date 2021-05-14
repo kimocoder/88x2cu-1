@@ -2502,6 +2502,8 @@ rtw_hal_mac_hal_init(struct rtw_phl_com_t *phl_com,
 	return hstatus;
 }
 
+#endif // NEO
+
 enum rtw_hal_status
 rtw_hal_mac_hal_fast_init(struct rtw_phl_com_t *phl_com,
 			  struct hal_info_t *hal_info,
@@ -2511,7 +2513,7 @@ rtw_hal_mac_hal_fast_init(struct rtw_phl_com_t *phl_com,
 	struct mac_adapter *mac = hal_to_mac(hal_info);
 	struct rtw_fw_info_t *fw_info = &phl_com->fw_info;
 	struct hal_ops_t *hal_ops = hal_get_ops(hal_info);
-	struct mac_ax_fwdl_info fwdl_info;
+	struct mac_fwdl_info fwdl_info;
 	u32 mac_status = 0;
 	enum rtw_fw_type fw_type = RTW_FW_MAX;
 
@@ -2524,6 +2526,10 @@ rtw_hal_mac_hal_fast_init(struct rtw_phl_com_t *phl_com,
 #else
 	fw_type  = RTW_FW_MAX;
 #endif
+
+	pr_info("%s NEO TODO\n", __func__);
+
+#if 0 //NEO
 	hstatus = hal_ops->hal_cfg_fw(phl_com, hal_info, init_info->ic_name, fw_type);
 	if(RTW_HAL_STATUS_SUCCESS != hstatus) {
 		PHL_ERR("%s : Cfg FW Failed: %d!\n", __func__, hstatus);
@@ -2544,6 +2550,7 @@ rtw_hal_mac_hal_fast_init(struct rtw_phl_com_t *phl_com,
 		fwdl_info.fw_from_hdr = 0;
 	else
 		fwdl_info.fw_from_hdr = 1;
+#endif //NEO
 
 	mac_status = mac->ops->hal_fast_init(mac, &init_info->trx_info, &fwdl_info, &init_info->intf_info);
 	if (mac_status == MACSUCCESS)
@@ -2555,9 +2562,10 @@ rtw_hal_mac_hal_fast_init(struct rtw_phl_com_t *phl_com,
 	}
 
 	FUNCOUT_WSTS(hstatus);
-
 	return hstatus;
 }
+
+#if 0 //NEO
 
 enum rtw_hal_status
 rtw_hal_mac_hal_deinit(struct rtw_phl_com_t *phl_com, struct hal_info_t *hal_info)

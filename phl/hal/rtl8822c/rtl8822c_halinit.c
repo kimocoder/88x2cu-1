@@ -295,11 +295,11 @@ enum rtw_hal_status hal_get_efuse_8822c(struct rtw_phl_com_t *phl_com,
 	FUNCIN();
 
 	pr_info("%s NEO DOING\n", __func__);
-#if 0 // NEO
 	hal_status = rtw_hal_mac_hal_fast_init(phl_com, hal, init_info);
 	if (hal_status != RTW_HAL_STATUS_SUCCESS)
 		goto hal_fast_init_fail;
 
+#if 0 // NEO
 	rtw_hal_efuse_process(hal, init_info->ic_name);
 
 	hal_status = rtw_hal_mac_power_switch(phl_com, hal, 0);
