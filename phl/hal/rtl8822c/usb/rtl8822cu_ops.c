@@ -34,9 +34,7 @@ void hal_set_ops_8822cu(struct rtw_phl_com_t *phl_com,
 	hal_set_ops_8822c(phl_com, hal);
 
 	ops->init_hal_spec = init_hal_spec_8822cu;
-#if 0 // NEO TODO
-	ops->hal_get_efuse = hal_get_efuse_8852au;
-#endif // if 0 NEO
+	ops->hal_get_efuse = hal_get_efuse_8822cu;
 	ops->hal_init = hal_init_8822cu;
 	ops->hal_deinit = hal_deinit_8822cu;
 	ops->hal_start = hal_start_8822cu;

@@ -20,32 +20,30 @@ static void _hal_pre_init_8822cu(struct rtw_phl_com_t *phl_com,
 				 struct hal_info_t *hal_info,
 				 struct hal_init_info_t *init_22cu)
 {
-#if 0 // NEO
-	struct mac_ax_trx_info *trx_info = &init_52au->trx_info;
-	struct mac_ax_host_rpr_cfg *rpr_cfg = (struct mac_ax_host_rpr_cfg *)hal_info->rpr_cfg;
+	struct mac_trx_info *trx_info = &init_22cu->trx_info;
+	struct mac_host_rpr_cfg *rpr_cfg = (struct mac_host_rpr_cfg *)hal_info->rpr_cfg;
 
-	trx_info->trx_mode = MAC_AX_TRX_NORMAL;
+	trx_info->trx_mode = MAC_TRX_NORMAL;
 
 	if (hal_info->hal_com->dbcc_en == false)
-		trx_info->qta_mode = MAC_AX_QTA_SCC;
+		trx_info->qta_mode = MAC_QTA_SCC;
 	else
-		trx_info->qta_mode = MAC_AX_QTA_DBCC;
+		trx_info->qta_mode = MAC_QTA_DBCC;
 
 	#ifdef RTW_WKARD_LAMODE
 	PHL_INFO("%s : la_mode %d\n", __func__,	phl_com->dev_cap.la_mode);
 	if (phl_com->dev_cap.la_mode)
-		trx_info->qta_mode = MAC_AX_QTA_LAMODE;
+		trx_info->qta_mode = MAC_QTA_LAMODE;
 	#endif
 
 	rpr_cfg->agg_def = 1;
 	rpr_cfg->tmr_def = 1;
-	rpr_cfg->txok_en = MAC_AX_FUNC_DEF;
-	rpr_cfg->rty_lmt_en = MAC_AX_FUNC_DEF;
-	rpr_cfg->lft_drop_en = MAC_AX_FUNC_DEF;
-	rpr_cfg->macid_drop_en = MAC_AX_FUNC_DEF;
+	rpr_cfg->txok_en = MAC_FUNC_DEF;
+	rpr_cfg->rty_lmt_en = MAC_FUNC_DEF;
+	rpr_cfg->lft_drop_en = MAC_FUNC_DEF;
+	rpr_cfg->macid_drop_en = MAC_FUNC_DEF;
 
 	trx_info->rpr_cfg = rpr_cfg;
-#endif // if 0 NEO
 	init_22cu->ic_name = "rtl8822cu";
 }
 
@@ -67,19 +65,16 @@ void init_hal_spec_8822cu(struct rtw_phl_com_t *phl_com,
 	bus_hw_cap->in_token_num = 4;
 }
 
-#if 0 // NEO
-
-enum rtw_hal_status hal_get_efuse_8852au(struct rtw_phl_com_t *phl_com,
+enum rtw_hal_status hal_get_efuse_8822cu(struct rtw_phl_com_t *phl_com,
 					 struct hal_info_t *hal_info)
 {
-	struct hal_init_info_t init_52au;
+	struct hal_init_info_t init_22cu;
 
-	_os_mem_set(hal_to_drvpriv(hal_info), &init_52au, 0, sizeof(init_52au));
-	_hal_pre_init_8852au(phl_com, hal_info, &init_52au);
+	_os_mem_set(hal_to_drvpriv(hal_info), &init_22cu, 0, sizeof(init_22cu));
+	_hal_pre_init_8822cu(phl_com, hal_info, &init_22cu);
 
-	return hal_get_efuse_8852a(phl_com, hal_info, &init_52au);
+	return hal_get_efuse_8822c(phl_com, hal_info, &init_22cu);
 }
-#endif // if 0 NEO
 
 enum rtw_hal_status hal_init_8822cu(struct rtw_phl_com_t *phl_com,
 				    struct hal_info_t *hal_info)

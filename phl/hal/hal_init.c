@@ -1271,8 +1271,7 @@ enum rtw_hal_status rtw_hal_preload(struct rtw_phl_com_t *phl_com, void *hal)
 
 	FUNCIN();
 
-	pr_info("%s NEO TODO\n", __func__);
-	//hal_status = hal_ops->hal_get_efuse(phl_com, hal_info);
+	hal_status = hal_ops->hal_get_efuse(phl_com, hal_info);
 	if (hal_status != RTW_HAL_STATUS_SUCCESS)
 		return hal_status;
 

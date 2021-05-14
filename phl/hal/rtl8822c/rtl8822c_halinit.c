@@ -284,8 +284,9 @@ init_fw_fail:
 	PHL_TRACE(COMP_PHL_DBG, _PHL_ERR_, "%s : fw_en %d.\n", __func__, fw_info->fw_en);
 	return hstatus;
 }
+#endif // if 0 NEO
 
-enum rtw_hal_status hal_get_efuse_8852a(struct rtw_phl_com_t *phl_com,
+enum rtw_hal_status hal_get_efuse_8822c(struct rtw_phl_com_t *phl_com,
 					struct hal_info_t *hal,
 					struct hal_init_info_t *init_info)
 {
@@ -293,6 +294,8 @@ enum rtw_hal_status hal_get_efuse_8852a(struct rtw_phl_com_t *phl_com,
 
 	FUNCIN();
 
+	pr_info("%s NEO DOING\n", __func__);
+#if 0 // NEO
 	hal_status = rtw_hal_mac_hal_fast_init(phl_com, hal, init_info);
 	if (hal_status != RTW_HAL_STATUS_SUCCESS)
 		goto hal_fast_init_fail;
@@ -304,7 +307,7 @@ enum rtw_hal_status hal_get_efuse_8852a(struct rtw_phl_com_t *phl_com,
 		goto hal_power_off_fail;
 
 	FUNCOUT();
-
+#endif // NEO
 	return RTW_HAL_STATUS_SUCCESS;
 
 hal_power_off_fail:
@@ -313,7 +316,6 @@ hal_fast_init_fail:
 	return hal_status;
 }
 
-#endif // if 0 NEO
 
 enum rtw_hal_status hal_start_8822c(struct rtw_phl_com_t *phl_com,
 				   struct hal_info_t *hal,
