@@ -187,14 +187,10 @@ rtw_hal_get_efuse_info(void *hal,
 	return status;
 }
 
-#if 0 // NEO : TODO : mark off first
-
 void rtw_hal_efuse_process(struct hal_info_t *hal_info, char *ic_name)
 {
 	rtw_efuse_process(hal_info->efuse, ic_name);
 }
-
-#endif // NEO
 
 enum rtw_hal_status rtw_hal_efuse_init(struct rtw_phl_com_t *phl_com,
 					struct hal_info_t *hal_info)

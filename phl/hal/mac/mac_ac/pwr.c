@@ -208,13 +208,14 @@ u32 mac_pwr_switch(struct mac_adapter *adapter, u8 on)
 	u32 (*intf_pwr_switch)(void *vadapter, u8 pre_switch, u8 on);
 	u32 (*pwr_func)(void *vadapter);
 	u32 val32;
-	u8 rpwm, value8;
+	u8 rpwm, val8;
 	enum mac_pwr_st mac_pwr;
 	struct rtw_hal_com_t *hal_com = (struct rtw_hal_com_t *)adapter->drv_adapter;
 	struct dvobj_priv *dvobj = hal_com->drv_priv;
 	_adapter *tadapter = dvobj_get_primary_adapter(dvobj);
 
 	pr_info("%s NEO TODO\n", __func__);
+
 
 	/* Check FW still exist or not */
 	if (MAC_REG_R16(REG_MCUFW_CTRL_8822C) == 0xC078) {
@@ -223,8 +224,8 @@ u32 mac_pwr_switch(struct mac_adapter *adapter, u8 on)
 		MAC_REG_W8(0xFE58, rpwm);
 	}
 
-	value8 = MAC_REG_R8(REG_CR_8822C);
-	if (value8 == 0xEA) {
+	val8 = MAC_REG_R8(REG_CR_8822C);
+	if (val8 == 0xEA) {
 		mac_pwr = MAC_PWR_OFF;
 	} else {
 		if (BIT(0) == (MAC_REG_R8(REG_SYS_STATUS1_8822C + 1) & BIT(0)))
@@ -243,9 +244,44 @@ u32 mac_pwr_switch(struct mac_adapter *adapter, u8 on)
 		}
 
 		pwr_seq = adapter->hw_info->pwr_on_seq;
+
+
+		/* pre_init_system_cfg_8822c */
+		MAC_REG_W8(REG_RSV_CTRL_8822C, 0);
+		if (MAC_REG_R8(REG_SYS_CFG2_8822C + 3) == 0x20)
+			MAC_REG_W8(0xFE5B, MAC_REG_R8(0xFE5B) | BIT(4));
+
+		/* CONFIG PIN MUX */
+		val32 = MAC_REG_R32(REG_PAD_CTRL1_8822C);
+		val32 |= BIT(28) | BIT(29);
+		MAC_REG_W32(REG_PAD_CTRL1_8822C, val32);
+
+		val32 = MAC_REG_R32(REG_LED_CFG_8822C);
+		val32 &= ~(BIT(25) | BIT(26));
+		MAC_REG_W32(REG_LED_CFG_8822C, val32);
+
+		val32 = MAC_REG_R32(REG_GPIO_MUXCFG_8822C);
+		val32 |= BIT(2);
+		MAC_REG_W32(REG_GPIO_MUXCFG_8822C, val32);
+
+		/* disable BB/RF */
+		val8 = MAC_REG_R8(REG_SYS_FUNC_EN_8822C);
+		val8 &= ~(BIT(0) | BIT(1));
+		MAC_REG_W8(REG_SYS_FUNC_EN_8822C, val8);
+
+		val8 = MAC_REG_R8(REG_RF_CTRL_8822C);
+		val8 &= ~(BIT(0) | BIT(1) | BIT(2));
+		MAC_REG_W8(REG_RF_CTRL_8822C, val8);
+
+
+		val32 = MAC_REG_R32(REG_WLRF1_8822C);
+		val32 &= ~(BIT(24) | BIT(25) | BIT(26));
+		MAC_REG_W32(REG_WLRF1_8822C, val32);
+		
 	} else {
 		pwr_seq = adapter->hw_info->pwr_off_seq;
 	}
+
 
 	ret = pwr_seq_start(adapter, pwr_seq);
 	if (ret != MACSUCCESS) {

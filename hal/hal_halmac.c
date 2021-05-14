@@ -2483,9 +2483,6 @@ static int _send_general_info_by_reg(struct dvobj_priv *d,
 	a = dvobj_get_primary_adapter(d);
 	hal = GET_HAL_DATA(a);
 	rftype = _rf_type_halmac2drv(info->rf_type);
-	//NEO
-	//cut_drv = GET_CVID_CUT_VERSION(hal->version_id);
-	//cut_phydm = _cut_version_drv2phydm(cut_drv);
 
 #define CLASS_GENERAL_INFO_REG				0x02
 #define CMD_ID_GENERAL_INFO_REG				0x0C
@@ -3084,11 +3081,6 @@ static int _halmac_init_hal(struct dvobj_priv *d, u8 *fw, u32 fwsize)
 	err_ret = 0;
 out:
 	return err_ret;
-}
-
-int rtw_halmac_init_hal(struct dvobj_priv *d)
-{
-	return _halmac_init_hal(d, NULL, 0);
 }
 
 /*

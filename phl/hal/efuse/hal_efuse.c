@@ -722,10 +722,15 @@ enum rtw_hal_status rtw_efuse_get_info(void *efuse,
 	return hal_status;
 }
 
+#endif //NEO
+
 void rtw_efuse_process(void *efuse, char *ic_name)
 {
 	struct efuse_t *efuse_info = (struct efuse_t *)efuse;
 
+	pr_info("%s NEO TODO\n", __func__);
+
+#if 0 //NEO
 	if(TEST_STATUS_FLAG(efuse_info->status, EFUSE_STATUS_PROCESS) == true) {
 		PHL_INFO("%s EFUSE module is already initialized.\n", __FUNCTION__);
 		return;
@@ -756,8 +761,8 @@ void rtw_efuse_process(void *efuse, char *ic_name)
 			 efuse_info->hal_com->dev_hw_cap.rfe_type,
 			 efuse_info->hal_com->dev_hw_cap.xcap);
 	}
-}
 #endif //NEO
+}
 
 u32 rtw_efuse_init(struct rtw_phl_com_t *phl_com,
 				   struct rtw_hal_com_t *hal_com, void **efuse)
