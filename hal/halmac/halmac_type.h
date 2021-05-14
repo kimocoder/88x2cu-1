@@ -2162,7 +2162,7 @@ struct halmac_adapter {
 	struct halmac_txff_allocation txff_alloc;
 	u8 efuse_map_valid;
 	u8 efuse_seg_size;
-	u8 rpwm;
+	//u8 rpwm;
 	u8 bulkout_num;
 	u8 drv_info_size;
 	enum halmac_sdio_cmd53_4byte_mode sdio_cmd53_4byte;

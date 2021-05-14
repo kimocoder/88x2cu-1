@@ -38,12 +38,12 @@ mac_pwr_switch_usb_8822c(struct halmac_adapter *adapter,
 
 	PLTFM_MSG_TRACE("[TRACE]%s ===>\n", __func__);
 
-	adapter->rpwm = HALMAC_REG_R8(0xFE58);
+	rpwm = HALMAC_REG_R8(0xFE58);
 
 	/* Check FW still exist or not */
 	if (HALMAC_REG_R16(REG_MCUFW_CTRL) == 0xC078) {
 		/* Leave 32K */
-		rpwm = (u8)((adapter->rpwm ^ BIT(7)) & 0x80);
+		rpwm = (u8)((rpwm ^ BIT(7)) & 0x80);
 		HALMAC_REG_W8(0xFE58, rpwm);
 	}
 

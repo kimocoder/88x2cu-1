@@ -1321,27 +1321,6 @@ void rtw_init_pwrctrl_priv(PADAPTER padapter)
 		LPS_1T1R_ARG
 	);
 
-#ifdef CONFIG_LPS_LCLK
-	rtw_hal_set_hwreg(padapter, HW_VAR_SET_RPWM, (u8 *)(&pwrctrlpriv->rpwm));
-
-	_init_workitem(&pwrctrlpriv->cpwm_event, cpwm_event_callback, NULL);
-
-	_init_workitem(&pwrctrlpriv->dma_event, dma_event_callback, NULL);
-
-#ifdef CONFIG_LPS_RPWM_TIMER
-	pwrctrlpriv->brpwmtimeout = _FALSE;
-	_init_workitem(&pwrctrlpriv->rpwmtimeoutwi, rpwmtimeout_workitem_callback, NULL);
-	rtw_init_timer(&pwrctrlpriv->pwr_rpwm_timer, pwr_rpwm_timeout_handler, padapter);
-#endif /* CONFIG_LPS_RPWM_TIMER */
-#endif /* CONFIG_LPS_LCLK */
-
-#ifdef CONFIG_LPS_PG
-	pwrctrlpriv->lpspg_info.name = "LPSPG_INFO";
-	#ifdef CONFIG_RTL8822C
-	pwrctrlpriv->lpspg_dpk_info.name = "LPSPG_DPK_INFO";
-	pwrctrlpriv->lpspg_iqk_info.name = "LPSPG_IQK_INFO";
-	#endif
-#endif
 
 	rtw_init_timer(&pwrctrlpriv->pwr_state_check_timer, pwr_state_check_handler, padapter);
 
@@ -1475,21 +1454,6 @@ void rtw_free_pwrctrl_priv(PADAPTER adapter)
 	rtw_hal_set_hwreg(adapter, HW_VAR_LPS_POFF_DEINIT, 0);
 #endif
 
-#ifdef CONFIG_LPS_LCLK
-	_cancel_workitem_sync(&pwrctrlpriv->cpwm_event);
-	_cancel_workitem_sync(&pwrctrlpriv->dma_event);
-	#ifdef CONFIG_LPS_RPWM_TIMER
-	_cancel_workitem_sync(&pwrctrlpriv->rpwmtimeoutwi);
-	#endif
-#endif /* CONFIG_LPS_LCLK */
-
-#ifdef CONFIG_LPS_PG
-	rsvd_page_cache_free(&pwrctrlpriv->lpspg_info);
-	#ifdef CONFIG_RTL8822C
-	rsvd_page_cache_free(&pwrctrlpriv->lpspg_dpk_info);
-	rsvd_page_cache_free(&pwrctrlpriv->lpspg_iqk_info);
-	#endif
-#endif
 
 #ifdef CONFIG_WOWLAN
 #ifdef CONFIG_WOW_PATTERN_HW_CAM
