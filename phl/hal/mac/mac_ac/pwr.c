@@ -244,6 +244,54 @@ u32 mac_pwr_switch(struct mac_adapter *adapter, u8 on)
 
 	pr_info("%s NEO TODO\n", __func__);
 #if 0 //NEO
+	adapter->rpwm = MAC_REG_R8(0xFE58);
+
+	/* Check FW still exist or not */
+	if (MAC_REG_R16(REG_MCUFW_CTRL) == 0xC078) {
+		/* Leave 32K */
+		rpwm = (u8)((adapter->rpwm ^ BIT(7)) & 0x80);
+		HALMAC_REG_W8(0xFE58, rpwm);
+	}
+
+	value8 = MAC_REG_R8(REG_CR);
+	if (value8 == 0xEA) {
+		adapter->halmac_state.mac_pwr = HALMAC_MAC_POWER_OFF;
+	} else {
+		if (BIT(0) == (MAC_REG_R8(REG_SYS_STATUS1 + 1) & BIT(0)))
+			adapter->halmac_state.mac_pwr = HALMAC_MAC_POWER_OFF;
+		else
+			adapter->halmac_state.mac_pwr = HALMAC_MAC_POWER_ON;
+	}
+
+	/*Check if power switch is needed*/
+	if (pwr == HALMAC_MAC_POWER_ON &&
+	    adapter->halmac_state.mac_pwr == HALMAC_MAC_POWER_ON) {
+		PLTFM_MSG_WARN("[WARN]power state unchange!!\n");
+		return HALMAC_RET_PWR_UNCHANGE;
+	}
+
+	if (pwr == HALMAC_MAC_POWER_OFF) {
+		if (pwr_seq_parser_88xx(adapter, card_dis_flow_8822c) !=
+		    HALMAC_RET_SUCCESS) {
+			PLTFM_MSG_ERR("[ERR]Handle power off cmd error\n");
+			return HALMAC_RET_POWER_OFF_FAIL;
+		}
+
+		adapter->halmac_state.mac_pwr = HALMAC_MAC_POWER_OFF;
+		adapter->halmac_state.dlfw_state = HALMAC_DLFW_NONE;
+		init_adapter_dynamic_param_88xx(adapter);
+	} else {
+		if (pwr_seq_parser_88xx(adapter, card_en_flow_8822c) !=
+		    HALMAC_RET_SUCCESS) {
+			PLTFM_MSG_ERR("[ERR]Handle power on cmd error\n");
+			return HALMAC_RET_POWER_ON_FAIL;
+		}
+
+		MAC_REG_W8_CLR(REG_SYS_STATUS1 + 1, BIT(0));
+
+		adapter->halmac_state.mac_pwr = HALMAC_MAC_POWER_ON;
+	}
+//#else
 	val32 = MAC_REG_R32(R_AX_GPIO_MUXCFG) & B_AX_BOOT_MODE;
 	if (val32 == B_AX_BOOT_MODE) {
 		val32 = MAC_REG_R32(R_AX_SYS_PW_CTRL) & ~B_AX_APFN_ONMAC;

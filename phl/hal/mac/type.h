@@ -206,6 +206,15 @@
 #define MAC_REG_W8(addr, val) ops->reg_write8(adapter, addr, val)
 #define MAC_REG_W16(addr, val) ops->reg_write16(adapter, addr, val)
 #define MAC_REG_W32(addr, val) ops->reg_write32(adapter, addr, val)
+
+//NEO
+#define MAC_REG_W8_CLR(offset, mask)					\
+	do {								\
+		u32 __offset = (u32)offset;				\
+		MAC_REG_W8(__offset, MAC_REG_R8(__offset) & ~(mask));	\
+	} while (0)
+
+
 #endif /*CONFIG_NEW_HALMAC_INTERFACE*/
 
 #define MAC_AX_WMM0_SEL		0
