@@ -198,6 +198,14 @@
 #define MAC_REG_W8(addr, val) ops->reg_write8(adapter, addr, val)
 #define MAC_REG_W16(addr, val) ops->reg_write16(adapter, addr, val)
 #define MAC_REG_W32(addr, val) ops->reg_write32(adapter, addr, val)
+
+//NEO
+#define MAC_REG_W8_CLR(offset, mask)					\
+	do {								\
+		u32 __offset = (u32)offset;				\
+		MAC_REG_W8(__offset, MAC_REG_R8(__offset) & ~(mask));	\
+	} while (0)
+
 #endif /*CONFIG_NEW_HALMAC_INTERFACE*/
 
 /*--------------------Define MACRO--------------------------------------*/
@@ -626,6 +634,15 @@ enum mac_ax_wow_ctrl {
 	MAC_AX_WOW_LEAVE
 };
 
+#endif //NEO
+
+enum mac_pwr_st {
+	MAC_PWR_OFF = 0,
+	MAC_PWR_ON = 1,
+	MAC_PWR_LPS = 2
+};
+
+#if 0 //NEO
 /*--------------------Define DBG and recovery related enum--------------------*/
 enum mac_ax_err_info {
 	// Get error info
@@ -1562,7 +1579,7 @@ struct mac_ax_fw_info {
 	mac_mutex seq_lock;
 };
 
-struct mac_ax_mac_pwr_info {
+struct mac_pwr_info {
 	u8 pwr_seq_proc;
 	u8 pwr_in_lps;
 	u32 (*intf_pwr_switch)(void *vadapter,

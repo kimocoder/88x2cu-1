@@ -1542,6 +1542,7 @@ enum rtw_hal_status rtw_hal_mac_get_pwr_state(struct hal_info_t *hal_info, u8 *p
 	return RTW_HAL_STATUS_SUCCESS;
 }
 
+#endif //NEO
 
 /* halmac wrapper API for hal and proto type is at hal_api_mac.h */
 enum rtw_hal_status
@@ -1560,6 +1561,8 @@ rtw_hal_mac_power_switch(struct rtw_phl_com_t *phl_com,
 
 	return RTW_HAL_STATUS_SUCCESS;
 }
+
+#if 0 //NEO
 
 #ifdef DBG_PHL_MAC_REG_RW
 #define HALPHY_BASE_OFFSET 0x10000

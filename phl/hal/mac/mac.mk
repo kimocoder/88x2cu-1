@@ -103,7 +103,9 @@ ic := 8822c
 # Level 2 directory
 path_hm_8822c := $(path_hm_ac)/mac_$(ic)
 
-halmac-y	+=	$(path_hm_8822c)/init_$(ic).o
+halmac-y	+=	$(path_hm_8822c)/init_$(ic).o \
+			$(path_hm_8822c)/pwr_seq_$(ic).o
+
 #halmac-y	+=	$(path_hm_8852b)/gpio_$(ic).o \
 			$(path_hm_8852b)/init_$(ic).o \
 			$(path_hm_8852b)/pwr_seq_$(ic).o

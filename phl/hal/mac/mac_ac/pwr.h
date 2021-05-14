@@ -27,10 +27,12 @@
  * @PWR_CMD_DELAY:
  * @PWR_CMD_END:
  */
-#define	PWR_CMD_WRITE		0
-#define	PWR_CMD_POLL		1
-#define	PWR_CMD_DELAY		2
-#define	PWR_CMD_END		3
+// NEO : AC start from 0x01 instead of 0x00
+#define	PWR_CMD_READ		0x00
+#define	PWR_CMD_WRITE		0x01
+#define	PWR_CMD_POLL		0x02
+#define	PWR_CMD_DELAY		0x03
+#define	PWR_CMD_END		0x04
 
 #define	PWR_CAV_MSK		BIT(0)
 #define	PWR_CBV_MSK		BIT(1)
@@ -52,11 +54,12 @@
 #define PWR_BASE_MAC		0
 #define PWR_BASE_USB		1
 #define PWR_BASE_PCIE		2
+#define PWR_BASE_SDIO		3
 
 #define	PWR_DELAY_US		0
 #define	PWR_DELAY_MS		1
 
-#define PWR_POLL_CNT		2000
+#define PWR_POLL_CNT		20000 //NEO: 2000->20000
 #define PWR_POLL_DLY_US		1000
 
 #define LPS_LEAVE_GPIO		10

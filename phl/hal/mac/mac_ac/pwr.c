@@ -13,7 +13,7 @@
  *
  ******************************************************************************/
 #include "pwr.h"
-
+#include "../mac_reg_ac.h"
 #if 0 //NEO
 #include "coex.h"
 
@@ -91,16 +91,18 @@ static u32 _patch_aon_int_leave_lps(struct mac_ax_adapter *adapter)
 
 	return MACSUCCESS;
 }
+#endif //NEO
 
-static u32 pwr_cmd_poll(struct mac_ax_adapter *adapter, struct mac_pwr_cfg *seq)
+static u32 pwr_cmd_poll(struct mac_adapter *adapter, struct mac_pwr_cfg *seq)
 {
 	u8 val = 0;
 	u32 addr;
 	u32 cnt;
-	struct mac_ax_intf_ops *ops = adapter_to_intf_ops(adapter);
+	struct mac_intf_ops *ops = adapter_to_intf_ops(adapter);
 
 	cnt = PWR_POLL_CNT;
 	addr = seq->addr;
+	pr_info("%s poll 0x%x \n", __func__, addr);
 
 	while (cnt--) {
 		val = MAC_REG_R8(addr);
@@ -117,13 +119,14 @@ static u32 pwr_cmd_poll(struct mac_ax_adapter *adapter, struct mac_pwr_cfg *seq)
 	return MACPOLLTO;
 }
 
-static u32 sub_pwr_seq_start(struct mac_ax_adapter *adapter,
+
+static u32 sub_pwr_seq_start(struct mac_adapter *adapter,
 			     u8 cv_msk, u8 intf_msk, struct mac_pwr_cfg *seq)
 {
 	u8 val;
 	u32 addr;
 	u32 ret;
-	struct mac_ax_intf_ops *ops = adapter_to_intf_ops(adapter);
+	struct mac_intf_ops *ops = adapter_to_intf_ops(adapter);
 
 	while (seq->cmd != PWR_CMD_END) {
 		if (!(seq->intf_msk & intf_msk) || !(seq->cut_msk & cv_msk))
@@ -136,6 +139,7 @@ static u32 sub_pwr_seq_start(struct mac_ax_adapter *adapter,
 			val &= ~(seq->msk);
 			val |= (seq->val & seq->msk);
 
+			pr_info("%s write 0x%x val 0x%x\n", __func__, addr, val);
 			MAC_REG_W8(addr, val);
 			break;
 		case PWR_CMD_POLL:
@@ -146,12 +150,17 @@ static u32 sub_pwr_seq_start(struct mac_ax_adapter *adapter,
 			}
 			break;
 		case PWR_CMD_DELAY:
+			pr_info("%s delay %d \n", __func__, seq->addr);
 			if (seq->val == PWR_DELAY_US)
 				PLTFM_DELAY_US(seq->addr);
 			else
 				PLTFM_DELAY_US(seq->addr * 1000);
 			break;
+		case PWR_CMD_READ:
+			pr_info("%s read\n", __func__);
+			break;
 		default:
+			pr_info("%s error\n", __func__);
 			PLTFM_MSG_ERR("[ERR]unknown pwr seq cmd %d\n",
 				      seq->cmd);
 			return MACNOITEM;
@@ -163,59 +172,19 @@ next_seq:
 	return MACSUCCESS;
 }
 
-u32 pwr_seq_start(struct mac_ax_adapter *adapter,
+u32 pwr_seq_start(struct mac_adapter *adapter,
 		  struct mac_pwr_cfg **seq)
 {
 	u8 cv;
 	u8 intf;
 	u32 ret;
-	struct mac_ax_hw_info *hw_info = adapter->hw_info;
+	struct mac_hw_info *hw_info = adapter->hw_info;
 	struct mac_pwr_cfg *sub_seq = *seq;
-#if MAC_AX_USB_SUPPORT
 	u32 val = 0;
-#endif
 
-	switch (hw_info->cv) {
-	case CAV:
-		cv = PWR_CAV_MSK;
-		break;
-	case CBV:
-		cv = PWR_CBV_MSK;
-		break;
-	case CCV:
-		cv = PWR_CCV_MSK;
-		break;
-	case CDV:
-		cv = PWR_CDV_MSK;
-		break;
-	case CEV:
-		cv = PWR_CEV_MSK;
-		break;
-	default:
-		PLTFM_MSG_ERR("[ERR]cut version\n");
-		return MACNOITEM;
-	}
+	cv = PWR_CDV_MSK;
 
-	switch (hw_info->intf) {
-	case MAC_AX_INTF_SDIO:
-		intf = PWR_INTF_MSK_SDIO;
-		break;
-	case MAC_AX_INTF_USB:
-#if MAC_AX_USB_SUPPORT
-		val = get_usb_mode(adapter);
-		if (val == MAC_AX_USB3)
-			intf = PWR_INTF_MSK_USB3;
-		else
-			intf = PWR_INTF_MSK_USB2;
-		break;
-#endif
-	case MAC_AX_INTF_PCIE:
-		intf = PWR_INTF_MSK_PCIE;
-		break;
-	default:
-		PLTFM_MSG_ERR("[ERR]interface\n");
-		return MACNOITEM;
-	}
+	intf = PWR_INTF_MSK_USB2;
 
 	while (sub_seq) {
 		ret = sub_pwr_seq_start(adapter, cv, intf, sub_seq);
@@ -230,8 +199,6 @@ u32 pwr_seq_start(struct mac_ax_adapter *adapter,
 	return MACSUCCESS;
 }
 
-#endif //NEO
-
 u32 mac_pwr_switch(struct mac_adapter *adapter, u8 on)
 {
 	u32 ret = MACSUCCESS;
@@ -241,172 +208,53 @@ u32 mac_pwr_switch(struct mac_adapter *adapter, u8 on)
 	u32 (*intf_pwr_switch)(void *vadapter, u8 pre_switch, u8 on);
 	u32 (*pwr_func)(void *vadapter);
 	u32 val32;
+	u8 rpwm, value8;
+	enum mac_pwr_st mac_pwr;
+	struct rtw_hal_com_t *hal_com = (struct rtw_hal_com_t *)adapter->drv_adapter;
+	struct dvobj_priv *dvobj = hal_com->drv_priv;
+	_adapter *tadapter = dvobj_get_primary_adapter(dvobj);
 
 	pr_info("%s NEO TODO\n", __func__);
-#if 0 //NEO
-	adapter->rpwm = MAC_REG_R8(0xFE58);
 
 	/* Check FW still exist or not */
-	if (MAC_REG_R16(REG_MCUFW_CTRL) == 0xC078) {
+	if (MAC_REG_R16(REG_MCUFW_CTRL_8822C) == 0xC078) {
 		/* Leave 32K */
-		rpwm = (u8)((adapter->rpwm ^ BIT(7)) & 0x80);
-		HALMAC_REG_W8(0xFE58, rpwm);
+		rpwm = (u8)((rpwm ^ BIT(7)) & 0x80);
+		MAC_REG_W8(0xFE58, rpwm);
 	}
 
-	value8 = MAC_REG_R8(REG_CR);
+	value8 = MAC_REG_R8(REG_CR_8822C);
 	if (value8 == 0xEA) {
-		adapter->halmac_state.mac_pwr = HALMAC_MAC_POWER_OFF;
+		mac_pwr = MAC_PWR_OFF;
 	} else {
-		if (BIT(0) == (MAC_REG_R8(REG_SYS_STATUS1 + 1) & BIT(0)))
-			adapter->halmac_state.mac_pwr = HALMAC_MAC_POWER_OFF;
+		if (BIT(0) == (MAC_REG_R8(REG_SYS_STATUS1_8822C + 1) & BIT(0)))
+			mac_pwr = MAC_PWR_OFF;
 		else
-			adapter->halmac_state.mac_pwr = HALMAC_MAC_POWER_ON;
+			mac_pwr = MAC_PWR_ON;
 	}
 
-	/*Check if power switch is needed*/
-	if (pwr == HALMAC_MAC_POWER_ON &&
-	    adapter->halmac_state.mac_pwr == HALMAC_MAC_POWER_ON) {
-		PLTFM_MSG_WARN("[WARN]power state unchange!!\n");
-		return HALMAC_RET_PWR_UNCHANGE;
-	}
-
-	if (pwr == HALMAC_MAC_POWER_OFF) {
-		if (pwr_seq_parser_88xx(adapter, card_dis_flow_8822c) !=
-		    HALMAC_RET_SUCCESS) {
-			PLTFM_MSG_ERR("[ERR]Handle power off cmd error\n");
-			return HALMAC_RET_POWER_OFF_FAIL;
-		}
-
-		adapter->halmac_state.mac_pwr = HALMAC_MAC_POWER_OFF;
-		adapter->halmac_state.dlfw_state = HALMAC_DLFW_NONE;
-		init_adapter_dynamic_param_88xx(adapter);
-	} else {
-		if (pwr_seq_parser_88xx(adapter, card_en_flow_8822c) !=
-		    HALMAC_RET_SUCCESS) {
-			PLTFM_MSG_ERR("[ERR]Handle power on cmd error\n");
-			return HALMAC_RET_POWER_ON_FAIL;
-		}
-
-		MAC_REG_W8_CLR(REG_SYS_STATUS1 + 1, BIT(0));
-
-		adapter->halmac_state.mac_pwr = HALMAC_MAC_POWER_ON;
-	}
-//#else
-	val32 = MAC_REG_R32(R_AX_GPIO_MUXCFG) & B_AX_BOOT_MODE;
-	if (val32 == B_AX_BOOT_MODE) {
-		val32 = MAC_REG_R32(R_AX_SYS_PW_CTRL) & ~B_AX_APFN_ONMAC;
-		MAC_REG_W32(R_AX_SYS_PW_CTRL, val32);
-		val32 = MAC_REG_R32(R_AX_SYS_STATUS1) & ~B_AX_AUTO_WLPON;
-		MAC_REG_W32(R_AX_SYS_STATUS1, val32);
-		val32 = MAC_REG_R32(R_AX_GPIO_MUXCFG) & ~B_AX_BOOT_MODE;
-		MAC_REG_W32(R_AX_GPIO_MUXCFG, val32);
-		val32 = MAC_REG_R32(R_AX_RSV_CTRL) & ~B_AX_R_DIS_PRST;
-		MAC_REG_W32(R_AX_RSV_CTRL, val32);
-	}
-
-	val32 = MAC_REG_R32(R_AX_IC_PWR_STATE);
-	val32 = GET_FIELD(val32, B_AX_WLMAC_PWR_STE);
-	if (val32 == MAC_AX_MAC_OFF && on == MAC_AX_MAC_OFF) {
-		PLTFM_MSG_WARN("MAC has already powered off\n");
-		return MACSUCCESS;
-	}
-
-	intf_pwr_switch = adapter->mac_pwr_info.intf_pwr_switch;
-
-	if (!intf_pwr_switch) {
-		PLTFM_MSG_ERR("interface power switch func is NULL\n");
-		ret = MACNPTR;
-		return ret;
-	}
 
 	if (on) {
-		pwr_seq = adapter->hw_info->pwr_on_seq;
-		pwr_func = adapter->hw_info->pwr_on;
-	} else {
-		pwr_seq = adapter->hw_info->pwr_off_seq;
-		pwr_func = adapter->hw_info->pwr_off;
-		adapter->sm.pwr = MAC_AX_PWR_PRE_OFF;
-		adapter->sm.dmac_func = MAC_AX_FUNC_OFF;
-		adapter->sm.cmac0_func = MAC_AX_FUNC_OFF;
-		adapter->sm.cmac1_func = MAC_AX_FUNC_OFF;
-		adapter->sm.bb0_func = MAC_AX_FUNC_OFF;
-		adapter->sm.bb1_func = MAC_AX_FUNC_OFF;
-		adapter->sm.plat = MAC_AX_PLAT_OFF;
-	}
-
-	ret = intf_pwr_switch(adapter, PWR_PRE_SWITCH, on);
-	if (ret != MACSUCCESS) {
-		PLTFM_MSG_ERR("interface pre pwr switch fails %d\n", ret);
-		goto END;
-	}
-
-	if (on) {
-		ret = _patch_aon_int_leave_lps(adapter);
-		if (ret != MACSUCCESS) {
-			PLTFM_MSG_ERR("AON interrupt leave LPS fail %X\n", ret);
-			goto END;
-		}
-
-		val32 = MAC_REG_R32(R_AX_IC_PWR_STATE);
-		val32 = GET_FIELD(val32, B_AX_WLMAC_PWR_STE);
-		if (val32 == MAC_AX_MAC_ON) {
-			PLTFM_MSG_WARN("MAC has already powered on %d\n", val32);
+		/*Check if power switch is needed*/
+		if (mac_pwr == MAC_PWR_ON) {
+			PLTFM_MSG_WARN("[WARN]power state unchange!!\n");
 			ret = MACALRDYON;
 			goto END;
-		} else if (val32 == MAC_AX_MAC_LPS) {
-			PLTFM_MSG_ERR("MAC leave LPS fail %d\n", val32);
-			ret = MACPWRSTAT;
-			goto END;
 		}
-	}
 
-	if (!pwr_func) {
-		ret = pwr_seq_start(adapter, pwr_seq);
-		if (ret != MACSUCCESS) {
-			PLTFM_MSG_ERR("[ERR]pwr seq start %d\n", ret);
-			adapter->sm.pwr = MAC_AX_PWR_ERR;
-			goto END;
-		}
+		pwr_seq = adapter->hw_info->pwr_on_seq;
 	} else {
-		ret = pwr_func(adapter);
-		if (ret != MACSUCCESS) {
-			PLTFM_MSG_ERR("[ERR]pwr func %d\n", ret);
-			adapter->sm.pwr = MAC_AX_PWR_ERR;
-			goto END;
-		}
+		pwr_seq = adapter->hw_info->pwr_off_seq;
 	}
 
-	ret = intf_pwr_switch(adapter, PWR_POST_SWITCH, on);
+	ret = pwr_seq_start(adapter, pwr_seq);
 	if (ret != MACSUCCESS) {
-		PLTFM_MSG_ERR("interface post pwr switch fails %d\n", ret);
-		adapter->sm.pwr = MAC_AX_PWR_ERR;
+		PLTFM_MSG_ERR("[ERR]pwr seq start %d\n", ret);
 		goto END;
 	}
 
-	mac_ax_init_state(adapter);
-
-	if (on) {
-		adapter->sm.pwr = MAC_AX_PWR_ON;
-		adapter->sm.plat = MAC_AX_PLAT_ON;
-		adapter->sm.io_st = MAC_AX_IO_ST_NORM;
-		adapter->sm.fw_rst = MAC_AX_FW_RESET_IDLE;
-		adapter->mac_pwr_info.pwr_in_lps = 0;
-		/* patch form BT BG/LDO issue */
-		MAC_REG_W8(R_AX_SCOREBOARD + 3, MAC_AX_NOTIFY_TP_MAJOR);
-	} else {
-		adapter->sm.pwr = MAC_AX_PWR_OFF;
-		/* patch form BT BG/LDO issue */
-		MAC_REG_W8(R_AX_SCOREBOARD + 3, MAC_AX_NOTIFY_PWR_MAJOR);
-	}
-END:
 	if (on)
-		clr_aon_int(adapter);
-	ret_end = intf_pwr_switch(adapter, PWR_END_SWITCH, on);
-	if (ret_end != MACSUCCESS) {
-		PLTFM_MSG_ERR("interface end pwr switch fails %d\n", ret_end);
-		adapter->sm.pwr = MAC_AX_PWR_ERR;
-		return ret_end;
-	}
-#endif //NEO
+		MAC_REG_W8_CLR(REG_SYS_STATUS1_8822C + 1, BIT(0));
+END:
 	return ret;
 }

@@ -301,13 +301,13 @@ enum rtw_hal_status hal_get_efuse_8822c(struct rtw_phl_com_t *phl_com,
 
 #if 0 // NEO
 	rtw_hal_efuse_process(hal, init_info->ic_name);
+#endif // NEO
 
 	hal_status = rtw_hal_mac_power_switch(phl_com, hal, 0);
 	if (hal_status != RTW_HAL_STATUS_SUCCESS)
 		goto hal_power_off_fail;
 
 	FUNCOUT();
-#endif // NEO
 	return RTW_HAL_STATUS_SUCCESS;
 
 hal_power_off_fail:

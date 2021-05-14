@@ -24,8 +24,8 @@
 #include "../init.h"
 #if 0 // NEO
 #include "../trxcfg.h"
-#include "pwr_seq_8852a.h"
 #endif // if 0 NEO
+#include "pwr_seq_8822c.h"
 
 #include "../hw.h"
 
@@ -160,7 +160,7 @@ static struct mac_ax_intf_ops mac8852a_pcie_ops = {
 static struct mac_ops mac8822c_ops = {
 	NULL, /* intf_ops */
 	/*System level*/
-	NULL, /* mac_hal_init, /* hal_init */
+	NULL, /* mac_hal_init, */ /* hal_init */
 	mac_hal_fast_init, /* hal_fast_init */
 #if 0 // NEO
 	NULL, /* mac_hal_deinit,*/ /* hal_deinit */
@@ -428,8 +428,8 @@ static struct mac_hw_info mac8822c_hw_info = {
 	10, /* tx_data_ch_num */
 	0, /* WD_BODY_LEN, */ /* wd_body_len */
 	0, /* WD_INFO_LEN, */ /* wd_info_len */
-	NULL, /* pwr_on_seq_8852a,*/ /* pwr_on_seq */
-	NULL, /* pwr_off_seq_8852a,*/ /* pwr_off_seq */
+	pwr_on_seq_8822c, /* pwr_on_seq */
+	pwr_off_seq_8822c, /* pwr_off_seq */
 	NULL, /* PWR_SEQ_VER_8852A, */ /* pwr_seq_ver */
 	458752, /* fifo_size */
 	128, /* macid_num */
