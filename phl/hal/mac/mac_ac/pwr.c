@@ -289,8 +289,31 @@ u32 mac_pwr_switch(struct mac_adapter *adapter, u8 on)
 		goto END;
 	}
 
-	if (on)
+	if (on) {
 		MAC_REG_W8_CLR(REG_SYS_STATUS1_8822C + 1, BIT(0));
+
+		/* init system cfg 8822c */
+		val32 = MAC_REG_R32(REG_CPU_DMEM_CON_8822C);
+		val32 |= BIT(16) | BIT(8);
+		MAC_REG_W32(REG_CPU_DMEM_CON_8822C, val32);
+
+		val8 = MAC_REG_R8(REG_SYS_FUNC_EN_8822C + 1);
+		val8 |= 0xD8;
+		MAC_REG_W8(REG_SYS_FUNC_EN_8822C + 1, val8);
+
+		/* PHY_REQ_DELAY reg 0x1100[27:24] = 0x0C */
+		val8 = MAC_REG_R8(REG_CR_EXT_8822C + 3) & 0xF0;
+		val8 |= 0x0C;
+		MAC_REG_W8(REG_CR_EXT_8822C + 3, val8);
+
+		/* disable boot-from-flash for driver's DL FW */
+		val32 = MAC_REG_R32(REG_MCUFW_CTRL_8822C);
+		if (val32 & BIT(20)) {
+			MAC_REG_W32(REG_MCUFW_CTRL_8822C, val32 & (~(BIT(20))));
+			val32 = MAC_REG_R32(REG_GPIO_MUXCFG_8822C) & (~(BIT(19)));
+			MAC_REG_W32(REG_GPIO_MUXCFG_8822C, val32);
+		}
+	}
 END:
 	return ret;
 }
