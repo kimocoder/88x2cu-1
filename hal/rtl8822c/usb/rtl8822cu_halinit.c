@@ -26,53 +26,6 @@
 #endif
 
 
-#ifdef CONFIG_FWLPS_IN_IPS
-u8 rtl8822cu_fw_ips_init(_adapter *padapter)
-{
-	struct sreset_priv *psrtpriv = &GET_HAL_DATA(padapter)->srestpriv;
-	struct debug_priv *pdbgpriv = &adapter_to_dvobj(padapter)->drv_dbg;
-	struct pwrctrl_priv *pwrctl = adapter_to_pwrctl(padapter);
-
-	if (pwrctl->bips_processing == _TRUE && psrtpriv->silent_reset_inprogress == _FALSE
-		&& GET_HAL_DATA(padapter)->bFWReady == _TRUE && pwrctl->pre_ips_type == 0) {
-		systime start_time;
-		u8 cpwm_orig, cpwm_now, rpwm;
-		u8 bMacPwrCtrlOn = _TRUE;
-
-		RTW_INFO("%s: Leaving FW_IPS\n", __func__);
-		rtl8822c_set_FwPwrModeInIPS_cmd(padapter, 0);
-
-		rtw_hal_set_hwreg(padapter, HW_VAR_APFM_ON_MAC, &bMacPwrCtrlOn);
-		return _SUCCESS;
-	}
-	return _FAIL;
-}
-
-u8 rtl8822cu_fw_ips_deinit(_adapter *padapter)
-{
-	struct sreset_priv *psrtpriv =  &GET_HAL_DATA(padapter)->srestpriv;
-	struct debug_priv *pdbgpriv = &adapter_to_dvobj(padapter)->drv_dbg;
-	struct pwrctrl_priv *pwrctl = adapter_to_pwrctl(padapter);
-
-	if (pwrctl->bips_processing == _TRUE && psrtpriv->silent_reset_inprogress == _FALSE
-		&& GET_HAL_DATA(padapter)->bFWReady == _TRUE && padapter->netif_up == _TRUE) {
-		int cnt = 0;
-		u8 val8 = 0, rpwm;
-
-		RTW_INFO("%s: issue H2C to FW when entering IPS\n", __func__);
-
-		rtl8822c_set_FwPwrModeInIPS_cmd(padapter, 0x1);
-		return _SUCCESS;
-	}
-
-	pdbgpriv->dbg_carddisable_cnt++;
-	pwrctl->pre_ips_type = 1;
-
-	return _FAIL;
-
-}
-
-#endif
 
 #ifdef CONFIG_RTW_LED
 static void init_hwled(PADAPTER adapter, u8 enable)
@@ -106,11 +59,6 @@ u32 rtl8822cu_init(PADAPTER padapter)
 	u8 status = _SUCCESS;
 	systime init_start_time = rtw_get_current_time();
 
-#ifdef CONFIG_FWLPS_IN_IPS
-	if (_SUCCESS == rtl8822cu_fw_ips_init(padapter))
-		goto exit;
-#endif
-
 	if (rtl8822c_init(padapter) == _FAIL)
 		status = _FAIL;
 	else
@@ -120,9 +68,6 @@ u32 rtl8822cu_init(PADAPTER padapter)
 	rtl8822c_set_usb_suspend_mode(padapter);
 #endif
 
-#ifdef CONFIG_FWLPS_IN_IPS
-exit:
-#endif
 	RTW_INFO("%s in %dms, status=%d\n", __func__, rtw_get_passing_time_ms(init_start_time), status);
 	return status;
 }
@@ -149,11 +94,6 @@ u32 rtl8822cu_deinit(PADAPTER padapter)
 
 	RTW_INFO("==> %s\n", __func__);
 
-#ifdef CONFIG_FWLPS_IN_IPS
-	if (_SUCCESS == rtl8822cu_fw_ips_deinit(padapter))
-		goto exit;
-#endif
-
 	hal_deinit_misc(padapter);
 	status = rtl8822c_deinit(padapter);
 	if (status == _FALSE) {
@@ -161,9 +101,6 @@ u32 rtl8822cu_deinit(PADAPTER padapter)
 		return _FAIL;
 	}
 
-#ifdef CONFIG_FWLPS_IN_IPS
-exit:
-#endif
 	RTW_INFO("%s <==\n", __func__);
 	return _SUCCESS;
 }
@@ -176,16 +113,6 @@ u32 rtl8822cu_inirp_init(PADAPTER padapter)
 	struct recv_buf *precvbuf;
 	struct dvobj_priv *pdev = adapter_to_dvobj(padapter);
 	struct recv_priv *precvpriv = &adapter_to_dvobj(padapter)->recvpriv;
-
-#ifdef CONFIG_FWLPS_IN_IPS
-	/* Do not sumbit urb repeat */
-	struct pwrctrl_priv *pwrctl = adapter_to_pwrctl(padapter);
-
-	if (pwrctl->bips_processing == _TRUE) {
-		status = _SUCCESS;
-		goto exit;
-	}
-#endif /* CONFIG_FWLPS_IN_IPS */
 
 	status = _SUCCESS;
 
