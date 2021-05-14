@@ -84,24 +84,6 @@ static u8 sethwreg(PADAPTER padapter, u8 variable, u8 *val)
 #endif
 		break;
 	case HW_VAR_SET_RPWM:
-#ifdef CONFIG_LPS_LCLK
-		{
-			u8	ps_state = *((u8 *)val);
-			struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(padapter);
-			/*rpwm value only use BIT0(clock bit) ,BIT6(Ack bit), and BIT7(Toggle bit) for 88e.
-			BIT0 value - 1: 32k, 0:40MHz.
-			BIT6 value - 1: report cpwm value after success set, 0:do not report.
-			BIT7 value - Toggle bit change.
-			modify by Thomas. 2012/4/2.*/
-			ps_state = ps_state & 0xC1;
-			/* RTW_INFO("##### Change RPWM value to = %x for switch clk #####\n", ps_state); */
-			#ifdef CONFIG_LPS_PG
-			if ((ps_state & BIT(0)) && (LPS_PG == pwrpriv->lps_level))
-				ps_state |= BIT(4);
-			#endif
-			rtw_write8(padapter, REG_USB_HRPWM_8822C, ps_state);
-		}
-#endif
 		break;
 	case HW_VAR_AMPDU_MAX_TIME:
 		rtw_write8(padapter, REG_AMPDU_MAX_TIME_V1_8822C, 0x70);
@@ -133,25 +115,7 @@ static void gethwreg(PADAPTER padapter, u8 variable, u8 *val)
 {
 	HAL_DATA_TYPE *pHalData = GET_HAL_DATA(padapter);
 
-	switch (variable) {
-	case HW_VAR_CPWM:
-#ifdef CONFIG_LPS_LCLK
-		*val = rtw_read8(padapter, REG_USB_HCPWM_8822C);
-		/* RTW_INFO("##### REG_USB_HCPWM(0x%02x) = 0x%02x #####\n", REG_USB_HCPWM_8822C, *val); */
-#endif /* CONFIG_LPS_LCLK */
-		break;
-	case HW_VAR_RPWM_TOG:
-#ifdef CONFIG_LPS_LCLK
-		*val = rtw_read8(padapter, REG_USB_HRPWM_8822C);
-		*val &= BIT_TOGGLE_8822C;
-#endif /* CONFIG_LPS_LCLK */
-		break;
-
-	default:
-		rtl8822c_gethwreg(padapter, variable, val);
-		break;
-	}
-
+	rtl8822c_gethwreg(padapter, variable, val);
 }
 
 /*

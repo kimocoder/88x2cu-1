@@ -186,21 +186,9 @@
 
 
 /* Interface support */
-#ifdef CONFIG_SDIO_HCI
-#define HALMAC_SDIO_SUPPORT	1
-#else
 #define HALMAC_SDIO_SUPPORT	0
-#endif
-#ifdef CONFIG_USB_HCI
 #define HALMAC_USB_SUPPORT	1
-#else
-#define HALMAC_USB_SUPPORT	0
-#endif
-#ifdef CONFIG_PCI_HCI
-#define HALMAC_PCIE_SUPPORT	1
-#else
 #define HALMAC_PCIE_SUPPORT	0
-#endif
 
 #endif /* __HALMAC__HW_CFG_H__ */
 

@@ -61,9 +61,6 @@ enum h2c_cmd {
 	H2C_LPS_POFF_CTRL = 0x29,
 	H2C_LPS_POFF_PARAM = 0x2A,
 #endif
-#ifdef CONFIG_LPS_PG
-	H2C_LPS_PG_INFO = 0x2B,
-#endif
 
 #ifdef CONFIG_FW_MULTI_PORT_SUPPORT
 	H2C_DEFAULT_PORT_ID = 0x2C,
@@ -180,14 +177,6 @@ enum h2c_cmd {
 	#define H2C_MCC_TIME_SETTING_LEN		6
 	#define H2C_MCC_IQK_PARAM_LEN		7
 #endif /* CONFIG_MCC_MODE */
-#ifdef CONFIG_LPS_PG
-#ifdef CONFIG_RTL8822C
-	#define H2C_LPS_PG_INFO_LEN		4
-#else
-	#define H2C_LPS_PG_INFO_LEN		2
-#endif
-	#define H2C_LPSPG_LEN			16
-#endif
 #ifdef CONFIG_LPS_POFF
 	#define H2C_LPS_POFF_CTRL_LEN		1
 	#define H2C_LPS_POFF_PARAM_LEN		5
@@ -645,18 +634,6 @@ s32 rtw_hal_customer_str_write(_adapter *adapter, const u8 *cs);
 #define SET_H2CCMD_RSVDPAGE_LOC_P2P_INVITE_RSP(__pH2CCmd, __Value)		SET_BITS_TO_LE_1BYTE((__pH2CCmd)+3, 0, 8, __Value)
 #define SET_H2CCMD_RSVDPAGE_LOC_P2P_PD_RSP(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE((__pH2CCmd)+4, 0, 8, __Value)
 #endif /* CONFIG_P2P_WOWLAN */
-
-#ifdef CONFIG_LPS_PG
-#define SET_H2CCMD_LPSPG_SEC_CAM_EN(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE(__pH2CCmd, 0, 1, __Value)/*SecurityCAM_En*/
-#define SET_H2CCMD_LPSPG_MBID_CAM_EN(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE(__pH2CCmd, 1, 1, __Value)/*BSSIDCAM_En*/
-#define SET_H2CCMD_LPSPG_PMC_CAM_EN(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE(__pH2CCmd, 2, 1, __Value)/*PatternMatchCAM_En*/
-#define SET_H2CCMD_LPSPG_MACID_SEARCH_EN(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE(__pH2CCmd, 3, 1, __Value)/*MACIDSearch_En*/
-#define SET_H2CCMD_LPSPG_TXSC_EN(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE(__pH2CCmd, 4, 1, __Value)/*TXSC_En*/
-#define SET_H2CCMD_LPSPG_MU_RATE_TB_EN(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE(__pH2CCmd, 5, 1, __Value)/*MURateTable_En*/
-#define SET_H2CCMD_LPSPG_LOC(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE((__pH2CCmd)+1, 0, 8, __Value)/*Loc_LPS_PG*/
-#define SET_H2CCMD_LPSPG_DPK_INFO_LOC(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE((__pH2CCmd)+2, 0, 8, __Value)/*Loc_LPS_PG_DPK_info*/
-#define SET_H2CCMD_LPSPG_IQK_INFO_LOC(__pH2CCmd, __Value)	SET_BITS_TO_LE_1BYTE((__pH2CCmd) + 3, 0, 8, __Value)/*Loc_IQK_result*/
-#endif
 
 #ifdef CONFIG_WAR_OFFLOAD
 /* WarOffload_Info_0x8D */

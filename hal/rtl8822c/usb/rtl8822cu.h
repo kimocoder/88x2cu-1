@@ -19,12 +19,6 @@
 
 #define USB_AGG_EN_8822C			BIT(7)
 
-#ifdef CONFIG_LPS_LCLK
-/* for CONFIG_LPS_LCLK setting in rtl8822cu_ops.c */
-#define REG_USB_HRPWM_8822C		0xFE58
-#define REG_USB_HCPWM_8822C		0xFE57
-#endif /* CONFIG_LPS_LCLK */
-
 /* rtl8822cu_halinit.c */
 u32 rtl8822cu_init(PADAPTER);
 u32 rtl8822cu_deinit(PADAPTER);

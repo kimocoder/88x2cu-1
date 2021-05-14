@@ -1124,14 +1124,6 @@ void rtw_phydm_wd_lps_lclk_hdl(_adapter *adapter)
 	odm_cmn_info_update(&pHalData->odmpriv, ODM_CMNINFO_LINK, is_linked);
 
 	phydm_watchdog_lps_32k(&pHalData->odmpriv);
-
-#ifdef CONFIG_LPS_PG
-	if (pwrpriv->lps_level == LPS_PG) {
-		 if (rtw_hal_set_lps_pg_info_cmd(adapter) == _FAIL)
-		 	RTW_INFO(FUNC_ADPT_FMT": Send PG H2C command Fail! \n", 
-		 			 FUNC_ADPT_ARG(adapter));
-	}
-#endif /* CONFIG_LPS_PG */
 }
 
 void rtw_phydm_watchdog_in_lps_lclk(_adapter *adapter)
@@ -1502,50 +1494,6 @@ bool rtw_phydm_set_crystal_cap(_adapter *adapter, u8 crystal_cap)
 
 	return phydm_set_crystal_cap_reg(phydm, crystal_cap);
 }
-
-#ifdef CONFIG_LPS_PG
-/*
-static void _lps_pg_state_update(_adapter *adapter)
-{
-	u8	is_in_lpspg = _FALSE;
-	struct pwrctrl_priv *pwrpriv = adapter_to_pwrctl(adapter);
-	PHAL_DATA_TYPE	pHalData = GET_HAL_DATA(adapter);
-	struct mlme_priv *pmlmepriv = &adapter->mlmepriv;
-	struct sta_priv *pstapriv = &adapter->stapriv;
-	struct sta_info *psta = NULL;
-
-	if ((pwrpriv->lps_level == LPS_PG) && (pwrpriv->pwr_mode != PS_MODE_ACTIVE) && (pwrpriv->rpwm <= PS_STATE_S2))
-		is_in_lpspg = _TRUE;
-	psta = rtw_get_stainfo(pstapriv, get_bssid(pmlmepriv));
-
-	if (psta)
-		psta->cmn.ra_info.disable_ra = (is_in_lpspg) ? _TRUE : _FALSE;
-}
-*/
-void rtw_phydm_lps_pg_hdl(_adapter *adapter, struct sta_info *sta, bool in_lpspg)
-{
-	struct dm_struct *phydm = adapter_to_phydm(adapter);
-	/*u8 rate_id;*/
-
-	if(sta == NULL) {
-		RTW_ERR("%s sta is null\n", __func__);
-		rtw_warn_on(1);
-		return;
-	}
-
-	if (in_lpspg) {
-		sta->cmn.ra_info.disable_ra = _TRUE;
-		sta->cmn.ra_info.disable_pt = _TRUE;
-		/*TODO : DRV fix tx rate*/
-		/*rate_id = phydm_get_rate_from_rssi_lv(phydm, sta->cmn.mac_id);*/
-	} else {
-		sta->cmn.ra_info.disable_ra = _FALSE;
-		sta->cmn.ra_info.disable_pt = _FALSE;
-	}
-
-	rtw_phydm_ra_registed(adapter, sta);
-}
-#endif
 
 /*#define DBG_PHYDM_STATE_CHK*/
 

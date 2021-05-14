@@ -100,16 +100,6 @@
 		/* #define CONFIG_LPS_LCLK	1 */
 	#endif
 
-	#ifdef CONFIG_LPS_LCLK
-		#ifdef CONFIG_POWER_SAVING
-		#endif /* CONFIG_POWER_SAVING */
-		#ifndef CONFIG_SUPPORT_USB_INT
-			#define LPS_RPWM_WAIT_MS 300
-			#define CONFIG_DETECT_CPWM_BY_POLLING
-		#endif /* !CONFIG_SUPPORT_USB_INT */
-		/* #define DBG_CHECK_FW_PS_STATE */
-	#endif /* CONFIG_LPS_LCLK */
-
 	#ifdef CONFIG_LPS
 		#define CONFIG_WMMPS_STA 1
 	#endif /* CONFIG_LPS */

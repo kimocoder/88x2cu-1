@@ -726,8 +726,6 @@ defined(CONFIG_RTL8723F) /*|| defined(CONFIG_RTL8814A)*/
 #ifndef RTW_LPS_MODE
 	#if defined(CONFIG_LPS_PG) || defined(CONFIG_LPS_PG_DDMA)
 		#define RTW_LPS_MODE 3
-	#elif defined(CONFIG_LPS_LCLK)
-		#define RTW_LPS_MODE 2
 	#elif defined(CONFIG_LPS)
 		#define RTW_LPS_MODE 1
 	#else
@@ -751,8 +749,6 @@ defined(CONFIG_RTL8723F) /*|| defined(CONFIG_RTL8814A)*/
 #ifndef RTW_WOW_LPS_MODE
 	#if defined(CONFIG_LPS_PG) || defined(CONFIG_LPS_PG_DDMA)
 		#define RTW_WOW_LPS_MODE 3
-	#elif defined(CONFIG_LPS_LCLK)
-		#define RTW_WOW_LPS_MODE 2
 	#elif defined(CONFIG_LPS)
 		#define RTW_WOW_LPS_MODE 1
 	#else

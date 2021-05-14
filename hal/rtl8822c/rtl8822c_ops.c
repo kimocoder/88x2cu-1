@@ -2291,11 +2291,6 @@ u8 rtl8822c_sethwreg(PADAPTER adapter, u8 variable, u8 *val)
 			/* disable RXDMA aggregation */
 			rx_agg_switch(adapter, _FALSE);
 		break;
-/*
-	case HW_VAR_SET_RPWM:
-	case HW_VAR_CPWM:
-		break;
-*/
 	case HW_VAR_H2C_FW_PWRMODE:
 		rtl8822c_set_FwPwrMode_cmd(adapter, *val);
 		break;
@@ -2842,18 +2837,6 @@ void rtl8822c_gethwreg(PADAPTER adapter, u8 variable, u8 *val)
 		val[2] = (val32 >> 16) & 0xFF;
 		val[3] = (val32 >> 24) & 0x07;
 		break;
-/*
-	case HW_VAR_ACM_CTRL:
-	case HW_VAR_AMPDU_MIN_SPACE:
-	case HW_VAR_AMPDU_FACTOR:
-	case HW_VAR_RXDMA_AGG_PG_TH:
-	case HW_VAR_SET_RPWM:
-	case HW_VAR_CPWM:
-	case HW_VAR_H2C_FW_PWRMODE:
-	case HW_VAR_H2C_PS_TUNE_PARAM:
-	case HW_VAR_H2C_FW_JOINBSSRPT:
-		break;
-*/
 	case HW_VAR_FWLPS_RF_ON:
 		/* When we halt NIC, we should check if FW LPS is leave. */
 		if (rtw_is_surprise_removed(adapter) ||
@@ -2878,22 +2861,6 @@ void rtl8822c_gethwreg(PADAPTER adapter, u8 variable, u8 *val)
 				*val = _TRUE;
 		}
 		break;
-/*
-	case HW_VAR_H2C_FW_P2P_PS_OFFLOAD:
-	case HW_VAR_TRIGGER_GPIO_0:
-	case HW_VAR_BT_SET_COEXIST:
-	case HW_VAR_BT_ISSUE_DELBA:
-	case HW_VAR_SWITCH_EPHY_WoWLAN:
-	case HW_VAR_EFUSE_USAGE:
-	case HW_VAR_EFUSE_BYTES:
-	case HW_VAR_EFUSE_BT_USAGE:
-	case HW_VAR_EFUSE_BT_BYTES:
-	case HW_VAR_FIFO_CLEARN_UP:
-	case HW_VAR_RESTORE_HW_SEQ:
-	case HW_VAR_CHECK_TXBUF:
-	case HW_VAR_PCIE_STOP_TX_DMA:
-		break;
-*/
 
 /*
 	case HW_VAR_HCI_SUS_STATE:
