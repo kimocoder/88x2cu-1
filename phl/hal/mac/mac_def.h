@@ -21,8 +21,7 @@
 #include "pltfm_cfg.h"
 #include "feature_cfg.h"
 #include "chip_cfg.h"
-//NEO
-//#include "mac_ax/state_mach.h"
+#include "mac_ac/state_mach.h"
 #include "errors.h"
 
 #if MAC_AX_FEATURE_HV
@@ -637,9 +636,9 @@ enum mac_ax_wow_ctrl {
 #endif //NEO
 
 enum mac_pwr_st {
-	MAC_PWR_OFF = 0,
-	MAC_PWR_ON = 1,
-	MAC_PWR_LPS = 2
+	MAC_PWR_MAC_OFF = 0,
+	MAC_PWR_MAC_ON = 1,
+	MAC_PWR_MAC_LPS = 2
 };
 
 #if 0 //NEO
@@ -4535,7 +4534,7 @@ struct mac_adapter {
 	void *phl_adapter; //phl_com adapter
 
 	struct mac_pltfm_cb *pltfm_cb;
-	//struct mac_ax_state_mach sm;
+	struct mac_state_mach sm;
 	struct mac_hw_info *hw_info;
 #if 0 // NEO
 	struct mac_ax_fw_info fw_info;

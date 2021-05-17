@@ -17,10 +17,10 @@
 #define _MAC_TYPE_H_
 
 #include "mac_def.h"
+#include "mac_reg.h"
+#include "mac_reg_ac.h"
 
 #if 0 // NEO
-
-#include "mac_reg.h"
 #include "mac_hw_info.h"
 #include "txdesc.h"
 #include "rxdesc.h"

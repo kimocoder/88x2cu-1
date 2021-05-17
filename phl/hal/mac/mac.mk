@@ -42,7 +42,8 @@ halmac-y += $(path_hm_ac)/fwcmd.o \
 		$(path_hm_ac)/role.o \
 		$(path_hm_ac)/security_cam.o \
 		$(path_hm_ac)/efuse.o \
-		$(path_hm_ac)/pwr.o
+		$(path_hm_ac)/pwr.o \
+		$(path_hm_ac)/fwdl.o \
 
 #halmac-y +=		$(path_hm_d1)/addr_cam.o \
 			$(path_hm_d1)/cmac_tx.o \
@@ -51,7 +52,6 @@ halmac-y += $(path_hm_ac)/fwcmd.o \
 			$(path_hm_d1)/dbgpkg.o \
 			$(path_hm_d1)/dle.o \
 			$(path_hm_d1)/fwcmd.o \
-			$(path_hm_d1)/fwdl.o \
 			$(path_hm_d1)/fwofld.o \
 			$(path_hm_d1)/gpio.o \
 			$(path_hm_d1)/hci_fc.o \
@@ -109,6 +109,14 @@ halmac-y	+=	$(path_hm_8822c)/init_$(ic).o \
 #halmac-y	+=	$(path_hm_8852b)/gpio_$(ic).o \
 			$(path_hm_8852b)/init_$(ic).o \
 			$(path_hm_8852b)/pwr_seq_$(ic).o
+
+
+# fw files
+path_fw_8822c := $(path_hm_d1)/rtl8822c
+
+#halmac-y	+=	$(path_fw_8822c)/hal8822c_fw.o 
+		
+
 endif
 
 _HAL_MAC_FILES +=	$(halmac-y)

@@ -220,18 +220,18 @@ u32 mac_pwr_switch(struct mac_adapter *adapter, u8 on)
 
 	val8 = MAC_REG_R8(REG_CR);
 	if (val8 == 0xEA) {
-		mac_pwr = MAC_PWR_OFF;
+		mac_pwr = MAC_PWR_MAC_OFF;
 	} else {
 		if (BIT(0) == (MAC_REG_R8(REG_SYS_STATUS1 + 1) & BIT(0)))
-			mac_pwr = MAC_PWR_OFF;
+			mac_pwr = MAC_PWR_MAC_OFF;
 		else
-			mac_pwr = MAC_PWR_ON;
+			mac_pwr = MAC_PWR_MAC_ON;
 	}
 
 
 	if (on) {
 		/*Check if power switch is needed*/
-		if (mac_pwr == MAC_PWR_ON) {
+		if (mac_pwr == MAC_PWR_MAC_ON) {
 			PLTFM_MSG_WARN("[WARN]power state unchange!!\n");
 			ret = MACALRDYON;
 			goto END;
