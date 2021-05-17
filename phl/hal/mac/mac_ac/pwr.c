@@ -102,7 +102,6 @@ static u32 pwr_cmd_poll(struct mac_adapter *adapter, struct mac_pwr_cfg *seq)
 
 	cnt = PWR_POLL_CNT;
 	addr = seq->addr;
-	pr_info("%s poll 0x%x \n", __func__, addr);
 
 	while (cnt--) {
 		val = MAC_REG_R8(addr);
@@ -138,8 +137,6 @@ static u32 sub_pwr_seq_start(struct mac_adapter *adapter,
 			val = MAC_REG_R8(addr);
 			val &= ~(seq->msk);
 			val |= (seq->val & seq->msk);
-
-			pr_info("%s write 0x%x val 0x%x\n", __func__, addr, val);
 			MAC_REG_W8(addr, val);
 			break;
 		case PWR_CMD_POLL:
@@ -150,17 +147,14 @@ static u32 sub_pwr_seq_start(struct mac_adapter *adapter,
 			}
 			break;
 		case PWR_CMD_DELAY:
-			pr_info("%s delay %d \n", __func__, seq->addr);
 			if (seq->val == PWR_DELAY_US)
 				PLTFM_DELAY_US(seq->addr);
 			else
 				PLTFM_DELAY_US(seq->addr * 1000);
 			break;
 		case PWR_CMD_READ:
-			pr_info("%s read\n", __func__);
 			break;
 		default:
-			pr_info("%s error\n", __func__);
 			PLTFM_MSG_ERR("[ERR]unknown pwr seq cmd %d\n",
 				      seq->cmd);
 			return MACNOITEM;
@@ -218,17 +212,17 @@ u32 mac_pwr_switch(struct mac_adapter *adapter, u8 on)
 
 
 	/* Check FW still exist or not */
-	if (MAC_REG_R16(REG_MCUFW_CTRL_8822C) == 0xC078) {
+	if (MAC_REG_R16(REG_MCUFW_CTRL) == 0xC078) {
 		/* Leave 32K */
 		rpwm = (u8)((rpwm ^ BIT(7)) & 0x80);
 		MAC_REG_W8(0xFE58, rpwm);
 	}
 
-	val8 = MAC_REG_R8(REG_CR_8822C);
+	val8 = MAC_REG_R8(REG_CR);
 	if (val8 == 0xEA) {
 		mac_pwr = MAC_PWR_OFF;
 	} else {
-		if (BIT(0) == (MAC_REG_R8(REG_SYS_STATUS1_8822C + 1) & BIT(0)))
+		if (BIT(0) == (MAC_REG_R8(REG_SYS_STATUS1 + 1) & BIT(0)))
 			mac_pwr = MAC_PWR_OFF;
 		else
 			mac_pwr = MAC_PWR_ON;
@@ -247,36 +241,36 @@ u32 mac_pwr_switch(struct mac_adapter *adapter, u8 on)
 
 
 		/* pre_init_system_cfg_8822c */
-		MAC_REG_W8(REG_RSV_CTRL_8822C, 0);
-		if (MAC_REG_R8(REG_SYS_CFG2_8822C + 3) == 0x20)
+		MAC_REG_W8(REG_RSV_CTRL, 0);
+		if (MAC_REG_R8(REG_SYS_CFG2 + 3) == 0x20)
 			MAC_REG_W8(0xFE5B, MAC_REG_R8(0xFE5B) | BIT(4));
 
 		/* CONFIG PIN MUX */
-		val32 = MAC_REG_R32(REG_PAD_CTRL1_8822C);
+		val32 = MAC_REG_R32(REG_PAD_CTRL1);
 		val32 |= BIT(28) | BIT(29);
-		MAC_REG_W32(REG_PAD_CTRL1_8822C, val32);
+		MAC_REG_W32(REG_PAD_CTRL1, val32);
 
-		val32 = MAC_REG_R32(REG_LED_CFG_8822C);
+		val32 = MAC_REG_R32(REG_LED_CFG);
 		val32 &= ~(BIT(25) | BIT(26));
-		MAC_REG_W32(REG_LED_CFG_8822C, val32);
+		MAC_REG_W32(REG_LED_CFG, val32);
 
-		val32 = MAC_REG_R32(REG_GPIO_MUXCFG_8822C);
+		val32 = MAC_REG_R32(REG_GPIO_MUXCFG);
 		val32 |= BIT(2);
-		MAC_REG_W32(REG_GPIO_MUXCFG_8822C, val32);
+		MAC_REG_W32(REG_GPIO_MUXCFG, val32);
 
 		/* disable BB/RF */
-		val8 = MAC_REG_R8(REG_SYS_FUNC_EN_8822C);
+		val8 = MAC_REG_R8(REG_SYS_FUNC_EN);
 		val8 &= ~(BIT(0) | BIT(1));
-		MAC_REG_W8(REG_SYS_FUNC_EN_8822C, val8);
+		MAC_REG_W8(REG_SYS_FUNC_EN, val8);
 
-		val8 = MAC_REG_R8(REG_RF_CTRL_8822C);
+		val8 = MAC_REG_R8(REG_RF_CTRL);
 		val8 &= ~(BIT(0) | BIT(1) | BIT(2));
-		MAC_REG_W8(REG_RF_CTRL_8822C, val8);
+		MAC_REG_W8(REG_RF_CTRL, val8);
 
 
-		val32 = MAC_REG_R32(REG_WLRF1_8822C);
+		val32 = MAC_REG_R32(REG_WLRF1);
 		val32 &= ~(BIT(24) | BIT(25) | BIT(26));
-		MAC_REG_W32(REG_WLRF1_8822C, val32);
+		MAC_REG_W32(REG_WLRF1, val32);
 		
 	} else {
 		pwr_seq = adapter->hw_info->pwr_off_seq;
@@ -290,28 +284,28 @@ u32 mac_pwr_switch(struct mac_adapter *adapter, u8 on)
 	}
 
 	if (on) {
-		MAC_REG_W8_CLR(REG_SYS_STATUS1_8822C + 1, BIT(0));
+		MAC_REG_W8_CLR(REG_SYS_STATUS1 + 1, BIT(0));
 
 		/* init system cfg 8822c */
-		val32 = MAC_REG_R32(REG_CPU_DMEM_CON_8822C);
+		val32 = MAC_REG_R32(REG_CPU_DMEM_CON);
 		val32 |= BIT(16) | BIT(8);
-		MAC_REG_W32(REG_CPU_DMEM_CON_8822C, val32);
+		MAC_REG_W32(REG_CPU_DMEM_CON, val32);
 
-		val8 = MAC_REG_R8(REG_SYS_FUNC_EN_8822C + 1);
+		val8 = MAC_REG_R8(REG_SYS_FUNC_EN + 1);
 		val8 |= 0xD8;
-		MAC_REG_W8(REG_SYS_FUNC_EN_8822C + 1, val8);
+		MAC_REG_W8(REG_SYS_FUNC_EN + 1, val8);
 
 		/* PHY_REQ_DELAY reg 0x1100[27:24] = 0x0C */
-		val8 = MAC_REG_R8(REG_CR_EXT_8822C + 3) & 0xF0;
+		val8 = MAC_REG_R8(REG_CR_EXT + 3) & 0xF0;
 		val8 |= 0x0C;
-		MAC_REG_W8(REG_CR_EXT_8822C + 3, val8);
+		MAC_REG_W8(REG_CR_EXT + 3, val8);
 
 		/* disable boot-from-flash for driver's DL FW */
-		val32 = MAC_REG_R32(REG_MCUFW_CTRL_8822C);
+		val32 = MAC_REG_R32(REG_MCUFW_CTRL);
 		if (val32 & BIT(20)) {
-			MAC_REG_W32(REG_MCUFW_CTRL_8822C, val32 & (~(BIT(20))));
-			val32 = MAC_REG_R32(REG_GPIO_MUXCFG_8822C) & (~(BIT(19)));
-			MAC_REG_W32(REG_GPIO_MUXCFG_8822C, val32);
+			MAC_REG_W32(REG_MCUFW_CTRL, val32 & (~(BIT(20))));
+			val32 = MAC_REG_R32(REG_GPIO_MUXCFG) & (~(BIT(19)));
+			MAC_REG_W32(REG_GPIO_MUXCFG, val32);
 		}
 	}
 END:

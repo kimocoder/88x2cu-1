@@ -123,13 +123,13 @@ static u32 get_chip_info(struct mac_ax_adapter *adapter,
 		break;
 	case MAC_INTF_USB:
 	case MAC_INTF_PCIE:
-		*cv = pltfm_cb->reg_r8(drv_adapter, REG_SYS_CFG1_8822C + 1) >> 4;
+		*cv = pltfm_cb->reg_r8(drv_adapter, REG_SYS_CFG1 + 1) >> 4;
 		break;
 	default:
 		return MACINTF;
 	}
 
-	*id = MAC_CHIP_ID_8822C;
+	*id = MAC_CHIP_ID;
 
 	return MACSUCCESS;
 }
@@ -230,7 +230,7 @@ static u32 get_chip_info(struct mac_adapter *drv_adapter,
 		break;
 	case MAC_INTF_USB:
 	case MAC_INTF_PCIE:
-		*cv = pltfm_cb->reg_r8(drv_adapter, REG_SYS_CFG1_8822C + 1) >> 4;
+		*cv = pltfm_cb->reg_r8(drv_adapter, REG_SYS_CFG1 + 1) >> 4;
 		break;
 	default:
 		return MACINTF;
