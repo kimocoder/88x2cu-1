@@ -1562,8 +1562,7 @@ struct mac_hw_info {
 	mac_mutex mdio_lock;
 };
 
-#if 0 // NEO
-struct mac_ax_fw_info {
+struct mac_fw_info {
 	u8 major_ver;
 	u8 minor_ver;
 	u8 sub_ver;
@@ -1585,6 +1584,7 @@ struct mac_pwr_info {
 			       u8 pre_switch, u8 on);
 };
 
+#if 0 // NEO
 struct mac_ax_ft_status {
 	enum mac_ax_feature mac_ft;
 	enum mac_ax_status status;
@@ -4536,8 +4536,8 @@ struct mac_adapter {
 	struct mac_pltfm_cb *pltfm_cb;
 	struct mac_state_mach sm;
 	struct mac_hw_info *hw_info;
+	struct mac_fw_info fw_info;
 #if 0 // NEO
-	struct mac_ax_fw_info fw_info;
 	struct mac_ax_efuse_param efuse_param;
 	struct mac_ax_mac_pwr_info mac_pwr_info;
 	struct mac_ax_ft_status *ft_stat;

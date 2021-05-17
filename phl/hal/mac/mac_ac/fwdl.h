@@ -36,7 +36,6 @@
 
 #include "../fw_ac/rtl8822c/hal8822c_fw.h"
 
-#if 0 //NEO
 #define FWHDR_HDR_LEN (sizeof(struct fwhdr_hdr_t))
 #define FWHDR_SECTION_LEN (sizeof(struct fwhdr_section_t))
 
@@ -253,6 +252,7 @@ enum fw_dl_cv {
 #define SECTION_INFO_CHECKSUM BIT(28)
 #define SECTION_INFO_REDL BIT(29)
 
+#if 0 //NEO
 /**
  * @addtogroup Firmware
  * @{

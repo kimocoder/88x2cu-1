@@ -15,8 +15,6 @@
 
 #include "fwdl.h"
 
-#if 0 //NEO
-
 #define FWDL_WAIT_CNT 400000
 #define FWDL_SECTION_MAX_NUM 10
 #define FWDL_SECTION_CHKSUM_LEN	8
@@ -47,6 +45,7 @@ struct fwld_info {
 	u8 *fw;
 };
 
+#if 0 //NEO
 static inline void fwhdr_section_parser(struct fwhdr_section_t *section,
 					struct fwhdr_section_info *info)
 {
@@ -83,9 +82,13 @@ static inline void fwhdr_hdr_parser(struct fwhdr_hdr_t *hdr,
 	info->git_idx = GET_FIELD(hdr_val, FWHDR_COMMITID);
 }
 
-static u32 fwhdr_parser(struct mac_ax_adapter *adapter, u8 *fw, u32 len,
+#endif //NEO
+
+static u32 fwhdr_parser(struct mac_adapter *adapter, u8 *fw, u32 len,
 			struct fw_bin_info *info)
 {
+
+#if 0 //NEO
 	u32 i;
 	u8 *fw_end = fw + len;
 	u8 *bin_ptr;
@@ -122,16 +125,17 @@ static u32 fwhdr_parser(struct mac_ax_adapter *adapter, u8 *fw, u32 len,
 		PLTFM_MSG_ERR("fw bin size != fw size in fwhdr\n");
 		return MACFWBIN;
 	}
-
+#endif //NEO
 	return MACSUCCESS;
 }
 
-static inline u32 update_fw_ver(struct mac_ax_adapter *adapter,
+static inline u32 update_fw_ver(struct mac_adapter *adapter,
 				struct fwhdr_hdr_t *hdr)
 {
 	u32 hdr_val;
-	struct mac_ax_fw_info *info = &adapter->fw_info;
+	struct mac_fw_info *info = &adapter->fw_info;
 
+#if 0 //NEO
 	hdr_val = le32_to_cpu(hdr->dword1);
 	info->major_ver = GET_FIELD(hdr_val, FWHDR_MAJORVER);
 	info->minor_ver = GET_FIELD(hdr_val, FWHDR_MINORVER);
@@ -146,12 +150,14 @@ static inline u32 update_fw_ver(struct mac_ax_adapter *adapter,
 	info->build_date = GET_FIELD(hdr_val, FWHDR_DATE);
 	info->build_hour = GET_FIELD(hdr_val, FWHDR_HOUR);
 	info->build_min = GET_FIELD(hdr_val, FWHDR_MIN);
-
+#endif //NEO
 	info->h2c_seq = 0;
 	info->rec_seq = 0;
 
 	return MACSUCCESS;
 }
+
+#if 0 //NEO
 
 static u32 __fwhdr_download(struct mac_ax_adapter *adapter,
 			    u8 *fw, u32 hdr_len, u8 redl)
@@ -705,11 +711,15 @@ fwdl_err:
 	return ret;
 }
 
-u32 mac_fwdl(struct mac_ax_adapter *adapter, u8 *fw, u32 len)
+#endif //NEO
+
+u32 mac_fwdl(struct mac_adapter *adapter, u8 *fw, u32 len)
 {
 	u32 ret;
 	struct fw_bin_info info;
 
+	return MACSUCCESS;
+#if 0 //NEO
 	ret = fwhdr_parser(adapter, fw, len, &info);
 	if (ret) {
 		PLTFM_MSG_ERR("[ERR]%s: fwhdr_parser fail\n", __func__);
@@ -744,9 +754,8 @@ fwdl_err:
 	fwdl_fail_dump(adapter, &info, ret);
 
 	return ret;
-}
-
 #endif //NEO
+}
 
 u32 mac_enable_cpu(struct mac_adapter *adapter, u8 boot_reason, u8 dlfw)
 {
@@ -764,6 +773,8 @@ u32 mac_enable_cpu(struct mac_adapter *adapter, u8 boot_reason, u8 dlfw)
 	val8 = MAC_REG_R8(REG_SYS_FUNC_EN + 1);
 	val8 |= BIT(2);
 	MAC_REG_W8(REG_SYS_FUNC_EN + 1, val8);
+
+	adapter->sm.fwdl = MAC_FWDL_CPU_ON;
 
 	return MACSUCCESS;
 }
