@@ -20,6 +20,29 @@
 #define FWDL_SECTION_CHKSUM_LEN	8
 #define FWDL_SECTION_PER_PKT_LEN 2020
 
+/* NEO: halmac_fw_info.h */
+/* FW bin information */
+#define WLAN_FW_HDR_SIZE			64
+#define WLAN_FW_HDR_CHKSUM_SIZE			8
+
+#define WLAN_FW_HDR_VERSION			4
+#define WLAN_FW_HDR_SUBVERSION			6
+#define WLAN_FW_HDR_SUBINDEX			7
+#define WLAN_FW_HDR_MONTH			16
+#define WLAN_FW_HDR_DATE			17
+#define WLAN_FW_HDR_HOUR			18
+#define WLAN_FW_HDR_MIN				19
+#define WLAN_FW_HDR_YEAR			20
+#define WLAN_FW_HDR_MEM_USAGE			24
+#define WLAN_FW_HDR_H2C_FMT_VER			28
+#define WLAN_FW_HDR_DMEM_ADDR			32
+#define WLAN_FW_HDR_DMEM_SIZE			36
+#define WLAN_FW_HDR_IMEM_SIZE			48
+#define WLAN_FW_HDR_EMEM_SIZE			52
+#define WLAN_FW_HDR_EMEM_ADDR			56
+#define WLAN_FW_HDR_IMEM_ADDR			60
+
+
 struct fwhdr_section_info {
 	u8 redl;
 	u8 *addr;
@@ -84,10 +107,50 @@ static inline void fwhdr_hdr_parser(struct fwhdr_hdr_t *hdr,
 
 #endif //NEO
 
+
+static u32
+chk_fw_size_88xx(struct mac_adapter *adapter, u8 *fw_bin, u32 size)
+{
+	u32 imem_size;
+	u32 dmem_size;
+	u32 emem_size = 0;
+	u32 real_size;
+
+	if (size < WLAN_FW_HDR_SIZE) {
+		PLTFM_MSG_ERR("[ERR]FW size error!\n");
+		return MACBUFSZ;
+	}
+
+	dmem_size = *((__le32 *)(fw_bin + WLAN_FW_HDR_DMEM_SIZE));
+	imem_size = *((__le32 *)(fw_bin + WLAN_FW_HDR_IMEM_SIZE));
+	if (0 != ((*(fw_bin + WLAN_FW_HDR_MEM_USAGE)) & BIT(4)))
+		emem_size =*((__le32 *)(fw_bin + WLAN_FW_HDR_EMEM_SIZE));
+
+	dmem_size += WLAN_FW_HDR_CHKSUM_SIZE;
+	imem_size += WLAN_FW_HDR_CHKSUM_SIZE;
+	if (emem_size != 0)
+		emem_size += WLAN_FW_HDR_CHKSUM_SIZE;
+
+	real_size = WLAN_FW_HDR_SIZE + dmem_size + imem_size + emem_size;
+	if (size != real_size) {
+		PLTFM_MSG_ERR("[ERR]size != real size!\n");
+		return MACBUFSZ;
+	}
+
+	return MACSUCCESS;
+}
+
 static u32 fwhdr_parser(struct mac_adapter *adapter, u8 *fw, u32 len,
 			struct fw_bin_info *info)
 {
+	u32 ret;
 
+	ret = chk_fw_size_88xx(adapter, fw, len);
+	if (ret) {
+		PLTFM_MSG_ERR("[ERR]chk_fw_size_88xx\n");
+		goto fwhdr_parser_fail;
+	}
+	
 #if 0 //NEO
 	u32 i;
 	u8 *fw_end = fw + len;
@@ -126,7 +189,8 @@ static u32 fwhdr_parser(struct mac_adapter *adapter, u8 *fw, u32 len,
 		return MACFWBIN;
 	}
 #endif //NEO
-	return MACSUCCESS;
+fwhdr_parser_fail:
+	return ret;
 }
 
 static inline u32 update_fw_ver(struct mac_adapter *adapter,
@@ -454,10 +518,11 @@ ind_aces_end:
 	return MACSUCCESS;
 }
 
-static u32 fwdl_phase0(struct mac_ax_adapter *adapter)
+
+static u32 fwdl_phase0(struct mac_adapter *adapter)
 {
 	u32 cnt = FWDL_WAIT_CNT;
-	struct mac_ax_intf_ops *ops = adapter_to_intf_ops(adapter);
+	struct mac_intf_ops *ops = adapter_to_intf_ops(adapter);
 
 	if (adapter->sm.fwdl != MAC_AX_FWDL_CPU_ON) {
 		PLTFM_MSG_ERR("[ERR]%s: state != CPU_ON\n", __func__);
@@ -726,11 +791,11 @@ u32 mac_fwdl(struct mac_adapter *adapter, u8 *fw, u32 len)
 		goto fwdl_err;
 	}
 
-#if 0 //NEO
 	ret = update_fw_ver(adapter, (struct fwhdr_hdr_t *)fw);
 	if (ret)
 		goto fwdl_err;
 
+#if 0 //NEO
 	ret = fwdl_phase0(adapter);
 	if (ret) {
 		PLTFM_MSG_ERR("[ERR]%s: fwdl_phase0 fail\n", __func__);
@@ -927,13 +992,12 @@ u32 mac_enable_fw(struct mac_adapter *adapter, enum rtw_fw_type cat)
 		return ret;
 	}
 
-#if 0 //NEO
 	ret = mac_fwdl(adapter, fw, fw_len);
 	if (ret != MACSUCCESS) {
 		PLTFM_MSG_ERR("[ERR]%s: mac_enable_cpu fail\n", __func__);
 		return ret;
 	}
-#endif //NEO
+
 	return ret;
 }
 

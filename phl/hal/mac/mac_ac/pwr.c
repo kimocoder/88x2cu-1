@@ -208,8 +208,6 @@ u32 mac_pwr_switch(struct mac_adapter *adapter, u8 on)
 	struct dvobj_priv *dvobj = hal_com->drv_priv;
 	_adapter *tadapter = dvobj_get_primary_adapter(dvobj);
 
-	pr_info("%s NEO TODO\n", __func__);
-
 
 	/* Check FW still exist or not */
 	if (MAC_REG_R16(REG_MCUFW_CTRL) == 0xC078) {

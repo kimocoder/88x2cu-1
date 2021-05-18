@@ -17,7 +17,7 @@ endif
 path_hm := phl/hal/mac
 # Level 1 directory
 path_hm_ac := phl/hal/mac/mac_ac
-path_fw_d1 := $(path_hm)/fw_ac
+path_fw_ac := phl/hal/mac/fw_ac
 
 ifeq ($(CONFIG_PCI_HCI), y)
 pci := y
@@ -112,9 +112,9 @@ halmac-y	+=	$(path_hm_8822c)/init_$(ic).o \
 
 
 # fw files
-path_fw_8822c := $(path_hm_d1)/rtl8822c
+path_fw_8822c := $(path_fw_ac)/rtl8822c
 
-#halmac-y	+=	$(path_fw_8822c)/hal8822c_fw.o 
+halmac-y	+=	$(path_fw_8822c)/hal8822c_fw.o 
 		
 
 endif
