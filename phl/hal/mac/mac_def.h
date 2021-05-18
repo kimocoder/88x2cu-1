@@ -205,6 +205,12 @@
 		MAC_REG_W8(__offset, MAC_REG_R8(__offset) & ~(mask));	\
 	} while (0)
 
+#define MAC_REG_W32_SET(offset, mask)					\
+	do {								\
+		u32 __offset = (u32)offset;				\
+		MAC_REG_W32(__offset, MAC_REG_R32(__offset) | mask);	\
+	} while (0)
+
 #endif /*CONFIG_NEW_HALMAC_INTERFACE*/
 
 /*--------------------Define MACRO--------------------------------------*/
