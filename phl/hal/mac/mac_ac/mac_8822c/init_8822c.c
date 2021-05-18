@@ -36,10 +36,9 @@
 
 #include "../trx_desc.h"
 #include "../fwcmd.h"
-
+#include "../fwdl.h"
 
 #if 0 // NEO
-#include "../fwdl.h"
 #include "../fwofld.h"
 #include "../role.h"
 #include "../tblupd.h"
@@ -177,7 +176,9 @@ static struct mac_ops mac8822c_ops = {
 	NULL, /* mac_disable_cpu, */ /* disable_cpu */
 	NULL, /* mac_fwredl, */ /* fwredl */
 	NULL, /* mac_fwdl, */ /* fwdl */
-	NULL, /* mac_enable_fw, */ /* enable_fw */
+#endif // NEO if 0
+	mac_enable_fw, /* enable_fw */
+#if 0 // NEO
 	NULL, /* mac_lv1_rcvy, */ /* lv1_rcvy */
 	NULL, /* mac_get_macaddr, */
 #endif // NEO if 0

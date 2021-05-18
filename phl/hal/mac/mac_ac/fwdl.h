@@ -408,6 +408,8 @@ u32 mac_ram_boot(struct mac_ax_adapter *adapter, u8 *fw, u32 len);
  * @}
  */
 
+#endif //NEO
+
 /**
  * @addtogroup Firmware
  * @{
@@ -423,11 +425,10 @@ u32 mac_ram_boot(struct mac_ax_adapter *adapter, u8 *fw, u32 len);
  * @return Please Place Description here.
  * @retval u32
  */
-u32 mac_enable_fw(struct mac_ax_adapter *adapter, enum rtw_fw_type cat);
+u32 mac_enable_fw(struct mac_adapter *adapter, enum rtw_fw_type cat);
 /**
  * @}
  * @}
  */
 
-#endif //NEO
 #endif

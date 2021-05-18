@@ -910,6 +910,8 @@ u32 mac_enable_fw(struct mac_adapter *adapter, enum rtw_fw_type cat)
 	u8 *fw = NULL;
 	struct mac_intf_ops *ops = adapter_to_intf_ops(adapter);
 
+	pr_info("%s NEO TODO\n", __func__);
+
 	fw_len = array_length_8822c_nic;
 	fw = array_8822c_nic;
 
