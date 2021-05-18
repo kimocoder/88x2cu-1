@@ -718,14 +718,15 @@ u32 mac_fwdl(struct mac_adapter *adapter, u8 *fw, u32 len)
 	u32 ret;
 	struct fw_bin_info info;
 
-	return MACSUCCESS;
-#if 0 //NEO
+	pr_info("%s NEO TODO\n", __func__);
+
 	ret = fwhdr_parser(adapter, fw, len, &info);
 	if (ret) {
 		PLTFM_MSG_ERR("[ERR]%s: fwhdr_parser fail\n", __func__);
 		goto fwdl_err;
 	}
 
+#if 0 //NEO
 	ret = update_fw_ver(adapter, (struct fwhdr_hdr_t *)fw);
 	if (ret)
 		goto fwdl_err;
@@ -750,11 +751,11 @@ u32 mac_fwdl(struct mac_adapter *adapter, u8 *fw, u32 len)
 
 	return MACSUCCESS;
 
+#endif //NEO
 fwdl_err:
-	fwdl_fail_dump(adapter, &info, ret);
+	//fwdl_fail_dump(adapter, &info, ret);
 
 	return ret;
-#endif //NEO
 }
 
 u32 mac_enable_cpu(struct mac_adapter *adapter, u8 boot_reason, u8 dlfw)
@@ -918,13 +919,13 @@ u32 mac_enable_fw(struct mac_adapter *adapter, enum rtw_fw_type cat)
 		return ret;
 	}
 
-#if 0 //NEO
 	ret = mac_enable_cpu(adapter, AX_BOOT_REASON_PWR_ON, 1);
 	if (ret != MACSUCCESS) {
 		PLTFM_MSG_ERR("[ERR]%s: mac_enable_cpu fail\n", __func__);
 		return ret;
 	}
 
+#if 0 //NEO
 	ret = mac_fwdl(adapter, fw, fw_len);
 	if (ret != MACSUCCESS) {
 		PLTFM_MSG_ERR("[ERR]%s: mac_enable_cpu fail\n", __func__);
