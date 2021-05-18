@@ -434,6 +434,67 @@ exit:
 
 }
 
+static void rtw_usb_write_data_complete(struct urb *urb)
+{
+	struct sk_buff *skb;
+
+	skb = (struct sk_buff *)urb->context;
+	dev_kfree_skb_any(skb);
+}
+
+static u32
+rtw_usb_write_data(void *d, u8 bulk_id, u32 cnt, struct sk_buff *skb,
+		   usb_complete_t cb, void *context)
+{
+	struct dvobj_priv *pdvobj = (struct dvobj_priv *)d;
+	struct usb_device *pusbd = dvobj_to_usb(pdvobj)->pusbdev;
+	struct urb *urb;
+	unsigned int pipe;
+	int status;
+	u32 ret = _FAIL;
+
+	pipe = bulkid2pipe(pdvobj, bulk_id, _TRUE);
+	urb = usb_alloc_urb(0, GFP_ATOMIC);
+	if (!urb)
+		return -ENOMEM;
+
+	usb_fill_bulk_urb(urb, pusbd, pipe, skb->data, (int)cnt, cb, context);
+	status = usb_submit_urb(urb, GFP_ATOMIC);
+	if (unlikely(status)) {
+		RTW_ERR("%s failed to submit write urb, ret=%d\n", status); 
+
+		switch(status) {
+		case -ENODEV:
+			dev_set_drv_stopped(pdvobj);
+			break;
+		default:
+			break;
+		}
+		goto exit;
+	}
+
+	usb_free_urb(urb);
+	ret = _SUCCESS;
+
+exit:
+	if (ret == _SUCCESS)
+		ret = RTW_PHL_STATUS_SUCCESS;
+	else
+		ret = RTW_PHL_STATUS_FAILURE;
+
+	return ret;
+}
+
+u32 rtw_usb_write_data_rsvd_page(void *d, u8 *buf, u32 size)
+{
+	struct dvobj_priv *pdvobj = (struct dvobj_priv *)d;
+
+	/* TODO */
+	return RTW_PHL_STATUS_SUCCESS;
+}
+
+
+
 void rtw_usb_write_port_cancel(void *d)
 {
 	int i, j;
@@ -454,6 +515,9 @@ void rtw_usb_write_port_cancel(void *d)
 		xmiturb++;
 	}
 }
+
+
+
 
 static void rtw_usb_read_port_complete(struct urb *urb, struct pt_regs *regs)
 {

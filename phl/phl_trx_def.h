@@ -31,7 +31,7 @@
 #define _WD_BODY_LEN 24
 #define H2C_CMD_LEN 64
 #define H2C_DATA_LEN 256
-#define H2C_LONG_DATA_LEN 2048
+#define H2C_LONG_DATA_LEN 8192
 
 #define get_h2c_size_by_range(i) \
 	((i < _H2CB_CMD_QLEN) ? \

@@ -18,10 +18,9 @@
 #define _MAC_FWDL_H_
 
 #include "../type.h"
+#include "fwcmd.h"
 
 #if 0 //NEO
-
-#include "fwcmd.h"
 #include "trx_desc.h"
 #include "trxcfg.h"
 #include "dle.h"

@@ -18,7 +18,7 @@
 #define FWDL_WAIT_CNT 400000
 #define FWDL_SECTION_MAX_NUM 10
 #define FWDL_SECTION_CHKSUM_LEN	8
-#define FWDL_SECTION_PER_PKT_LEN 2020
+#define FWDL_SECTION_PER_PKT_LEN 8192
 
 /* NEO: halmac_fw_info.h */
 /* FW bin information */
@@ -209,6 +209,111 @@ dlfw_to_mem_88xx(struct mac_adapter *adapter, u8 *fw_bin, u32 src, u32 dest, u32
 #endif //NEO
 
 	return MACSUCCESS;
+}
+
+static u32 __section_push(struct rtw_h2c_pkt *h2cb)
+{
+#define section_push_len 8
+	h2cb->vir_data -= section_push_len;
+	h2cb->vir_tail -= section_push_len;
+
+	return MACSUCCESS;
+}
+
+static u32 __sections_download(struct mac_adapter *adapter, u8 *fw_bin, u32 src, u32 dest, u32 size)
+{
+	struct mac_intf_ops *ops = adapter_to_intf_ops(adapter);
+	struct rtw_h2c_pkt *h2cb;
+	u32 residue_len;
+	u32 mem_offset;
+	u32 pkt_len;
+	u8 first_part;
+	u8 *buf;
+	u32 ret;
+
+	mem_offset = 0;
+	first_part = 1;
+	residue_len = size;
+
+	while (residue_len) {
+		if (residue_len >= FWDL_SECTION_PER_PKT_LEN)
+			pkt_len = FWDL_SECTION_PER_PKT_LEN;
+		else
+			pkt_len = residue_len;
+
+		h2cb = h2cb_alloc(adapter, H2CB_CLASS_LONG_DATA);
+		if (!h2cb) {
+			PLTFM_MSG_ERR("[ERR]%s: ", __func__);
+			PLTFM_MSG_ERR("h2cb_alloc fail\n");
+			return MACNPTR;
+		}
+
+		__section_push(h2cb);
+		buf = h2cb_put(h2cb, pkt_len);
+		if (!buf) {
+			PLTFM_MSG_ERR("[ERR]%s: ", __func__);
+			PLTFM_MSG_ERR("h2cb_put fail\n");
+			ret = MACNOBUF;
+			goto fail;
+		}
+
+#if 1 //NEO
+		ret = send_fwpkt_88xx(adapter, (u16)(src >> 7),
+					 fw_bin + mem_offset, pkt_len);
+		if (ret) {
+			PLTFM_MSG_ERR("[ERR]send fw pkt!!\n");
+			goto fail;
+		}
+
+#if 0 //NEO
+		ret = iddma_dlfw_88xx(adapter,
+					 OCPBASE_TXBUF_88XX +
+					 src + TX_DESC_SIZE_88XX,
+					 dest + mem_offset, pkt_len,
+					 first_part);
+		if (ret) {
+			PLTFM_MSG_ERR("[ERR]iddma dlfw!!\n");
+			goto fail;
+		}
+#endif //NEO
+
+#else 
+		PLTFM_MEMCPY(buf, section, pkt_len);
+
+		ret = __sections_build_txd(adapter, h2cb);
+		if (ret) {
+			PLTFM_MSG_ERR("[ERR]%s: ", __func__);
+			PLTFM_MSG_ERR("__sections_build_txd fail\n");
+			goto fail;
+		}
+		ret = PLTFM_TX(h2cb->data, h2cb->len);
+		if (ret) {
+			PLTFM_MSG_ERR("[ERR]%s: PLTFM_TX fail\n", __func__);
+			goto fail;
+		}
+
+#endif //NEO
+
+		h2cb_free(adapter, h2cb);
+		first_part = 0;
+		mem_offset += pkt_len;
+		residue_len -= pkt_len;
+	}
+
+#if 0 //NEO
+	ret = check_fw_chksum_88xx(adapter, dest);
+	if (ret) {
+		PLTFM_MSG_ERR("[ERR]chk fw chksum!!\n");
+		goto fail;
+	}
+#endif //NEO
+
+	return MACSUCCESS;
+fail:
+	h2cb_free(adapter, h2cb);
+	PLTFM_MSG_ERR("[ERR]%s ret: %d\n", __func__, ret);
+
+	return ret;
 }
 
 static u32 
