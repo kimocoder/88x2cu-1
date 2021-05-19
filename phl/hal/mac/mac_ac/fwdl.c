@@ -121,96 +121,6 @@ DL_RSVD_PG_END:
 	return ret;
 }
 
-static u32
-send_fwpkt_88xx(struct mac_adapter *adapter, u16 pg_addr, u8 *fw_bin, u32 size)
-{
-	u8 *fw_add_dum = NULL;
-	u32 ret;
-	struct mac_intf_ops *ops = adapter_to_intf_ops(adapter);
-
-	if (!((size + TX_DESC_SIZE_88XX) & (512 - 1))) {
-		fw_add_dum = (u8 *)PLTFM_MALLOC(size + 1);
-		if (!fw_add_dum) {
-			PLTFM_MSG_ERR("[ERR]fw bin malloc!!\n");
-			return MACBUFALLOC;
-		}
-
-		PLTFM_MEMCPY(fw_add_dum, fw_bin, size);
-
-		ret = dl_rsvd_page_88xx(adapter, pg_addr,
-					   fw_add_dum, size + 1);
-		if (ret)
-			PLTFM_MSG_ERR("[ERR]dl rsvd page - dum!!\n");
-
-		PLTFM_FREE(fw_add_dum, size + 1);
-
-		return ret;
-	}
-
-	ret = dl_rsvd_page_88xx(adapter, pg_addr, fw_bin, size);
-	if (ret)
-		PLTFM_MSG_ERR("[ERR]dl rsvd page!!\n");
-
-	return ret;
-}
-
-static u32
-dlfw_to_mem_88xx(struct mac_adapter *adapter, u8 *fw_bin, u32 src, u32 dest, u32 size)
-{
-	u8 first_part;
-	u32 mem_offset;
-	u32 residue_size;
-	u32 pkt_size;
-	u32 ret;
-	struct mac_intf_ops *ops = adapter_to_intf_ops(adapter);
-
-	mem_offset = 0;
-	first_part = 1;
-	residue_size = size;
-
-	MAC_REG_W32_SET(REG_DDMA_CH0CTRL, BIT(25));
-
-	while (residue_size != 0) {
-		if (residue_size >= DLFW_PKT_MAX_SIZE)
-			pkt_size = DLFW_PKT_MAX_SIZE;
-		else
-			pkt_size = residue_size;
-
-		ret = send_fwpkt_88xx(adapter, (u16)(src >> 7),
-					 fw_bin + mem_offset, pkt_size);
-		if (ret) {
-			PLTFM_MSG_ERR("[ERR]send fw pkt!!\n");
-			return ret;
-		}
-
-#if 0 //NEO
-		ret = iddma_dlfw_88xx(adapter,
-					 OCPBASE_TXBUF_88XX +
-					 src + TX_DESC_SIZE_88XX,
-					 dest + mem_offset, pkt_size,
-					 first_part);
-		if (ret) {
-			PLTFM_MSG_ERR("[ERR]iddma dlfw!!\n");
-			return ret;
-		}
-#endif //NEO
-
-		first_part = 0;
-		mem_offset += pkt_size;
-		residue_size -= pkt_size;
-	}
-
-#if 0 //NEO
-	ret = check_fw_chksum_88xx(adapter, dest);
-	if (ret) {
-		PLTFM_MSG_ERR("[ERR]chk fw chksum!!\n");
-		return ret;
-	}
-#endif //NEO
-
-	return MACSUCCESS;
-}
-
 static u32 __section_push(struct rtw_h2c_pkt *h2cb)
 {
 #define section_push_len 8
@@ -220,15 +130,56 @@ static u32 __section_push(struct rtw_h2c_pkt *h2cb)
 	return MACSUCCESS;
 }
 
-static u32 __sections_download(struct mac_adapter *adapter, u8 *fw_bin, u32 src, u32 dest, u32 size)
+static u32
+send_fwpkt_88xx(struct mac_adapter *adapter, u16 pg_addr, u8 *fw_bin, u32 size)
 {
 	struct mac_intf_ops *ops = adapter_to_intf_ops(adapter);
 	struct rtw_h2c_pkt *h2cb;
+	u32 pkt_len = size;
+	u32 ret = MACSUCCESS;
+	u8 *fw_add_dum = NULL;
+	u8 *buf;
+
+	h2cb = h2cb_alloc(adapter, H2CB_CLASS_LONG_DATA);
+	if (!h2cb) {
+		PLTFM_MSG_ERR("[ERR]%s: ", __func__);
+		PLTFM_MSG_ERR("h2cb_alloc fail\n");
+		return MACNPTR;
+	}
+
+	// USB2 - 512 , USB3 - 1024 ? 
+	if (!((size + TX_DESC_SIZE_88XX) & (512 - 1)))
+		pkt_len += 1;
+
+	__section_push(h2cb);
+	buf = h2cb_put(h2cb, pkt_len);
+	if (!buf) {
+		PLTFM_MSG_ERR("[ERR]%s: ", __func__);
+		PLTFM_MSG_ERR("h2cb_put fail\n");
+		ret = MACNOBUF;
+		goto out;
+	}
+
+	PLTFM_MEMCPY(buf, fw_bin, size);
+	if (!((size + TX_DESC_SIZE_88XX) & (512 - 1)))
+		buf[size] = 0;
+
+	ret = dl_rsvd_page_88xx(adapter, pg_addr, buf, pkt_len);
+	if (ret)
+		PLTFM_MSG_ERR("[ERR]dl rsvd page!!\n");
+
+out:
+	h2cb_free(adapter, h2cb);
+	return ret;
+}
+
+static u32 __sections_download(struct mac_adapter *adapter, u8 *fw_bin, u32 src, u32 dest, u32 size)
+{
+	struct mac_intf_ops *ops = adapter_to_intf_ops(adapter);
 	u32 residue_len;
 	u32 mem_offset;
 	u32 pkt_len;
 	u8 first_part;
-	u8 *buf;
 	u32 ret;
 
 	mem_offset = 0;
@@ -241,23 +192,6 @@ static u32 __sections_download(struct mac_adapter *adapter, u8 *fw_bin, u32 src,
 		else
 			pkt_len = residue_len;
 
-		h2cb = h2cb_alloc(adapter, H2CB_CLASS_LONG_DATA);
-		if (!h2cb) {
-			PLTFM_MSG_ERR("[ERR]%s: ", __func__);
-			PLTFM_MSG_ERR("h2cb_alloc fail\n");
-			return MACNPTR;
-		}
-
-		__section_push(h2cb);
-		buf = h2cb_put(h2cb, pkt_len);
-		if (!buf) {
-			PLTFM_MSG_ERR("[ERR]%s: ", __func__);
-			PLTFM_MSG_ERR("h2cb_put fail\n");
-			ret = MACNOBUF;
-			goto fail;
-		}
-
-#if 1 //NEO
 		ret = send_fwpkt_88xx(adapter, (u16)(src >> 7),
 					 fw_bin + mem_offset, pkt_len);
 		if (ret) {
@@ -275,10 +209,7 @@ static u32 __sections_download(struct mac_adapter *adapter, u8 *fw_bin, u32 src,
 			PLTFM_MSG_ERR("[ERR]iddma dlfw!!\n");
 			goto fail;
 		}
-#endif //NEO
 
-#else 
-		PLTFM_MEMCPY(buf, section, pkt_len);
 
 		ret = __sections_build_txd(adapter, h2cb);
 		if (ret) {
@@ -294,7 +225,6 @@ static u32 __sections_download(struct mac_adapter *adapter, u8 *fw_bin, u32 src,
 
 #endif //NEO
 
-		h2cb_free(adapter, h2cb);
 		first_part = 0;
 		mem_offset += pkt_len;
 		residue_len -= pkt_len;
@@ -310,7 +240,6 @@ static u32 __sections_download(struct mac_adapter *adapter, u8 *fw_bin, u32 src,
 
 	return MACSUCCESS;
 fail:
-	h2cb_free(adapter, h2cb);
 	PLTFM_MSG_ERR("[ERR]%s ret: %d\n", __func__, ret);
 
 	return ret;
@@ -352,14 +281,14 @@ start_dlfw_88xx(struct mac_adapter *adapter, u8 *fw_bin, u32 size)
 	cur_fw = fw_bin + WLAN_FW_HDR_SIZE;
 	addr = *((__le32 *)(fw_bin + WLAN_FW_HDR_DMEM_ADDR));
 	addr &= ~BIT(31);
-	ret = dlfw_to_mem_88xx(adapter, cur_fw, 0, addr, dmem_size);
+	ret = __sections_download(adapter, cur_fw, 0, addr, dmem_size);
 	if (ret)
 		return ret;
 
 	cur_fw = fw_bin + WLAN_FW_HDR_SIZE + dmem_size;
 	addr = *((__le32 *)(fw_bin + WLAN_FW_HDR_IMEM_ADDR));
 	addr &= ~BIT(31);
-	ret = dlfw_to_mem_88xx(adapter, cur_fw, 0, addr, imem_size);
+	ret = __sections_download(adapter, cur_fw, 0, addr, imem_size);
 	if (ret)
 		return ret;
 
@@ -368,7 +297,7 @@ DLFW_EMEM:
 		cur_fw = fw_bin + WLAN_FW_HDR_SIZE + dmem_size + imem_size;
 		addr = *((__le32 *)(fw_bin + WLAN_FW_HDR_EMEM_ADDR));
 		addr &= ~BIT(31);
-		ret = dlfw_to_mem_88xx(adapter, cur_fw, 0, addr, emem_size);
+		ret = __sections_download(adapter, cur_fw, 0, addr, emem_size);
 		if (ret)
 			return ret;
 	}

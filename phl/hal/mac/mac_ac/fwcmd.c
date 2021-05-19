@@ -17,7 +17,7 @@
 
 #if 0 // NEO mark off first
 
-#include "mcc.h"
+//#include "mcc.h"
 
 #if MAC_AX_FEATURE_HV
 #include "../hv_ax/dbgpkg_hv.h"
@@ -110,6 +110,8 @@ static inline void __h2cb_unlink(struct h2c_buf *h2cb,
 	prev->next = next;
 }
 
+#endif //NEO
+
 static inline struct h2c_buf *h2cb_peek(struct h2c_buf_head *list)
 {
 	struct h2c_buf *h2cb = list->next;
@@ -119,17 +121,12 @@ static inline struct h2c_buf *h2cb_peek(struct h2c_buf_head *list)
 	return h2cb;
 }
 
-#if MAC_PHL_H2C
 static inline u8 *h2cb_tail_pointer(const struct rtw_h2c_pkt *h2cb)
 {
 	return h2cb->vir_tail;
 }
-#else
-static inline u8 *h2cb_tail_pointer(const struct h2c_buf *h2cb)
-{
-	return h2cb->tail;
-}
-#endif
+
+#if 0 //NEO
 
 static inline struct h2c_buf *h2cb_dequeue(struct h2c_buf_head *list)
 {
@@ -326,41 +323,25 @@ u32 h2c_end_flow(struct mac_ax_adapter *adapter)
 	return MACSUCCESS;
 }
 
-#if MAC_PHL_H2C
-struct rtw_h2c_pkt *h2cb_alloc(struct mac_ax_adapter *adapter,
+#endif //NEO
+
+struct rtw_h2c_pkt *h2cb_alloc(struct mac_adapter *adapter,
 			       enum h2c_buf_class buf_class)
 {
 	struct rtw_h2c_pkt *h2cb;
-#if MAC_AX_H2C_LMT_EN
-	struct mac_ax_fw_info *fwinfo = &adapter->fw_info;
-	u8 diff;
-#endif
 
 	if (buf_class >= H2CB_CLASS_LAST) {
 		PLTFM_MSG_ERR("[ERR]unknown class\n");
 		return NULL;
 	}
 
-#if MAC_AX_H2C_LMT_EN
-	if (fwinfo->h2c_seq >= fwinfo->rec_seq)
-		diff = fwinfo->h2c_seq - fwinfo->rec_seq;
-	else
-		diff = (255 - fwinfo->rec_seq) + fwinfo->h2c_seq;
-
-	if (diff >= FWCMD_LMT) {
-		PLTFM_MSG_ERR("The number of H2C has reached the limitation\n");
-		PLTFM_MSG_ERR("curr: %d, rec: %d\n",
-			      fwinfo->h2c_seq, fwinfo->rec_seq);
-		return NULL;
-	}
-#endif
 
 	h2cb = PLTFM_QUERY_H2C(buf_class);
 
 	return h2cb;
 }
 
-void h2cb_free(struct mac_ax_adapter *adapter, struct rtw_h2c_pkt *h2cb)
+void h2cb_free(struct mac_adapter *adapter, struct rtw_h2c_pkt *h2cb)
 {
 }
 
@@ -402,6 +383,8 @@ u8 *h2cb_put(struct rtw_h2c_pkt *h2cb, u32 len)
 
 	return tmp;
 }
+
+#if 0 //NEO
 
 u32 h2c_pkt_set_hdr(struct mac_ax_adapter *adapter, struct rtw_h2c_pkt *h2cb,
 		    u8 type, u8 cat, u8 _class_, u8 func, u16 rack, u16 dack)
@@ -499,306 +482,6 @@ u32 fwcmd_wq_idle(struct mac_ax_adapter *adapter, u32 id)
 	return MACSUCCESS;
 }
 
-#else
-struct h2c_buf *h2cb_alloc(struct mac_ax_adapter *adapter,
-			   enum h2c_buf_class buf_class)
-{
-	struct h2c_buf_head *list_head = &h2cb_head[buf_class];
-	struct h2c_buf *h2cb;
-
-	if (buf_class >= H2CB_CLASS_LAST) {
-		PLTFM_MSG_ERR("[ERR]unknown class\n");
-		return NULL;
-	}
-
-	PLTFM_MUTEX_LOCK(&list_head->lock);
-
-	h2cb = h2cb_dequeue(list_head);
-	if (!h2cb) {
-		PLTFM_MSG_ERR("[ERR]allocate h2cb, class : %d\n", buf_class);
-		goto h2cb_fail;
-	}
-
-	if (!(h2cb->flags & H2CB_FLAGS_FREED)) {
-		PLTFM_MSG_ERR("[ERR]not freed flag\n");
-		PLTFM_FREE(h2cb, sizeof(struct h2c_buf));
-		goto h2cb_fail;
-	}
-
-	h2cb->flags &= ~H2CB_FLAGS_FREED;
-	PLTFM_MUTEX_UNLOCK(&list_head->lock);
-
-	return h2cb;
-h2cb_fail:
-	PLTFM_MUTEX_UNLOCK(&list_head->lock);
-	return NULL;
-}
-
-void h2cb_free(struct mac_ax_adapter *adapter, struct h2c_buf *h2cb)
-{
-	struct h2c_buf_head *list_head;
-
-	if (h2cb->flags & H2CB_FLAGS_FREED) {
-		PLTFM_MSG_ERR("[ERR]freed flag\n");
-		return;
-	}
-
-	if (h2cb->_class_ >= H2CB_CLASS_LAST) {
-		PLTFM_MSG_ERR("[ERR]unknown class\n");
-		return;
-	}
-
-	list_head = &h2cb_head[h2cb->_class_];
-
-	h2cb->len = 0;
-	h2cb->data = h2cb->head + h2cb->hdr_len;
-	h2cb->tail = h2cb->data;
-	h2cb->flags |= H2CB_FLAGS_FREED;
-
-	PLTFM_MUTEX_LOCK(&list_head->lock);
-	__h2cb_queue_tail(list_head, h2cb);
-	PLTFM_MUTEX_UNLOCK(&list_head->lock);
-}
-
-u8 *h2cb_push(struct h2c_buf *h2cb, u32 len)
-{
-	h2cb->data -= len;
-	h2cb->len  += len;
-
-	if (h2cb->data < h2cb->head)
-		return NULL;
-
-	return h2cb->data;
-}
-
-u8 *h2cb_pull(struct h2c_buf *h2cb, u32 len)
-{
-	h2cb->data += len;
-
-	if (h2cb->data > h2cb->end)
-		return NULL;
-
-	if (h2cb->len < len)
-		return NULL;
-
-	h2cb->len -= len;
-
-	return h2cb->data;
-}
-
-u8 *h2cb_put(struct h2c_buf *h2cb, u32 len)
-{
-	u8 *tmp = h2cb_tail_pointer(h2cb);
-
-	h2cb->tail += len;
-	h2cb->len += len;
-
-	if (h2cb->tail > h2cb->end)
-		return NULL;
-
-	return tmp;
-}
-
-u32 h2c_pkt_set_hdr(struct mac_ax_adapter *adapter, struct h2c_buf *h2cb,
-		    u8 type, u8 cat, u8 _class_, u8 func, u16 rack, u16 dack)
-{
-	struct fwcmd_hdr *hdr;
-	struct mac_ax_fw_info *fwinfo = &adapter->fw_info;
-
-	if (adapter->sm.fwdl != MAC_AX_FWDL_INIT_RDY)
-		return MACFWNONRDY;
-
-	hdr = (struct fwcmd_hdr *)h2cb_push(h2cb, FWCMD_HDR_LEN);
-	if (!hdr)
-		return MACNPTR;
-
-	hdr->hdr0 = cpu_to_le32(SET_WORD(type, H2C_HDR_DEL_TYPE) |
-				SET_WORD(cat, H2C_HDR_CAT) |
-				SET_WORD(_class_, H2C_HDR_CLASS) |
-				SET_WORD(func, H2C_HDR_FUNC) |
-				SET_WORD(fwinfo->h2c_seq, H2C_HDR_H2C_SEQ));
-
-	hdr->hdr1 = cpu_to_le32(SET_WORD(h2cb->len, H2C_HDR_TOTAL_LEN) |
-				(rack || !(fwinfo->h2c_seq & 3) ?
-				 H2C_HDR_REC_ACK : 0) |
-				(dack ? H2C_HDR_DONE_ACK : 0));
-
-	h2cb->id = SET_FWCMD_ID(type, cat, _class_, func);
-	h2cb->h2c_seq = fwinfo->h2c_seq;
-
-	return 0;
-}
-
-u32 h2c_pkt_set_hdr_fwdl(struct mac_ax_adapter *adapter,
-			 struct h2c_buf *h2cb, u8 type, u8 cat,
-			 u8 _class_, u8 func, u16 rack, u16 dack)
-{
-	struct fwcmd_hdr *hdr;
-	struct mac_ax_fw_info *fwinfo = &adapter->fw_info;
-
-	hdr = (struct fwcmd_hdr *)h2cb_push(h2cb, FWCMD_HDR_LEN);
-	if (!hdr)
-		return MACNPTR;
-
-	hdr->hdr0 = cpu_to_le32(SET_WORD(type, H2C_HDR_DEL_TYPE) |
-				SET_WORD(cat, H2C_HDR_CAT) |
-				SET_WORD(_class_, H2C_HDR_CLASS) |
-				SET_WORD(func, H2C_HDR_FUNC) |
-				SET_WORD(fwinfo->h2c_seq, H2C_HDR_H2C_SEQ));
-
-	hdr->hdr1 = cpu_to_le32(SET_WORD(h2cb->len, H2C_HDR_TOTAL_LEN) |
-				(rack ? H2C_HDR_REC_ACK : 0) |
-				(dack ? H2C_HDR_DONE_ACK : 0));
-
-	h2cb->id = SET_FWCMD_ID(type, cat, _class_, func);
-	h2cb->h2c_seq = fwinfo->h2c_seq;
-
-	return 0;
-}
-
-u32 h2c_pkt_set_cmd(struct mac_ax_adapter *adapter, struct h2c_buf *h2cb,
-		    u8 *cmd, u32 len)
-{
-	u8 *buf;
-
-	buf = h2cb_put(h2cb, len);
-	if (!buf)
-		return MACNPTR;
-	PLTFM_MEMCPY(buf, cmd, len);
-	return MACSUCCESS;
-}
-
-u32 h2c_pkt_build_txd(struct mac_ax_adapter *adapter, struct h2c_buf *h2cb)
-{
-	u8 *buf;
-	u32 ret;
-	u32 txd_len;
-	struct mac_ax_txpkt_info info;
-
-	info.type = MAC_AX_PKT_H2C;
-	info.pktsize = h2cb->len;
-	txd_len = mac_txdesc_len(adapter, &info);
-
-	buf = h2cb_push(h2cb, txd_len);
-	if (!buf)
-		return MACNPTR;
-
-	ret = mac_build_txdesc(adapter, &info, buf, txd_len);
-	if (ret)
-		return ret;
-
-	return MACSUCCESS;
-}
-
-static inline void __fwcmd_wq_insert(struct h2c_buf *new_h2cb,
-				     struct h2c_buf *prev, struct h2c_buf *next,
-				     struct fwcmd_wkb_head *list)
-{
-	new_h2cb->next = next;
-	new_h2cb->prev = prev;
-	next->prev  = new_h2cb;
-	prev->next = new_h2cb;
-	list->qlen++;
-}
-
-static inline void __fwcmd_wq_before(struct fwcmd_wkb_head *list,
-				     struct h2c_buf *next,
-				     struct h2c_buf *new_h2cb)
-{
-	__fwcmd_wq_insert(new_h2cb, next->prev, next, list);
-}
-
-static inline void __fwcmd_wq_tail(struct fwcmd_wkb_head *list,
-				   struct h2c_buf *new_h2cb)
-{
-	__fwcmd_wq_before(list, (struct h2c_buf *)list, new_h2cb);
-}
-
-u32 fwcmd_wq_enqueue(struct mac_ax_adapter *adapter, struct h2c_buf *h2cb)
-{
-	struct fwcmd_wkb_head *list_head = &fwcmd_wq_head;
-
-	if (list_head->qlen > FWCMD_WQ_MAX_JOB_NUM) {
-		PLTFM_MSG_WARN("[WARN]fwcmd work queue full\n");
-		return MACBUFALLOC;
-	}
-
-	/* worq queue doesn't need wd body */
-	h2cb_pull(h2cb, WD_BODY_LEN);
-	PLTFM_MUTEX_LOCK(&list_head->lock);
-	__fwcmd_wq_tail(list_head, h2cb);
-	PLTFM_MUTEX_UNLOCK(&list_head->lock);
-
-	return MACSUCCESS;
-}
-
-static inline void __fwcmd_wq_unlink(struct h2c_buf *h2cb,
-				     struct fwcmd_wkb_head *list)
-{
-	struct h2c_buf *next, *prev;
-
-	list->qlen--;
-	next = h2cb->next;
-	prev = h2cb->prev;
-	h2cb->prev = NULL;
-	h2cb->next = NULL;
-	next->prev = prev;
-	prev->next = next;
-}
-
-struct h2c_buf *fwcmd_wq_dequeue(struct mac_ax_adapter *adapter, u32 id)
-{
-	struct fwcmd_wkb_head *list_head = &fwcmd_wq_head;
-	struct h2c_buf *h2cb;
-	u32 hdr0;
-	u16 type = GET_FWCMD_TYPE(id);
-	u16 cat = GET_FWCMD_CAT(id);
-	u16 _class_ = GET_FWCMD_CLASS(id);
-	u16 func = GET_FWCMD_FUNC(id);
-
-	PLTFM_MUTEX_LOCK(&list_head->lock);
-
-	for (h2cb = list_head->next; h2cb->next != list_head->next;
-	     h2cb = h2cb->next) {
-		hdr0 = ((struct fwcmd_hdr *)h2cb->data)->hdr0;
-		hdr0 = le32_to_cpu(hdr0);
-		if (type == GET_FIELD(hdr0, H2C_HDR_DEL_TYPE) &&
-		    cat == GET_FIELD(hdr0, H2C_HDR_CAT) &&
-		    _class_ == GET_FIELD(hdr0, H2C_HDR_CLASS) &&
-		    func == GET_FIELD(hdr0, H2C_HDR_FUNC)) {
-			__fwcmd_wq_unlink(h2cb, list_head);
-			PLTFM_MUTEX_UNLOCK(&list_head->lock);
-			return h2cb;
-		}
-	}
-
-	PLTFM_MUTEX_UNLOCK(&list_head->lock);
-
-	PLTFM_MSG_ERR("[ERR]cannot find wq item: %X\n", id);
-
-	return NULL;
-}
-
-u32 fwcmd_wq_idle(struct mac_ax_adapter *adapter, u32 id)
-{
-	struct fwcmd_wkb_head *list_head = &fwcmd_wq_head;
-	struct h2c_buf *h2cb;
-
-	PLTFM_MUTEX_LOCK(&list_head->lock);
-
-	for (h2cb = list_head->next; h2cb->next != list_head->next;
-	     h2cb = h2cb->next) {
-		if (h2cb->id == id) {
-			PLTFM_MUTEX_UNLOCK(&list_head->lock);
-			return MACWQBUSY;
-		}
-	}
-
-	PLTFM_MUTEX_UNLOCK(&list_head->lock);
-
-	return MACSUCCESS;
-}
-#endif
 
 static u32 c2h_fwi_cmd_log(struct mac_ax_adapter *adapter, u8 *buf, u32 len,
 			   struct rtw_c2h_info *info)
