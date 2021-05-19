@@ -28,6 +28,9 @@ void *rtw_phl_get_rxbd_buf(struct rtw_phl_com_t *phl_com);
 struct rtw_h2c_pkt *rtw_phl_query_h2c_pkt(struct rtw_phl_com_t *phl_com,
 										  enum rtw_h2c_pkt_type type);
 
+enum rtw_phl_status rtw_phl_pltfm_send_rsvd_page(struct rtw_phl_com_t *phl_com,
+						 u8 *buf, u32 size);
+
 /**
  * rtw_phl_pltfm_tx - h2c platform transmit
  * @phl_com: see struct rtw_phl_com_t

@@ -91,13 +91,16 @@ dl_rsvd_page_88xx(struct mac_adapter *adapter, u16 pg_addr, u8 *buf, u32 size)
 	restore[1] = value8;
 	value8 = (u8)(value8 & ~(BIT(6)));
 	MAC_REG_W8(REG_FWHW_TXQ_CTRL + 2, value8);
+#endif //NEO
 
-	if (PLTFM_SEND_RSVD_PAGE(buf, size) == 0) {
+	ret = PLTFM_SEND_RSVD_PAGE(buf, size);
+	if (ret) {
 		PLTFM_MSG_ERR("[ERR]send rvsd pg(pltfm)!!\n");
 		ret = MACDLELINK;
 		goto DL_RSVD_PG_END;
 	}
 
+#if 0 //NEO
 	cnt = 1000;
 	while (!(MAC_REG_R8(REG_FIFOPAGE_CTRL_2 + 1) & BIT(7))) {
 		PLTFM_DELAY_US(10);
@@ -108,14 +111,15 @@ dl_rsvd_page_88xx(struct mac_adapter *adapter, u16 pg_addr, u8 *buf, u32 size)
 			break;
 		}
 	}
+#endif //NEO
 
 DL_RSVD_PG_END:
+#if 0 //NEO
 	//rsvd_pg_head = adapter->txff_alloc.rsvd_boundary;
 	rsvd_pg_head = 0;
 	MAC_REG_W16(REG_FIFOPAGE_CTRL_2, rsvd_pg_head | BIT(15));
 	MAC_REG_W8(REG_FWHW_TXQ_CTRL + 2, restore[1]);
 	MAC_REG_W8(REG_CR + 1, restore[0]);
-
 #endif //NEO
 
 	return ret;

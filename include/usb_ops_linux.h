@@ -80,6 +80,8 @@ void usb_read_interrupt_complete(struct urb *purb, struct pt_regs *regs);
 u32 rtw_usb_write_port(void *d, u8 *phl_tx_buf_ptr,
 	u8 bulk_id, u32 len, u8 *pkt_data_buf);
 
+u32 rtw_usb_write_rsvd_page(void *d, u8 *buf, u32 size);
+
 void rtw_usb_write_port_cancel(void *d);
 
 u32 rtw_usb_read_port(void *d, void *rxobj,

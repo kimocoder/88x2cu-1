@@ -94,6 +94,7 @@ struct phl_hci_trx_ops {
 	enum rtw_phl_status (*trx_cfg)(struct phl_info_t *phl);
 	void (*trx_stop)(struct phl_info_t *phl);
 	enum rtw_phl_status (*pltfm_tx)(struct phl_info_t *phl, void *pkt);
+	enum rtw_phl_status (*pltfm_send_rsvd_page)(struct phl_info_t *phl, u8 *buf, u32 size);
 	void (*free_h2c_pkt_buf)(struct phl_info_t *phl_info,
 				   struct rtw_h2c_pkt *_h2c_pkt);
 	enum rtw_phl_status (*alloc_h2c_pkt_buf)(struct phl_info_t *phl_info,

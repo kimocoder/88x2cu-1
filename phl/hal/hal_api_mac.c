@@ -632,6 +632,20 @@ enum rtw_hal_status hal_pltfm_tx(struct rtw_phl_com_t *phl_com,
 	return hstatus;
 }
 
+enum rtw_hal_status hal_pltfm_send_rsvd_page(struct rtw_phl_com_t *phl_com,
+					     struct rtw_hal_com_t *hal_com,
+					     u8 *buf, u32 size)
+{
+	enum rtw_hal_status hstatus = RTW_HAL_STATUS_FAILURE;
+
+	if (rtw_phl_pltfm_send_rsvd_page(phl_com, buf, size) == RTW_PHL_STATUS_SUCCESS)
+		hstatus = RTW_HAL_STATUS_SUCCESS;
+	else
+		PHL_ERR("hal_pltfm_send_rsvd_page fail.\n");
+
+	return hstatus;
+}
+
 #ifdef DBG_MSG_FILTER
 static u8 is_msg_allowed(uint drv_lv, u8 msg_lv)
 {
@@ -756,6 +770,8 @@ void rtw_plt_cb_init(void)
 	rtw_plt_cb.tx = hal_pltfm_tx;
 	rtw_plt_cb.rtl_query_h2c = hal_query_h2c_pkt;
 #endif
+
+	rtw_plt_cb.send_rsvd_page = hal_pltfm_send_rsvd_page;
 }
 
 

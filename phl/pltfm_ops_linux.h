@@ -732,6 +732,11 @@ static inline int os_usb_tx(void *d, u8 *tx_buf_ptr,
 			bulk_id, len, pkt_data_buf);
 }
 
+static inline int os_usb_write_rsvd_page(void *d, u8 *buf, u32 size)
+{
+	return rtw_usb_write_rsvd_page((struct dvobj_priv *)d, buf, size);
+}
+
 static __inline void os_enable_usb_out_pipes(void *drv_priv)
 {
 }

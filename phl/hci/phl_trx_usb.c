@@ -1700,6 +1700,15 @@ enum rtw_phl_status phl_pltfm_tx_usb(struct phl_info_t *phl_info,
 	return pstatus;
 }
 
+enum rtw_phl_status phl_pltfm_send_rsvd_page_usb(struct phl_info_t *phl_info,
+						u8 *buf, u32 size)
+{
+	enum rtw_phl_status pstatus = RTW_PHL_STATUS_FAILURE;
+
+	pstatus = os_usb_write_rsvd_page(phl_to_drvpriv(phl_info), buf, size);
+	return pstatus;
+}
+
 static void _phl_free_h2c_pkt_buf_usb(struct phl_info_t *phl_info,
 					struct rtw_h2c_pkt *_h2c_pkt)
 {
@@ -1791,6 +1800,7 @@ static struct phl_hci_trx_ops ops= {
 	.trx_stop = phl_trx_stop_usb,
 	.pend_rxbuf = phl_pend_rxbuf_usb,
 	.pltfm_tx = phl_pltfm_tx_usb,
+	.pltfm_send_rsvd_page = phl_pltfm_send_rsvd_page_usb,
 	.alloc_h2c_pkt_buf = _phl_alloc_h2c_pkt_buf_usb,
 	.free_h2c_pkt_buf = _phl_free_h2c_pkt_buf_usb,
 	.trx_reset = phl_trx_reset_usb,

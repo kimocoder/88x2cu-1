@@ -485,9 +485,11 @@ exit:
 	return ret;
 }
 
-u32 rtw_usb_write_data_rsvd_page(void *d, u8 *buf, u32 size)
+u32 rtw_usb_write_rsvd_page(void *d, u8 *buf, u32 size)
 {
 	struct dvobj_priv *pdvobj = (struct dvobj_priv *)d;
+
+	pr_info("%s NEO TODO\n", __func__);
 
 	/* TODO */
 	return RTW_PHL_STATUS_SUCCESS;
