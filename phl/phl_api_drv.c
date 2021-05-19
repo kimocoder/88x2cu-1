@@ -30,6 +30,7 @@ void *rtw_phl_get_rxbd_buf(struct rtw_phl_com_t *phl_com)
 
 	return phl_info->hci_trx_ops->get_rxbd_buf(phl_info);
 }
+#endif
 
 struct rtw_h2c_pkt *rtw_phl_query_h2c_pkt(struct rtw_phl_com_t *phl_com,
 											enum rtw_h2c_pkt_type type)
@@ -44,8 +45,6 @@ struct rtw_h2c_pkt *rtw_phl_query_h2c_pkt(struct rtw_phl_com_t *phl_com,
 
 	return h2c_pkt;
 }
-
-#endif
 
 enum rtw_phl_status rtw_phl_pltfm_tx(struct rtw_phl_com_t *phl_com,
 										struct rtw_h2c_pkt *pkt)

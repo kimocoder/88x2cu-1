@@ -611,13 +611,10 @@ struct rtw_h2c_pkt *hal_query_h2c_pkt(struct rtw_phl_com_t *phl_com,
 {
 	struct rtw_h2c_pkt *h2c_pkt = NULL;
 
-// NEO : TODO : mark off first
-#if 0
 	h2c_pkt = rtw_phl_query_h2c_pkt(phl_com, type);
 
 	if (!h2c_pkt)
 		PHL_ERR("hal_query_h2c_pkt fail.\n");
-#endif // if 0 NEO
 	return h2c_pkt;
 }
 
