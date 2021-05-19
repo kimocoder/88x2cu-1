@@ -442,16 +442,15 @@ static void rtw_usb_write_data_complete(struct urb *urb)
 	dev_kfree_skb_any(skb);
 }
 
-static u32
-rtw_usb_write_data(void *d, u8 bulk_id, u32 cnt, struct sk_buff *skb,
+static int
+rtw_usb_write_port_no_xmitframe(void *d, u8 bulk_id, u32 cnt, struct sk_buff *skb,
 		   usb_complete_t cb, void *context)
 {
 	struct dvobj_priv *pdvobj = (struct dvobj_priv *)d;
 	struct usb_device *pusbd = dvobj_to_usb(pdvobj)->pusbdev;
 	struct urb *urb;
 	unsigned int pipe;
-	int status;
-	u32 ret = _FAIL;
+	int ret;
 
 	pipe = bulkid2pipe(pdvobj, bulk_id, _TRUE);
 	urb = usb_alloc_urb(0, GFP_ATOMIC);
@@ -459,11 +458,11 @@ rtw_usb_write_data(void *d, u8 bulk_id, u32 cnt, struct sk_buff *skb,
 		return -ENOMEM;
 
 	usb_fill_bulk_urb(urb, pusbd, pipe, skb->data, (int)cnt, cb, context);
-	status = usb_submit_urb(urb, GFP_ATOMIC);
-	if (unlikely(status)) {
-		RTW_ERR("%s failed to submit write urb, ret=%d\n", status); 
+	ret = usb_submit_urb(urb, GFP_ATOMIC);
+	if (unlikely(ret)) {
+		RTW_ERR("%s failed to submit write urb, ret=%d\n", ret);
 
-		switch(status) {
+		switch(ret) {
 		case -ENODEV:
 			dev_set_drv_stopped(pdvobj);
 			break;
@@ -477,17 +476,50 @@ rtw_usb_write_data(void *d, u8 bulk_id, u32 cnt, struct sk_buff *skb,
 	ret = _SUCCESS;
 
 exit:
-	if (ret == _SUCCESS)
-		ret = RTW_PHL_STATUS_SUCCESS;
-	else
-		ret = RTW_PHL_STATUS_FAILURE;
-
 	return ret;
 }
+
+#define PKT_OFFSET_SZ	8
+
+static int
+rtw_usb_write_data(void *d, u8 *buf, u32 size, u8 qsel, u32 addr)
+{
+	struct dvobj_priv *pdvobj = (struct dvobj_priv *)d;
+	struct sk_buff *skb;
+	u32 headsize;
+	u8 add_pkt_offset = 0;
+	int desclen = 48;
+	int len;
+	int ret;
+
+	headsize = desclen;
+	if (len % 512 == 0)
+		add_pkt_offset = 1;
+
+	if (add_pkt_offset == 1)
+		headsize += PKT_OFFSET_SZ;
+
+	len = headsize + size;
+
+	skb = dev_alloc_skb(len);
+	if (unlikely(!skb))
+		return -ENOMEM;
+
+	skb_reserve(skb, headsize);
+	skb_put_data(skb, buf, size);
+	skb_push(skb, headsize);
+	memset(skb->data, 0, headsize);
+
+	return _SUCCESS;
+}
+
+#define HALMAC_TXDESC_QSEL_BEACON	0x10
 
 u32 rtw_usb_write_rsvd_page(void *d, u8 *buf, u32 size)
 {
 	struct dvobj_priv *pdvobj = (struct dvobj_priv *)d;
+	u8 qsel =  HALMAC_TXDESC_QSEL_BEACON;
+	u32 addr = 0;
 
 	pr_info("%s NEO TODO\n", __func__);
 
