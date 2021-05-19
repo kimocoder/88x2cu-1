@@ -44,6 +44,7 @@
 
 #define DLFW_PKT_MAX_SIZE	8192
 #define TX_DESC_SIZE_88XX	48
+#define PKT_OFFSET_SZ		8
 
 struct halmac_backup_info {
 	u32 mac_register;
@@ -134,16 +135,52 @@ static u32 __section_push(struct rtw_h2c_pkt *h2cb)
 	return MACSUCCESS;
 }
 
+
 static u32
 send_fwpkt_88xx(struct mac_adapter *adapter, u16 pg_addr, u8 *fw_bin, u32 size)
 {
 	struct mac_intf_ops *ops = adapter_to_intf_ops(adapter);
-	struct rtw_h2c_pkt *h2cb;
+	struct mac_ops *mac_ops = adapter_to_mac_ops(adapter);
+	struct mac_txpkt_info info;
+	//struct rtw_h2c_pkt *h2cb;
+	struct sk_buff *skb;
+	u32 headsize;
 	u32 pkt_len = size;
 	u32 ret = MACSUCCESS;
-	u8 *fw_add_dum = NULL;
-	u8 *buf;
+	u8 add_pkt_offset = 0;
+	int desclen;
+	int len;
 
+	/* __section_build_txd */
+	info.type = MAC_PKT_FWDL;
+	info.pktsize = size;
+	desclen = mac_ops->txdesc_len(adapter, &info);
+
+	headsize = desclen;
+	if (size % 512 == 0)
+		add_pkt_offset = 1;
+
+	if (add_pkt_offset == 1)
+		headsize = PKT_OFFSET_SZ;
+
+	len = headsize + size;
+	pr_info("%s NEO len=%d\n", __func__, len);
+
+	skb = dev_alloc_skb(len);
+	if (unlikely(!skb))
+		return -ENOMEM;
+
+	skb_reserve(skb, headsize);
+	skb_put_data(skb, fw_bin, size);
+	skb_push(skb, headsize);
+	memset(skb->data, 0, headsize);
+
+	ret = mac_ops->build_txdesc(adapter, &info, skb->data, desclen);
+	if (ret)
+		goto send_fwpkt_fail;
+
+
+#if 0 //NEO
 	h2cb = h2cb_alloc(adapter, H2CB_CLASS_LONG_DATA);
 	if (!h2cb) {
 		PLTFM_MSG_ERR("[ERR]%s: ", __func__);
@@ -171,9 +208,11 @@ send_fwpkt_88xx(struct mac_adapter *adapter, u16 pg_addr, u8 *fw_bin, u32 size)
 	ret = dl_rsvd_page_88xx(adapter, pg_addr, buf, pkt_len);
 	if (ret)
 		PLTFM_MSG_ERR("[ERR]dl rsvd page!!\n");
+#endif //NEO
 
-out:
-	h2cb_free(adapter, h2cb);
+send_fwpkt_fail:
+	//h2cb_free(adapter, h2cb);
+	dev_kfree_skb_any(skb);
 	return ret;
 }
 
