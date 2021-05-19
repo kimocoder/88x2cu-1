@@ -63,12 +63,12 @@ enum rtw_phl_status rtw_phl_pltfm_tx(struct rtw_phl_com_t *phl_com,
 }
 
 enum rtw_phl_status rtw_phl_pltfm_send_rsvd_page(struct rtw_phl_com_t *phl_com,
-						 u8 *buf, u32 size)
+						 struct sk_buff *skb)
 {
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_FAILURE;
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl_com->phl_priv;
 
-	pstatus = phl_info->hci_trx_ops->pltfm_send_rsvd_page(phl_info, buf, size);
+	pstatus = phl_info->hci_trx_ops->pltfm_send_rsvd_page(phl_info, skb);
 
 	return pstatus;
 }

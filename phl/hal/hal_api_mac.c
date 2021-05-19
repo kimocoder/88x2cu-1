@@ -634,11 +634,11 @@ enum rtw_hal_status hal_pltfm_tx(struct rtw_phl_com_t *phl_com,
 
 enum rtw_hal_status hal_pltfm_send_rsvd_page(struct rtw_phl_com_t *phl_com,
 					     struct rtw_hal_com_t *hal_com,
-					     u8 *buf, u32 size)
+					     struct sk_buff *skb)
 {
 	enum rtw_hal_status hstatus = RTW_HAL_STATUS_FAILURE;
 
-	if (rtw_phl_pltfm_send_rsvd_page(phl_com, buf, size) == RTW_PHL_STATUS_SUCCESS)
+	if (rtw_phl_pltfm_send_rsvd_page(phl_com, skb) == RTW_PHL_STATUS_SUCCESS)
 		hstatus = RTW_HAL_STATUS_SUCCESS;
 	else
 		PHL_ERR("hal_pltfm_send_rsvd_page fail.\n");

@@ -1701,11 +1701,11 @@ enum rtw_phl_status phl_pltfm_tx_usb(struct phl_info_t *phl_info,
 }
 
 enum rtw_phl_status phl_pltfm_send_rsvd_page_usb(struct phl_info_t *phl_info,
-						u8 *buf, u32 size)
+						 struct sk_buff *skb)
 {
 	enum rtw_phl_status pstatus = RTW_PHL_STATUS_FAILURE;
 
-	pstatus = os_usb_write_rsvd_page(phl_to_drvpriv(phl_info), buf, size);
+	pstatus = os_usb_write_rsvd_page(phl_to_drvpriv(phl_info), skb); 
 	return pstatus;
 }
 

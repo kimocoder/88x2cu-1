@@ -42,9 +42,15 @@
 #define WLAN_FW_HDR_EMEM_ADDR			56
 #define WLAN_FW_HDR_IMEM_ADDR			60
 
-#define DLFW_PKT_MAX_SIZE	8192
-#define TX_DESC_SIZE_88XX	48
-#define PKT_OFFSET_SZ		8
+#define DLFW_PKT_MAX_SIZE		8192
+#define TX_DESC_SIZE_88XX		48
+#define PKT_OFFSET_SZ			8
+#define HALMAC_DDMA_POLLING_COUNT	1000
+#define BIT_DDMACH0_OWN			BIT(31)
+#define BIT_DDMACH0_CHKSUM_EN		BIT(29)
+#define BIT_MASK_DDMACH0_DLEN		0x3ffff
+#define BIT_DDMACH0_CHKSUM_CONT		BIT(24)
+#define OCPBASE_TXBUF_88XX		0x18780000
 
 struct halmac_backup_info {
 	u32 mac_register;
@@ -64,23 +70,23 @@ struct fwld_info {
 };
 
 static u32
-dl_rsvd_page_88xx(struct mac_adapter *adapter, u16 pg_addr, u8 *buf, u32 size)
+dl_rsvd_page_88xx(struct mac_adapter *adapter, u16 pg_addr, struct sk_buff *skb)
 {
+	struct mac_intf_ops *ops = adapter_to_intf_ops(adapter);
 	u8 restore[2];
 	u8 value8;
+	u8 *buf = skb->data;
 	u16 rsvd_pg_head;
 	u32 cnt;
+	u32 size = skb->len;
 	u32 ret = MACSUCCESS;
-	struct mac_intf_ops *ops = adapter_to_intf_ops(adapter);
 
 	if (size == 0) {
 		PLTFM_MSG_TRACE("[TRACE]pkt size = 0\n");
 		return MACBUFSZ;
 	}
 
-#if 0 // NEO
-
-	pg_addr &= BIT_MASK_BCN_HEAD_1_V1;
+	pg_addr &= 0xfff;
 	MAC_REG_W16(REG_FIFOPAGE_CTRL_2, (u16)(pg_addr | BIT(15)));
 
 	value8 = MAC_REG_R8(REG_CR + 1);
@@ -92,16 +98,14 @@ dl_rsvd_page_88xx(struct mac_adapter *adapter, u16 pg_addr, u8 *buf, u32 size)
 	restore[1] = value8;
 	value8 = (u8)(value8 & ~(BIT(6)));
 	MAC_REG_W8(REG_FWHW_TXQ_CTRL + 2, value8);
-#endif //NEO
 
-	ret = PLTFM_SEND_RSVD_PAGE(buf, size);
+	ret = PLTFM_SEND_RSVD_PAGE(skb);
 	if (ret) {
 		PLTFM_MSG_ERR("[ERR]send rvsd pg(pltfm)!!\n");
 		ret = MACDLELINK;
 		goto DL_RSVD_PG_END;
 	}
 
-#if 0 //NEO
 	cnt = 1000;
 	while (!(MAC_REG_R8(REG_FIFOPAGE_CTRL_2 + 1) & BIT(7))) {
 		PLTFM_DELAY_US(10);
@@ -112,16 +116,13 @@ dl_rsvd_page_88xx(struct mac_adapter *adapter, u16 pg_addr, u8 *buf, u32 size)
 			break;
 		}
 	}
-#endif //NEO
 
 DL_RSVD_PG_END:
-#if 0 //NEO
 	//rsvd_pg_head = adapter->txff_alloc.rsvd_boundary;
 	rsvd_pg_head = 0;
 	MAC_REG_W16(REG_FIFOPAGE_CTRL_2, rsvd_pg_head | BIT(15));
 	MAC_REG_W8(REG_FWHW_TXQ_CTRL + 2, restore[1]);
 	MAC_REG_W8(REG_CR + 1, restore[0]);
-#endif //NEO
 
 	return ret;
 }
@@ -183,11 +184,15 @@ send_fwpkt_88xx(struct mac_adapter *adapter, u16 pg_addr, u8 *fw_bin, u32 size)
 		goto out;
 	}
 
-	ret = dl_rsvd_page_88xx(adapter, pg_addr, skb->data, skb->len);
+#if 0 //NEO
+	ret = dl_rsvd_page_88xx(adapter, pg_addr, skb);
 	if (ret) {
 		PLTFM_MSG_ERR("[ERR]dl rsvd page!!\n");
 		goto out;
 	}
+#else
+	dev_kfree_skb_any(skb);
+#endif
 
 
 #if 0 //NEO
@@ -215,15 +220,74 @@ send_fwpkt_88xx(struct mac_adapter *adapter, u16 pg_addr, u8 *fw_bin, u32 size)
 	if (!((size + TX_DESC_SIZE_88XX) & (512 - 1)))
 		buf[size] = 0;
 
-	ret = dl_rsvd_page_88xx(adapter, pg_addr, buf, pkt_len);
-	if (ret)
-		PLTFM_MSG_ERR("[ERR]dl rsvd page!!\n");
+	ret = __sections_build_txd(adapter, h2cb);
+	if (ret) {
+		PLTFM_MSG_ERR("[ERR]%s: ", __func__);
+		PLTFM_MSG_ERR("__sections_build_txd fail\n");
+		goto fail;
+	}
+	ret = PLTFM_TX(h2cb->data, h2cb->len);
+	if (ret) {
+		PLTFM_MSG_ERR("[ERR]%s: PLTFM_TX fail\n", __func__);
+		goto fail;
+	}
 #endif //NEO
 
+	return MACSUCCESS;
 out:
 	//h2cb_free(adapter, h2cb);
 	dev_kfree_skb_any(skb);
 	return ret;
+}
+
+static u32
+iddma_en_88xx(struct mac_adapter *adapter, u32 src, u32 dest, u32 ctrl)
+{
+	struct mac_intf_ops *ops = adapter_to_intf_ops(adapter);
+	u32 cnt = HALMAC_DDMA_POLLING_COUNT;
+
+	MAC_REG_W32(REG_DDMA_CH0SA, src);
+	MAC_REG_W32(REG_DDMA_CH0DA, dest);
+	MAC_REG_W32(REG_DDMA_CH0CTRL, ctrl);
+
+	while (MAC_REG_R32(REG_DDMA_CH0CTRL) & BIT_DDMACH0_OWN) {
+		cnt--;
+		if (cnt == 0)
+			return MACDLELINK;
+	}
+
+	return MACSUCCESS;
+}
+
+static u32
+iddma_dlfw_88xx(struct mac_adapter *adapter, u32 src, u32 dest, u32 len,
+		u8 first)
+{
+	struct mac_intf_ops *ops = adapter_to_intf_ops(adapter);
+	u32 ch0_ctrl = (u32)(BIT_DDMACH0_CHKSUM_EN | BIT_DDMACH0_OWN);
+	u32 cnt;
+	u32 ret;
+
+	cnt = HALMAC_DDMA_POLLING_COUNT;
+	while (MAC_REG_R32(REG_DDMA_CH0CTRL) & BIT_DDMACH0_OWN) {
+		cnt--;
+		if (cnt == 0) {
+			PLTFM_MSG_ERR("[ERR]ch0 ready!!\n");
+			return MACDLELINK;
+		}
+	}
+
+	ch0_ctrl |= (len & BIT_MASK_DDMACH0_DLEN);
+	if (first == 0)
+		ch0_ctrl |= BIT_DDMACH0_CHKSUM_CONT;
+
+	ret = iddma_en_88xx(adapter, src, dest, ch0_ctrl);
+	if (ret) {
+		PLTFM_MSG_ERR("[ERR]iddma en!!\n");
+		return MACDLELINK;
+	}
+
+	return MACSUCCESS;
 }
 
 static u32 __sections_download(struct mac_adapter *adapter, u8 *fw_bin, u32 src, u32 dest, u32 size)
@@ -240,6 +304,8 @@ static u32 __sections_download(struct mac_adapter *adapter, u8 *fw_bin, u32 src,
 	residue_len = size;
 
 	while (residue_len) {
+		pr_info("%s residue_len = 0x%x\n", __func__, residue_len);
+
 		if (residue_len >= FWDL_SECTION_PER_PKT_LEN)
 			pkt_len = FWDL_SECTION_PER_PKT_LEN;
 		else
@@ -262,21 +328,7 @@ static u32 __sections_download(struct mac_adapter *adapter, u8 *fw_bin, u32 src,
 			PLTFM_MSG_ERR("[ERR]iddma dlfw!!\n");
 			goto fail;
 		}
-
-
-		ret = __sections_build_txd(adapter, h2cb);
-		if (ret) {
-			PLTFM_MSG_ERR("[ERR]%s: ", __func__);
-			PLTFM_MSG_ERR("__sections_build_txd fail\n");
-			goto fail;
-		}
-		ret = PLTFM_TX(h2cb->data, h2cb->len);
-		if (ret) {
-			PLTFM_MSG_ERR("[ERR]%s: PLTFM_TX fail\n", __func__);
-			goto fail;
-		}
-
-#endif //NEO
+#endif
 
 		first_part = 0;
 		mem_offset += pkt_len;

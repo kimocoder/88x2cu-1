@@ -443,8 +443,7 @@ static void rtw_usb_write_data_complete(struct urb *urb)
 }
 
 static int
-rtw_usb_write_port_no_xmitframe(void *d, u8 bulk_id, u32 cnt, struct sk_buff *skb,
-		   usb_complete_t cb, void *context)
+rtw_usb_write_data(void *d, u8 bulk_id, struct sk_buff *skb)
 {
 	struct dvobj_priv *pdvobj = (struct dvobj_priv *)d;
 	struct usb_device *pusbd = dvobj_to_usb(pdvobj)->pusbdev;
@@ -457,7 +456,9 @@ rtw_usb_write_port_no_xmitframe(void *d, u8 bulk_id, u32 cnt, struct sk_buff *sk
 	if (!urb)
 		return -ENOMEM;
 
-	usb_fill_bulk_urb(urb, pusbd, pipe, skb->data, (int)cnt, cb, context);
+	usb_fill_bulk_urb(urb, pusbd, pipe, skb->data, skb->len,
+			  rtw_usb_write_data_complete, skb);
+
 	ret = usb_submit_urb(urb, GFP_ATOMIC);
 	if (unlikely(ret)) {
 		RTW_ERR("%s failed to submit write urb, ret=%d\n", ret);
@@ -479,52 +480,21 @@ exit:
 	return ret;
 }
 
-#define PKT_OFFSET_SZ	8
-
-static int
-rtw_usb_write_data(void *d, u8 *buf, u32 size, u8 qsel, u32 addr)
+u32 rtw_usb_write_rsvd_page(void *d, struct sk_buff *skb)
 {
 	struct dvobj_priv *pdvobj = (struct dvobj_priv *)d;
-	struct sk_buff *skb;
-	u32 headsize;
-	u8 add_pkt_offset = 0;
-	int desclen = 48;
-	int len;
-	int ret;
-
-	headsize = desclen;
-	if (len % 512 == 0)
-		add_pkt_offset = 1;
-
-	if (add_pkt_offset == 1)
-		headsize += PKT_OFFSET_SZ;
-
-	len = headsize + size;
-
-	skb = dev_alloc_skb(len);
-	if (unlikely(!skb))
-		return -ENOMEM;
-
-	skb_reserve(skb, headsize);
-	skb_put_data(skb, buf, size);
-	skb_push(skb, headsize);
-	memset(skb->data, 0, headsize);
-
-	return _SUCCESS;
-}
-
-#define HALMAC_TXDESC_QSEL_BEACON	0x10
-
-u32 rtw_usb_write_rsvd_page(void *d, u8 *buf, u32 size)
-{
-	struct dvobj_priv *pdvobj = (struct dvobj_priv *)d;
-	u8 qsel =  HALMAC_TXDESC_QSEL_BEACON;
-	u32 addr = 0;
+	u32 bulk_id = 0;
+	u32 ret;
 
 	pr_info("%s NEO TODO\n", __func__);
+	ret = rtw_usb_write_data(d, bulk_id, skb);
 
-	/* TODO */
-	return RTW_PHL_STATUS_SUCCESS;
+	if (ret == _SUCCESS)
+		ret = RTW_PHL_STATUS_SUCCESS;
+	else
+		ret = RTW_PHL_STATUS_FAILURE;
+
+	return ret;
 }
 
 
