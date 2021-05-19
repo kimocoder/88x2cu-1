@@ -470,13 +470,29 @@ void fill_txdesc_checksum_common(u8 *txdesc, size_t words)
 	SET_TX_DESC_TXDESC_CHECKSUM(txdesc, __le16_to_cpu(chksum));
 }
 
+u32 mac_wd_checksum(struct mac_adapter *adapter,
+		    struct mac_txpkt_info *info, u8 *wddesc)
+{
+	struct mac_pkt_data *data = &info->u.data;
+	size_t words;
+
+	if (!wddesc) {
+		PLTFM_MSG_ERR("[ERR]null pointer\n");
+		return MACNPTR;
+	}
+
+	words = (data->pkt_offset * 8 + 48) / 2;
+	fill_txdesc_checksum_common(wddesc, words);
+
+	return MACSUCCESS;
+}
+
 u32 mac_build_txdesc(struct mac_adapter *adapter,
 		     struct mac_txpkt_info *info, u8 *buf, u32 len)
 {
 #if 1 // NEO
 	struct mac_pkt_data *pkt_info = &info->u.data;
 	__le32 *txdesc = (__le32 *)buf;
-	size_t words;
 
 	SET_TX_DESC_TXPKTSIZE(txdesc,  info->pktsize);
 	SET_TX_DESC_OFFSET(txdesc, pkt_info->offset);
@@ -503,8 +519,8 @@ u32 mac_build_txdesc(struct mac_adapter *adapter,
 	SET_TX_DESC_HW_SSN_SEL(txdesc, pkt_info->hw_ssn_sel);
 	SET_TX_DESC_NAVUSEHDR(txdesc, pkt_info->nav_use_hdr);
 
-	words = (pkt_info->pkt_offset * 8 + 48) / 2;
-	fill_txdesc_checksum_common((u8 *)txdesc, words);
+	mac_wd_checksum(adapter, info, (u8 *)(txdesc));
+
 	return MACSUCCESS;
 #else
 	struct txd_proc_type *proc = txdes_proc_mac;
@@ -651,39 +667,5 @@ u32 mac_parse_rxdesc(struct mac_ax_adapter *adapter,
 
 	return handler(adapter, info, buf, len);
 }
-
-u32 mac_wd_checksum(struct mac_ax_adapter *adapter,
-		    struct mac_ax_txpkt_info *info, u8 *wddesc)
-{
-	u16 chksum = 0;
-	u32 wddesc_size;
-	u16 *data;
-	u32 i, dw4;
-
-	if (!wddesc) {
-		PLTFM_MSG_ERR("[ERR]null pointer\n");
-		return MACNPTR;
-	}
-
-	if (adapter->hw_info->wd_checksum_en != 1)
-		PLTFM_MSG_TRACE("[TRACE]chksum disable\n");
-
-	dw4 = ((struct wd_body_t *)wddesc)->dword4;
-
-	((struct wd_body_t *)wddesc)->dword4 =
-		SET_CLR_WORD(dw4, 0x0, AX_TXD_TXDESC_CHECKSUM);
-
-	data = (u16 *)(wddesc);
-	/*unit : 4 bytes*/
-	wddesc_size = mac_txdesc_len(adapter, info) >> 2;
-	for (i = 0; i < wddesc_size; i++)
-		chksum ^= (*(data + 2 * i) ^ *(data + (2 * i + 1)));
-
-	/* *(data + 2 * i) & *(data + (2 * i + 1) have endain issue*/
-	/* Process eniadn issue after checksum calculation */
-	((struct wd_body_t *)wddesc)->dword4 =
-		SET_CLR_WORD(dw4, (u16)(chksum), AX_TXD_TXDESC_CHECKSUM);
-	return MACSUCCESS;
-}
-
 #endif // if 0 NEO
+

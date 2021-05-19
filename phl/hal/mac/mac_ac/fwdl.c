@@ -163,6 +163,8 @@ send_fwpkt_88xx(struct mac_adapter *adapter, u16 pg_addr, u8 *fw_bin, u32 size)
 	if (add_pkt_offset == 1)
 		headsize = PKT_OFFSET_SZ;
 
+	info.u.data.pkt_offset = add_pkt_offset;
+
 	len = headsize + size;
 	pr_info("%s NEO len=%d\n", __func__, len);
 
@@ -176,8 +178,16 @@ send_fwpkt_88xx(struct mac_adapter *adapter, u16 pg_addr, u8 *fw_bin, u32 size)
 	memset(skb->data, 0, headsize);
 
 	ret = mac_ops->build_txdesc(adapter, &info, skb->data, desclen);
-	if (ret)
-		goto send_fwpkt_fail;
+	if (ret) {
+		PLTFM_MSG_ERR("[ERR]build txdesc!!\n");
+		goto out;
+	}
+
+	ret = dl_rsvd_page_88xx(adapter, pg_addr, skb->data, skb->len);
+	if (ret) {
+		PLTFM_MSG_ERR("[ERR]dl rsvd page!!\n");
+		goto out;
+	}
 
 
 #if 0 //NEO
@@ -210,7 +220,7 @@ send_fwpkt_88xx(struct mac_adapter *adapter, u16 pg_addr, u8 *fw_bin, u32 size)
 		PLTFM_MSG_ERR("[ERR]dl rsvd page!!\n");
 #endif //NEO
 
-send_fwpkt_fail:
+out:
 	//h2cb_free(adapter, h2cb);
 	dev_kfree_skb_any(skb);
 	return ret;

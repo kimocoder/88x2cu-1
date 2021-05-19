@@ -92,7 +92,9 @@ u32 mac_refill_txdesc(struct mac_ax_adapter *adapter,
 		      struct mac_ax_refill_info *info);
 u32 mac_parse_rxdesc(struct mac_ax_adapter *adapter,
 		     struct mac_ax_rxpkt_info *info, u8 *buf, u32 len);
-u32 mac_wd_checksum(struct mac_ax_adapter *adapter,
-		    struct mac_ax_txpkt_info *info, u8 *wddesc);
 #endif // if 0 NEO
+
+u32 mac_wd_checksum(struct mac_adapter *adapter,
+		    struct mac_txpkt_info *info, u8 *wddesc);
+
 #endif
