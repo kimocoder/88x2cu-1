@@ -18,7 +18,7 @@
 #define FWDL_WAIT_CNT 400000
 #define FWDL_SECTION_MAX_NUM 10
 #define FWDL_SECTION_CHKSUM_LEN	8
-#define FWDL_SECTION_PER_PKT_LEN 8192
+#define FWDL_SECTION_PER_PKT_LEN 0x1000
 
 /* NEO: halmac_fw_info.h */
 /* FW bin information */
@@ -42,7 +42,6 @@
 #define WLAN_FW_HDR_EMEM_ADDR			56
 #define WLAN_FW_HDR_IMEM_ADDR			60
 
-#define DLFW_PKT_MAX_SIZE		0x1000
 #define TX_DESC_SIZE_88XX		48
 #define PKT_OFFSET_SZ			8
 #define HALMAC_DDMA_POLLING_COUNT	1000
@@ -86,7 +85,7 @@ dl_rsvd_page_88xx(struct mac_adapter *adapter, u16 pg_addr, struct sk_buff *skb)
 		return MACBUFSZ;
 	}
 
-#if 0 //NEO
+#if 1 //NEO
 	pg_addr &= 0xfff;
 	MAC_REG_W16(REG_FIFOPAGE_CTRL_2, (u16)(pg_addr | BIT(15)));
 
@@ -110,7 +109,7 @@ dl_rsvd_page_88xx(struct mac_adapter *adapter, u16 pg_addr, struct sk_buff *skb)
 		goto DL_RSVD_PG_END;
 	}
 
-#if 0 //NEO
+#if 1 //NEO
 	cnt = 1000;
 	while (!(MAC_REG_R8(REG_FIFOPAGE_CTRL_2 + 1) & BIT(7))) {
 		PLTFM_DELAY_US(10);
@@ -125,7 +124,7 @@ dl_rsvd_page_88xx(struct mac_adapter *adapter, u16 pg_addr, struct sk_buff *skb)
 	pr_info("%s after send page\n", __func__);
 
 DL_RSVD_PG_END:
-#if 0 //NEO
+#if 1 //NEO
 	//rsvd_pg_head = adapter->txff_alloc.rsvd_boundary;
 	rsvd_pg_head = 0;
 	MAC_REG_W16(REG_FIFOPAGE_CTRL_2, rsvd_pg_head | BIT(15));
@@ -166,13 +165,17 @@ send_fwpkt_88xx(struct mac_adapter *adapter, u16 pg_addr, u8 *fw_bin, u32 size)
 	info.type = MAC_PKT_FWDL;
 	info.pktsize = size;
 	desclen = mac_ops->txdesc_len(adapter, &info);
-
 	headsize = desclen;
-	if (size % 512 == 0)
+
+	// USB2 - 512 , USB3 - 1024 ? 
+	if (!((size + desclen) & (512 - 1)))
+		size += 1;
+
+	if ((size + desclen) % 512 == 0)
 		add_pkt_offset = 1;
 
 	if (add_pkt_offset == 1) {
-		headsize = PKT_OFFSET_SZ;
+		headsize += PKT_OFFSET_SZ;
 		pkt_info->offset = desclen + 8;
 		pkt_info->pkt_offset = 1;
 	} else {
@@ -181,7 +184,6 @@ send_fwpkt_88xx(struct mac_adapter *adapter, u16 pg_addr, u8 *fw_bin, u32 size)
 	pkt_info->qsel = 0x10; // TX_DESC_QSEL_BEACON
 
 	len = headsize + size;
-	pr_info("%s NEO len=%d\n", __func__, len);
 
 	skb = dev_alloc_skb(len);
 	if (unlikely(!skb))
@@ -198,16 +200,11 @@ send_fwpkt_88xx(struct mac_adapter *adapter, u16 pg_addr, u8 *fw_bin, u32 size)
 		goto out;
 	}
 
-#if 1 //NEO
 	ret = dl_rsvd_page_88xx(adapter, pg_addr, skb);
 	if (ret) {
 		PLTFM_MSG_ERR("[ERR]dl rsvd page!!\n");
 		goto out;
 	}
-#else
-	dev_kfree_skb_any(skb);
-#endif
-
 
 #if 0 //NEO
 	h2cb = h2cb_alloc(adapter, H2CB_CLASS_LONG_DATA);
@@ -217,7 +214,6 @@ send_fwpkt_88xx(struct mac_adapter *adapter, u16 pg_addr, u8 *fw_bin, u32 size)
 		return MACNPTR;
 	}
 
-	// USB2 - 512 , USB3 - 1024 ? 
 	if (!((size + TX_DESC_SIZE_88XX) & (512 - 1)))
 		pkt_len += 1;
 
@@ -335,7 +331,7 @@ static u32 __sections_download(struct mac_adapter *adapter, u8 *fw_bin, u32 src,
 			goto fail;
 		}
 
-#if 0 //NEO
+#if 1 //NEO
 		ret = iddma_dlfw_88xx(adapter,
 					 OCPBASE_TXBUF_88XX +
 					 src + TX_DESC_SIZE_88XX,
@@ -442,13 +438,11 @@ u32 mac_fwdl(struct mac_adapter *adapter, u8 *fw, u32 len)
 		return MACBUFSZ;
 	}
 
-#if 0 //NEO
 	ret = start_dlfw_88xx(adapter, fw, len);
 	if (ret) {
 		PLTFM_MSG_ERR("[ERR] start_dlfw_88xx failed\n");
 		goto fwdl_err;
 	}
-#endif //NEO
 
 	return MACSUCCESS;
 

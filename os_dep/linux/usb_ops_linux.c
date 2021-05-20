@@ -454,8 +454,7 @@ rtw_usb_write_data(void *d, u8 bulk_id, struct sk_buff *skb)
 #if 0 //NEO
 	print_hex_dump(KERN_INFO, "write data: ", DUMP_PREFIX_OFFSET, 16, 1,
 		       skb->data, skb->len, 1);
-	dev_kfree_skb_any(skb);
-#else
+#endif
 	pipe = bulkid2pipe(pdvobj, bulk_id, _TRUE);
 	urb = usb_alloc_urb(0, GFP_ATOMIC);
 	if (!urb)
@@ -479,7 +478,6 @@ rtw_usb_write_data(void *d, u8 bulk_id, struct sk_buff *skb)
 	}
 
 	usb_free_urb(urb);
-#endif
 	ret = _SUCCESS;
 
 exit:
