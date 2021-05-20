@@ -575,6 +575,7 @@ u32 mac_dump_log_efuse(struct mac_adapter *adapter,
 		       enum mac_efuse_read_cfg cfg,
 		       u8 *efuse_map, bool is_limit)
 {
+	struct mac_hw_info *hw_info = adapter->hw_info;
 	u8 *map = NULL;
 	u32 ret, stat;
 	u32 efuse_size;
@@ -584,6 +585,8 @@ u32 mac_dump_log_efuse(struct mac_adapter *adapter,
 		return MACNOFW;
 
 	PLTFM_MSG_TRACE("[TRACE]cfg = %d\n", cfg);
+	
+
 
 	ret = efuse_proc_ck(adapter);
 	if (ret != 0)
@@ -593,7 +596,11 @@ u32 mac_dump_log_efuse(struct mac_adapter *adapter,
 	if (ret != 0)
 		return ret;
 
-#if 0 //NEO
+	if (!hw_info) {
+		PLTFM_MSG_ERR("[ERR] hw_info is NULL\n");
+		return MACNPTR;
+	}
+
 	ret = switch_efuse_bank(adapter, MAC_EFUSE_BANK_WIFI);
 	if (ret != 0) {
 		PLTFM_MSG_ERR("[ERR]switch efuse bank!!\n");
@@ -603,9 +610,11 @@ u32 mac_dump_log_efuse(struct mac_adapter *adapter,
 		return ret;
 	}
 
+	bank_efuse_info.log_map_size = &hw_info->log_efuse_size;
 	efuse_size = *bank_efuse_info.log_map_size;
 	pr_info("%s NEO efuse_size=%d\n", __func__, efuse_size);
 
+#if 0 //NEO
 	if (dv_sel == DAV) {
 		ret = efuse_map_init(adapter, EFUSE_MAP_SEL_PHY_DAV);
 		if (ret != 0)
@@ -2236,11 +2245,11 @@ static u32 switch_efuse_bank(struct mac_adapter *adapter,
 			     enum mac_efuse_bank bank)
 {
 	struct mac_intf_ops *ops = adapter_to_intf_ops(adapter);
-	struct mac_hw_info *hw_info = adapter->hw_info;
 	u8 reg_value;
 	
 	reg_value = MAC_REG_R8(REG_LDO_EFUSE_CTRL + 1);
 
+	/* bank is switched already */
 	if (bank == (reg_value & (BIT(0) | BIT(1))))
 		return MACSUCCESS;
 
@@ -2251,8 +2260,6 @@ static u32 switch_efuse_bank(struct mac_adapter *adapter,
 	reg_value = MAC_REG_R8(REG_LDO_EFUSE_CTRL + 1);
 	if ((reg_value & (BIT(0) | BIT(1))) != bank)
 		return MACEFUSEBANK;
-
-	bank_efuse_info.log_map_size = &hw_info->log_efuse_size;
 
 	return MACSUCCESS;
 }
