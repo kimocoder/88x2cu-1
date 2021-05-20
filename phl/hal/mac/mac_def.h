@@ -926,45 +926,45 @@ enum mac_ax_sw_io_mode {
 	MAC_AX_SW_IO_MODE_INVALID = MAC_AX_SW_IO_MODE_LAST,
 };
 
+#endif //NEO
+
 /*--------------------Define Efuse related enum-------------------------------*/
-enum mac_ax_efuse_read_cfg {
-	MAC_AX_EFUSE_R_AUTO,
-	MAC_AX_EFUSE_R_DRV,
-	MAC_AX_EFUSE_R_FW,
+enum mac_efuse_read_cfg {
+	MAC_EFUSE_R_AUTO,
+	MAC_EFUSE_R_DRV,
+	MAC_EFUSE_R_FW,
 
 	/* keep last */
-	MAC_AX_EFUSE_R_LAST,
-	MAC_AX_EFUSE_R_MAX = MAC_AX_EFUSE_R_LAST,
-	MAC_AX_EFUSE_R_INVALID = MAC_AX_EFUSE_R_LAST,
+	MAC_EFUSE_R_LAST,
+	MAC_EFUSE_R_MAX = MAC_EFUSE_R_LAST,
+	MAC_EFUSE_R_INVALID = MAC_EFUSE_R_LAST,
 };
 
-enum mac_ax_efuse_bank {
-	MAC_AX_EFUSE_BANK_WIFI,
-	MAC_AX_EFUSE_BANK_BT,
+enum mac_efuse_bank {
+	MAC_EFUSE_BANK_WIFI,
+	MAC_EFUSE_BANK_BT,
 
 	/* keep last */
-	MAC_AX_EFUSE_BANK_LAST,
-	MAC_AX_EFUSE_BANK_MAX = MAC_AX_EFUSE_BANK_LAST,
-	MAC_AX_EFUSE_BANK_INVALID = MAC_AX_EFUSE_BANK_LAST,
+	MAC_EFUSE_BANK_LAST,
+	MAC_EFUSE_BANK_MAX = MAC_EFUSE_BANK_LAST,
+	MAC_EFUSE_BANK_INVALID = MAC_EFUSE_BANK_LAST,
 };
 
-enum mac_ax_efuse_parser_cfg {
-	MAC_AX_EFUSE_PARSER_MAP,
-	MAC_AX_EFUSE_PARSER_MASK,
+enum mac_efuse_parser_cfg {
+	MAC_EFUSE_PARSER_MAP,
+	MAC_EFUSE_PARSER_MASK,
 
 	/* keep last */
-	MAC_AX_EFUSE_PARSER_LAST,
-	MAC_AX_EFUSE_PARSER_MAX = MAC_AX_EFUSE_PARSER_LAST,
-	MAC_AX_EFUSE_PARSER_INVALID = MAC_AX_EFUSE_PARSER_LAST,
+	MAC_EFUSE_PARSER_LAST,
+	MAC_EFUSE_PARSER_MAX = MAC_EFUSE_PARSER_LAST,
+	MAC_EFUSE_PARSER_INVALID = MAC_EFUSE_PARSER_LAST,
 };
 
-enum mac_ax_efuse_feature_id {
-	MAC_AX_DUMP_PHYSICAL_EFUSE,     /* Support */
-	MAC_AX_DUMP_LOGICAL_EFUSE,      /* Support */
-	MAC_AX_DUMP_LOGICAL_EFUSE_MASK, /* Support */
+enum mac_efuse_feature_id {
+	MAC_DUMP_PHYSICAL_EFUSE,     /* Support */
+	MAC_DUMP_LOGICAL_EFUSE,      /* Support */
+	MAC_DUMP_LOGICAL_EFUSE_MASK, /* Support */
 };
-
-#endif // if 0 NEO
 
 /*--------------------Define TRX PKT INFO/RPT related enum--------------------*/
 enum mac_trx_mode {
@@ -5031,10 +5031,12 @@ struct mac_ops {
 			  u8 *val, enum mac_ax_efuse_bank bank);
 	u32 (*get_efuse_avl_size)(struct mac_adapter *adapter, u32 *size);
 	u32 (*get_efuse_avl_size_bt)(struct mac_adapter *adapter, u32 *size);
+#endif //NEO
 	u32 (*dump_log_efuse)(struct mac_adapter *adapter,
-			      enum mac_ax_efuse_parser_cfg parser_cfg,
-			      enum mac_ax_efuse_read_cfg cfg,
+			      enum mac_efuse_parser_cfg parser_cfg,
+			      enum mac_efuse_read_cfg cfg,
 			      u8 *efuse_map, bool is_limit);
+#if 0 //NEO
 	u32 (*read_log_efuse)(struct mac_adapter *adapter, u32 addr,
 			      u32 size, u8 *val);
 	u32 (*write_log_efuse)(struct mac_adapter *adapter, u32 addr,

@@ -534,6 +534,7 @@ u32 mac_get_efuse_avl_size_bt(struct mac_adapter *adapter, u32 *size);
  * @}
  */
 
+
 /**
  * @addtogroup Efuse
  * @{
@@ -558,6 +559,8 @@ u32 mac_dump_log_efuse_plus(struct mac_adapter *adapter,
  * @}
  */
 
+#endif //NEO
+
 /**
  * @addtogroup Efuse
  * @{
@@ -575,12 +578,14 @@ u32 mac_dump_log_efuse_plus(struct mac_adapter *adapter,
  * @retval u32
  */
 u32 mac_dump_log_efuse(struct mac_adapter *adapter,
-		       enum mac_ax_efuse_parser_cfg parser_cfg,
-		       enum mac_ax_efuse_read_cfg cfg,
+		       enum mac_efuse_parser_cfg parser_cfg,
+		       enum mac_efuse_read_cfg cfg,
 		       u8 *efuse_map, bool is_limit);
 /**
  * @}
  */
+
+#if 0 //NEO
 
 /**
  * @addtogroup Efuse

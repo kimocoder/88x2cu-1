@@ -4815,7 +4815,6 @@ rtw_hal_mac_get_log_efuse_size(struct rtw_hal_com_t *hal_com, u32 *val,
 	return RTW_HAL_STATUS_SUCCESS;
 }
 
-#if 0 //NEO
 
 enum rtw_hal_status
 rtw_hal_mac_read_log_efuse_map(struct rtw_hal_com_t *hal_com, u8 *map,
@@ -4825,12 +4824,8 @@ rtw_hal_mac_read_log_efuse_map(struct rtw_hal_com_t *hal_com, u8 *map,
 	struct mac_adapter *mac = hal_to_mac(hal_info);
 
 	if (mac->ops->dump_log_efuse(mac,
-			MAC_AX_EFUSE_PARSER_MAP,
-			#ifdef RTW_WKARD_EFUSE_OPERATION
-			MAC_AX_EFUSE_R_DRV,
-			#else
-			MAC_AX_EFUSE_R_AUTO,
-			#endif
+			MAC_EFUSE_PARSER_MAP,
+			MAC_EFUSE_R_AUTO,
 			map,
 			is_limited
 			) != MACSUCCESS) {
@@ -4841,6 +4836,8 @@ rtw_hal_mac_read_log_efuse_map(struct rtw_hal_com_t *hal_com, u8 *map,
 	PHL_INFO("%s: Dump logical efuse ok!\n", __FUNCTION__);
 	return RTW_HAL_STATUS_SUCCESS;
 }
+
+#if 0 //NEO
 
 /*
  * HALMAC PG EFUSE API put version length at the tail of map/mask buffer

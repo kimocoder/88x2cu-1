@@ -20,14 +20,14 @@ static struct mac_bank_efuse_info bank_efuse_info;
 bool OTP_test;
 enum rtw_dv_sel dv_sel = DDV;
 
-#if 0 //NEO
 static u32 efuse_map_init(struct mac_adapter *adapter,
 			  enum efuse_map_sel map_sel);
 static u32 efuse_fwcmd_ck(struct mac_adapter *adapter);
 static u32 efuse_proc_ck(struct mac_adapter *adapter);
 static u32 cnv_efuse_state(struct mac_adapter *adapter, u8 dest_state);
 static u32 switch_efuse_bank(struct mac_adapter *adapter,
-			     enum mac_ax_efuse_bank bank);
+			     enum mac_efuse_bank bank);
+#if 0 //NEO
 static u32 proc_dump_efuse(struct mac_adapter *adapter,
 			   enum mac_ax_efuse_read_cfg cfg);
 static u32 read_hw_efuse(struct mac_adapter *adapter, u32 offset, u32 size,
@@ -568,17 +568,19 @@ u32 mac_dump_log_efuse_plus(struct mac_adapter *adapter,
 	return MACSUCCESS;
 }
 
+#endif //NEO
+
 u32 mac_dump_log_efuse(struct mac_adapter *adapter,
-		       enum mac_ax_efuse_parser_cfg parser_cfg,
-		       enum mac_ax_efuse_read_cfg cfg,
+		       enum mac_efuse_parser_cfg parser_cfg,
+		       enum mac_efuse_read_cfg cfg,
 		       u8 *efuse_map, bool is_limit)
 {
 	u8 *map = NULL;
 	u32 ret, stat;
 	u32 efuse_size;
 
-	if (cfg == MAC_AX_EFUSE_R_FW &&
-	    adapter->sm.fwdl != MAC_AX_FWDL_INIT_RDY)
+	if (cfg == MAC_EFUSE_R_FW &&
+	    adapter->sm.fwdl != MAC_FWDL_INIT_RDY)
 		return MACNOFW;
 
 	PLTFM_MSG_TRACE("[TRACE]cfg = %d\n", cfg);
@@ -587,20 +589,22 @@ u32 mac_dump_log_efuse(struct mac_adapter *adapter,
 	if (ret != 0)
 		return ret;
 
-	ret = cnv_efuse_state(adapter, MAC_AX_EFUSE_LOG_MAP);
+	ret = cnv_efuse_state(adapter, MAC_EFUSE_LOG_MAP);
 	if (ret != 0)
 		return ret;
 
-	ret = switch_efuse_bank(adapter, MAC_AX_EFUSE_BANK_WIFI);
+#if 0 //NEO
+	ret = switch_efuse_bank(adapter, MAC_EFUSE_BANK_WIFI);
 	if (ret != 0) {
 		PLTFM_MSG_ERR("[ERR]switch efuse bank!!\n");
-		stat = cnv_efuse_state(adapter, MAC_AX_EFUSE_IDLE);
+		stat = cnv_efuse_state(adapter, MAC_EFUSE_IDLE);
 		if (stat != 0)
 			return stat;
 		return ret;
 	}
 
 	efuse_size = *bank_efuse_info.log_map_size;
+	pr_info("%s NEO efuse_size=%d\n", __func__, efuse_size);
 
 	if (dv_sel == DAV) {
 		ret = efuse_map_init(adapter, EFUSE_MAP_SEL_PHY_DAV);
@@ -662,9 +666,11 @@ u32 mac_dump_log_efuse(struct mac_adapter *adapter,
 	ret = cnv_efuse_state(adapter, MAC_AX_EFUSE_IDLE);
 	if (ret != 0)
 		return ret;
-
+#endif //NEO
 	return MACSUCCESS;
 }
+
+#if 0 //NEO
 
 u32 mac_read_log_efuse_plus(struct mac_adapter *adapter, u32 addr, u32 size,
 			    u8 *val)
@@ -2188,41 +2194,21 @@ static u32 efuse_map_init(struct mac_adapter *adapter,
 	return MACSUCCESS;
 }
 
+#endif //NEO
+
 static u32 efuse_fwcmd_ck(struct mac_adapter *adapter)
 {
-/*Soar TBD*/
-#ifdef NEVER
-	u32 ret;
-
-	ret = fwcmd_wq_idle(adapter,
-			    SET_FWCMD_ID(FWCMD_TYPE_H2C,
-					 FWCMD_H2C_CAT_MAC,
-					 TBD,
-					 TBD));
-	if (ret != 0) {
-		PLTFM_MSG_WARN("[WARN]H2C not idle(efuse)\n");
-		return ret;
-	}
-#endif /* NEVER */
 	return MACSUCCESS;
 }
 
 static u32 efuse_proc_ck(struct mac_adapter *adapter)
 {
-/*Soar TBD*/
-#ifdef NEVER
-	u32 ret;
-
-	ret = efuse_fwcmd_ck(adapter);
-	if (ret != 0)
-		return ret;
-#endif /* NEVER */
-	if (adapter->sm.efuse != MAC_AX_EFUSE_IDLE) {
+	if (adapter->sm.efuse != MAC_EFUSE_IDLE) {
 		PLTFM_MSG_WARN("[WARN]Proc not idle(efuse)\n");
 		return MACPROCBUSY;
 	}
 
-	if (adapter->sm.pwr != MAC_AX_PWR_ON)
+	if (adapter->sm.pwr != MAC_PWR_ON)
 		PLTFM_MSG_ERR("[ERR]Access efuse in suspend\n");
 
 	return MACSUCCESS;
@@ -2230,14 +2216,14 @@ static u32 efuse_proc_ck(struct mac_adapter *adapter)
 
 static u32 cnv_efuse_state(struct mac_adapter *adapter, u8 dest_state)
 {
-	if (adapter->sm.efuse >= MAC_AX_EFUSE_MAX)
+	if (adapter->sm.efuse >= MAC_EFUSE_MAX)
 		return MACPROCERR;
 
 	if (adapter->sm.efuse == dest_state)
 		return MACPROCERR;
 
-	if (dest_state != MAC_AX_EFUSE_IDLE) {
-		if (adapter->sm.efuse != MAC_AX_EFUSE_IDLE)
+	if (dest_state != MAC_EFUSE_IDLE) {
+		if (adapter->sm.efuse != MAC_EFUSE_IDLE)
 			return MACPROCERR;
 	}
 
@@ -2247,95 +2233,31 @@ static u32 cnv_efuse_state(struct mac_adapter *adapter, u8 dest_state)
 }
 
 static u32 switch_efuse_bank(struct mac_adapter *adapter,
-			     enum mac_ax_efuse_bank bank)
+			     enum mac_efuse_bank bank)
 {
+	struct mac_intf_ops *ops = adapter_to_intf_ops(adapter);
+	struct mac_hw_info *hw_info = adapter->hw_info;
 	u8 reg_value;
-	struct mac_ax_intf_ops *ops = adapter_to_intf_ops(adapter);
-	struct mac_ax_efuse_param *efuse_param = &adapter->efuse_param;
-	struct mac_ax_hw_info *hw_info = adapter->hw_info;
-	u8 chip_id = adapter->hw_info->chip_id;
+	
+	reg_value = MAC_REG_R8(REG_LDO_EFUSE_CTRL + 1);
 
-	switch (chip_id) {
-	case MAC_AX_CHIP_ID_8852A:
-		if (bank == MAC_AX_EFUSE_BANK_BT) {
-			/* check bt state */
-			MAC_REG_W8(R_AX_SYSON_FSM_MON + 3, 0x05);
-			reg_value = MAC_REG_R8(R_AX_SYSON_FSM_MON);
-			if (reg_value != 0x04)
-				return MACEFUSEBANK;
-		}
+	if (bank == (reg_value & (BIT(0) | BIT(1))))
+		return MACSUCCESS;
 
-		reg_value = MAC_REG_R8(R_AX_EFUSE_CTRL_1 + 1);
-		if (bank == (reg_value & B_AX_EF_CELL_SEL_MSK))
-			goto set_val;
+	reg_value &= ~(BIT(0) | BIT(1));
+	reg_value |= bank;
+	MAC_REG_W8(REG_LDO_EFUSE_CTRL + 1, reg_value);
 
-		reg_value &= ~B_AX_EF_CELL_SEL_MSK;
-		reg_value |= bank;
-		MAC_REG_W8(R_AX_EFUSE_CTRL_1 + 1, reg_value);
-
-		reg_value = MAC_REG_R8(R_AX_EFUSE_CTRL_1 + 1);
-		if ((reg_value & B_AX_EF_CELL_SEL_MSK) == bank)
-			goto set_val;
-		else
-			return MACEFUSEBANK;
-		break;
-	case MAC_AX_CHIP_ID_8852B:
-	case MAC_AX_CHIP_ID_8852C:
-		goto set_val;
-	default:
-		break;
-	}
-
-set_val:
-	switch (bank) {
-	case MAC_AX_EFUSE_BANK_WIFI:
-		if (dv_sel == DAV) {
-			bank_efuse_info.phy_map = &efuse_param->dav_efuse_map;
-			bank_efuse_info.log_map =
-				&efuse_param->dav_log_efuse_map;
-			bank_efuse_info.phy_map_valid =
-				&efuse_param->dav_efuse_map_valid;
-			bank_efuse_info.log_map_valid =
-				&efuse_param->dav_log_efuse_map_valid;
-			bank_efuse_info.efuse_end =
-				&efuse_param->dav_efuse_end;
-			bank_efuse_info.phy_map_size =
-				&hw_info->dav_efuse_size;
-			bank_efuse_info.log_map_size =
-				&hw_info->dav_log_efuse_size;
-			bank_efuse_info.efuse_start =
-				&hw_info->dav_efuse_start_addr;
-			break;
-		}
-
-		bank_efuse_info.phy_map = &efuse_param->efuse_map;
-		bank_efuse_info.log_map = &efuse_param->log_efuse_map;
-		bank_efuse_info.phy_map_valid = &efuse_param->efuse_map_valid;
-		bank_efuse_info.log_map_valid =
-			&efuse_param->log_efuse_map_valid;
-		bank_efuse_info.efuse_end = &efuse_param->efuse_end;
-		bank_efuse_info.phy_map_size = &hw_info->efuse_size;
-		bank_efuse_info.log_map_size = &hw_info->log_efuse_size;
-		bank_efuse_info.efuse_start = &hw_info->wl_efuse_start_addr;
-		break;
-	case MAC_AX_EFUSE_BANK_BT:
-		bank_efuse_info.phy_map = &efuse_param->bt_efuse_map;
-		bank_efuse_info.log_map = &efuse_param->bt_log_efuse_map;
-		bank_efuse_info.phy_map_valid =
-			&efuse_param->bt_efuse_map_valid;
-		bank_efuse_info.log_map_valid =
-			&efuse_param->bt_log_efuse_map_valid;
-		bank_efuse_info.efuse_end = &efuse_param->bt_efuse_end;
-		bank_efuse_info.phy_map_size = &hw_info->bt_efuse_size;
-		bank_efuse_info.log_map_size = &hw_info->bt_log_efuse_size;
-		bank_efuse_info.efuse_start = &hw_info->bt_efuse_start_addr;
-		break;
-	default:
+	reg_value = MAC_REG_R8(REG_LDO_EFUSE_CTRL + 1);
+	if ((reg_value & (BIT(0) | BIT(1))) != bank)
 		return MACEFUSEBANK;
-	}
+
+	bank_efuse_info.log_map_size = &hw_info->log_efuse_size;
 
 	return MACSUCCESS;
 }
+
+#if 0 //NEO
 
 static u32 proc_dump_efuse(struct mac_adapter *adapter,
 			   enum mac_ax_efuse_read_cfg cfg)

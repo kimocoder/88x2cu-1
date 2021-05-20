@@ -154,20 +154,24 @@ enum rtw_hal_status rtw_efuse_logicmap_buf_load(void *efuse, u8* buf, bool is_li
 	return status;
 }
 
+#endif //NEO
+
 enum rtw_hal_status rtw_efuse_shadow_load(void *efuse, bool is_limit)
 {
 	enum rtw_hal_status status = RTW_HAL_STATUS_FAILURE;
 	struct efuse_t *efuse_info = efuse;
 
 	status = rtw_hal_mac_read_log_efuse_map(efuse_info->hal_com,
-											efuse_info->shadow_map,
-											is_limit);
+						efuse_info->shadow_map,
+						is_limit);
 
 	if (efuse_info->is_map_valid == true && status == RTW_HAL_STATUS_SUCCESS)
 		efuse_info->map_from_status = HW_LOG_MAP;
 
 	return status;
 }
+
+#if 0 //NEO
 
 enum rtw_hal_status rtw_efuse_shadow_file_load(void *efuse, char *ic_name, bool is_limit)
 {
@@ -730,16 +734,16 @@ void rtw_efuse_process(void *efuse, char *ic_name)
 
 	pr_info("%s NEO TODO\n", __func__);
 
-#if 0 //NEO
 	if(TEST_STATUS_FLAG(efuse_info->status, EFUSE_STATUS_PROCESS) == true) {
 		PHL_INFO("%s EFUSE module is already initialized.\n", __FUNCTION__);
 		return;
 	}
 
-	efuse_check_autoload(efuse_info);
+	//efuse_check_autoload(efuse_info);
 	/* Load wifi full map to shadow map */
 	rtw_efuse_shadow_load(efuse_info, false);
 
+#if 0 //NEO
 	rtw_efuse_shadow_file_load(efuse_info, ic_name, false);
 
 	debug_dump_data(efuse_info->shadow_map, efuse_info->log_efuse_size,

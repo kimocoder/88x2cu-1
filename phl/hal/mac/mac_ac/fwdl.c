@@ -308,7 +308,7 @@ iddma_dlfw_88xx(struct mac_adapter *adapter, u32 src, u32 dest, u32 len,
 
 
 static u32
-check_fw_chksum(struct mac_adapter *adapter, u32 mem_addr)
+check_fw_rdy(struct mac_adapter *adapter, u32 mem_addr)
 {
 	struct mac_intf_ops *ops = adapter_to_intf_ops(adapter);
 	u8 fw_ctrl;
@@ -338,6 +338,8 @@ check_fw_chksum(struct mac_adapter *adapter, u32 mem_addr)
 		fw_ctrl |= (BIT_DMEM_DW_OK | BIT_DMEM_CHKSUM_OK);
 		MAC_REG_W8(REG_MCUFW_CTRL, fw_ctrl);
 	}
+
+	adapter->sm.fwdl = MAC_FWDL_INIT_RDY;
 
 	return MACSUCCESS;
 }
@@ -383,7 +385,7 @@ static u32 __sections_download(struct mac_adapter *adapter, u8 *fw_bin, u32 src,
 		residue_len -= pkt_len;
 	}
 
-	ret = check_fw_chksum(adapter, dest);
+	ret = check_fw_rdy(adapter, dest);
 	if (ret) {
 		PLTFM_MSG_ERR("[ERR]chk fw chksum!!\n");
 		goto fail;

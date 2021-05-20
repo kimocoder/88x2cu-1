@@ -278,6 +278,7 @@ u32 mac_pwr_switch(struct mac_adapter *adapter, u8 on)
 	ret = pwr_seq_start(adapter, pwr_seq);
 	if (ret != MACSUCCESS) {
 		PLTFM_MSG_ERR("[ERR]pwr seq start %d\n", ret);
+		adapter->sm.pwr = MAC_PWR_ERR;
 		goto END;
 	}
 
@@ -305,6 +306,9 @@ u32 mac_pwr_switch(struct mac_adapter *adapter, u8 on)
 			val32 = MAC_REG_R32(REG_GPIO_MUXCFG) & (~(BIT(19)));
 			MAC_REG_W32(REG_GPIO_MUXCFG, val32);
 		}
+		adapter->sm.pwr = MAC_PWR_ON;
+	} else {
+		adapter->sm.pwr = MAC_PWR_OFF;
 	}
 END:
 	return ret;

@@ -18,9 +18,7 @@
 #include "../../mac_def.h"
 
 #include "../pwr.h"
-#if 0 // NEO
 #include "../efuse.h"
-#endif // if 0 NEO
 #include "../init.h"
 #if 0 // NEO
 #include "../trxcfg.h"
@@ -321,7 +319,9 @@ static struct mac_ops mac8822c_ops = {
 	NULL, /* mac_read_efuse, */ /* read_wl_bt_efuse */
 	NULL, /* mac_get_efuse_avl_size, */ /* get_available_efuse_size */
 	NULL, /* mac_get_efuse_avl_size_bt, */ /* get_available_efuse_size_bt */
-	NULL, /* mac_dump_log_efuse, */ /* dump_logical_efuse */
+#endif // NEO
+	mac_dump_log_efuse, /* dump_log_efuse */
+#if 0 //NEO
 	NULL, /* mac_read_log_efuse, */ /* read_logical_efuse */
 	NULL, /* mac_write_log_efuse, */ /* write_logical_efuse */
 	NULL, /* mac_dump_log_efuse_bt, */ /* dump_logical_efuse_bt */
