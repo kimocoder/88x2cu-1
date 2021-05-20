@@ -67,6 +67,9 @@ static u32 usb_write_port_not_xmitframe(struct dvobj_priv *d, u8 addr, u32 cnt, 
 	struct usb_device *pusbd = pusb_data->pusbdev;
 
 
+	//print_hex_dump(KERN_INFO, "write data: ", DUMP_PREFIX_OFFSET, 16, 1,
+	//	       wmem, cnt, 1);
+
 	purb	= usb_alloc_urb(0, GFP_KERNEL);
 	if (purb == NULL) {
 		RTW_ERR("purb == NULL\n");

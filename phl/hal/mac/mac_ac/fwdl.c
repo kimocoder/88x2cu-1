@@ -42,7 +42,7 @@
 #define WLAN_FW_HDR_EMEM_ADDR			56
 #define WLAN_FW_HDR_IMEM_ADDR			60
 
-#define DLFW_PKT_MAX_SIZE		8192
+#define DLFW_PKT_MAX_SIZE		0x1000
 #define TX_DESC_SIZE_88XX		48
 #define PKT_OFFSET_SZ			8
 #define HALMAC_DDMA_POLLING_COUNT	1000
@@ -86,6 +86,7 @@ dl_rsvd_page_88xx(struct mac_adapter *adapter, u16 pg_addr, struct sk_buff *skb)
 		return MACBUFSZ;
 	}
 
+#if 0 //NEO
 	pg_addr &= 0xfff;
 	MAC_REG_W16(REG_FIFOPAGE_CTRL_2, (u16)(pg_addr | BIT(15)));
 
@@ -98,6 +99,9 @@ dl_rsvd_page_88xx(struct mac_adapter *adapter, u16 pg_addr, struct sk_buff *skb)
 	restore[1] = value8;
 	value8 = (u8)(value8 & ~(BIT(6)));
 	MAC_REG_W8(REG_FWHW_TXQ_CTRL + 2, value8);
+#endif  //NEO
+
+	pr_info("%s before send page\n", __func__);
 
 	ret = PLTFM_SEND_RSVD_PAGE(skb);
 	if (ret) {
@@ -106,6 +110,7 @@ dl_rsvd_page_88xx(struct mac_adapter *adapter, u16 pg_addr, struct sk_buff *skb)
 		goto DL_RSVD_PG_END;
 	}
 
+#if 0 //NEO
 	cnt = 1000;
 	while (!(MAC_REG_R8(REG_FIFOPAGE_CTRL_2 + 1) & BIT(7))) {
 		PLTFM_DELAY_US(10);
@@ -116,14 +121,17 @@ dl_rsvd_page_88xx(struct mac_adapter *adapter, u16 pg_addr, struct sk_buff *skb)
 			break;
 		}
 	}
+#endif //NEO
+	pr_info("%s after send page\n", __func__);
 
 DL_RSVD_PG_END:
+#if 0 //NEO
 	//rsvd_pg_head = adapter->txff_alloc.rsvd_boundary;
 	rsvd_pg_head = 0;
 	MAC_REG_W16(REG_FIFOPAGE_CTRL_2, rsvd_pg_head | BIT(15));
 	MAC_REG_W8(REG_FWHW_TXQ_CTRL + 2, restore[1]);
 	MAC_REG_W8(REG_CR + 1, restore[0]);
-
+#endif //NEO
 	return ret;
 }
 
@@ -143,6 +151,7 @@ send_fwpkt_88xx(struct mac_adapter *adapter, u16 pg_addr, u8 *fw_bin, u32 size)
 	struct mac_intf_ops *ops = adapter_to_intf_ops(adapter);
 	struct mac_ops *mac_ops = adapter_to_mac_ops(adapter);
 	struct mac_txpkt_info info;
+	struct mac_pkt_data *pkt_info = &info.u.data;
 	//struct rtw_h2c_pkt *h2cb;
 	struct sk_buff *skb;
 	u32 headsize;
@@ -153,6 +162,7 @@ send_fwpkt_88xx(struct mac_adapter *adapter, u16 pg_addr, u8 *fw_bin, u32 size)
 	int len;
 
 	/* __section_build_txd */
+	memset(&info, 0, sizeof(info));
 	info.type = MAC_PKT_FWDL;
 	info.pktsize = size;
 	desclen = mac_ops->txdesc_len(adapter, &info);
@@ -161,10 +171,14 @@ send_fwpkt_88xx(struct mac_adapter *adapter, u16 pg_addr, u8 *fw_bin, u32 size)
 	if (size % 512 == 0)
 		add_pkt_offset = 1;
 
-	if (add_pkt_offset == 1)
+	if (add_pkt_offset == 1) {
 		headsize = PKT_OFFSET_SZ;
-
-	info.u.data.pkt_offset = add_pkt_offset;
+		pkt_info->offset = desclen + 8;
+		pkt_info->pkt_offset = 1;
+	} else {
+		pkt_info->offset = desclen;
+	}
+	pkt_info->qsel = 0x10; // TX_DESC_QSEL_BEACON
 
 	len = headsize + size;
 	pr_info("%s NEO len=%d\n", __func__, len);
@@ -184,7 +198,7 @@ send_fwpkt_88xx(struct mac_adapter *adapter, u16 pg_addr, u8 *fw_bin, u32 size)
 		goto out;
 	}
 
-#if 0 //NEO
+#if 1 //NEO
 	ret = dl_rsvd_page_88xx(adapter, pg_addr, skb);
 	if (ret) {
 		PLTFM_MSG_ERR("[ERR]dl rsvd page!!\n");
@@ -311,6 +325,9 @@ static u32 __sections_download(struct mac_adapter *adapter, u8 *fw_bin, u32 src,
 		else
 			pkt_len = residue_len;
 
+		//if (first_part)
+		//	print_hex_dump(KERN_INFO, "fw: ", DUMP_PREFIX_OFFSET, 16, 1, fw_bin, pkt_len, 1);
+
 		ret = send_fwpkt_88xx(adapter, (u16)(src >> 7),
 					 fw_bin + mem_offset, pkt_len);
 		if (ret) {
@@ -425,12 +442,15 @@ u32 mac_fwdl(struct mac_adapter *adapter, u8 *fw, u32 len)
 		return MACBUFSZ;
 	}
 
+#if 0 //NEO
 	ret = start_dlfw_88xx(adapter, fw, len);
 	if (ret) {
 		PLTFM_MSG_ERR("[ERR] start_dlfw_88xx failed\n");
 		goto fwdl_err;
 	}
+#endif //NEO
 
+	return MACSUCCESS;
 
 fwdl_err:
 	return ret;

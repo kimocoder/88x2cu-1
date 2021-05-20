@@ -451,6 +451,11 @@ rtw_usb_write_data(void *d, u8 bulk_id, struct sk_buff *skb)
 	unsigned int pipe;
 	int ret;
 
+#if 0 //NEO
+	print_hex_dump(KERN_INFO, "write data: ", DUMP_PREFIX_OFFSET, 16, 1,
+		       skb->data, skb->len, 1);
+	dev_kfree_skb_any(skb);
+#else
 	pipe = bulkid2pipe(pdvobj, bulk_id, _TRUE);
 	urb = usb_alloc_urb(0, GFP_ATOMIC);
 	if (!urb)
@@ -474,6 +479,7 @@ rtw_usb_write_data(void *d, u8 bulk_id, struct sk_buff *skb)
 	}
 
 	usb_free_urb(urb);
+#endif
 	ret = _SUCCESS;
 
 exit:
@@ -486,7 +492,6 @@ u32 rtw_usb_write_rsvd_page(void *d, struct sk_buff *skb)
 	u32 bulk_id = 0;
 	u32 ret;
 
-	pr_info("%s NEO TODO\n", __func__);
 	ret = rtw_usb_write_data(d, bulk_id, skb);
 
 	if (ret == _SUCCESS)
