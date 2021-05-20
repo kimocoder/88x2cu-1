@@ -323,6 +323,7 @@ u32 mac_phl_init(void *phl_adapter, struct mac_adapter *mac_adapter)
 
 u32 mac_ops_exit(struct mac_adapter *adapter)
 {
+	struct mac_efuse_param *efuse_param = &adapter->efuse_param;
 	u32 ret;
 
 	ret = free_sec_info_tbl(adapter);
@@ -349,14 +350,14 @@ u32 mac_ops_exit(struct mac_adapter *adapter)
 		return ret;
 	}
 #endif
-#if 0 // NEO
-	struct mac_efuse_param *efuse_param = &adapter->efuse_param;
 
+#if 0 //NEO
 	ret = h2cb_exit(adapter);
 	if (ret) {
 		PLTFM_MSG_ERR("[ERR]h2c buffer exit\n");
 		return ret;
 	}
+#endif //NEO
 
 	if (efuse_param->efuse_map) {
 		PLTFM_FREE(efuse_param->efuse_map,
@@ -383,7 +384,6 @@ u32 mac_ops_exit(struct mac_adapter *adapter)
 	}
 
 	PLTFM_FREE(adapter->hw_info, sizeof(struct mac_hw_info));
-#endif // if 0 NEO
 
 	PLTFM_FREE(adapter, sizeof(struct mac_adapter));
 	return MACSUCCESS;

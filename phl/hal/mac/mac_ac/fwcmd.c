@@ -298,7 +298,7 @@ u32 h2cb_init(struct mac_ax_adapter *adapter)
 	return MACSUCCESS;
 }
 
-u32 h2cb_exit(struct mac_ax_adapter *adapter)
+u32 h2cb_exit(struct mac_adapter *adapter)
 {
 	struct fwcmd_wkb_head *list_head = &fwcmd_wq_head;
 
@@ -314,7 +314,7 @@ u32 h2cb_exit(struct mac_ax_adapter *adapter)
 
 u32 h2c_end_flow(struct mac_ax_adapter *adapter)
 {
-	struct mac_ax_fw_info *fwinfo = &adapter->fw_info;
+	struct mac_fw_info *fwinfo = &adapter->fw_info;
 
 	PLTFM_MUTEX_LOCK(&fwinfo->seq_lock);
 	fwinfo->h2c_seq++;

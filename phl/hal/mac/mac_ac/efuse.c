@@ -614,21 +614,11 @@ u32 mac_dump_log_efuse(struct mac_adapter *adapter,
 	efuse_size = *bank_efuse_info.log_map_size;
 	pr_info("%s NEO efuse_size=%d\n", __func__, efuse_size);
 
-#if 0 //NEO
-	if (dv_sel == DAV) {
-		ret = efuse_map_init(adapter, EFUSE_MAP_SEL_PHY_DAV);
-		if (ret != 0)
-			return ret;
-		ret = efuse_map_init(adapter, EFUSE_MAP_SEL_LOG_DAV);
-	} else {
-		ret = efuse_map_init(adapter, EFUSE_MAP_SEL_LOG);
-		if (ret != 0)
-			return ret;
-		ret = efuse_map_init(adapter, EFUSE_MAP_SEL_PHY_WL);
-	}
+	ret = efuse_map_init(adapter, EFUSE_MAP_SEL_LOG);
 	if (ret)
 		return ret;
 
+#if 0 //NEO
 	if (*bank_efuse_info.log_map_valid == 0) {
 		ret = proc_dump_efuse(adapter, cfg);
 		if (ret != 0) {
@@ -2125,85 +2115,25 @@ u32 efuse_tbl_exit(struct mac_adapter *adapter)
 	return MACSUCCESS;
 }
 
-#if 0 //NEO
 
 static u32 efuse_map_init(struct mac_adapter *adapter,
 			  enum efuse_map_sel map_sel)
 {
+	struct mac_efuse_param *efuse_param = &adapter->efuse_param;
 	u32 size;
-	struct mac_ax_efuse_param *efuse_param = &adapter->efuse_param;
 
-	switch (map_sel) {
-	case EFUSE_MAP_SEL_PHY_WL:
-		size = adapter->hw_info->efuse_size;
-		if (!efuse_param->efuse_map) {
-			efuse_param->efuse_map = (u8 *)PLTFM_MALLOC(size);
-			if (!efuse_param->efuse_map) {
-				PLTFM_MSG_ERR("[ERR]malloc map\n");
-				return MACBUFALLOC;
-			}
-		}
-		break;
-	case EFUSE_MAP_SEL_PHY_BT:
-		size = adapter->hw_info->bt_efuse_size;
-		if (!efuse_param->bt_efuse_map) {
-			efuse_param->bt_efuse_map = (u8 *)PLTFM_MALLOC(size);
-			if (!efuse_param->bt_efuse_map) {
-				PLTFM_MSG_ERR("[ERR]malloc map\n");
-				return MACBUFALLOC;
-			}
-		}
-		break;
-	case EFUSE_MAP_SEL_LOG:
-		size = adapter->hw_info->log_efuse_size;
+	size = adapter->hw_info->log_efuse_size;
+	if (!efuse_param->log_efuse_map) {
+		efuse_param->log_efuse_map = (u8 *)PLTFM_MALLOC(size);
 		if (!efuse_param->log_efuse_map) {
-			efuse_param->log_efuse_map = (u8 *)PLTFM_MALLOC(size);
-			if (!efuse_param->log_efuse_map) {
-				PLTFM_MSG_ERR("[ERR]malloc map\n");
-				return MACBUFALLOC;
-			}
+			PLTFM_MSG_ERR("[ERR]malloc map\n");
+			return MACBUFALLOC;
 		}
-		break;
-	case EFUSE_MAP_SEL_LOG_BT:
-		size = adapter->hw_info->bt_log_efuse_size;
-		if (!efuse_param->bt_log_efuse_map) {
-			efuse_param->bt_log_efuse_map =
-				(u8 *)PLTFM_MALLOC(size);
-			if (!efuse_param->bt_log_efuse_map) {
-				PLTFM_MSG_ERR("[ERR]malloc map\n");
-				return MACBUFALLOC;
-			}
-		}
-		break;
-	case EFUSE_MAP_SEL_PHY_DAV:
-		size = adapter->hw_info->dav_efuse_size;
-		if (!efuse_param->dav_efuse_map) {
-			efuse_param->dav_efuse_map = (u8 *)PLTFM_MALLOC(size);
-			if (!efuse_param->dav_efuse_map) {
-				PLTFM_MSG_ERR("[ERR]malloc map\n");
-				return MACBUFALLOC;
-			}
-		}
-		break;
-	case EFUSE_MAP_SEL_LOG_DAV:
-		size = adapter->hw_info->dav_log_efuse_size;
-		if (!efuse_param->dav_log_efuse_map) {
-			efuse_param->dav_log_efuse_map =
-				(u8 *)PLTFM_MALLOC(size);
-			if (!efuse_param->dav_log_efuse_map) {
-				PLTFM_MSG_ERR("[ERR]malloc map\n");
-				return MACBUFALLOC;
-			}
-		}
-		break;
-	default:
-		break;
 	}
 
 	return MACSUCCESS;
 }
 
-#endif //NEO
 
 static u32 efuse_fwcmd_ck(struct mac_adapter *adapter)
 {

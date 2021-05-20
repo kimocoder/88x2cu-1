@@ -2225,7 +2225,9 @@ struct mac_ax_pg_efuse_info {
 	u32 efuse_mask_size;
 };
 
-struct mac_ax_efuse_param {
+#endif //NEO
+
+struct mac_efuse_param {
 	u8 *efuse_map;
 	u8 *bt_efuse_map;
 	u8 *log_efuse_map;
@@ -2238,6 +2240,8 @@ struct mac_ax_efuse_param {
 	u8 bt_log_efuse_map_valid;
 	u8 auto_ck_en;
 };
+
+#if 0 //NEO
 
 /*-------------------- Define offload related Struct -------------------------*/
 struct mac_ax_read_req {
@@ -4549,8 +4553,8 @@ struct mac_adapter {
 	struct mac_state_mach sm;
 	struct mac_hw_info *hw_info;
 	struct mac_fw_info fw_info;
+	struct mac_efuse_param efuse_param;
 #if 0 // NEO
-	struct mac_ax_efuse_param efuse_param;
 	struct mac_ax_mac_pwr_info mac_pwr_info;
 	struct mac_ax_ft_status *ft_stat;
 	struct mac_ax_hfc_param *hfc_param;
