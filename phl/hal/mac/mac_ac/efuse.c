@@ -1742,26 +1742,30 @@ u32 mac_set_efuse_info(struct mac_adapter *adapter, u8 *efuse_map,
 	return MACSUCCESS;
 }
 
+#endif //NEO
+
 u32 mac_read_hidden_rpt(struct mac_adapter *adapter,
 			struct mac_defeature_value *rpt)
 {
 	u32 ret, stat;
+#if 0 //NEO
 	struct mac_ax_h2creg_info h2c;
 	struct mac_ax_c2hreg_poll c2h;
 	struct fwcmd_c2hreg *c2h_content;
+#endif //NEO
 
 	ret = efuse_proc_ck(adapter);
 	if (ret != MACSUCCESS)
 		return ret;
 
-	ret = cnv_efuse_state(adapter, MAC_AX_EFUSE_PHY);
+	ret = cnv_efuse_state(adapter, MAC_EFUSE_PHY);
 	if (ret != MACSUCCESS)
 		return ret;
 
-	ret = switch_efuse_bank(adapter, MAC_AX_EFUSE_BANK_WIFI);
+	ret = switch_efuse_bank(adapter, MAC_EFUSE_BANK_WIFI);
 	if (ret != MACSUCCESS) {
 		PLTFM_MSG_ERR("[ERR]switch efuse bank!!\n");
-		stat = cnv_efuse_state(adapter, MAC_AX_EFUSE_IDLE);
+		stat = cnv_efuse_state(adapter, MAC_EFUSE_IDLE);
 		if (stat != MACSUCCESS)
 			return stat;
 		return ret;
@@ -1771,6 +1775,7 @@ u32 mac_read_hidden_rpt(struct mac_adapter *adapter,
 	if (ret != MACSUCCESS)
 		return ret;
 
+#if 0 //NEO
 	h2c.id = FWCMD_H2CREG_FUNC_HIDDEN_GET;
 	h2c.content_len = sizeof(struct mac_efuse_hidden_h2creg);
 
@@ -1804,13 +1809,16 @@ u32 mac_read_hidden_rpt(struct mac_adapter *adapter,
 	rpt->hw_special_type =
 	GET_FIELD(c2h_content->dword2,
 		  FWCMD_C2HREG_EFUSE_HIDDEN_HW_SPECIAL_TYPE);
+#endif //NEO
 
-	ret = cnv_efuse_state(adapter, MAC_AX_EFUSE_IDLE);
+	ret = cnv_efuse_state(adapter, MAC_EFUSE_IDLE);
 	if (ret != MACSUCCESS)
 		return ret;
 
 	return MACSUCCESS;
 }
+
+#if 0 //NEO
 
 u32 mac_check_efuse_autoload(struct mac_adapter *adapter,
 			     u8 *autoload_status)

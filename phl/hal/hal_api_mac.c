@@ -4921,7 +4921,7 @@ err_mem_tmp_map:
 
 	return status;
 }
-
+#endif //NEO
 
 enum rtw_hal_status
 rtw_hal_mac_read_hidden_rpt(struct rtw_hal_com_t *hal_com)
@@ -4959,6 +4959,7 @@ rtw_hal_mac_read_hidden_rpt(struct rtw_hal_com_t *hal_com)
 	return RTW_HAL_STATUS_SUCCESS;
 }
 
+#if 0 //NEO
 
 enum rtw_hal_status
 rtw_hal_mac_check_efuse_autoload(struct rtw_hal_com_t *hal_com, u8 *autoload)

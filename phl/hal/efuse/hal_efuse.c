@@ -80,6 +80,8 @@ u32 efuse_check_autoload(struct efuse_t *efuse)
 	return hal_status;
 }
 
+#endif //NEO
+
 u32 efuse_hidden_handle(struct efuse_t *efuse)
 {
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_FAILURE;
@@ -88,6 +90,8 @@ u32 efuse_hidden_handle(struct efuse_t *efuse)
 
 	return hal_status;
 }
+
+#if 0 //NEO
 
 enum rtw_hal_status efuse_set_hw_cap(struct efuse_t *efuse)
 {
@@ -171,37 +175,15 @@ enum rtw_hal_status rtw_efuse_shadow_load(void *efuse, bool is_limit)
 	return status;
 }
 
-#if 0 //NEO
 
-enum rtw_hal_status rtw_efuse_shadow_file_load(void *efuse, char *ic_name, bool is_limit)
+static enum rtw_hal_status rtw_efuse_shadow_file_load(void *efuse, char *ic_name, bool is_limit)
 {
 	enum rtw_hal_status status = RTW_HAL_STATUS_SUCCESS;
 
-#ifdef CONFIG_EFUSE_CONFIG_FILE
-	struct efuse_t *efuse_info = efuse;
-
-	if (efuse_info->is_map_valid != true ||
-		rtw_hal_rf_check_efuse_data(efuse_info->hal_com, HW_PHY_0) != true) {
-
-		if (rtw_hal_efuse_shadow_file_load(efuse_info->hal_com ,
-						ic_name, is_limit) == RTW_HAL_STATUS_SUCCESS) {
-
-			if (rtw_hal_rf_check_efuse_data(efuse_info->hal_com, HW_PHY_0) == true) {
-				efuse_info->is_map_valid = true;
-				PHL_INFO(" %s() hal_rf check file efuse is_map_valid.\n", __FUNCTION__);
-			} else {
-				status = RTW_HAL_STATUS_FAILURE;
-				PHL_WARN(" %s() efuse Power invalid !\n", __FUNCTION__);
-			}
-		} else {
-			PHL_WARN("%s: efuse shadow_file_load fail!\n", __FUNCTION__);
-			status = RTW_HAL_STATUS_FAILURE;
-		}
-	}
-#endif
 	return status;
 }
 
+#if 0 //NEO
 enum rtw_hal_status rtw_efuse_shadow_update(void *efuse, bool is_limit)
 {
 	enum rtw_hal_status status = RTW_HAL_STATUS_EFUSE_PG_FAIL;
@@ -743,7 +725,6 @@ void rtw_efuse_process(void *efuse, char *ic_name)
 	/* Load wifi full map to shadow map */
 	rtw_efuse_shadow_load(efuse_info, false);
 
-#if 0 //NEO
 	rtw_efuse_shadow_file_load(efuse_info, ic_name, false);
 
 	debug_dump_data(efuse_info->shadow_map, efuse_info->log_efuse_size,
@@ -751,6 +732,7 @@ void rtw_efuse_process(void *efuse, char *ic_name)
 	efuse_hidden_handle(efuse_info);
 
 	SET_STATUS_FLAG(efuse_info->status, EFUSE_STATUS_PROCESS);
+#if 0 //NEO
 	/*
 	 * We can set the hw cap after we got the shadow map.
 	 * The efuse get info API will check the efuse is processed or not.

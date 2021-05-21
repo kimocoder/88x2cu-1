@@ -904,6 +904,8 @@ u32 mac_set_efuse_info(struct mac_adapter *adapter, u8 *efuse_map,
  * @}
  */
 
+#endif //NEO
+
 /**
  * @addtogroup Efuse
  * @{
@@ -922,6 +924,8 @@ u32 mac_read_hidden_rpt(struct mac_adapter *adapter,
 /**
  * @}
  */
+
+#if 0 //NEO
 
 /**
  * @addtogroup Efuse

@@ -334,7 +334,9 @@ static struct mac_ops mac8822c_ops = {
 	NULL, /* mac_cmp_sec_data_by_map, */ /* compare_secure_data_map */
 	NULL, /* mac_get_efuse_info, */ /* get_efuse_info */
 	NULL, /* mac_set_efuse_info, */ /* set_efuse_info */
-	NULL, /* mac_read_hidden_rpt, */ /* read_efuse_hidden_report */
+#endif // NEO
+	mac_read_hidden_rpt, /* read_hidden_rpt */
+#if 0 //NEO
 	NULL, /* mac_check_efuse_autoload, */ /* check_efuse_autoload */
 	NULL, /* mac_pg_simulator, */ /* efuse pg simulator */
 	NULL, /* mac_checksum_update, */ /* checksum update */

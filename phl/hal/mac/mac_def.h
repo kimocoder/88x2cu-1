@@ -1976,6 +1976,8 @@ struct mac_ax_conf_ofld_req {
 	union mac_conf_ofld_req_bd req;
 };
 
+#endif //NEO
+
 struct mac_defeature_value {
 	u8 rx_spatial_stream;
 	u8 bandwidth;
@@ -1983,6 +1985,8 @@ struct mac_defeature_value {
 	u8 protocol_80211;
 	u8 NIC_router;
 };
+
+#if 0 //NEO
 
 struct mac_ax_wowlan_info {
 	u8 *aoac_report;
@@ -5071,8 +5075,10 @@ struct mac_ops {
 			      u32 length, u8 *autoload_status);
 	u32 (*set_efuse_info)(struct mac_adapter *adapter, u8 *efuse_map,
 			      enum rtw_efuse_info id, void *value, u32 length);
+#endif // NEO
 	u32 (*read_hidden_rpt)(struct mac_adapter *adapter,
 			       struct mac_defeature_value *rpt);
+#if 0 //NEO
 	u32 (*check_efuse_autoload)(struct mac_adapter *adapter,
 				    u8 *autoload_status);
 	u32 (*pg_simulator)(struct mac_adapter *adapter,
