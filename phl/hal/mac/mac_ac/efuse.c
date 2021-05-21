@@ -570,6 +570,24 @@ u32 mac_dump_log_efuse_plus(struct mac_adapter *adapter,
 
 #endif //NEO
 
+static u32 bank_efuse_info_init(struct mac_adapter *adapter)
+{
+	struct mac_hw_info *hw_info = adapter->hw_info;
+	struct mac_efuse_param *efuse_param = &adapter->efuse_param;
+
+	if (!hw_info) {
+		PLTFM_MSG_ERR("[ERR] hw_info is NULL\n");
+		return MACNPTR;
+	}
+
+	bank_efuse_info.log_map_valid = &efuse_param->log_efuse_map_valid;
+	bank_efuse_info.log_map_size = &hw_info->log_efuse_size;
+
+	*bank_efuse_info.log_map_valid = 0;
+
+	return MACSUCCESS;
+}
+
 u32 mac_dump_log_efuse(struct mac_adapter *adapter,
 		       enum mac_efuse_parser_cfg parser_cfg,
 		       enum mac_efuse_read_cfg cfg,
@@ -586,23 +604,16 @@ u32 mac_dump_log_efuse(struct mac_adapter *adapter,
 
 	PLTFM_MSG_TRACE("[TRACE]cfg = %d\n", cfg);
 	
-
-
 	ret = efuse_proc_ck(adapter);
-	if (ret != 0)
+	if (ret)
 		return ret;
 
 	ret = cnv_efuse_state(adapter, MAC_EFUSE_LOG_MAP);
-	if (ret != 0)
+	if (ret)
 		return ret;
 
-	if (!hw_info) {
-		PLTFM_MSG_ERR("[ERR] hw_info is NULL\n");
-		return MACNPTR;
-	}
-
 	ret = switch_efuse_bank(adapter, MAC_EFUSE_BANK_WIFI);
-	if (ret != 0) {
+	if (ret) {
 		PLTFM_MSG_ERR("[ERR]switch efuse bank!!\n");
 		stat = cnv_efuse_state(adapter, MAC_EFUSE_IDLE);
 		if (stat != 0)
@@ -610,13 +621,24 @@ u32 mac_dump_log_efuse(struct mac_adapter *adapter,
 		return ret;
 	}
 
-	bank_efuse_info.log_map_size = &hw_info->log_efuse_size;
+	ret = bank_efuse_info_init(adapter);
+	if (ret) {
+		PLTFM_MSG_ERR("[ERR] bank_efuse_info_init failed\n");
+		return ret;
+		
+	}
+
 	efuse_size = *bank_efuse_info.log_map_size;
-	pr_info("%s NEO efuse_size=%d\n", __func__, efuse_size);
 
 	ret = efuse_map_init(adapter, EFUSE_MAP_SEL_LOG);
-	if (ret)
+	if (ret) {
+		PLTFM_MSG_ERR("[ERR] efuse_map_init failed\n");
 		return ret;
+	}
+
+	if (*bank_efuse_info.log_map_valid == 0) {
+		pr_info("%s NEO log_map is invalid\n", __func__);
+	}
 
 #if 0 //NEO
 	if (*bank_efuse_info.log_map_valid == 0) {
