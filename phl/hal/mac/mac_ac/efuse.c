@@ -39,6 +39,11 @@ enum rtw_dv_sel dv_sel = DDV;
 #define BIT_GET_EF_DATA(x) (((x) >> BIT_SHIFT_EF_DATA) & BIT_MASK_EF_DATA)
 #define BIT_SET_EF_DATA(x, v) (BIT_CLEAR_EF_DATA(x) | BIT_EF_DATA(v))
 
+#define MAC_HIDDEN_RPT_LEN	8
+#define MAC_HIDDEN_RPT_2_LEN	5
+#define C2H_MAC_HIDDEN_RPT	0x19
+#define C2H_DEFEATURE_RSVD	0xFD
+
 
 static u32 efuse_map_init(struct mac_adapter *adapter,
 			  enum efuse_map_sel map_sel);
@@ -1747,73 +1752,33 @@ u32 mac_set_efuse_info(struct mac_adapter *adapter, u8 *efuse_map,
 u32 mac_read_hidden_rpt(struct mac_adapter *adapter,
 			struct mac_defeature_value *rpt)
 {
-	u32 ret, stat;
-#if 0 //NEO
-	struct mac_ax_h2creg_info h2c;
-	struct mac_ax_c2hreg_poll c2h;
-	struct fwcmd_c2hreg *c2h_content;
-#endif //NEO
+	struct mac_intf_ops *ops = adapter_to_intf_ops(adapter);
+	u8 id = C2H_DEFEATURE_RSVD;
+	u8 mac_hidden_rpt[MAC_HIDDEN_RPT_LEN + MAC_HIDDEN_RPT_2_LEN] = {0};
+	u32 cnt = 100;
+	u32 ret;
+	int i;
 
-	ret = efuse_proc_ck(adapter);
-	if (ret != MACSUCCESS)
-		return ret;
-
-	ret = cnv_efuse_state(adapter, MAC_EFUSE_PHY);
-	if (ret != MACSUCCESS)
-		return ret;
-
-	ret = switch_efuse_bank(adapter, MAC_EFUSE_BANK_WIFI);
-	if (ret != MACSUCCESS) {
-		PLTFM_MSG_ERR("[ERR]switch efuse bank!!\n");
-		stat = cnv_efuse_state(adapter, MAC_EFUSE_IDLE);
-		if (stat != MACSUCCESS)
-			return stat;
-		return ret;
+	while (cnt--) {
+		id = MAC_REG_R8(REG_C2HEVT);
+		pr_info("%s NEO id=0x%x\n", __func__, id);
+		if (id == C2H_MAC_HIDDEN_RPT)
+			break;
+		PLTFM_DELAY_MS(10);
 	}
 
-	ret = efuse_map_init(adapter, EFUSE_MAP_SEL_PHY_WL);
-	if (ret != MACSUCCESS)
-		return ret;
-
-#if 0 //NEO
-	h2c.id = FWCMD_H2CREG_FUNC_HIDDEN_GET;
-	h2c.content_len = sizeof(struct mac_efuse_hidden_h2creg);
-
-	c2h.polling_id = FWCMD_C2HREG_FUNC_EFUSE_HIDDEN;
-	c2h.retry_cnt = EFUSE_C2HREG_WAIT_CNT;
-	c2h.retry_wait_us = EFUSE_C2HREG_RETRY_WAIT_US;
-
-	ret = proc_msg_reg(adapter, &h2c, &c2h);
-	if (ret != MACSUCCESS) {
-		PLTFM_MSG_ERR("[ERR]read hidden rpt proc msg reg %d\n", ret);
-		stat = cnv_efuse_state(adapter, MAC_AX_EFUSE_IDLE);
-		if (stat)
-			return stat;
-		return ret;
+	if (id == C2H_MAC_HIDDEN_RPT) {
+		for (i = 0; i < MAC_HIDDEN_RPT_LEN + MAC_HIDDEN_RPT_2_LEN; i++)
+			mac_hidden_rpt[i] = MAC_REG_R8(REG_C2HEVT + 2 + i);
+	} else {
+		PLTFM_MSG_ERR("[ERR] poll hidden rpt failed\n");
+		return MACPOLLTO;
 	}
 
-	c2h_content = &c2h.c2hreg_cont.c2h_content;
-	rpt->rx_spatial_stream =
-	GET_FIELD(c2h_content->dword0, FWCMD_C2HREG_EFUSE_HIDDEN_RX_NSS);
-	rpt->bandwidth =
-	GET_FIELD(c2h_content->dword0, FWCMD_C2HREG_EFUSE_HIDDEN_BW);
-	rpt->tx_spatial_stream =
-	GET_FIELD(c2h_content->dword1, FWCMD_C2HREG_EFUSE_HIDDEN_TX_NSS);
-	rpt->protocol_80211 =
-	GET_FIELD(c2h_content->dword1, FWCMD_C2HREG_EFUSE_HIDDEN_PROT80211);
-	rpt->NIC_router =
-	GET_FIELD(c2h_content->dword1, FWCMD_C2HREG_EFUSE_HIDDEN_NIC_ROUTER);
-	rpt->wl_func_support =
-	GET_FIELD(c2h_content->dword1,
-		  FWCMD_C2HREG_EFUSE_HIDDEN_WL_FUNC_SUPPORT);
-	rpt->hw_special_type =
-	GET_FIELD(c2h_content->dword2,
-		  FWCMD_C2HREG_EFUSE_HIDDEN_HW_SPECIAL_TYPE);
-#endif //NEO
+	MAC_REG_W8(REG_C2HEVT, C2H_DBG);
 
-	ret = cnv_efuse_state(adapter, MAC_EFUSE_IDLE);
-	if (ret != MACSUCCESS)
-		return ret;
+	print_hex_dump(KERN_INFO, "NEO HIDDEN RPT: ", DUMP_PREFIX_OFFSET, 16, 1,
+		       mac_hidden_rpt, MAC_HIDDEN_RPT_LEN + MAC_HIDDEN_RPT_2_LEN, 1);
 
 	return MACSUCCESS;
 }

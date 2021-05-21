@@ -65,6 +65,7 @@
 #define BIT_DMEM_DW_OK		BIT(5)
 #define BIT_DMEM_CHKSUM_OK	BIT(6)
 
+#define C2H_DEFEATURE_RSVD	0xFD
 
 struct halmac_backup_info {
 	u32 mac_register;
@@ -658,8 +659,6 @@ u32 mac_enable_fw(struct mac_adapter *adapter, enum rtw_fw_type cat)
 	u32 bckp_idx = 0;
 	struct halmac_backup_info bckp[DLFW_RESTORE_REG_NUM];
 
-	pr_info("%s NEO TODO\n", __func__);
-
 	fw_len = array_length_8822c_nic;
 	fw = array_8822c_nic;
 
@@ -712,6 +711,9 @@ u32 mac_enable_fw(struct mac_adapter *adapter, enum rtw_fw_type cat)
 	MAC_REG_W8(REG_BCN_CTRL, value8);
 
 	pltfm_reset_88xx(adapter);
+
+	/* for efuse hidden rpt */
+	MAC_REG_W8(REG_C2HEVT, C2H_DEFEATURE_RSVD);
 
 	ret = mac_fwdl(adapter, fw, fw_len);
 	if (ret != MACSUCCESS) {

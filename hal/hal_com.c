@@ -1403,6 +1403,8 @@ int hal_read_mac_hidden_rpt(_adapter *adapter)
 	/* inform FW mac hidden rpt has read */
 	rtw_write8(adapter, REG_C2HEVT_MSG_NORMAL, C2H_DBG);
 
+	print_hex_dump(KERN_INFO, "hidden rpt: ", DUMP_PREFIX_OFFSET, 16, 1, mac_hidden_rpt, 13, 1);
+
 mac_hidden_rpt_hdl:
 	c2h_mac_hidden_rpt_hdl(adapter, mac_hidden_rpt, MAC_HIDDEN_RPT_LEN);
 	c2h_mac_hidden_rpt_2_hdl(adapter, mac_hidden_rpt + MAC_HIDDEN_RPT_LEN, MAC_HIDDEN_RPT_2_LEN);

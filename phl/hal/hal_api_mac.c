@@ -2530,55 +2530,19 @@ rtw_hal_mac_hal_fast_init(struct rtw_phl_com_t *phl_com,
 	struct rtw_fw_info_t *fw_info = &phl_com->fw_info;
 	struct hal_ops_t *hal_ops = hal_get_ops(hal_info);
 	struct mac_fwdl_info fwdl_info;
+	struct mac_defeature_value rpt;
 	u32 mac_status = 0;
 	enum rtw_fw_type fw_type = RTW_FW_MAX;
 
-	FUNCIN_WSTS(hstatus);
-
-#ifdef PHL_FEATURE_NIC
 	fw_type = RTW_FW_NIC;
-#elif defined(PHL_FEATURE_AP)
-	fw_type = RTW_FW_AP;
-#else
-	fw_type  = RTW_FW_MAX;
-#endif
-
-	pr_info("%s NEO TODO\n", __func__);
-
-#if 0 //NEO
-	hstatus = hal_ops->hal_cfg_fw(phl_com, hal_info, init_info->ic_name, fw_type);
-	if(RTW_HAL_STATUS_SUCCESS != hstatus) {
-		PHL_ERR("%s : Cfg FW Failed: %d!\n", __func__, hstatus);
-		return hstatus;
-	}
-
-	/* fwdl_info */
-	fwdl_info.fw_en = fw_info->fw_en;
-	fwdl_info.dlram_en = fw_info->dlram_en;
-	fwdl_info.dlrom_en = fw_info->dlrom_en;
-	fwdl_info.ram_buff = fw_info->ram_buff;
-	fwdl_info.ram_size = fw_info->ram_size;
-	fwdl_info.rom_buff = fw_info->rom_buff;
-	fwdl_info.rom_size = fw_info->rom_size;
-	fwdl_info.fw_cat = fw_info->fw_type;
-
-	if(fw_info->fw_src == RTW_FW_SRC_EXTNAL)
-		fwdl_info.fw_from_hdr = 0;
-	else
-		fwdl_info.fw_from_hdr = 1;
-#endif //NEO
 
 	mac_status = mac->ops->hal_fast_init(mac, &init_info->trx_info, &fwdl_info, &init_info->intf_info);
-	if (mac_status == MACSUCCESS)
-		hstatus = RTW_HAL_STATUS_SUCCESS;
-	else {
-
-		hstatus = RTW_HAL_STATUS_HAL_INIT_FAILURE;
-		PHL_ERR("%s : mac_status %d!\n", __func__, mac_status);
+	if (mac_status != MACSUCCESS) {
+		PHL_ERR("%s : hal_fast_init failed, status %d!\n", __func__, mac_status);
+		return RTW_HAL_STATUS_HAL_INIT_FAILURE;
 	}
 
-	FUNCOUT_WSTS(hstatus);
-	return hstatus;
+	return RTW_HAL_STATUS_SUCCESS;
 }
 
 #if 0 //NEO
@@ -4934,7 +4898,7 @@ rtw_hal_mac_read_hidden_rpt(struct rtw_hal_com_t *hal_com)
 
 	err = mac->ops->read_hidden_rpt(mac, &rpt);
 	if (err != MACSUCCESS) {
-		PHL_TRACE(COMP_PHL_TRIG, _PHL_INFO_, "err=0x%x\n", err);
+		PHL_ERR("%s: mac read_hidden_rpt fail!, ret=%d\n", __func__, err);
 		return RTW_HAL_STATUS_FAILURE;
 	}
 

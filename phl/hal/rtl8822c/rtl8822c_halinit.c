@@ -304,6 +304,7 @@ enum rtw_hal_status hal_get_efuse_8822c(struct rtw_phl_com_t *phl_com,
 	if (hal_status != RTW_HAL_STATUS_SUCCESS)
 		goto hal_power_off_fail;
 
+
 	FUNCOUT();
 	return RTW_HAL_STATUS_SUCCESS;
 

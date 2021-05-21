@@ -1462,18 +1462,10 @@ enum rtw_phl_status rtw_phl_preload(void *phl)
 	struct phl_info_t *phl_info = (struct phl_info_t *)phl;
 	enum rtw_hal_status hal_status = RTW_HAL_STATUS_SUCCESS;
 
-#ifdef RTW_WKARD_PRELOAD_TRX_RESET
-aa
-	struct phl_hci_trx_ops *ops = phl_info->hci_trx_ops;
-#endif
 	FUNCIN();
 
 	hal_status = rtw_hal_preload(phl_info->phl_com, phl_info->hal);
 
-#ifdef RTW_WKARD_PRELOAD_TRX_RESET
-aa
-	ops->trx_reset(phl_info, PHL_CTRL_TX|PHL_CTRL_RX);
-#endif
 	if (hal_status != RTW_HAL_STATUS_SUCCESS)
 		return RTW_PHL_STATUS_FAILURE;
 
