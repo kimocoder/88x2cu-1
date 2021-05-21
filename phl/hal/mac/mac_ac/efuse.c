@@ -53,6 +53,9 @@ static u32 read_hw_efuse(struct mac_adapter *adapter, u32 offset, u32 size,
 			 u8 *map);
 static u32 eeprom_parser(struct mac_adapter *adapter, u8 *phy_map,
 			 u8 *log_map, enum mac_efuse_parser_cfg cfg);
+static u32 query_status_map(struct mac_adapter *adapter,
+			    enum mac_efuse_feature_id feature_id,
+			    u8 *map, bool is_limit);
 #if 0 //NEO
 static u32 write_hw_efuse(struct mac_adapter *adapter, u32 offset, u8 value);
 static u32 cmp_hw_efuse(struct mac_adapter *adapter, u32 offset, u16 val);
@@ -80,9 +83,6 @@ static u32 program_efuse(struct mac_adapter *adapter,
 			 bool pg_sim);
 static void mask_eeprom(struct mac_adapter *adapter,
 			struct mac_ax_pg_efuse_info *info);
-static u32 query_status_map(struct mac_adapter *adapter,
-			    enum mac_ax_efuse_feature_id feature_id,
-			    u8 *map, bool is_limit);
 static u32 adjust_mask(struct mac_adapter *adapter,
 		       struct mac_ax_pg_efuse_info *info);
 static u32 compare_info_length(enum mac_ax_intf intf,
@@ -706,14 +706,13 @@ u32 mac_dump_log_efuse(struct mac_adapter *adapter,
 			       *bank_efuse_info.log_map, efuse_size, 1);
 	}
 
-#if 0 //NEO
-	query_status_map(adapter, MAC_AX_DUMP_LOGICAL_EFUSE,
+	query_status_map(adapter, MAC_DUMP_LOGICAL_EFUSE,
 			 efuse_map, is_limit);
 
-	ret = cnv_efuse_state(adapter, MAC_AX_EFUSE_IDLE);
+	ret = cnv_efuse_state(adapter, MAC_EFUSE_IDLE);
 	if (ret != 0)
 		return ret;
-#endif //NEO
+
 	return MACSUCCESS;
 }
 
@@ -3106,32 +3105,34 @@ static void mask_eeprom(struct mac_adapter *adapter,
 	}
 }
 
+#endif //NEO
+
 static u32 query_status_map(struct mac_adapter *adapter,
-			    enum mac_ax_efuse_feature_id feature_id,
+			    enum mac_efuse_feature_id feature_id,
 			    u8 *map, bool is_limit)
 {
-	struct mac_ax_hw_info *hw_info = adapter->hw_info;
-	enum mac_ax_intf intf = adapter->hw_info->intf;
+	struct mac_hw_info *hw_info = adapter->hw_info;
+	enum mac_intf intf = adapter->hw_info->intf;
 	u32 map_size = 0;
 
 	PLTFM_MUTEX_LOCK(&efuse_tbl.lock);
 	switch (feature_id) {
-	case MAC_AX_DUMP_PHYSICAL_EFUSE:
+	case MAC_DUMP_PHYSICAL_EFUSE:
 		map_size = *bank_efuse_info.phy_map_size;
 		PLTFM_MEMCPY(map, *bank_efuse_info.phy_map, map_size);
 		break;
-	case MAC_AX_DUMP_LOGICAL_EFUSE:
+	case MAC_DUMP_LOGICAL_EFUSE:
 		if (!is_limit) {
 			map_size = *bank_efuse_info.log_map_size;
 		} else {// WL
 			switch (intf) {
-			case MAC_AX_INTF_PCIE:
+			case MAC_INTF_PCIE:
 				map_size = hw_info->limit_efuse_size_pcie;
 				break;
-			case MAC_AX_INTF_USB:
+			case MAC_INTF_USB:
 				map_size = hw_info->limit_efuse_size_usb;
 				break;
-			case MAC_AX_INTF_SDIO:
+			case MAC_INTF_SDIO:
 				map_size = hw_info->limit_efuse_size_sdio;
 				break;
 			default:
@@ -3147,6 +3148,8 @@ static u32 query_status_map(struct mac_adapter *adapter,
 
 	return MACSUCCESS;
 }
+
+#if 0 //NEO
 
 static u32 adjust_mask(struct mac_adapter *adapter,
 		       struct mac_ax_pg_efuse_info *info)
