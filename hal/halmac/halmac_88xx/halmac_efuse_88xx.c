@@ -1014,6 +1014,9 @@ read_hw_efuse_88xx(struct halmac_adapter *adapter, u32 offset, u32 size,
 	enum halmac_ret_status status = HALMAC_RET_SUCCESS;
 	struct halmac_api *api = (struct halmac_api *)adapter->halmac_api;
 
+	pr_info("%s NEO take off 2.V LDO disable \n", __func__);
+
+#if 0 //NEO
 	/* Read efuse no need 2.5V LDO */
 	enable = 0;
 	status = api->halmac_set_hw_value(adapter, HALMAC_HW_LDO25_EN, &enable);
@@ -1021,6 +1024,8 @@ read_hw_efuse_88xx(struct halmac_adapter *adapter, u32 offset, u32 size,
 		PLTFM_MSG_ERR("[ERR]dis ldo25\n");
 		return status;
 	}
+#endif //NEO
+
 	value32 = HALMAC_REG_R32(REG_EFUSE_CTRL);
 
 	for (addr = offset; addr < offset + size; addr++) {

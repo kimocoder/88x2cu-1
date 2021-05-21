@@ -13052,11 +13052,13 @@ void rtw_dump_cur_efuse(PADAPTER padapter)
 		return;
 	}
 
+
 #ifdef CONFIG_RTW_DEBUG
 	if (hal_data->efuse_file_status == EFUSE_FILE_LOADED)
 		RTW_MAP_DUMP_SEL(RTW_DBGDUMP, "EFUSE FILE", hal_data->efuse_eeprom_data, mapsize);
 	else
-		RTW_MAP_DUMP_SEL(RTW_DBGDUMP, "HW EFUSE", hal_data->efuse_eeprom_data, mapsize);
+		print_hex_dump(KERN_INFO, "HW EFUSE: ", DUMP_PREFIX_OFFSET, 16, 1, hal_data->efuse_eeprom_data, mapsize, 1);
+		//RTW_MAP_DUMP_SEL(RTW_DBGDUMP, "HW EFUSE", hal_data->efuse_eeprom_data, mapsize);
 #endif
 }
 
