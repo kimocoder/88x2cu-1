@@ -4993,6 +4993,8 @@ rtw_hal_mac_get_efuse_mask_size(struct rtw_hal_com_t *hal_com, u32 *val,
 	return RTW_HAL_STATUS_SUCCESS;
 }
 
+#endif //NEO
+
 enum rtw_hal_status
 rtw_hal_mac_get_efuse_info(struct rtw_hal_com_t *hal_com,
 	u8 *efuse_map, enum rtw_efuse_info info_type, void *value,
@@ -5008,6 +5010,8 @@ rtw_hal_mac_get_efuse_info(struct rtw_hal_com_t *hal_com,
 		return RTW_HAL_STATUS_FAILURE;
 	return RTW_HAL_STATUS_SUCCESS;
 }
+
+#if 0 //NEO
 
 enum rtw_hal_status
 rtw_hal_mac_read_phy_efuse(struct rtw_hal_com_t *hal_com,

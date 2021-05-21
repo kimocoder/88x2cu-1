@@ -1231,8 +1231,10 @@ _adapter *rtw_usb_primary_adapter_init(struct dvobj_priv *dvobj,
 	dvobj_to_pwrctl(dvobj)->autopm_cnt = 1;
 #endif
 
+	/* get mac addr */
+	rtw_hw_get_mac_addr(dvobj, hw_mac_addr);
 	/* set mac addr */
-	rtw_macaddr_cfg(adapter_mac_addr(padapter), get_hal_mac_addr(padapter));
+	rtw_macaddr_cfg(adapter_mac_addr(padapter), hw_mac_addr);
 #ifdef CONFIG_MI_WITH_MBSSID_CAM
 	rtw_mbid_camid_alloc(padapter, adapter_mac_addr(padapter));
 #endif

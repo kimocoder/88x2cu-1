@@ -663,11 +663,12 @@ char* rtw_efuse_get_shadowmap_from_to_str(void *efuse)
 	return SHADOWMAP_FROM2STR(efuse_info->map_from_status);
 }
 
+#endif //NEO
 
 enum rtw_hal_status rtw_efuse_get_info(void *efuse,
-									   enum rtw_efuse_info info_type,
-									   void *value,
-									   u8 size)
+				       enum rtw_efuse_info info_type,
+				       void *value,
+				       u8 size)
 {
 	struct efuse_t *efuse_info = efuse;
 	struct rtw_hal_com_t *hal_com = efuse_info->hal_com;
@@ -676,13 +677,15 @@ enum rtw_hal_status rtw_efuse_get_info(void *efuse,
 	if(TEST_STATUS_FLAG(efuse_info->status, EFUSE_STATUS_PROCESS) == false)
 		return RTW_HAL_STATUS_EFUSE_UNINIT;
 
-	if(info_type <= EFUSE_INFO_MAC_MAX)
+//	if(info_type <= EFUSE_INFO_MAC_MAX)
 		hal_status = rtw_hal_mac_get_efuse_info(hal_com,
 												efuse_info->shadow_map,
 												info_type,
 												value,
 												size,
 												efuse_info->is_map_valid);
+
+#if 0 //NEO
 	else if (info_type <= EFUSE_INFO_BB_MAX)
 		hal_status = rtw_hal_bb_get_efuse_info(hal_com,
 											   efuse_info->shadow_map,
@@ -704,11 +707,9 @@ enum rtw_hal_status rtw_efuse_get_info(void *efuse,
 												value,
 												size,
 												efuse_info->is_map_valid);
-
+#endif //NEO
 	return hal_status;
 }
-
-#endif //NEO
 
 void rtw_efuse_process(void *efuse, char *ic_name)
 {

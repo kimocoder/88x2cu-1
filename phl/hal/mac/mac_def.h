@@ -5070,9 +5070,11 @@ struct mac_ops {
 				  struct mac_ax_pg_efuse_info *info);
 	u32 (*cmp_sec_data_by_map)(struct mac_adapter *adapter,
 				   struct mac_ax_pg_efuse_info *info);
+#endif // NEO
 	u32 (*get_efuse_info)(struct mac_adapter *adapter, u8 *efuse_map,
 			      enum rtw_efuse_info id, void *value,
 			      u32 length, u8 *autoload_status);
+#if 0 //NEO
 	u32 (*set_efuse_info)(struct mac_adapter *adapter, u8 *efuse_map,
 			      enum rtw_efuse_info id, void *value, u32 length);
 #endif // NEO

@@ -181,8 +181,7 @@ rtw_hal_get_efuse_info(void *hal,
 	enum rtw_hal_status status = RTW_HAL_STATUS_FAILURE;
 	struct hal_info_t *hal_info = (struct hal_info_t *)hal;
 
-	// NEO : TODO : mark off first
-	//status = rtw_efuse_get_info(hal_info->efuse, info_type, value, size);
+	status = rtw_efuse_get_info(hal_info->efuse, info_type, value, size);
 
 	return status;
 }

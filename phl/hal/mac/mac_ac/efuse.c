@@ -61,6 +61,8 @@ static u32 eeprom_parser(struct mac_adapter *adapter, u8 *phy_map,
 static u32 query_status_map(struct mac_adapter *adapter,
 			    enum mac_efuse_feature_id feature_id,
 			    u8 *map, bool is_limit);
+static u32 compare_info_length(enum mac_intf intf,
+			       enum rtw_efuse_info id, u32 length);
 #if 0 //NEO
 static u32 write_hw_efuse(struct mac_adapter *adapter, u32 offset, u8 value);
 static u32 cmp_hw_efuse(struct mac_adapter *adapter, u32 offset, u16 val);
@@ -90,8 +92,6 @@ static void mask_eeprom(struct mac_adapter *adapter,
 			struct mac_ax_pg_efuse_info *info);
 static u32 adjust_mask(struct mac_adapter *adapter,
 		       struct mac_ax_pg_efuse_info *info);
-static u32 compare_info_length(enum mac_ax_intf intf,
-			       enum rtw_efuse_info id, u32 length);
 static u32 set_check_sum_val(struct mac_adapter *adapter,
 			     u8 *map, u16 value);
 static void cal_check_sum(struct mac_adapter *adapter,
@@ -1613,23 +1613,27 @@ u32 mac_cmp_sec_data_by_map(struct mac_adapter *adapter,
 	return MACSUCCESS;
 }
 
+#endif //NEO
+
 u32 mac_get_efuse_info(struct mac_adapter *adapter, u8 *efuse_map,
 		       enum rtw_efuse_info id, void *value, u32 length,
 		       u8 *autoload_status)
 {
 	u32 offset = 0;
 	u32 ret;
-	enum mac_ax_intf intf = adapter->hw_info->intf;
+	enum mac_intf intf = adapter->hw_info->intf;
 	u8 default_value = 0;
 
 	ret = compare_info_length(intf, id, length);
-	if (ret != 0)
+	if (ret != 0) {
+		PLTFM_MSG_ERR("[ERR]compare_info_length\n");
 		return ret;
+	}
 
-	if (intf == MAC_AX_INTF_USB) {
+	if (intf == MAC_INTF_USB) {
 		switch (id) {
 		case EFUSE_INFO_MAC_ADDR:
-			offset = OFS_ADDR_AU;
+			offset = OFS_ADDR_CU;
 			default_value = VAL_ADDR_AU;
 			break;
 		case EFUSE_INFO_MAC_PID:
@@ -1643,49 +1647,13 @@ u32 mac_get_efuse_info(struct mac_adapter *adapter, u8 *efuse_map,
 		default:
 			return MACNOITEM;
 		}
-	} else if (intf == MAC_AX_INTF_PCIE) {
-		switch (id) {
-		case EFUSE_INFO_MAC_ADDR:
-			offset = OFS_ADDR_AE;
-			default_value = VAL_ADDR_AE;
-			break;
-		case EFUSE_INFO_MAC_DID:
-			offset = OFS_DID_AE;
-			default_value = VAL_DID_AE;
-			break;
-		case EFUSE_INFO_MAC_VID:
-			offset = OFS_VID_AE;
-			default_value = VAL_VID_AE;
-			break;
-		case EFUSE_INFO_MAC_SVID:
-			offset = OFS_SVID_AE;
-			default_value = VAL_SVID_AE;
-			break;
-		case EFUSE_INFO_MAC_SMID:
-			offset = OFS_SMID_AE;
-			default_value = VAL_SMID_AE;
-			break;
-		default:
-			return MACNOITEM;
-		}
-	} else if (intf == MAC_AX_INTF_SDIO) {
-		switch (id) {
-		case EFUSE_INFO_MAC_ADDR:
-			offset = OFS_ADDR_AS;
-			default_value = VAL_ADDR_AS;
-			break;
-		default:
-			return MACNOITEM;
-		}
 	}
-
-	if (*autoload_status == 0)
-		PLTFM_MEMCPY(value, &default_value, 1);
-	else
-		PLTFM_MEMCPY(value, efuse_map + offset, length);
+	PLTFM_MEMCPY(value, efuse_map + offset, length);
 
 	return MACSUCCESS;
 }
+
+#if 0 //NEO
 
 u32 mac_set_efuse_info(struct mac_adapter *adapter, u8 *efuse_map,
 		       enum rtw_efuse_info id, void *value, u32 length)
@@ -3177,12 +3145,14 @@ static u32 adjust_mask(struct mac_adapter *adapter,
 	return MACSUCCESS;
 }
 
-static u32 compare_info_length(enum mac_ax_intf intf,
+#endif //NEO
+
+static u32 compare_info_length(enum mac_intf intf,
 			       enum rtw_efuse_info id, u32 length)
 {
 	u32 idle_len = 0;
 
-	if (intf == MAC_AX_INTF_USB) {
+	if (intf == MAC_INTF_USB) {
 		switch (id) {
 		case EFUSE_INFO_MAC_ADDR:
 			idle_len = LEN_ADDR_AU;
@@ -3196,7 +3166,7 @@ static u32 compare_info_length(enum mac_ax_intf intf,
 		default:
 			return MACNOITEM;
 		}
-	} else if (intf == MAC_AX_INTF_PCIE) {
+	} else if (intf == MAC_INTF_PCIE) {
 		switch (id) {
 		case EFUSE_INFO_MAC_ADDR:
 			idle_len = LEN_ADDR_AE;
@@ -3216,7 +3186,7 @@ static u32 compare_info_length(enum mac_ax_intf intf,
 		default:
 			return MACNOITEM;
 		}
-	} else if (intf == MAC_AX_INTF_SDIO) {
+	} else if (intf == MAC_INTF_SDIO) {
 		switch (id) {
 		case EFUSE_INFO_MAC_ADDR:
 			idle_len = LEN_ADDR_AS;
@@ -3231,6 +3201,8 @@ static u32 compare_info_length(enum mac_ax_intf intf,
 	else
 		return MACSUCCESS;
 }
+
+#if 0 //NEO
 
 static u32 set_check_sum_val(struct mac_adapter *adapter,
 			     u8 *map, u16 value)

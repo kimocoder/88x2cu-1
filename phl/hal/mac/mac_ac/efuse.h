@@ -137,17 +137,17 @@ enum efuse_map_sel {
  */
 enum mac_info_offset {
 	/*USB*/
-	OFS_ADDR_AU = 0x438,
+	OFS_ADDR_CU = 0x157,
 	OFS_PID_AU = 0x432,
 	OFS_VID_AU = 0x430,
 	/*PCIE*/
-	OFS_ADDR_AE = 0x400,
+	OFS_ADDR_CE = 0x16A,
 	OFS_DID_AE = 0x408,
 	OFS_VID_AE = 0x406,
 	OFS_SVID_AE = 0x40A,
 	OFS_SMID_AE = 0x40C,
 	/*SDIO*/
-	OFS_ADDR_AS = 0x41A,
+	OFS_ADDR_CS = 0x120,
 };
 
 /**
@@ -858,6 +858,8 @@ u32 mac_cmp_sec_data_by_map(struct mac_adapter *adapter,
  * @}
  */
 
+#endif //NEO
+
 /**
  * @addtogroup Efuse
  * @{
@@ -881,6 +883,8 @@ u32 mac_get_efuse_info(struct mac_adapter *adapter, u8 *efuse_map,
 /**
  * @}
  */
+
+#if 0 //NEO
 
 /**
  * @addtogroup Efuse
